@@ -13,9 +13,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@preact/signals": "^2.9.0",
     "preact": "^10.29.1",
-    "preact-router": "^4.1.2"
+    "preact-router": "^4.1.2",
+    "react-hook-form": "^7.76.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",

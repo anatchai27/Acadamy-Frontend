@@ -1,57 +1,84 @@
-import { useState } from 'preact/hooks';
 import { route } from 'preact-router';
-import { Button, Input } from '../../components/ui';
-import { Card } from '../../components/ui';
+import { useForm } from 'react-hook-form';
+import { Button, Input, Checkbox, AuthFormLayout, AuthPageShell } from '../../components/ui';
+import { showToast } from '../../components/ui';
+import { useAppContext } from '../../store/AppContext';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { dispatch } = useAppContext();
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Login:', { email, password });
+  const emailReg = register('email', { required: 'กรุณากรอกอีเมลหรือเบอร์โทรศัพท์' });
+  const passwordReg = register('password', { required: 'กรุณากรอกรหัสผ่าน' });
+  const rememberReg = register('remember');
+
+  const onSubmit = (data) => {
+    dispatch({ type: 'SET_USER', payload: { email: data.email } });
+    showToast('เข้าสู่ระบบสำเร็จ', 'success');
+    route('/admin/dashboard');
+  };
+
+  const onError = () => {
+    showToast('กรุณากรอกอีเมลหรือเบอร์โทรศัพท์และรหัสผ่าน', 'error');
   };
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-deep-navy via-ocean-blue to-deep-navy flex items-center justify-center p-6">
-      <nav class="fixed top-0 left-0 right-0 container mx-auto px-6 py-6 flex items-center justify-between z-10">
-        <span class="text-xl font-bold text-mist-blue tracking-tight cursor-pointer" onClick={() => route('/')}>AcadamyFront</span>
-        <Button variant="primary" size="sm" onClick={() => route('/register')}>
-          Get Started
-        </Button>
-      </nav>
-
-      <Card class="w-full max-w-sm p-10" hover={false}>
-        <h2 class="text-3xl font-semibold text-white mb-2">Welcome Back</h2>
-        <p class="text-mist-blue/50 text-sm mb-8">Sign in to continue your learning journey</p>
-        <form onSubmit={handleSubmit} class="flex flex-col gap-5">
+    <AuthPageShell navActionLabel="ลงทะเบียนสถาบันใหม่" navActionHref="/register">
+      <AuthFormLayout
+        title="เข้าสู่ระบบ TiwHub"
+        subtitle="จัดการคลาสเรียนและติดตามการเรียนการสอนของคุณ"
+      >
+        <form onSubmit={handleSubmit(onSubmit, onError)} class="flex flex-col gap-5">
           <Input
             type="email"
-            label="Email"
-            id="email"
-            value={email}
-            onInput={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            label="อีเมล หรือ เบอร์โทรศัพท์"
+            id="login-email"
+            placeholder="กรอกอีเมลหรือเบอร์โทรศัพท์"
+            error={errors.email?.message}
+            name={emailReg.name}
+            onChange={emailReg.onChange}
+            onBlur={emailReg.onBlur}
+            inputRef={emailReg.ref}
           />
+
           <Input
             type="password"
-            label="Password"
-            id="password"
-            value={password}
-            onInput={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            label="รหัสผ่าน"
+            id="login-password"
+            placeholder="กรอกรหัสผ่าน"
+            error={errors.password?.message}
+            name={passwordReg.name}
+            onChange={passwordReg.onChange}
+            onBlur={passwordReg.onBlur}
+            inputRef={passwordReg.ref}
           />
+
+          <div class="flex items-center justify-between">
+            <Checkbox
+              id="remember"
+              label="จดจำการเข้าสู่ระบบ"
+              name={rememberReg.name}
+              onChange={rememberReg.onChange}
+              onBlur={rememberReg.onBlur}
+              inputRef={rememberReg.ref}
+            />
+            <Button variant="link" size="sm" onClick={() => route('/forgot-password')}>
+              ลืมรหัสผ่าน?
+            </Button>
+          </div>
+
           <Button variant="primary" size="md" type="submit" class="w-full mt-2">
-            Sign In
+            เข้าสู่ระบบ
           </Button>
         </form>
-        <p class="mt-6 text-center text-sm text-mist-blue/50">
-          Don't have an account?{' '}
-          <button class="text-sky-blue font-medium hover:underline bg-transparent border-none cursor-pointer text-sm" onClick={() => route('/register')}>
-            Sign up
-          </button>
+
+        <p class="mt-6 text-center text-sm text-slate-600">
+          ยังไม่มีบัญชี?{' '}
+          <Button variant="link" size="sm" onClick={() => route('/register')}>
+            ลงทะเบียนสถาบันใหม่
+          </Button>
         </p>
-      </Card>
-    </div>
+      </AuthFormLayout>
+    </AuthPageShell>
   );
 }

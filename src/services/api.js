@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 async function fetcher(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -13,7 +13,7 @@ async function fetcher(endpoint, options = {}) {
     throw new Error(`API Error: ${response.status}`);
   }
 
-  return response.json();
+  return { data: await response.json(), status: response.status };
 }
 
 export const api = {

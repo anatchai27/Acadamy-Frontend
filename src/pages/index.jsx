@@ -31,7 +31,7 @@ export function IndexPage() {
             <Button variant="primary" size="lg" onClick={() => route('/register')} class="shadow-lg shadow-sky-blue/20">
               Get Started Free
             </Button>
-            <Button variant="secondary" size="lg" onClick={() => route('/login')}>
+            <Button variant="secondary" size="lg" onClick={() => route('/')}>
               Sign In
             </Button>
           </div>

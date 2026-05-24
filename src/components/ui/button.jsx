@@ -1,10 +1,11 @@
-export function Button({ children, variant = 'primary', size = 'md', onClick, type = 'button', class: className = '', disabled = false }) {
-  const baseClasses = 'font-medium rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+export function Button({ children, variant = 'primary', size = 'md', onClick, type = 'button', class: className = '', disabled = false, loading = false }) {
+  const baseClasses = 'font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed rounded-sm';
   
   const variants = {
-    primary: 'bg-sky-blue hover:bg-sky-blue/80 text-white',
-    secondary: 'bg-white/5 backdrop-blur-md border border-mist-blue/20 text-mist-blue hover:border-mist-blue/40 hover:bg-white/10',
-    ghost: 'bg-transparent text-mist-blue/70 hover:text-mist-blue hover:bg-white/5',
+    primary: 'bg-amber-500 hover:bg-amber-600 text-white',
+    secondary: 'bg-slate-200 hover:bg-slate-300 text-slate-900',
+    outline: 'bg-transparent border border-slate-300 text-slate-900 hover:bg-slate-50',
+    link: 'bg-transparent border-none text-blue-800 font-medium hover:underline p-0 rounded-none',
   };
   
   const sizes = {
@@ -16,8 +17,8 @@ export function Button({ children, variant = 'primary', size = 'md', onClick, ty
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
 
   return (
-    <button type={type} class={classes} onClick={onClick} disabled={disabled}>
-      {children}
+    <button type={type} class={classes} onClick={onClick} disabled={disabled || loading}>
+      {loading ? 'กำลังดำเนินการ...' : children}
     </button>
   );
 }
