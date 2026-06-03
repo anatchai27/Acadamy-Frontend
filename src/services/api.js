@@ -9,11 +9,18 @@ async function fetcher(endpoint, options = {}) {
     ...options,
   });
 
+  const data = response.headers.get('content-type')?.includes('application/json')
+    ? await response.json().catch(() => null)
+    : null;
+
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+    const error = new Error(data?.message || `API Error: ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
-  return { data: await response.json(), status: response.status };
+  return { data, status: response.status };
 }
 
 export const api = {

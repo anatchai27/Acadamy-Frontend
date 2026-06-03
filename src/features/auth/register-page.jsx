@@ -59,14 +59,14 @@ export function RegisterPage() {
 
       const response = await userService.createUser(payload);
 
-      if (response && [200, 201].includes(response.status)) {
-        showToast('สร้างบัญชีผู้ใช้งานสำเร็จ กำลังเปลี่ยนเส้นทาง...', 'success', 3000);
-        setTimeout(() => route('/login'), 1200);
-      } else {
-        showToast('สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
-      }
+      showToast('สร้างบัญชีผู้ใช้งานสำเร็จ กำลังเปลี่ยนเส้นทาง...', 'success', 3000);
+      setTimeout(() => route('/login'), 1200);
     } catch (error) {
-      showToast('สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
+      const message = error?.data?.message
+        || (error?.status === 409 && 'อีเมลหรือ Line ID นี้มีผู้ใช้งานแล้ว')
+        || 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+
+      showToast(message, 'error');
       console.error('Register error:', error);
     }
   };
