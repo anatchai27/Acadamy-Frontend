@@ -1,21 +1,39 @@
 import { route } from 'preact-router';
 import { useForm } from 'react-hook-form';
+import { useState } from 'preact/hooks';
 import { Button, Input, Checkbox, AuthFormLayout, AuthPageShell } from '../../components/ui';
 import { showToast } from '../../components/ui';
 import { useAppContext } from '../../store/AppContext';
+import { authService, setAuthStorage } from '../../services';
 
 export function LoginPage() {
   const { dispatch } = useAppContext();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const emailReg = register('email', { required: 'กรุณากรอกอีเมลหรือเบอร์โทรศัพท์' });
   const passwordReg = register('password', { required: 'กรุณากรอกรหัสผ่าน' });
   const rememberReg = register('remember');
 
-  const onSubmit = (data) => {
-    dispatch({ type: 'SET_USER', payload: { email: data.email } });
-    showToast('เข้าสู่ระบบสำเร็จ', 'success');
-    route('/admin/dashboard');
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const response = await authService.login({ email: data.email, password: data.password });
+      const { token, ...user } = response.data;
+
+      setAuthStorage(token, user);
+      dispatch({ type: 'SET_USER', payload: user });
+
+      showToast('เข้าสู่ระบบสำเร็จ', 'success');
+      route('/admin/dashboard');
+    } catch (error) {
+      const message = error?.data?.message
+        || (error?.status === 401 && 'อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+        || 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      showToast(message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onError = () => {
@@ -67,7 +85,7 @@ export function LoginPage() {
             </Button>
           </div>
 
-          <Button variant="primary" size="md" type="submit" class="w-full mt-2">
+          <Button variant="primary" size="md" type="submit" class="w-full mt-2" loading={isSubmitting} disabled={isSubmitting}>
             เข้าสู่ระบบ
           </Button>
         </form>

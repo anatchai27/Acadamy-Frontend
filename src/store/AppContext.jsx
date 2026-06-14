@@ -1,31 +1,18 @@
 import { createContext } from 'preact';
 import { useContext, useReducer } from 'preact/hooks';
-
+import { AppReducer } from './AppReducer';
 const initialState = {
   theme: 'dark',
   user: null,
   isAuthenticated: false,
 };
 
-function appReducer(state, action) {
-  switch (action.type) {
-    case 'SET_THEME':
-      return { ...state, theme: action.payload };
-    case 'SET_USER':
-      return { ...state, user: action.payload, isAuthenticated: !!action.payload };
-    case 'CLEAR_USER':
-      return { ...state, user: null, isAuthenticated: false };
-    case 'RESET':
-      return { ...initialState };
-    default:
-      return state;
-  }
-}
+
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [state, dispatch] = useReducer(AppReducer, initialState);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

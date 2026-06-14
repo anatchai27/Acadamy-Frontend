@@ -8,9 +8,15 @@ const menuItems = [
   { path: '/admin/settings', label: 'ตั้งค่า', icon: SettingsIcon },
 ];
 
+function getPageTitle(path) {
+  const item = menuItems.find((m) => m.path === path);
+  return item ? item.label : 'แดชบอร์ด';
+}
+
 export function AdminLayout({ children, path }) {
   const { state, dispatch } = useAppContext();
   const currentPath = path || '/admin/dashboard';
+  const currentTitle = getPageTitle(currentPath);
 
   const handleLogout = () => {
     dispatch({ type: 'CLEAR_USER' });
@@ -18,54 +24,106 @@ export function AdminLayout({ children, path }) {
   };
 
   return (
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen bg-tiwhub-bg dark:bg-tiwhub-heading">
       {/* Desktop Sidebar */}
-      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:bg-white md:dark:bg-gray-800 md:border-r md:border-gray-200 md:dark:border-gray-700">
-        <div class="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-700">
-          <h1 class="text-xl font-bold text-deep-navy dark:text-white">TiwHub</h1>
+      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-tiwhub-surface dark:bg-tiwhub-heading border-r border-tiwhub-border-light dark:border-tiwhub-border/20">
+        {/* Logo */}
+        <div class="flex h-16 items-center gap-3 px-6 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
+          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-tiwhub-primary text-white font-bold text-sm shrink-0">
+            TH
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-tiwhub-heading dark:text-white leading-tight">TiwHub</span>
+            <span class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70 leading-tight">Admin Panel</span>
+          </div>
         </div>
-        <nav class="flex-1 space-y-1 px-3 py-4">
+
+        {/* Navigation */}
+        <nav class="flex-1 space-y-1 px-3 py-5 overflow-y-auto">
+          <p class="px-3 mb-2 text-xs font-semibold text-tiwhub-muted/60 dark:text-tiwhub-muted/40 uppercase tracking-wider">
+            เมนูหลัก
+          </p>
           {menuItems.map((item) => {
             const isActive = currentPath === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => route(item.path)}
-                class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                class={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                    ? 'bg-tiwhub-primary/10 text-tiwhub-primary dark:bg-tiwhub-primary/15 dark:text-tiwhub-primary-light shadow-sm ring-1 ring-tiwhub-primary/10 dark:ring-tiwhub-primary/20'
+                    : 'text-tiwhub-body hover:bg-tiwhub-surface-hover hover:text-tiwhub-heading dark:text-tiwhub-muted dark:hover:bg-tiwhub-heading/40 dark:hover:text-tiwhub-bg'
                 }`}
               >
-                <item.icon class="h-5 w-5" />
+                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-tiwhub-primary dark:text-tiwhub-primary-light' : ''}`} />
                 {item.label}
+                {isActive && (
+                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-tiwhub-primary dark:bg-tiwhub-primary-light" />
+                )}
               </button>
             );
           })}
         </nav>
-        <div class="border-t border-gray-200 dark:border-gray-700 p-4">
+
+        {/* User Profile & Logout */}
+        <div class="border-t border-tiwhub-border-light dark:border-tiwhub-border/20 p-4">
+          <div class="flex items-center gap-3 mb-3 px-1">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold shrink-0">
+              {state.user?.email?.charAt(0).toUpperCase() || 'A'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-tiwhub-heading dark:text-white truncate">
+                {state.user?.email || 'admin'}
+              </p>
+              <p class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70">ผู้ดูแลระบบ</p>
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-tiwhub-body hover:text-tiwhub-danger hover:bg-tiwhub-danger/10 dark:text-tiwhub-muted dark:hover:text-tiwhub-danger dark:hover:bg-tiwhub-danger/10 transition-all duration-200"
           >
-            <LogoutIcon class="h-5 w-5" />
+            <LogoutIcon class="h-5 w-5 shrink-0" />
             ออกจากระบบ
           </button>
         </div>
       </aside>
 
       {/* Mobile Header */}
-      <header class="md:hidden fixed top-0 left-0 right-0 z-10 h-14 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center">
-        <h1 class="text-lg font-bold text-deep-navy dark:text-white">TiwHub</h1>
+      <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-b border-tiwhub-border-light dark:border-tiwhub-border/20 flex items-center justify-between px-4">
+        <div class="flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-md bg-tiwhub-primary text-white font-bold text-xs shrink-0">
+            TH
+          </div>
+          <span class="text-base font-semibold text-tiwhub-heading dark:text-white">{currentTitle}</span>
+        </div>
+        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold">
+          {state.user?.email?.charAt(0).toUpperCase() || 'A'}
+        </div>
+      </header>
+
+      {/* Desktop Top Bar */}
+      <header class="hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
+        <div>
+          <h1 class="text-lg font-semibold text-tiwhub-heading dark:text-white">{currentTitle}</h1>
+          <p class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70">
+            {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="relative p-2 text-tiwhub-muted hover:text-tiwhub-body dark:hover:text-tiwhub-bg transition-colors rounded-lg hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40">
+            <BellIcon class="h-5 w-5" />
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-tiwhub-danger ring-2 ring-tiwhub-surface dark:ring-tiwhub-heading" />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main class="md:ml-64 pt-14 pb-20 md:pt-0 md:pb-0">
-        <div class="p-4 md:p-6">{children}</div>
+      <main class="md:ml-64 pt-14 md:pt-0">
+        <div class="p-4 md:p-8 max-w-7xl mx-auto">{children}</div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-10 h-16 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-around safe-area-bottom">
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-t border-tiwhub-border-light dark:border-tiwhub-border/20 flex items-center justify-around safe-area-bottom">
         {menuItems.map((item) => {
           const isActive = currentPath === item.path;
           return (
@@ -74,8 +132,8 @@ export function AdminLayout({ children, path }) {
               onClick={() => route(item.path)}
               class={`flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${
                 isActive
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-tiwhub-primary dark:text-tiwhub-primary-light'
+                  : 'text-tiwhub-muted dark:text-tiwhub-muted/60'
               }`}
             >
               <item.icon class="h-5 w-5" />
@@ -88,7 +146,8 @@ export function AdminLayout({ children, path }) {
   );
 }
 
-// SVG Icon Components
+/* ─── SVG Icons ─── */
+
 function DashboardIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -126,6 +185,14 @@ function LogoutIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  );
+}
+
+function BellIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
     </svg>
   );
 }

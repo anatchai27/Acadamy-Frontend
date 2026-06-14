@@ -1,43 +1,154 @@
 import { AdminLayout } from '../../layouts/admin-layout';
+import { DashboardOverviewWidget } from '../../components/dashboard/dashboard-overview';
+
+const recentActivities = [
+  { text: 'ผู้ใช้ใหม่ลงทะเบียน: john@example.com', time: '5 นาทีที่แล้ว', icon: UserPlusIcon, color: 'primary' },
+  { text: 'คอร์ส "JavaScript Basics" ถูกเปิดสอน', time: '1 ชั่วโมงที่แล้ว', icon: BookIcon, color: 'success' },
+  { text: 'ผู้เรียน 5 คนเรียนจบคอร์ส "React 101"', time: '2 ชั่วโมงที่แล้ว', icon: CheckIcon, color: 'accent' },
+  { text: 'อัปเดตระบบชำระเงินสำเร็จ', time: '3 ชั่วโมงที่แล้ว', icon: CogIcon, color: 'danger' },
+  { text: 'มีการเพิ่มคอร์ส "Python Advanced"', time: '5 ชั่วโมงที่แล้ว', icon: BookIcon, color: 'success' },
+];
+
+const colorIconBgMap = {
+  primary: 'bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15',
+  success: 'bg-tiwhub-success/10 dark:bg-tiwhub-success/15',
+  accent: 'bg-tiwhub-accent/10 dark:bg-tiwhub-accent/15',
+  danger: 'bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15',
+};
+
+const colorTextMap = {
+  primary: 'text-tiwhub-primary dark:text-tiwhub-primary-light',
+  success: 'text-tiwhub-success dark:text-tiwhub-success',
+  accent: 'text-tiwhub-accent dark:text-tiwhub-accent-light',
+  danger: 'text-tiwhub-danger dark:text-tiwhub-danger',
+};
 
 export function DashboardPage({ path }) {
-  const stats = [
-    { label: 'ผู้ใช้ทั้งหมด', value: '1,234', change: '+12%' },
-    { label: 'คอร์สเรียน', value: '56', change: '+3%' },
-    { label: 'ผู้เรียนออนไลน์', value: '89', change: '+24%' },
-    { label: 'รายได้เดือนนี้', value: '฿45,678', change: '+8%' },
-  ];
-
   return (
     <AdminLayout path={path}>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">แดชบอร์ด</h1>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-            <p class="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
-            <span class="text-xs text-green-600 dark:text-green-400">{stat.change}</span>
-          </div>
-        ))}
+      {/* Welcome */}
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ภาพรวมระบบ</h2>
+        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">ดูข้อมูลสำคัญและการเปลี่ยนแปลงของระบบคุณ</p>
       </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">กิจกรรมล่าสุด</h2>
-        <div class="space-y-3">
-          {[
-            { text: 'ผู้ใช้ใหม่ลงทะเบียน: john@example.com', time: '5 นาทีที่แล้ว' },
-            { text: 'คอร์ส "JavaScript Basics" ถูกเปิดสอน', time: '1 ชั่วโมงที่แล้ว' },
-            { text: 'ผู้เรียน 5 คนเรียนจบคอร์ส "React 101"', time: '2 ชั่วโมงที่แล้ว' },
-            { text: 'อัปเดตระบบชำระเงินสำเร็จ', time: '3 ชั่วโมงที่แล้ว' },
-          ].map((activity, i) => (
-            <div key={i} class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-              <span class="text-sm text-gray-700 dark:text-gray-300">{activity.text}</span>
-              <span class="text-xs text-gray-400 whitespace-nowrap ml-4">{activity.time}</span>
+      {/* Dashboard Overview Widget - Grid 2x2 */}
+      <DashboardOverviewWidget />
+
+      {/* Two Column Layout */}
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-15">
+        {/* Activity Feed */}
+        <div class="lg:col-span-2 bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
+            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white">กิจกรรมล่าสุด</h3>
+            <button class="text-sm font-medium text-tiwhub-primary dark:text-tiwhub-primary-light hover:text-tiwhub-primary-dark dark:hover:text-tiwhub-accent transition-colors">
+              ดูทั้งหมด
+            </button>
+          </div>
+          <div class="p-6 space-y-0">
+            {recentActivities.map((activity, i) => (
+              <div
+                key={i}
+                class={`flex items-start gap-4 py-3 ${
+                  i < recentActivities.length - 1 ? 'border-b border-tiwhub-border-light dark:border-tiwhub-border/20' : ''
+                }`}
+              >
+                <div class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorIconBgMap[activity.color]}`}>
+                  <activity.icon class={`h-4 w-4 ${colorTextMap[activity.color]}`} />
+                </div>
+                <div class="flex-1 min-w-0 flex items-center justify-between gap-4">
+                  <span class="text-sm text-tiwhub-body dark:text-tiwhub-bg/80 truncate">{activity.text}</span>
+                  <span class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/60 whitespace-nowrap">{activity.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Stats Sidebar */}
+        <div class="space-y-6">
+          {/* Top Courses */}
+          <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 p-6">
+            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white mb-4">คอร์สยอดนิยม</h3>
+            <div class="space-y-4">
+              {[
+                { title: 'JavaScript Basics', students: 45, color: 'primary' },
+                { title: 'React 101', students: 38, color: 'success' },
+                { title: 'Python for Beginners', students: 32, color: 'accent' },
+              ].map((course) => (
+                <div key={course.title} class="flex items-center gap-3">
+                  <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-').replace('dark:text-', 'dark:bg-')}`} />
+                  <span class="flex-1 text-sm text-tiwhub-body dark:text-tiwhub-bg/80 truncate">{course.title}</span>
+                  <span class="text-xs font-medium text-tiwhub-muted dark:text-tiwhub-muted/60">{course.students} คน</span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 p-6">
+            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white mb-4">ดำเนินการด่วน</h3>
+            <div class="space-y-2">
+              {[
+                { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary' },
+                { label: 'สร้างคอร์สเรียน', icon: BookIcon, color: 'success' },
+                { label: 'ดูรายงาน', icon: ChartIcon, color: 'accent' },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-tiwhub-body dark:text-tiwhub-bg/80 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors"
+                >
+                  <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+/* ─── SVG Icons ─── */
+
+function UserPlusIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+    </svg>
+  );
+}
+
+function BookIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  );
+}
+
+function CheckIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function CogIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function ChartIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
   );
 }
