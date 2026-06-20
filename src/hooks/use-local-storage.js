@@ -1,3 +1,5 @@
+import { useState } from 'preact/hooks';
+
 export function useLocalStorage(key, initialValue) {
   const [storedValue, setStoredValue] = useState(() => {
     try {

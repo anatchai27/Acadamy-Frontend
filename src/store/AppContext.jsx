@@ -1,18 +1,36 @@
 import { createContext } from 'preact';
-import { useContext, useReducer } from 'preact/hooks';
+import { useContext, useReducer, useEffect } from 'preact/hooks';
 import { AppReducer } from './AppReducer';
+import { getStoredToken, getStoredUser, getMe } from '../services/auth-service';
+
 const initialState = {
   theme: 'dark',
   user: null,
+  userProfile: null,
   isAuthenticated: false,
 };
-
-
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(AppReducer, initialState);
+  const initializedState = (() => {
+    const token = getStoredToken();
+    const user = getStoredUser();
+    if (token && user) {
+      return { ...initialState, user, isAuthenticated: true };
+    }
+    return initialState;
+  })();
+
+  const [state, dispatch] = useReducer(AppReducer, initializedState);
+
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      getMe()
+        .then((res) => dispatch({ type: 'SET_PROFILE', payload: res.data }))
+        .catch(() => {});
+    }
+  }, [state.isAuthenticated]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

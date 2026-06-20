@@ -4,8 +4,18 @@ export async function login({ email, password }) {
   return api.post('/auth/login', { email, password });
 }
 
+export async function getMe() {
+  return api.get('/auth/me');
+}
+
+export async function logout() {
+  return api.post('/auth/logout');
+}
+
 export const authService = {
   login,
+  logout,
+  getMe,
 };
 
 const TOKEN_KEY = 'auth_token';
