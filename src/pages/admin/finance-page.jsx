@@ -66,14 +66,14 @@ export function FinancePage({ path }) {
     setIsSubmitting(true);
     try {
       const payload = {
-        studentName: form.studentName,
-        courseId: form.course ? mockCourses.find((c) => c.name === form.course)?.id : 1,
+        enrollmentId: form.course ? mockCourses.find((c) => c.name === form.course)?.id : 1,
         amount: Number(form.amount),
-        method: form.method,
+        method: form.method === 'โอนเงิน' ? 'transfer' : 'cash',
+        slipUrl: '',
       };
       const res = await financeService.createPayment(payload);
-      const invoice = res.data?.invoice || `INV-${Date.now()}`;
-      showToast(`บันทึกสำเร็จ! เลข Invoice: ${invoice}`, 'success');
+      const invoiceNo = res.data?.data?.invoiceNo || res.data?.invoiceNo || `INV-${Date.now()}`;
+      showToast(`บันทึกสำเร็จ! เลข Invoice: ${invoiceNo}`, 'success');
       setForm({ studentName: '', course: '', amount: '', method: 'โอนเงิน' });
     } catch {
       showToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error');
@@ -85,10 +85,11 @@ export function FinancePage({ path }) {
   const handleDateFilter = async () => {
     try {
       const params = {};
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
       const res = await financeService.getPayments(params);
-      setPayments(res.data || []);
+      const paymentsData = res.data?.data?.payments || res.data?.payments || res.data || [];
+      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
     } catch {
       const filtered = mockPayments.filter((p) => {
         if (startDate && p.date < startDate) return false;

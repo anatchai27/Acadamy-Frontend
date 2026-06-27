@@ -28,6 +28,7 @@ export function LoginPage() {
       route('/admin/dashboard');
     } catch (error) {
       const message = error?.data?.message
+        || error?.data?.error
         || (error?.status === 401 && 'อีเมลหรือรหัสผ่านไม่ถูกต้อง')
         || 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
       showToast(message, 'error');

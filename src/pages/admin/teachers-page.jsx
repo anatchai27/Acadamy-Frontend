@@ -10,12 +10,7 @@ const columns = [
   {
     key: 'fullName',
     label: 'ชื่อ-นามสกุล',
-    render: (value, row) => (
-      <div>
-        <p class="font-medium text-slate-900 dark:text-white">{value || '-'}</p>
-        {row.nickname && <p class="text-xs text-slate-400">({row.nickname})</p>}
-      </div>
-    ),
+    render: (value) => <span class="font-medium text-slate-900 dark:text-white">{value || '-'}</span>,
   },
   {
     key: 'user',

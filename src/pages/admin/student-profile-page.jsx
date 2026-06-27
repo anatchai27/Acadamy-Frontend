@@ -24,7 +24,7 @@ export function StudentProfilePage({ path, id }) {
     if (!id) return;
     setLoading(true);
     studentService.getStudentById(id)
-      .then((res) => setStudent(res.data))
+      .then((res) => setStudent(res.data?.data || res.data))
       .catch((err) => {
         if (err?.status === 404) {
           setError('ไม่พบข้อมูลนักเรียน');
@@ -75,7 +75,7 @@ export function StudentProfilePage({ path, id }) {
         </button>
         <div class="flex items-center gap-4">
           <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">
-            {student.firstname} {student.lastname}
+            {student.fullName || student.firstname + ' ' + student.lastname}
           </h2>
           <StatusBadge status={student.status} />
         </div>

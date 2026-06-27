@@ -6,9 +6,9 @@ import { studentService } from '../../services';
 
 const columns = [
   {
-    key: 'fullname',
+    key: 'fullName',
     label: 'ชื่อ-นามสกุล',
-    render: (_, row) => `${row.firstname || row.firstName || ''} ${row.lastname || row.lastName || ''}`,
+    render: (value, row) => value || row.fullName || '-',
   },
   { key: 'email', label: 'อีเมล' },
   { key: 'phone', label: 'เบอร์โทร' },

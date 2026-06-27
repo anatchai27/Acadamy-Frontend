@@ -1,7 +1,7 @@
 import { api } from './api';
 
-export function scanAttendance(qrData) {
-  return api.post('/attendance/scan', { qrData });
+export function scanAttendance(payload) {
+  return api.post('/attendance/scan', payload);
 }
 
 export function getDailyAttendance(params = {}) {

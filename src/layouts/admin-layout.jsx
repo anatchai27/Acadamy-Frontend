@@ -2,7 +2,6 @@ import { route } from 'preact-router';
 import { useState, useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
 import { clearAuthStorage, logout } from '../services/auth-service';
-import { api } from '../services/api';
 import { showConfirm } from '../components/ui';
 
 const menuItems = [
@@ -23,14 +22,7 @@ export function AdminLayout({ children, path }) {
   const { state, dispatch } = useAppContext();
   const currentPath = path || '/admin/dashboard';
   const currentTitle = getPageTitle(currentPath);
-  const [profile, setProfile] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    api.get('/auth/me')
-      .then((res) => setProfile(res.data))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     const close = () => setDropdownOpen(false);
@@ -56,8 +48,16 @@ export function AdminLayout({ children, path }) {
     route('/login');
   };
 
-  const displayName = profile?.fullName || profile?.email || state.user?.email || 'admin';
-  const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้สอน';
+  const profile = state.userProfile;
+
+  const displayName =
+    profile?.profile?.fullName
+    || profile?.fullName
+    || profile?.email
+    || state.user?.email
+    || state.user?.userId
+    || 'admin';
+  const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : profile?.role === 'teacher' ? 'ผู้สอน' : 'สมาชิก';
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
 
   return (

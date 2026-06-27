@@ -1,18 +1,29 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { ScannerCamera, StatusBadge, Button, showToast } from '../../components/ui';
 import { attendanceService } from '../../services';
 
-const mockStudents = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: i % 2 === 0 ? `เด็กชาย${['สมชาย','วิชัย','กรกฎ','ณัฐวุฒิ','ภาณุ','พิชัย','นเรศ','ธนากร','กิตติ','บุญมี'][i/2]}` : `เด็กหญิง${['สมศรี','นภา','มณี','สุพัตรา','พิมพ์ใจ','วราภรณ์','กัญจนา','อรัญญา','นฤมล','รุ่งนภา'][(i-1)/2]}`,
-  status: null,
-}));
-
 export function AttendancePage({ path }) {
-  const [mode, setMode] = useState('scan'); // 'scan' | 'manual'
+  const [mode, setMode] = useState('scan');
   const [recentScans, setRecentScans] = useState([]);
-  const [students, setStudents] = useState(mockStudents);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sessionId, setSessionId] = useState('');
+
+  useEffect(() => {
+    attendanceService.getDailyAttendance()
+      .then((res) => {
+        const data = res.data?.data || res.data || {};
+        setStudents(data.attendances || []);
+        if (data.sessionInfo?.id) {
+          setSessionId(String(data.sessionInfo.id));
+        }
+      })
+      .catch(() => {
+        showToast('ไม่สามารถโหลดข้อมูลการเช็คชื่อได้', 'error');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleScan = async (qrData) => {
     const existing = recentScans.find((s) => s.qrData === qrData);
@@ -21,13 +32,25 @@ export function AttendancePage({ path }) {
       return;
     }
 
+    if (!sessionId) {
+      showToast('ไม่พบข้อมูลคลาสเรียน กรุณาลองใหม่', 'error');
+      return;
+    }
+
     try {
-      await attendanceService.scanAttendance(qrData);
-      const entry = { qrData, name: `นักเรียน #${qrData}`, time: new Date().toLocaleTimeString('th-TH'), status: 'present' };
+      const res = await attendanceService.scanAttendance({ qrToken: qrData, sessionId: Number(sessionId) });
+      const scanResult = res.data?.data || {};
+      const entry = {
+        qrData,
+        name: scanResult.studentName || `นักเรียน #${qrData}`,
+        time: new Date().toLocaleTimeString('th-TH'),
+        status: scanResult.status || 'present',
+      };
       setRecentScans((prev) => [entry, ...prev]);
       showToast(`เช็คชื่อ ${entry.name} สำเร็จ`, 'success');
-    } catch {
-      showToast('สแกนไม่สำเร็จ กรุณาลองใหม่', 'error');
+    } catch (err) {
+      const msg = err?.data?.message || err?.data?.error || 'สแกนไม่สำเร็จ กรุณาลองใหม่';
+      showToast(msg, 'error');
     }
   };
 
@@ -36,15 +59,24 @@ export function AttendancePage({ path }) {
   };
 
   const handleManualStatus = async (studentId, status) => {
+    if (!sessionId) {
+      showToast('ไม่พบข้อมูลคลาสเรียน', 'error');
+      return;
+    }
+
     setStudents((prev) =>
-      prev.map((s) => (s.id === studentId ? { ...s, status: s.status === status ? null : status } : s))
+      prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === status ? null : status } : s))
     );
 
     try {
-      await attendanceService.submitManualAttendance({ studentId, status });
+      await attendanceService.submitManualAttendance({ sessionId: Number(sessionId), studentId, status });
       showToast('บันทึกสถานะเรียบร้อย', 'success');
-    } catch {
-      showToast('บันทึกไม่สำเร็จ', 'error');
+    } catch (err) {
+      const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
+      showToast(msg, 'error');
+      setStudents((prev) =>
+        prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === status ? null : status } : s))
+      );
     }
   };
 
@@ -55,6 +87,16 @@ export function AttendancePage({ path }) {
     { value: 'absent', label: 'ขาด', activeClass: 'bg-red-500 text-white' },
   ];
 
+  if (loading) {
+    return (
+      <AdminLayout path={path}>
+        <div class="flex items-center justify-center py-20">
+          <span class="text-slate-400">กำลังโหลดข้อมูล...</span>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
@@ -62,7 +104,6 @@ export function AttendancePage({ path }) {
         <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
       </div>
 
-      {/* Mode Switcher */}
       <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
         <button
           type="button"
@@ -90,12 +131,10 @@ export function AttendancePage({ path }) {
 
       {mode === 'scan' ? (
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Viewfinder */}
           <div class="lg:col-span-2">
             <ScannerCamera onScan={handleScan} onError={handleScanError} />
           </div>
 
-          {/* Recent Scans Log */}
           <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-4 max-h-[600px] overflow-y-auto">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 sticky top-0 bg-white dark:bg-slate-800 pb-2">
               สแกนล่าสุด ({recentScans.length})
@@ -125,7 +164,6 @@ export function AttendancePage({ path }) {
           </div>
         </div>
       ) : (
-        /* Manual Mode */
         <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <p class="text-sm text-slate-600 dark:text-slate-300">
@@ -137,32 +175,36 @@ export function AttendancePage({ path }) {
             </p>
           </div>
           <div class="divide-y divide-slate-200 dark:divide-slate-700">
-            {students.map((student) => (
-              <div key={student.id} class="flex items-center justify-between px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <div class="flex items-center gap-3 min-w-0">
-                  <span class="text-sm font-medium text-slate-900 dark:text-white">
-                    {student.name}
-                  </span>
-                  {student.status && <StatusBadge status={student.status} />}
+            {students.length === 0 ? (
+              <p class="text-sm text-slate-400 text-center py-8">ยังไม่มีข้อมูลการเข้าเรียนวันนี้</p>
+            ) : (
+              students.map((student) => (
+                <div key={student.studentId} class="flex items-center justify-between px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">
+                      {student.fullName || '-'}
+                    </span>
+                    {student.status && <StatusBadge status={student.status} />}
+                  </div>
+                  <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden shrink-0">
+                    {statusOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleManualStatus(student.studentId, opt.value)}
+                        class={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                          student.status === opt.value
+                            ? opt.activeClass
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden shrink-0">
-                  {statusOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleManualStatus(student.id, opt.value)}
-                      class={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                        student.status === opt.value
-                          ? opt.activeClass
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

@@ -1,7 +1,9 @@
 import { createContext } from 'preact';
-import { useContext, useReducer, useEffect } from 'preact/hooks';
+import { useContext, useReducer, useEffect, useCallback } from 'preact/hooks';
+import { route } from 'preact-router';
 import { AppReducer } from './AppReducer';
-import { getStoredToken, getStoredUser, getMe } from '../services/auth-service';
+import { getStoredToken, getStoredUser, clearAuthStorage, getMe } from '../services/auth-service';
+import { setOnUnauthorized } from '../services/api';
 
 const initialState = {
   theme: 'dark',
@@ -24,10 +26,19 @@ export function AppProvider({ children }) {
 
   const [state, dispatch] = useReducer(AppReducer, initializedState);
 
+  const handleUnauthorized = useCallback(() => {
+    dispatch({ type: 'CLEAR_USER' });
+    route('/login');
+  }, []);
+
+  useEffect(() => {
+    setOnUnauthorized(handleUnauthorized);
+  }, [handleUnauthorized]);
+
   useEffect(() => {
     if (state.isAuthenticated) {
       getMe()
-        .then((res) => dispatch({ type: 'SET_PROFILE', payload: res.data }))
+        .then((res) => dispatch({ type: 'SET_PROFILE', payload: res.data?.data || res.data }))
         .catch(() => {});
     }
   }, [state.isAuthenticated]);

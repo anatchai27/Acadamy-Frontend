@@ -12,13 +12,8 @@ export function getPaymentById(id) {
   return api.get(`/payments/${id}`);
 }
 
-export function getCourses() {
-  return api.get('/courses');
-}
-
 export const financeService = {
   createPayment,
   getPayments,
   getPaymentById,
-  getCourses,
 };

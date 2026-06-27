@@ -1,6 +1,12 @@
-import { getStoredToken } from './auth-service';
+import { getStoredToken, clearAuthStorage } from './auth-service';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+let onUnauthorized = null;
+
+export function setOnUnauthorized(handler) {
+  onUnauthorized = handler;
+}
 
 function buildQuery(params) {
   if (!params || Object.keys(params).length === 0) return '';
@@ -36,7 +42,12 @@ async function fetcher(endpoint, options = {}) {
     : null;
 
   if (!response.ok) {
-    const error = new Error(data?.message || `API Error: ${response.status}`);
+    if (response.status === 401 && onUnauthorized) {
+      clearAuthStorage();
+      onUnauthorized();
+    }
+    const msg = data?.message || data?.error || `API Error: ${response.status}`;
+    const error = new Error(msg);
     error.status = response.status;
     error.data = data;
     throw error;

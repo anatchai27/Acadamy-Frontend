@@ -1,10 +1,13 @@
 export { api } from './api';
-export { userService, createUser } from './user-service';
+export { userService, createUser, getUsers, getUserById } from './user-service';
 export {
   authService,
   login,
   logout,
   getMe,
+  registerInstitute,
+  forgetPassword,
+  resetPassword,
   getStoredToken,
   getStoredUser,
   setAuthStorage,
@@ -29,7 +32,6 @@ export {
   createPayment,
   getPayments,
   getPaymentById,
-  getCourses,
 } from './finance-service';
 export {
   teacherService,
@@ -37,3 +39,10 @@ export {
   getTeacherById,
   createTeacher,
 } from './teacher-service';
+export {
+  courseService,
+  getCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+} from './course-service';

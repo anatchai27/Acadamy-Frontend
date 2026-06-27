@@ -70,7 +70,7 @@ export function StudentAddPage({ path }) {
           })),
         pdpa: {
           isAccepted: consent,
-          consentVersion: consent ? 'v1.0' : '',
+          consentVersion: consent ? '1.0' : undefined,
         },
       };
 
@@ -78,7 +78,7 @@ export function StudentAddPage({ path }) {
       showToast('เพิ่มนักเรียนสำเร็จ', 'success');
       route('/admin/students');
     } catch (error) {
-      const message = error?.data?.message || 'เพิ่มนักเรียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      const message = error?.data?.message || error?.data?.error || 'เพิ่มนักเรียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
       showToast(message, 'error');
     } finally {
       setIsSubmitting(false);
