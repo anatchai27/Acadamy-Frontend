@@ -1,7 +1,7 @@
 import { Router } from 'preact-router';
 import { IndexPage } from './pages/index';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, CoursesPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage } from './pages/admin';
+import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import './app.css';
 
@@ -9,7 +9,6 @@ export function App() {
   return (
     <>
       <Router>
-        {/* <IndexPage path="/" /> */}
         <LoginPage path="/" />
         <LoginPage path="/login" />
         <RegisterPage path="/register" />
@@ -19,11 +18,14 @@ export function App() {
         <StudentsPage path="/admin/students" />
         <StudentAddPage path="/admin/students/add" />
         <StudentProfilePage path="/admin/students/:id" />
-        <AttendancePage path="/admin/attendance" />
-        <FinancePage path="/admin/finance" />
         <TeachersPage path="/admin/teachers" />
-        <UsersPage path="/admin/users" />
         <CoursesPage path="/admin/courses" />
+        <SessionsPage path="/admin/courses/:courseId/sessions" />
+        <AttendancePage path="/admin/attendance" />
+        <RequestsPage path="/admin/requests" />
+        <AcademicsPage path="/admin/academics" />
+        <FinancePage path="/admin/finance" />
+        <UsersPage path="/admin/users" />
         <SettingsPage path="/admin/settings" />
       </Router>
       <ToastContainer />

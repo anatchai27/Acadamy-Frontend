@@ -1,180 +1,316 @@
+import { useState, useEffect } from 'preact/hooks';
+import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
+import { SolidInput, Button, showToast } from '../../components/ui';
+import { courseService, teacherService } from '../../services';
 
-const courses = [
-  {
-    id: 1,
-    title: 'JavaScript Basics',
-    description: 'เรียนรู้พื้นฐาน JavaScript สำหรับผู้เริ่มต้น',
-    students: 45,
-    lessons: 12,
-    progress: 75,
-    status: 'active',
-    color: 'primary',
-  },
-  {
-    id: 2,
-    title: 'React 101',
-    description: 'สร้าง Web Application ด้วย React',
-    students: 32,
-    lessons: 8,
-    progress: 60,
-    status: 'active',
-    color: 'success',
-  },
-  {
-    id: 3,
-    title: 'Node.js Advanced',
-    description: 'พัฒนา Backend ด้วย Node.js ขั้นสูง',
-    students: 28,
-    lessons: 15,
-    progress: 40,
-    status: 'draft',
-    color: 'accent',
-  },
-  {
-    id: 4,
-    title: 'Python for Beginners',
-    description: 'พื้นฐานการเขียนโปรแกรมด้วย Python',
-    students: 67,
-    lessons: 10,
-    progress: 90,
-    status: 'active',
-    color: 'danger',
-  },
-];
+const formatCurrency = (n) =>
+  n != null ? `฿${Number(n).toLocaleString()}` : '-';
 
-const colorBarMap = {
-  primary: 'bg-tiwhub-primary dark:bg-tiwhub-primary-light',
-  success: 'bg-tiwhub-success dark:bg-tiwhub-success',
-  accent: 'bg-tiwhub-accent dark:bg-tiwhub-accent-light',
-  danger: 'bg-tiwhub-danger dark:bg-tiwhub-danger',
-};
-
-const colorBorderMap = {
-  primary: 'border-l-tiwhub-primary',
-  success: 'border-l-tiwhub-success',
-  accent: 'border-l-tiwhub-accent',
-  danger: 'border-l-tiwhub-danger',
+const emptyForm = {
+  name: '',
+  subject: '',
+  totalSessions: '20',
+  price: '',
+  teacherId: '',
 };
 
 export function CoursesPage({ path }) {
+  const [courses, setCourses] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (search.trim()) params.search = search.trim();
+      const res = await courseService.getCourses(params);
+      const payload = res.data?.data || res.data || {};
+      setCourses(payload.courses || (Array.isArray(payload) ? payload : []));
+    } catch {
+      showToast('ไม่สามารถโหลดข้อมูลคอร์สเรียนได้', 'error');
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    try {
+      const res = await teacherService.getTeachers();
+      setTeachers(Array.isArray(res.data) ? res.data : res.data?.data || []);
+    } catch { /* silent */ }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+    fetchTeachers();
+  }, []);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowForm(true);
+  };
+
+  const openEdit = (course) => {
+    setEditingId(course.id);
+    setForm({
+      name: course.name || '',
+      subject: course.subject || '',
+      totalSessions: String(course.totalSessions || '20'),
+      price: course.price != null ? String(course.price) : '',
+      teacherId: course.teacherId != null ? String(course.teacherId) : '',
+    });
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
+  const updateField = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.subject.trim()) {
+      showToast('กรุณากรอกชื่อคอร์สและวิชา', 'error');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        name: form.name.trim(),
+        subject: form.subject.trim(),
+        totalSessions: Number(form.totalSessions) || 20,
+        price: form.price ? Number(form.price) : 0,
+        teacherId: form.teacherId ? Number(form.teacherId) : undefined,
+      };
+
+      if (editingId) {
+        await courseService.updateCourse(editingId, payload);
+        showToast('อัปเดตคอร์สเรียนสำเร็จ', 'success');
+      } else {
+        await courseService.createCourse(payload);
+        showToast('เพิ่มคอร์สเรียนสำเร็จ', 'success');
+      }
+
+      closeForm();
+      fetchCourses();
+    } catch (err) {
+      const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ กรุณาลองใหม่';
+      showToast(msg, 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchCourses();
+  };
+
+  const activeCount = courses.filter((c) => c.totalSessions > 0).length;
+
   return (
     <AdminLayout path={path}>
       {/* Header */}
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div class="mb-8 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">จัดการคอร์สเรียน</h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการคอร์สเรียนทั้งหมดในระบบ</p>
+          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">คอร์สเรียน</h2>
+          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+            {courses.length > 0
+              ? `ทั้งหมด ${courses.length} คอร์ส · เปิดสอน ${activeCount}`
+              : 'จัดการคอร์สเรียนทั้งหมด'}
+          </p>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tiwhub-muted" />
-            <input
-              type="text"
-              placeholder="ค้นหาคอร์ส..."
-              class="pl-9 pr-4 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary w-48 transition-all"
-            />
-          </div>
-          <button class="inline-flex items-center gap-2 bg-tiwhub-primary hover:bg-tiwhub-primary-dark text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98]">
+        <Button variant="primary" size="md" onClick={openCreate}>
+          <span class="flex items-center gap-1.5">
             <PlusIcon class="h-4 w-4" />
-            เพิ่มคอร์ส
-          </button>
+            เพิ่มคอร์สเรียน
+          </span>
+        </Button>
+      </div>
+
+      {/* Add/Edit Form */}
+      {showForm && (
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
+          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
+            {editingId ? 'แก้ไขคอร์สเรียน' : 'เพิ่มคอร์สเรียนใหม่'}
+          </h3>
+          <form onSubmit={handleSubmit}>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SolidInput
+                label="ชื่อคอร์ส *"
+                placeholder="เช่น คณิตศาสตร์ ม.1 เทอม 1"
+                required
+                value={form.name}
+                onInput={updateField('name')}
+              />
+              <SolidInput
+                label="วิชา *"
+                placeholder="เช่น คณิตศาสตร์"
+                required
+                value={form.subject}
+                onInput={updateField('subject')}
+              />
+              <SolidInput
+                label="จำนวนคาบทั้งหมด"
+                type="number"
+                placeholder="20"
+                min="1"
+                value={form.totalSessions}
+                onInput={updateField('totalSessions')}
+              />
+              <SolidInput
+                label="ราคา (บาท)"
+                type="number"
+                placeholder="5000"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onInput={updateField('price')}
+              />
+              <div class="flex flex-col gap-1.5">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                  ครูผู้สอน
+                </label>
+                <select
+                  value={form.teacherId}
+                  onChange={updateField('teacherId')}
+                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white"
+                >
+                  <option value="">เลือกครูผู้สอน</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.fullName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
+                {editingId ? 'อัปเดตคอร์ส' : 'บันทึกคอร์ส'}
+              </Button>
+              <Button variant="outline" size="md" type="button" onClick={closeForm}>
+                ยกเลิก
+              </Button>
+            </div>
+          </form>
         </div>
-      </div>
+      )}
 
-      {/* Stats Summary */}
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'ทั้งหมด', value: courses.length, color: 'primary' },
-          { label: 'เปิดสอน', value: courses.filter((c) => c.status === 'active').length, color: 'success' },
-          { label: 'ฉบับร่าง', value: courses.filter((c) => c.status === 'draft').length, color: 'accent' },
-          { label: 'ผู้เรียนทั้งหมด', value: courses.reduce((s, c) => s + c.students, 0), color: 'danger' },
-        ].map((stat) => (
-          <div key={stat.label} class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl p-4 shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20">
-            <p class="text-xs font-medium text-tiwhub-muted dark:text-tiwhub-muted/60">{stat.label}</p>
-            <p class="text-xl font-bold text-tiwhub-heading dark:text-white mt-1">{stat.value}</p>
+      {/* Search */}
+      <form onSubmit={handleSearchSubmit} class="mb-6 flex gap-2">
+        <div class="flex-1">
+          <SolidInput
+            type="text"
+            placeholder="ค้นหาชื่อคอร์สหรือวิชา..."
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" size="md" type="submit">ค้นหา</Button>
+      </form>
+
+      {/* Loading */}
+      {loading && (
+        <div class="text-center py-16">
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && courses.length === 0 && (
+        <div class="text-center py-16">
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <BookIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
           </div>
-        ))}
-      </div>
+          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ไม่พบคอร์สเรียน</h3>
+          <p class="text-sm text-slate-400 mb-6">
+            {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}
+          </p>
+          {!search && (
+            <Button variant="primary" size="md" onClick={openCreate}>
+              + เพิ่มคอร์สเรียนแรก
+            </Button>
+          )}
+        </div>
+      )}
 
-      {/* Course Grid */}
-      <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {courses.map((course) => (
-          <div
-            key={course.id}
-            class={`group bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl overflow-hidden shadow-sm border-l-4 ${colorBorderMap[course.color]} border-t border-r border-b border-tiwhub-border-light dark:border-tiwhub-border/20 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300`}
-          >
-            {/* Card Header with gradient */}
-            <div class={`h-2 ${colorBarMap[course.color]}`} />
-
-            <div class="p-5">
-              <div class="flex items-start justify-between mb-3">
-                <div class="flex-1 min-w-0">
-                  <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white truncate">
-                    {course.title}
+      {/* Courses Grid */}
+      {!loading && courses.length > 0 && (
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {courses.map((course) => (
+            <div
+              key={course.id}
+              class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200 overflow-hidden"
+            >
+              <div class="p-5">
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">
+                    {course.name || '-'}
                   </h3>
-                  <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-0.5 line-clamp-2">
-                    {course.description}
-                  </p>
-                </div>
-                {course.status === 'draft' && (
-                  <span class="ml-2 shrink-0 inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-tiwhub-accent/10 text-tiwhub-accent-dark dark:bg-tiwhub-accent/15 dark:text-tiwhub-accent-light">
-                    ฉบับร่าง
-                  </span>
-                )}
-              </div>
-
-              {/* Meta */}
-              <div class="flex items-center gap-4 text-xs text-tiwhub-muted dark:text-tiwhub-muted/60 mb-4">
-                <span class="inline-flex items-center gap-1">
-                  <UserIcon class="h-3.5 w-3.5" />
-                  {course.students} คน
-                </span>
-                <span class="inline-flex items-center gap-1">
-                  <LessonIcon class="h-3.5 w-3.5" />
-                  {course.lessons} บทเรียน
-                </span>
-              </div>
-
-              {/* Progress */}
-              <div class="mb-4">
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="text-tiwhub-muted dark:text-tiwhub-muted/60">ความคืบหน้า</span>
-                  <span class={`font-semibold text-tiwhub-heading dark:text-white`}>
-                    {course.progress}%
+                  <span class="shrink-0 inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                    {course.subject || '-'}
                   </span>
                 </div>
-                <div class="w-full bg-tiwhub-border-light dark:bg-tiwhub-border/20 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    class={`h-full rounded-full ${colorBarMap[course.color]} transition-all duration-500`}
-                    style={`width: ${course.progress}%`}
-                  />
+
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  {course.teacherName && (
+                    <span class="inline-flex items-center gap-1">
+                      <UserIcon class="h-3 w-3" />
+                      {course.teacherName}
+                    </span>
+                  )}
+                  {course.totalSessions != null && (
+                    <span class="inline-flex items-center gap-1">
+                      <ClockIcon class="h-3 w-3" />
+                      {course.totalSessions} คาบ
+                    </span>
+                  )}
+                  {course.price != null && (
+                    <span class="font-bold text-amber-600 dark:text-amber-400">
+                      {formatCurrency(course.price)}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div class="flex items-center gap-2 pt-3 border-t border-tiwhub-border-light dark:border-tiwhub-border/20">
-                <button class="flex-1 text-center text-sm font-medium text-tiwhub-body dark:text-tiwhub-muted hover:text-tiwhub-heading dark:hover:text-white py-1.5 rounded-lg hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
-                  แก้ไข
+              <div class="border-t border-slate-100 dark:border-slate-700 flex items-stretch">
+                <button
+                  type="button"
+                  onClick={() => route(`/admin/courses/${course.id}/sessions`)}
+                  class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <CalendarIcon class="h-4 w-4" />
+                  ตารางสอน
                 </button>
-                <button class="flex-1 text-center text-sm font-medium text-tiwhub-body dark:text-tiwhub-muted hover:text-tiwhub-danger dark:hover:text-tiwhub-danger py-1.5 rounded-lg hover:bg-tiwhub-danger/10 dark:hover:bg-tiwhub-danger/10 transition-colors">
-                  ลบ
+                <div class="w-px bg-slate-100 dark:bg-slate-700" />
+                <button
+                  type="button"
+                  onClick={() => openEdit(course)}
+                  class="flex-1 px-4 py-3 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <EditIcon class="h-4 w-4" />
+                  แก้ไข
                 </button>
               </div>
             </div>
-          </div>
-        ))}
-
-        {/* Add New Course Card */}
-        <button class="group bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl border-2 border-dashed border-tiwhub-border dark:border-tiwhub-border/30 hover:border-tiwhub-primary dark:hover:border-tiwhub-primary-light transition-all duration-300 flex flex-col items-center justify-center p-8 min-h-[200px] hover:bg-tiwhub-primary/5 dark:hover:bg-tiwhub-primary/5">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-tiwhub-surface-hover dark:bg-tiwhub-heading/40 group-hover:bg-tiwhub-primary/10 dark:group-hover:bg-tiwhub-primary/15 transition-colors mb-3">
-            <PlusIcon class="h-6 w-6 text-tiwhub-muted group-hover:text-tiwhub-primary dark:group-hover:text-tiwhub-primary-light transition-colors" />
-          </div>
-          <span class="text-sm font-medium text-tiwhub-muted group-hover:text-tiwhub-primary dark:group-hover:text-tiwhub-primary-light transition-colors">
-            เพิ่มคอร์สใหม่
-          </span>
-        </button>
-      </div>
+          ))}
+        </div>
+      )}
     </AdminLayout>
   );
 }
@@ -189,10 +325,10 @@ function PlusIcon({ class: className }) {
   );
 }
 
-function SearchIcon({ class: className }) {
+function BookIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
   );
 }
@@ -205,10 +341,26 @@ function UserIcon({ class: className }) {
   );
 }
 
-function LessonIcon({ class: className }) {
+function ClockIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function EditIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
     </svg>
   );
 }

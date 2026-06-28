@@ -1,9 +1,9 @@
 # Academy API Specification
 
 > **Base URL:** `https://your-domain.com/api`
-> **Version:** 2.0
-> **Updated:** 2026-06-21
-> **Architecture:** Multi-Tenant (Institute-scoped)
+> **Version:** 2.1
+> **Updated:** 2026-06-28
+> **Architecture:** Multi-Tenant (Institute-scoped), Database-First (no EF migrations)
 
 ---
 
@@ -706,13 +706,7 @@ List all teachers in the current institute.
     "bio": "ประสบการณ์สอน 10 ปี",
     "hourlyRate": 500.00,
     "photoUrl": "https://...",
-    "institute": null,
-    "user": {
-      "id": 2,
-      "email": "teacher@example.com",
-      "role": "teacher",
-      "...": "..."
-    }
+    "userEmail": "teacher@example.com"
   }
 ]
 ```
@@ -721,7 +715,7 @@ List all teachers in the current institute.
 
 ### GET `/teachers/{id}`
 
-Get a single teacher by ID (within the current institute).
+Get a single teacher by ID (within the current institute). Returns `403` if the teacher belongs to a different institute.
 
 **Path Parameters**
 
@@ -729,13 +723,14 @@ Get a single teacher by ID (within the current institute).
 |------|------|-------------|
 | `id` | `int` | Teacher ID |
 
-**Response** `200 OK` — Same as single item from `GET /teachers`
+**Response** `200 OK` — Same shape as single item from `GET /teachers`
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
 | Not found | 404 | `{ "error": "Teacher not found." }` |
+| Cross-institute | 403 | `{ "error": "Access denied." }` |
 
 ---
 
@@ -747,7 +742,6 @@ Create a new teacher assigned to the current institute. The `instituteId` is aut
 ```json
 {
   "fullName": "string (required)",
-  "userId": null,
   "specialization": "string?",
   "bio": "string?",
   "hourlyRate": 500.00,
@@ -755,7 +749,19 @@ Create a new teacher assigned to the current institute. The `instituteId` is aut
 }
 ```
 
-**Response** `201 Created` — Returns the created teacher object.
+**Response** `201 Created` — Returns the created teacher object (without navigation properties).
+```json
+{
+  "id": 1,
+  "instituteId": 1,
+  "userId": null,
+  "fullName": "อาจารย์สมชาย",
+  "specialization": "คณิตศาสตร์, วิทยาศาสตร์",
+  "bio": null,
+  "hourlyRate": 500.00,
+  "photoUrl": "https://..."
+}
+```
 
 **Errors**
 
@@ -811,7 +817,20 @@ Get a single course by ID (within the current institute).
 |------|------|-------------|
 | `id` | `int` | Course ID |
 
-**Response** `200 OK` — Full course object with included teacher navigation.
+**Response** `200 OK`
+```json
+{
+  "id": 1,
+  "instituteId": 1,
+  "name": "คณิตศาสตร์ ม.1 เทอม 1",
+  "subject": "คณิตศาสตร์",
+  "totalSessions": 20,
+  "price": 5000.00,
+  "teacherId": 1,
+  "createdAt": "2026-06-01T10:00:00Z",
+  "teacherName": "อาจารย์สมชาย"
+}
+```
 
 **Errors**
 
@@ -829,26 +848,37 @@ Create a new course in the current institute. `instituteId` is automatically ass
 ```json
 {
   "name": "string (required)",
-  "subject": "string (required)",
+  "subject": "string",
   "totalSessions": 20,
   "price": 5000.00,
   "teacherId": 1
 }
 ```
 
-**Response** `201 Created` — Returns the created course object with `instituteId` and `createdAt`.
+**Response** `201 Created`
+```json
+{
+  "status": "success",
+  "message": "สร้างคอร์สเรียนสำเร็จ",
+  "data": {
+    "courseId": 1,
+    "name": "คณิตศาสตร์ ม.1 เทอม 1",
+    "createdAt": "2026-06-20T12:00:00Z"
+  }
+}
+```
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
-| Missing name | 400 | `{ "error": "Name is required." }` |
+| Missing name | 400 | `{ "status": "error", "errorCode": "NAME_REQUIRED", "message": "กรุณาระบุชื่อคอร์สเรียน" }` |
 
 ---
 
 ### PUT `/courses/{id}`
 
-Update a course. Only the course in the current institute is updated.
+Update a course. Only the course in the current institute is updated. Returns `403` on cross-institute access.
 
 **Path Parameters**
 
@@ -867,13 +897,99 @@ Update a course. Only the course in the current institute is updated.
 }
 ```
 
-**Response** `200 OK` — Updated course object.
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "อัปเดตคอร์สเรียนสำเร็จ"
+}
+```
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
-| Not found | 404 | `{ "error": "Course not found." }` |
+| Not found | 404 | `{ "status": "error", "errorCode": "NOT_FOUND", "message": "ไม่พบคอร์สเรียน" }` |
+| Cross-institute | 403 | `{ "status": "error", "errorCode": "FORBIDDEN", "message": "Access denied." }` |
+
+---
+
+### POST `/courses/{courseId}/sessions`
+
+Create a session (class schedule) for a specific course. Validates that the course belongs to the caller's institute before allowing the session to be created.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `courseId` | `int` | Course ID |
+
+**Request Body**
+```json
+{
+  "scheduledAt": "2026-07-01T10:00:00Z",
+  "durationMin": 120,
+  "roomId": "Room A"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `scheduledAt` | `DateTime` | Yes | Session date and time (ISO 8601 UTC) |
+| `durationMin` | `int` | Yes | Duration in minutes |
+| `roomId` | `string?` | No | Room identifier (max 50) |
+
+**Response** `201 Created`
+```json
+{
+  "status": "success",
+  "message": "สร้างตารางเรียนสำเร็จ",
+  "data": {
+    "sessionId": 10,
+    "scheduledAt": "2026-07-01T10:00:00Z"
+  }
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Course not found | 400 | `{ "status": "error", "errorCode": "COURSE_NOT_FOUND", "message": "ไม่พบคอร์สเรียนหรือไม่มีสิทธิ์เข้าถึง" }` |
+
+---
+
+### GET `/courses/{courseId}/sessions`
+
+List all sessions for a course (institute-scoped via the course).
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `courseId` | `int` | Course ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "sessions": [
+      {
+        "id": 10,
+        "courseId": 1,
+        "courseName": "คณิตศาสตร์ ม.1 เทอม 1",
+        "scheduledAt": "2026-07-01T10:00:00Z",
+        "durationMin": 120,
+        "roomId": "Room A",
+        "status": "scheduled"
+      }
+    ]
+  }
+}
+```
+
+**Session status enum:** `scheduled` | `completed` | `cancelled`
 
 ---
 
@@ -921,7 +1037,7 @@ Enroll a student in a course. The course must belong to the caller's institute.
 
 ### POST `/attendance/scan`
 
-Check-in a student by scanning their QR token. Decrements their `sessionsRemaining` by 1 and sends a LINE notification to parents. The student's institute **must** match the caller's institute.
+Check-in a student by scanning their QR token. Decrements their `sessionsRemaining` by 1 and sends a LINE notification to parents. The student's institute **must** match the caller's institute. Attendance recording and session decrement run in a single atomic transaction. LINE notification is fire-and-forget.
 
 **Request Body**
 ```json
@@ -1081,7 +1197,7 @@ Record a new payment for an enrollment. Generates an invoice number and sends LI
 }
 ```
 
-**Behavior:** The payment amount is automatically added to the enrollment's `paidAmount` total.
+**Behavior:** The payment amount is automatically added to the enrollment's `paidAmount` total. All operations run in an atomic transaction with `MySqlRetryingExecutionStrategy`.
 
 **Errors**
 
@@ -1138,7 +1254,393 @@ List payment history for the current institute with optional filters and paginat
 
 ---
 
-## 10. Products (Legacy)
+## 11. Leave Requests  🔒 All endpoints
+
+> **Scope:** All queries are filtered by institute via student's institute. Only admin/teacher roles should access approve/reject endpoints.
+
+### GET `/leave-requests`
+
+List leave requests with optional status filter and pagination. Default view shows pending requests first.
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `status` | `string?` | — | Filter by status (`pending`, `approved`, `rejected`) |
+| `page` | `int` | 1 | Page number (1-based) |
+| `limit` | `int` | 20 | Items per page (1-100) |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "requests": [
+      {
+        "id": 1,
+        "studentId": 5,
+        "studentName": "ด.ช. สมชาย รักเรียน",
+        "sessionId": 10,
+        "sessionScheduledAt": "2026-07-01T10:00:00Z",
+        "reason": "ป่วย",
+        "type": "leave",
+        "status": "pending",
+        "requestedAt": "2026-06-30T08:00:00Z"
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "totalItems": 1
+    }
+  }
+}
+```
+
+**Leave status enum:** `pending` | `approved` | `rejected`
+
+---
+
+### POST `/leave-requests/{id}/approve`
+
+Approve a leave request. Requires admin/teacher role. Creates a makeup credit (1 session, expires in 3 months) as part of the same atomic transaction.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | `int` | Leave request ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "อนุมัติคำร้องขอสำเร็จ"
+}
+```
+
+**Business Logic:**
+1. Validates request exists and belongs to caller's institute
+2. Checks current status is `pending`
+3. In a single transaction: sets `status = "approved"`, sets `approvedBy = currentUserId`, inserts a `makeup_credit` row (studentId, courseId, grantedAt, expiresAt=+3 months)
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Not found | 400 | `{ "status": "error", "errorCode": "NOT_FOUND", "message": "ไม่พบคำร้องขอ" }` |
+| Already processed | 400 | `{ "status": "error", "errorCode": "INVALID_STATUS", "message": "ไม่สามารถอนุมัติคำร้องขอที่มีสถานะ 'approved' ได้" }` |
+
+---
+
+### POST `/leave-requests/{id}/reject`
+
+Reject a leave request. Requires admin/teacher role. No makeup credit is created.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | `int` | Leave request ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "ปฏิเสธคำร้องขอสำเร็จ"
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Not found | 400 | `{ "status": "error", "errorCode": "NOT_FOUND", "message": "ไม่พบคำร้องขอ" }` |
+| Already processed | 400 | `{ "status": "error", "errorCode": "INVALID_STATUS", "message": "ไม่สามารถปฏิเสธคำร้องขอที่มีสถานะ 'rejected' ได้" }` |
+
+---
+
+## 12. Homeworks  🔒 All endpoints (admin/teacher for write, student for read)
+
+> **Scope:** Homework and submission queries are institute-scoped via the course.
+
+### POST `/homeworks`
+
+Create a new homework assignment for a course.
+
+**Request Body**
+```json
+{
+  "courseId": 1,
+  "title": "แบบฝึกหัดบทที่ 1",
+  "description": "ทำข้อ 1-10 หน้า 15",
+  "fileUrl": "https://storage.example.com/files/hw1.pdf",
+  "dueAt": "2026-07-10T23:59:00Z"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `courseId` | `int` | Yes | Course ID |
+| `title` | `string` | Yes | Homework title (max 255) |
+| `description` | `string?` | No | Homework description (text) |
+| `fileUrl` | `string?` | No | URL to attached file (max 1000) |
+| `dueAt` | `DateTime` | Yes | Due date (ISO 8601 UTC) |
+
+**Response** `201 Created`
+```json
+{
+  "status": "success",
+  "message": "สร้างการบ้านสำเร็จ",
+  "data": {
+    "homeworkId": 1,
+    "title": "แบบฝึกหัดบทที่ 1",
+    "dueAt": "2026-07-10T23:59:00Z"
+  }
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Missing title | 400 | `{ "status": "error", "errorCode": "TITLE_REQUIRED", "message": "กรุณาระบุหัวข้อการบ้าน" }` |
+
+---
+
+### GET `/homeworks/course/{courseId}`
+
+List all homework assignments for a course.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `courseId` | `int` | Course ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "homeworks": [
+      {
+        "id": 1,
+        "title": "แบบฝึกหัดบทที่ 1",
+        "description": "ทำข้อ 1-10 หน้า 15",
+        "fileUrl": "https://storage.example.com/files/hw1.pdf",
+        "dueAt": "2026-07-10T23:59:00Z",
+        "submissionCount": 5
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET `/homeworks/{homeworkId}/submissions`
+
+List all student submissions for a homework. Institute-scoped via the homework's course.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `homeworkId` | `int` | Homework ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "submissions": [
+      {
+        "id": 1,
+        "studentId": 5,
+        "studentName": "ด.ช. สมชาย รักเรียน",
+        "submittedAt": "2026-07-05T14:30:00Z",
+        "fileUrl": "https://storage.example.com/files/submission1.pdf",
+        "score": null,
+        "feedback": null
+      }
+    ]
+  }
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Not found | 404 | `{ "status": "error", "errorCode": "NOT_FOUND", "message": "ไม่พบการบ้าน" }` |
+
+---
+
+### PUT `/homeworks/submissions/{submissionId}/grade`
+
+Grade a student's homework submission.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `submissionId` | `int` | Submission ID |
+
+**Request Body**
+```json
+{
+  "score": 9.5,
+  "feedback": "ทำได้ดีมากครับ"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `score` | `decimal` | Yes | Score (e.g., 9.5 out of 10) |
+| `feedback` | `string?` | No | Teacher feedback comment |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "ให้คะแนนสำเร็จ"
+}
+```
+
+---
+
+## 13. Skill Scores  🔒 All endpoints (admin/teacher)
+
+> **Scope:** Skill scores are tied to students within the institute. Batch operations use upsert logic.
+
+### GET `/skill-scores/student/{studentId}`
+
+Get all skill scores for a student across topics.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `studentId` | `int` | Student ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "studentId": 5,
+    "studentName": "คณิตศาสตร์",
+    "scores": [
+      {
+        "id": 10,
+        "topicId": 1,
+        "topicName": "ความเข้าใจ",
+        "score": 4.5,
+        "note": "เข้าใจดี",
+        "updatedAt": "2026-07-01T15:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### POST `/skill-scores/batch-update`
+
+Batch insert or update skill scores for a student. Uses upsert logic — if a score already exists for the student+topic pair, it is updated; otherwise a new row is inserted. All operations run in a single save context.
+
+**Request Body**
+```json
+{
+  "studentId": 5,
+  "scores": [
+    { "topicId": 1, "score": 4.5, "note": "เข้าใจดี" },
+    { "topicId": 2, "score": 3.0, "note": null }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `studentId` | `int` | Yes | Student ID |
+| `scores` | `array` | Yes | Array of score items |
+| `scores[].topicId` | `int` | Yes | Skill topic ID |
+| `scores[].score` | `decimal` | Yes | Score value |
+| `scores[].note` | `string?` | No | Optional note |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "บันทึกคะแนนสำเร็จ"
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Empty scores array | 400 | `{ "status": "error", "errorCode": "NO_SCORES", "message": "กรุณาระบุคะแนนอย่างน้อย 1 รายการ" }` |
+
+---
+
+### GET `/skill-scores/topics`
+
+List skill topics for a course.
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `courseId` | `int` | (required) | Course ID |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "data": {
+    "topics": [
+      { "id": 1, "name": "ความเข้าใจ", "orderIndex": 1 },
+      { "id": 2, "name": "การมีส่วนร่วม", "orderIndex": 2 }
+    ]
+  }
+}
+```
+
+---
+
+### POST `/skill-scores/topics`
+
+Create a new skill topic for a course.
+
+**Request Body**
+```json
+{
+  "courseId": 1,
+  "name": "ความเข้าใจ",
+  "orderIndex": 1
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `courseId` | `int` | Yes | Course ID |
+| `name` | `string` | Yes | Topic display name (max 255) |
+| `orderIndex` | `int` | Yes | Sort order (lower = first) |
+
+**Response** `201 Created`
+```json
+{
+  "status": "success",
+  "message": "สร้างหัวข้อทักษะสำเร็จ"
+}
+```
+
+---
+
+## 14. Products (Legacy)
 
 > Products are **not** institute-scoped. These endpoints are public and use an in-memory repository.
 
@@ -1222,7 +1724,7 @@ Delete a product.
 
 ---
 
-## 11. System  ⃝ Public
+## 15. System  ⃝ Public
 
 ### GET `/health`
 
@@ -1264,13 +1766,13 @@ Database connectivity test.
 
 ---
 
-## 12. CORS
+## 16. CORS
 
 All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader`, `AllowAnyMethod`).
 
 ---
 
-## 13. Data Models (Reference)
+## 17. Data Models (Reference)
 
 ### UserRole Enum
 | Value |
@@ -1279,6 +1781,26 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 | `teacher` |
 | `parent` |
 | `student` |
+
+### Session Status
+| Value | Description |
+|-------|-------------|
+| `scheduled` | Upcoming session |
+| `completed` | Session has ended |
+| `cancelled` | Session was cancelled |
+
+### Leave Request Status
+| Value | Description |
+|-------|-------------|
+| `pending` | Awaiting approval |
+| `approved` | Approved by admin/teacher |
+| `rejected` | Rejected by admin/teacher |
+
+### Leave Request Type
+| Value |
+|-------|
+| `leave` |
+| `makeup` |
 
 ### Attendance Status
 | Value | Description |
@@ -1298,7 +1820,7 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 
 ---
 
-## 14. Complete Route Table
+## 18. Complete Route Table
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
@@ -1313,22 +1835,35 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 | `POST` | `/users/reset-password` | ⃝ | Reset password |
 | `GET` | `/students` | 🔒 | List students (paginated, searchable, institute-scoped) |
 | `GET` | `/students/{id}` | 🔒 | Student profile |
-| `POST` | `/students` | 🔒 | Create student (auto-assigned to institute) |
+| `POST` | `/students` | 🔒 | Create student + parents + PDPA (auto-assigned institute) |
 | `PUT` | `/students/{id}` | 🔒 | Update student (403 on cross-institute) |
 | `GET` | `/students/{id}/qr` | 🔒 | Generate QR token (403 on cross-institute) |
-| `GET` | `/teachers` | 🔒 | List teachers (institute-scoped) |
-| `GET` | `/teachers/{id}` | 🔒 | Get teacher |
-| `POST` | `/teachers` | 🔒 | Create teacher (auto-assigned to institute) |
+| `GET` | `/teachers` | 🔒 | List teachers (institute-scoped, returns DTO) |
+| `GET` | `/teachers/{id}` | 🔒 | Get teacher (403 on cross-institute) |
+| `POST` | `/teachers` | 🔒 | Create teacher via `TeacherRequest` DTO |
 | `GET` | `/courses` | 🔒 | List courses (institute-scoped) |
 | `GET` | `/courses/{id}` | 🔒 | Get course |
-| `POST` | `/courses` | 🔒 | Create course (auto-assigned to institute) |
-| `PUT` | `/courses/{id}` | 🔒 | Update course |
+| `POST` | `/courses` | 🔒 | Create course via `CreateCourseRequest` |
+| `PUT` | `/courses/{id}` | 🔒 | Update course (403 on cross-institute) |
+| `GET` | `/courses/{courseId}/sessions` | 🔒 | List sessions for course |
+| `POST` | `/courses/{courseId}/sessions` | 🔒 | Create session (validates course belongs to institute) |
 | `POST` | `/enrollments` | 🔒 | Enroll student in course (institute-scoped) |
-| `POST` | `/attendance/scan` | 🔒 | QR check-in (validates student's institute) |
-| `POST` | `/attendance/manual` | 🔒 | Manual attendance record |
+| `POST` | `/attendance/scan` | 🔒 | QR check-in (validates student's institute, atomic transaction) |
+| `POST` | `/attendance/manual` | 🔒 | Manual attendance record (atomic transaction) |
 | `GET` | `/attendance/daily` | 🔒 | Daily attendance report (institute-scoped) |
-| `POST` | `/payments` | 🔒 | Record payment (institute-scoped) |
+| `POST` | `/payments` | 🔒 | Record payment (institute-scoped, atomic transaction) |
 | `GET` | `/payments` | 🔒 | Payment history (institute-scoped) |
+| `GET` | `/leave-requests` | 🔒 | List leave requests (status filter, paginated) |
+| `POST` | `/leave-requests/{id}/approve` | 🔒 | Approve leave (creates makeup credit in transaction) |
+| `POST` | `/leave-requests/{id}/reject` | 🔒 | Reject leave |
+| `POST` | `/homeworks` | 🔒 | Create homework assignment |
+| `GET` | `/homeworks/course/{courseId}` | 🔒 | List homeworks for course |
+| `GET` | `/homeworks/{homeworkId}/submissions` | 🔒 | List submissions for homework |
+| `PUT` | `/homeworks/submissions/{submissionId}/grade` | 🔒 | Grade a submission |
+| `GET` | `/skill-scores/student/{studentId}` | 🔒 | Get student's skill scores |
+| `POST` | `/skill-scores/batch-update` | 🔒 | Batch upsert skill scores |
+| `GET` | `/skill-scores/topics` | 🔒 | List skill topics |
+| `POST` | `/skill-scores/topics` | 🔒 | Create skill topic |
 | `GET` | `/products` | ⃝ | List products |
 | `GET` | `/products/{id}` | ⃝ | Get product |
 | `POST` | `/products` | ⃝ | Create product |

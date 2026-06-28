@@ -46,3 +46,33 @@ export {
   createCourse,
   updateCourse,
 } from './course-service';
+export {
+  sessionService,
+  getSessions,
+  createSession,
+} from './session-service';
+export {
+  leaveRequestService,
+  getLeaveRequests,
+  getLeaveRequestById,
+  approveLeaveRequest,
+  rejectLeaveRequest,
+} from './leave-request-service';
+export {
+  homeworkService,
+  getHomeworks,
+  getHomeworkById,
+  createHomework,
+  getSubmissions,
+  gradeSubmission,
+} from './homework-service';
+export {
+  skillScoreService,
+  getSkillTopics,
+  getSkillScores,
+  batchUpdateSkillScores,
+} from './skill-score-service';
+export {
+  enrollmentService,
+  enrollStudent,
+} from './enrollment-service';

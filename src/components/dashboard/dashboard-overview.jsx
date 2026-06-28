@@ -1,76 +1,106 @@
+import { useState, useEffect } from 'preact/hooks';
+import { route } from 'preact-router';
 import { StatCard } from './stat-card';
+import { leaveRequestService } from '../../services';
 
-const mockData = {
+const defaultData = {
   students: {
     title: 'นักเรียน (Active)',
-    value: '847',
-    trendText: '+12%',
-    trendDirection: 'up',
+    value: '—',
+    trendText: '',
+    trendDirection: 'neutral',
     isAlertState: false,
   },
   attendance: {
     title: 'เช็คชื่อวันนี้',
-    value: '89/100',
-    trendText: 'มาแล้ว 89/100',
+    value: '—',
+    trendText: '',
     trendDirection: 'neutral',
     isAlertState: false,
   },
   requests: {
     title: 'คำขอลา/ชดเชย',
-    value: '3',
+    value: '—',
     trendText: 'รอตรวจสอบ',
     trendDirection: 'neutral',
-    isAlertState: true,
+    isAlertState: false,
   },
   revenue: {
     title: 'รายได้ (เดือนนี้)',
-    value: '฿45,678',
-    trendText: '+8%',
+    value: '฿—',
+    trendText: '',
     trendDirection: 'up',
     isAlertState: false,
   },
 };
 
 export function DashboardOverviewWidget() {
+  const [data, setData] = useState(defaultData);
+
+  useEffect(() => {
+    leaveRequestService.getLeaveRequests({ status: 'pending' })
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        const requests = payload.requests || (Array.isArray(payload) ? payload : []);
+        const count = requests.length;
+        setData((prev) => ({
+          ...prev,
+          requests: {
+            ...prev.requests,
+            value: String(count),
+            trendText: count > 0 ? 'รอตรวจสอบ' : 'ไม่มีรายการใหม่',
+            isAlertState: count > 0,
+          },
+        }));
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div class="grid grid-cols-2 gap-4 mb-8">
       <StatCard
         id="students"
-        title={mockData.students.title}
-        value={mockData.students.value}
-        trendText={mockData.students.trendText}
-        trendDirection={mockData.students.trendDirection}
-        isAlertState={mockData.students.isAlertState}
+        title={data.students.title}
+        value={data.students.value}
+        trendText={data.students.trendText}
+        trendDirection={data.students.trendDirection}
+        isAlertState={data.students.isAlertState}
         icon={<UsersGroupIcon class="h-5 w-5" />}
       />
 
       <StatCard
         id="attendance"
-        title={mockData.attendance.title}
-        value={mockData.attendance.value}
-        trendText={mockData.attendance.trendText}
-        trendDirection={mockData.attendance.trendDirection}
-        isAlertState={mockData.attendance.isAlertState}
+        title={data.attendance.title}
+        value={data.attendance.value}
+        trendText={data.attendance.trendText}
+        trendDirection={data.attendance.trendDirection}
+        isAlertState={data.attendance.isAlertState}
         icon={<QrCheckIcon class="h-5 w-5" />}
       />
 
-      <StatCard
-        id="requests"
-        title={mockData.requests.title}
-        value={mockData.requests.value}
-        trendText={mockData.requests.trendText}
-        trendDirection={mockData.requests.trendDirection}
-        isAlertState={mockData.requests.isAlertState}
-        icon={<ClipboardDocIcon class="h-5 w-5" />}
-      />
+      <button
+        type="button"
+        onClick={() => route('/admin/requests')}
+        class="w-full text-left"
+      >
+        <StatCard
+          id="requests"
+          title={data.requests.title}
+          value={data.requests.value}
+          trendText={data.requests.trendText}
+          trendDirection={data.requests.trendDirection}
+          isAlertState={data.requests.isAlertState}
+          icon={<ClipboardDocIcon class="h-5 w-5" />}
+        />
+      </button>
 
       <StatCard
         id="revenue"
-        title={mockData.revenue.title}
-        value={mockData.revenue.value}
-        trendText={mockData.revenue.trendText}
-        trendDirection={mockData.revenue.trendDirection}
-        isAlertState={mockData.revenue.isAlertState}
+        title={data.revenue.title}
+        value={data.revenue.value}
+        trendText={data.revenue.trendText}
+        trendDirection={data.revenue.trendDirection}
+        isAlertState={data.revenue.isAlertState}
         icon={<BanknotesIcon class="h-5 w-5" />}
       />
     </div>
