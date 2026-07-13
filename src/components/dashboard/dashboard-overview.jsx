@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { StatCard } from './stat-card';
-import { leaveRequestService } from '../../services';
+import { studentService, attendanceService, financeService, leaveRequestService } from '../../services';
 
 const defaultData = {
   students: {
-    title: 'นักเรียน (Active)',
+    title: 'นักเรียน',
     value: '—',
     trendText: '',
     trendDirection: 'neutral',
@@ -38,6 +38,33 @@ export function DashboardOverviewWidget() {
   const [data, setData] = useState(defaultData);
 
   useEffect(() => {
+    studentService.getStudents({ limit: 1 })
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        const total = payload.pagination?.totalItems ?? (Array.isArray(payload.students) ? payload.students.length : 0);
+        setData((prev) => ({
+          ...prev,
+          students: { ...prev.students, value: String(total), trendText: `ทั้งหมด ${total} คน` },
+        }));
+      })
+      .catch(() => {});
+
+    attendanceService.getDailyAttendance()
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        const attendances = payload.attendances || [];
+        const presentCount = attendances.filter((a) => a.status === 'present' || a.status === 'late').length;
+        setData((prev) => ({
+          ...prev,
+          attendance: {
+            ...prev.attendance,
+            value: `${presentCount}/${attendances.length}`,
+            trendText: `มาแล้ว ${presentCount}/${attendances.length}`,
+          },
+        }));
+      })
+      .catch(() => {});
+
     leaveRequestService.getLeaveRequests({ status: 'pending' })
       .then((res) => {
         const payload = res.data?.data || res.data || {};
@@ -50,6 +77,22 @@ export function DashboardOverviewWidget() {
             value: String(count),
             trendText: count > 0 ? 'รอตรวจสอบ' : 'ไม่มีรายการใหม่',
             isAlertState: count > 0,
+          },
+        }));
+      })
+      .catch(() => {});
+
+    financeService.getPayments({ limit: 1 })
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        const summary = payload.summary;
+        const totalAmount = summary?.totalAmountInRange;
+        setData((prev) => ({
+          ...prev,
+          revenue: {
+            ...prev.revenue,
+            value: totalAmount != null ? `฿${Number(totalAmount).toLocaleString()}` : '฿—',
+            trendText: totalAmount != null ? 'เดือนนี้' : '',
           },
         }));
       })

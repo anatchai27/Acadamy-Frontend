@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { Button, showToast } from '../../components/ui';
+import { Button, showToast, showConfirm } from '../../components/ui';
 import { leaveRequestService } from '../../services';
 
 const STATUS_MAP = {
@@ -41,6 +41,14 @@ export function RequestsPage({ path }) {
   }, [fetchRequests]);
 
   const handleApprove = async (id) => {
+    const confirmed = await showConfirm({
+      title: 'ยืนยันการอนุมัติ',
+      message: 'คุณแน่ใจว่าต้องการอนุมัติคำร้องขอนี้ใช่หรือไม่?',
+      yesLabel: 'อนุมัติ',
+      cancelLabel: 'ยกเลิก',
+    });
+    if (!confirmed) return;
+
     setActionLoading(id);
     try {
       await leaveRequestService.approveLeaveRequest(id);
@@ -55,6 +63,14 @@ export function RequestsPage({ path }) {
   };
 
   const handleReject = async (id) => {
+    const confirmed = await showConfirm({
+      title: 'ยืนยันการปฏิเสธ',
+      message: 'คุณแน่ใจว่าต้องการปฏิเสธคำร้องขอนี้ใช่หรือไม่?',
+      yesLabel: 'ปฏิเสธ',
+      cancelLabel: 'ยกเลิก',
+    });
+    if (!confirmed) return;
+
     setActionLoading(id);
     try {
       await leaveRequestService.rejectLeaveRequest(id);

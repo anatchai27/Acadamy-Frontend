@@ -1,9 +1,10 @@
 # Academy API Specification
 
 > **Base URL:** `https://your-domain.com/api`
-> **Version:** 2.1
-> **Updated:** 2026-06-28
+> **Version:** 2.2
+> **Updated:** 2026-07-03
 > **Architecture:** Multi-Tenant (Institute-scoped), Database-First (no EF migrations)
+> **Test Coverage:** 163 unit tests (xUnit + Moq + EF Core InMemory)
 
 ---
 
@@ -145,9 +146,19 @@ Log in with email and password to receive a JWT token containing `institute_id`.
   "token": "eyJhbGciOi...",
   "userId": 1,
   "email": "user@example.com",
-  "role": "admin"
+  "role": "admin",
+  "refreshToken": "eyJhbGciOi...",
+  "instituteId": 5
 }
 ```
+| Field | Type | Description |
+|-------|------|-------------|
+| `token` | `string` | Access JWT (includes `institute_id` claim) |
+| `userId` | `int` | User primary key |
+| `email` | `string` | Login email |
+| `role` | `string` | `admin`, `teacher`, `parent`, or `student` |
+| `refreshToken` | `string` | Refresh JWT for token renewal |
+| `instituteId` | `int?` | Institute FK (`null` if not assigned) |
 
 > The JWT payload includes `institute_id` if the user belongs to one.
 
@@ -284,7 +295,81 @@ Log out (stateless — client should discard the token).
 
 ---
 
+### POST `/auth/refresh-token` ⃝ Public
+
+Exchange a valid refresh token for a new access token.
+
+**Request Body**
+```json
+{
+  "token": "string (required — the refresh JWT)"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "ต่ออายุ Token สำเร็จ",
+  "token": "eyJhbGciOi...",
+  "refreshToken": "eyJhbGciOi...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "role": "admin",
+    "instituteId": 5
+  }
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Missing token | 400 | `{ "status": "error", "error_code": "MISSING_TOKEN", "message": "Token is required." }` |
+| Invalid/expired token | 401 | (empty) |
+
+---
+
+### POST `/auth/refresh-token` ⃝ Public
+
+Exchange a valid refresh token for a new access token pair.
+
+**Request Body**
+```json
+{
+  "token": "string (required — the refresh JWT)"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "message": "ต่ออายุ Token สำเร็จ",
+  "token": "eyJhbGciOi...",
+  "refreshToken": "eyJhbGciOi...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "role": "admin",
+    "instituteId": 5
+  }
+}
+```
+
+**Errors**
+
+| Code | Status | Body |
+|------|--------|------|
+| Missing token | 400 | `{ "status": "error", "error_code": "MISSING_TOKEN", "message": "Token is required." }` |
+| Invalid/expired token | 401 | (empty) |
+
+---
+
 ## 3. Users
+
+> **Scope:** All user queries are filtered by institute. Admin-only for list/detail.
 
 ### GET `/users` 🔒 Admin only
 
@@ -292,24 +377,24 @@ List all users in the current institute.
 
 **Response** `200 OK`
 ```json
-[
-  {
-    "id": 1,
-    "instituteId": 1,
-    "email": "admin@example.com",
-    "phone": null,
-    "role": "admin",
-    "lineUserId": null,
-    "passwordHash": "$2a$11$...",
-    "resetToken": null,
-    "resetTokenExpiry": null,
-    "createdAt": "2026-06-01T10:00:00Z",
-    "updatedAt": "2026-06-01T10:00:00Z",
-    "institute": null,
-    "student": null,
-    "teacher": null
-  }
-]
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 1,
+      "instituteId": 1,
+      "email": "admin@example.com",
+      "phone": null,
+      "role": "admin",
+      "lineUserId": null,
+      "passwordHash": "$2a$11$...",
+      "resetToken": null,
+      "resetTokenExpiry": null,
+      "createdAt": "2026-06-01T10:00:00Z",
+      "updatedAt": "2026-06-01T10:00:00Z"
+    }
+  ]
+}
 ```
 
 ---
@@ -554,7 +639,7 @@ Get a student's full profile including parents. Returns 404 if the student is no
 
 ### POST `/students`
 
-Create a new student with parents and PDPA consent. The student is automatically assigned to the current institute.
+Create a new student with parents and PDPA consent in a single atomic transaction (via `CreateExecutionStrategy`). The student is automatically assigned to the current institute.
 
 **Request Body**
 ```json
@@ -564,8 +649,8 @@ Create a new student with parents and PDPA consent. The student is automatically
     "nickname": "string?",
     "grade": "string?",
     "school": "string?",
-    "photoUrl": "string?",
-    "medicalInfo": "string?"
+    "photoUrl": "string? (max 255)",
+    "medicalInfo": "string? (text)"
   },
   "parents": [
     {
@@ -1254,7 +1339,7 @@ List payment history for the current institute with optional filters and paginat
 
 ---
 
-## 11. Leave Requests  🔒 All endpoints
+## 10. Leave Requests  🔒 All endpoints
 
 > **Scope:** All queries are filtered by institute via student's institute. Only admin/teacher roles should access approve/reject endpoints.
 
@@ -1360,7 +1445,7 @@ Reject a leave request. Requires admin/teacher role. No makeup credit is created
 
 ---
 
-## 12. Homeworks  🔒 All endpoints (admin/teacher for write, student for read)
+## 11. Homeworks  🔒 All endpoints (admin/teacher for write, student for read)
 
 > **Scope:** Homework and submission queries are institute-scoped via the course.
 
@@ -1510,7 +1595,7 @@ Grade a student's homework submission.
 
 ---
 
-## 13. Skill Scores  🔒 All endpoints (admin/teacher)
+## 12. Skill Scores  🔒 All endpoints (admin/teacher)
 
 > **Scope:** Skill scores are tied to students within the institute. Batch operations use upsert logic.
 
@@ -1640,7 +1725,7 @@ Create a new skill topic for a course.
 
 ---
 
-## 14. Products (Legacy)
+## 13. Products (Legacy)
 
 > Products are **not** institute-scoped. These endpoints are public and use an in-memory repository.
 
@@ -1724,7 +1809,7 @@ Delete a product.
 
 ---
 
-## 15. System  ⃝ Public
+## 14. System  ⃝ Public
 
 ### GET `/health`
 
@@ -1766,13 +1851,13 @@ Database connectivity test.
 
 ---
 
-## 16. CORS
+## 15. CORS
 
 All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader`, `AllowAnyMethod`).
 
 ---
 
-## 17. Data Models (Reference)
+## 16. Data Models (Reference)
 
 ### UserRole Enum
 | Value |
@@ -1820,54 +1905,55 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 
 ---
 
-## 18. Complete Route Table
+## 17. Complete Route Table
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/auth/login` | ⃝ | Login (JWT includes `institute_id`) |
-| `POST` | `/auth/register-institute` | ⃝ | Register institute + admin (returns JWT) |
+| `POST` | `/auth/login` | ⃝ | Login (JWT + refreshToken + institute_id) |
+| `POST` | `/auth/register-institute` | ⃝ | Register institute + admin in atomic transaction (returns JWT) |
+| `POST` | `/auth/refresh-token` | ⃝ | Refresh expired access token |
 | `GET` | `/auth/me` | 🔒 | Current user profile |
-| `POST` | `/auth/logout` | 🔒 | Logout |
-| `GET` | `/users` | 🔒 | List all users |
-| `GET` | `/users/{id}` | 🔒 | Get user by ID |
-| `POST` | `/users/register` | ⃝ | Register (creates institute + teacher for admin role) |
-| `POST` | `/users/forget-password` | ⃝ | Request password reset |
-| `POST` | `/users/reset-password` | ⃝ | Reset password |
+| `POST` | `/auth/logout` | 🔒 | Logout (stateless) |
+| `GET` | `/users` | 🔒 | List all users (admin only, institute-scoped) |
+| `GET` | `/users/{id}` | 🔒 | Get user by ID (admin only) |
+| `POST` | `/users/register` | ⃝ | Register (creates institute + teacher for admin role in transaction) |
+| `POST` | `/users/forget-password` | ⃝ | Request password reset (always returns 200) |
+| `POST` | `/users/reset-password` | ⃝ | Reset password with token |
 | `GET` | `/students` | 🔒 | List students (paginated, searchable, institute-scoped) |
-| `GET` | `/students/{id}` | 🔒 | Student profile |
-| `POST` | `/students` | 🔒 | Create student + parents + PDPA (auto-assigned institute) |
-| `PUT` | `/students/{id}` | 🔒 | Update student (403 on cross-institute) |
-| `GET` | `/students/{id}/qr` | 🔒 | Generate QR token (403 on cross-institute) |
-| `GET` | `/teachers` | 🔒 | List teachers (institute-scoped, returns DTO) |
-| `GET` | `/teachers/{id}` | 🔒 | Get teacher (403 on cross-institute) |
+| `GET` | `/students/{id}` | 🔒 | Student profile with parents |
+| `POST` | `/students` | 🔒 | Create student + parents + PDPA in atomic transaction |
+| `PUT` | `/students/{id}` | 🔒 | Update student info / parents (403 on cross-institute) |
+| `GET` | `/students/{id}/qr` | 🔒 | Generate/rotate QR token (403 on cross-institute) |
+| `GET` | `/teachers` | 🔒 | List teachers (institute-scoped, DTO projection — no entity leak) |
+| `GET` | `/teachers/{id}` | 🔒 | Get teacher by ID (403 on cross-institute) |
 | `POST` | `/teachers` | 🔒 | Create teacher via `TeacherRequest` DTO |
-| `GET` | `/courses` | 🔒 | List courses (institute-scoped) |
-| `GET` | `/courses/{id}` | 🔒 | Get course |
-| `POST` | `/courses` | 🔒 | Create course via `CreateCourseRequest` |
-| `PUT` | `/courses/{id}` | 🔒 | Update course (403 on cross-institute) |
+| `GET` | `/courses` | 🔒 | List courses (search + teacher filter, DTO projection) |
+| `GET` | `/courses/{id}` | 🔒 | Get course with teacher name |
+| `POST` | `/courses` | 🔒 | Create course via `CreateCourseRequest` DTO |
+| `PUT` | `/courses/{id}` | 🔒 | Update course (partial, 403 on cross-institute) |
 | `GET` | `/courses/{courseId}/sessions` | 🔒 | List sessions for course |
-| `POST` | `/courses/{courseId}/sessions` | 🔒 | Create session (validates course belongs to institute) |
-| `POST` | `/enrollments` | 🔒 | Enroll student in course (institute-scoped) |
-| `POST` | `/attendance/scan` | 🔒 | QR check-in (validates student's institute, atomic transaction) |
-| `POST` | `/attendance/manual` | 🔒 | Manual attendance record (atomic transaction) |
+| `POST` | `/courses/{courseId}/sessions` | 🔒 | Create session (validates course institute ownership) |
+| `POST` | `/enrollments` | 🔒 | Enroll student in course (institute-scoped course lookup) |
+| `POST` | `/attendance/scan` | 🔒 | QR check-in (atomic: record + decrement sessions) |
+| `POST` | `/attendance/manual` | 🔒 | Manual attendance (atomic: record + conditional decrement) |
 | `GET` | `/attendance/daily` | 🔒 | Daily attendance report (institute-scoped) |
-| `POST` | `/payments` | 🔒 | Record payment (institute-scoped, atomic transaction) |
-| `GET` | `/payments` | 🔒 | Payment history (institute-scoped) |
+| `POST` | `/payments` | 🔒 | Record payment (atomic: insert payment + update paidAmount) |
+| `GET` | `/payments` | 🔒 | Payment history (paginated, institute-scoped, summary total) |
 | `GET` | `/leave-requests` | 🔒 | List leave requests (status filter, paginated) |
-| `POST` | `/leave-requests/{id}/approve` | 🔒 | Approve leave (creates makeup credit in transaction) |
-| `POST` | `/leave-requests/{id}/reject` | 🔒 | Reject leave |
-| `POST` | `/homeworks` | 🔒 | Create homework assignment |
+| `POST` | `/leave-requests/{id}/approve` | 🔒 | Approve leave + insert makeup credit in atomic transaction |
+| `POST` | `/leave-requests/{id}/reject` | 🔒 | Reject leave (no makeup credit) |
+| `POST` | `/homeworks` | 🔒 | Create homework (assigns AssignedBy from JWT) |
 | `GET` | `/homeworks/course/{courseId}` | 🔒 | List homeworks for course |
-| `GET` | `/homeworks/{homeworkId}/submissions` | 🔒 | List submissions for homework |
-| `PUT` | `/homeworks/submissions/{submissionId}/grade` | 🔒 | Grade a submission |
-| `GET` | `/skill-scores/student/{studentId}` | 🔒 | Get student's skill scores |
-| `POST` | `/skill-scores/batch-update` | 🔒 | Batch upsert skill scores |
-| `GET` | `/skill-scores/topics` | 🔒 | List skill topics |
-| `POST` | `/skill-scores/topics` | 🔒 | Create skill topic |
-| `GET` | `/products` | ⃝ | List products |
+| `GET` | `/homeworks/{homeworkId}/submissions` | 🔒 | List submissions for homework (institute-scoped) |
+| `PUT` | `/homeworks/submissions/{submissionId}/grade` | 🔒 | Grade a submission (score + feedback) |
+| `GET` | `/skill-scores/student/{studentId}` | 🔒 | Get student's skill scores across topics |
+| `POST` | `/skill-scores/batch-update` | 🔒 | Batch upsert skill scores (insert or update in loop) |
+| `GET` | `/skill-scores/topics` | 🔒 | List skill topics by courseId |
+| `POST` | `/skill-scores/topics` | 🔒 | Create skill topic for course |
+| `GET` | `/products` | ⃝ | List products (in-memory, not institute-scoped) |
 | `GET` | `/products/{id}` | ⃝ | Get product |
 | `POST` | `/products` | ⃝ | Create product |
 | `PUT` | `/products/{id}` | ⃝ | Update product |
 | `DELETE` | `/products/{id}` | ⃝ | Delete product |
-| `GET` | `/health` | ⃝ | Health check |
-| `GET` | `/v1/test-connection` | ⃝ | DB connection test |
+| `GET` | `/health` | ⃝ | Health check (TiDB connectivity) |
+| `GET` | `/v1/test-connection` | ⃝ | Database connection test |
