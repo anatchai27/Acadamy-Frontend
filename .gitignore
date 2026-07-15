@@ -1,2 +1,7 @@
 /node_modules
 dist/
+API/academy-API.Tests/bin/
+API/academy-API.Tests/obj/
+API/bin/
+API/obj/
+Front/node_modules/
