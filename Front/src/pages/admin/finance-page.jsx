@@ -1,58 +1,74 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DataTable, SolidInput, Button, StatusBadge, showToast } from '../../components/ui';
-import { financeService } from '../../services';
-import { useAbortController } from '../../hooks';
-
-const mockCourses = [
-  { id: 1, name: 'คณิตศาสตร์ ป.4', price: 2500 },
-  { id: 2, name: 'ภาษาอังกฤษ ม.1', price: 3000 },
-  { id: 3, name: 'ฟิสิกส์ ม.4', price: 3500 },
-];
-
-const mockPayments = [
-  { id: 1, date: '2026-06-15', student: 'สมชาย ใจดี', course: 'คณิตศาสตร์ ป.4', amount: 2500, method: 'โอนเงิน', status: 'paid' },
-  { id: 2, date: '2026-06-14', student: 'สมศรี มีสุข', course: 'ภาษาอังกฤษ ม.1', amount: 3000, method: 'เงินสด', status: 'paid' },
-  { id: 3, date: '2026-06-13', student: 'วิชัย รักเรียน', course: 'ฟิสิกส์ ม.4', amount: 3500, method: 'โอนเงิน', status: 'pending' },
-  { id: 4, date: '2026-06-12', student: 'นภา ตั้งใจ', course: 'คณิตศาสตร์ ป.4', amount: 2500, method: 'โอนเงิน', status: 'paid' },
-  { id: 5, date: '2026-06-10', student: 'กรกฎ พากเพียร', course: 'ภาษาอังกฤษ ม.1', amount: 3000, method: 'เงินสด', status: 'paid' },
-  { id: 6, date: '2026-06-08', student: 'มณี แสงทอง', course: 'ฟิสิกส์ ม.4', amount: 3500, method: 'โอนเงิน', status: 'paid' },
-  { id: 7, date: '2026-06-05', student: 'ณัฐวุฒิ มั่นคง', course: 'คณิตศาสตร์ ป.4', amount: 2500, method: 'โอนเงิน', status: 'unpaid' },
-  { id: 8, date: '2026-06-03', student: 'พิมพ์ใจ งามดี', course: 'ภาษาอังกฤษ ม.1', amount: 3000, method: 'เงินสด', status: 'paid' },
-  { id: 9, date: '2026-06-01', student: 'ภาณุ เก่งกล้า', course: 'ฟิสิกส์ ม.4', amount: 3500, method: 'โอนเงิน', status: 'paid' },
-  { id: 10, date: '2026-05-28', student: 'สุพัตรา จิตดี', course: 'คณิตศาสตร์ ป.4', amount: 2500, method: 'เงินสด', status: 'paid' },
-];
+import { financeService, courseService } from '../../services';
 
 const paymentColumns = [
-  { key: 'date', label: 'วันที่' },
-  { key: 'student', label: 'นักเรียน' },
-  { key: 'course', label: 'คอร์สเรียน' },
+  {
+    key: 'paidAt',
+    label: 'วันที่',
+    render: (value) => {
+      if (!value) return '-';
+      try { return new Date(value).toLocaleDateString('th-TH'); } catch { return value; }
+    },
+  },
+  { key: 'studentName', label: 'นักเรียน' },
+  { key: 'courseName', label: 'คอร์สเรียน' },
   {
     key: 'amount',
     label: 'ยอดเงิน',
     align: 'right',
-    render: (value) => <span class="font-bold">฿{value?.toLocaleString?.() || value}</span>,
+    render: (value) => <span class="font-bold">฿{Number(value).toLocaleString()}</span>,
   },
   { key: 'method', label: 'ช่องทาง', align: 'center' },
   {
-    key: 'status',
-    label: 'สถานะ',
-    align: 'center',
-    render: (value) => <StatusBadge status={value} />,
+    key: 'invoiceNo',
+    label: 'เลข Invoice',
+    render: (value) => <span class="text-xs font-mono">{value || '-'}</span>,
   },
 ];
 
 export function FinancePage({ path }) {
-  const [mode, setMode] = useState('form'); // 'form' | 'history'
+  const [mode, setMode] = useState('form');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [payments, setPayments] = useState(mockPayments);
-  const getSignal = useAbortController();
+  const [payments, setPayments] = useState([]);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [courses, setCourses] = useState([]);
 
   const [form, setForm] = useState({
-    studentName: '', course: '', amount: '', method: 'โอนเงิน',
+    enrollmentId: '', amount: '', method: 'transfer', slipUrl: '',
   });
+
+  useEffect(() => {
+    courseService.getCourses()
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        setCourses(payload.courses || (Array.isArray(payload) ? payload : []));
+      })
+      .catch(() => {});
+  }, []);
+
+  const fetchPayments = async () => {
+    setPaymentLoading(true);
+    try {
+      const params = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      const res = await financeService.getPayments(params);
+      const payload = res.data?.data || res.data || {};
+      setPayments(payload.payments || (Array.isArray(payload) ? payload : []));
+    } catch {
+      showToast('ไม่สามารถโหลดข้อมูลการเงินได้', 'error');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mode === 'history') fetchPayments();
+  }, [mode]);
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -60,46 +76,33 @@ export function FinancePage({ path }) {
 
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
-    if (!form.studentName.trim() || !form.amount) {
-      showToast('กรุณากรอกชื่อนักเรียนและยอดเงิน', 'error');
+    if (!form.enrollmentId || !form.amount) {
+      showToast('กรุณากรอก Enrollment ID และยอดเงิน', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
       const payload = {
-        enrollmentId: form.course ? mockCourses.find((c) => c.name === form.course)?.id : 1,
+        enrollmentId: Number(form.enrollmentId),
         amount: Number(form.amount),
-        method: form.method === 'โอนเงิน' ? 'transfer' : 'cash',
-        slipUrl: '',
+        method: form.method,
+        slipUrl: form.slipUrl.trim() || undefined,
       };
       const res = await financeService.createPayment(payload);
       const invoiceNo = res.data?.data?.invoiceNo || res.data?.invoiceNo || `INV-${Date.now()}`;
       showToast(`บันทึกสำเร็จ! เลข Invoice: ${invoiceNo}`, 'success');
-      setForm({ studentName: '', course: '', amount: '', method: 'โอนเงิน' });
-    } catch {
-      showToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error');
+      setForm({ enrollmentId: '', amount: '', method: 'transfer', slipUrl: '' });
+    } catch (err) {
+      const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
+      showToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDateFilter = async () => {
-    try {
-      const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      const res = await financeService.getPayments(params, { signal: getSignal() });
-      const paymentsData = res.data?.data?.payments || res.data?.payments || res.data || [];
-      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
-    } catch {
-      const filtered = mockPayments.filter((p) => {
-        if (startDate && p.date < startDate) return false;
-        if (endDate && p.date > endDate) return false;
-        return true;
-      });
-      setPayments(filtered);
-    }
+    fetchPayments();
   };
 
   return (
@@ -136,29 +139,29 @@ export function FinancePage({ path }) {
       </div>
 
       {mode === 'form' ? (
-        /* Payment Form */
         <div class="max-w-2xl">
           <form onSubmit={handleSubmitPayment}>
             <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-6 space-y-5">
               <SolidInput
-                label="ชื่อนักเรียน"
-                placeholder="พิมพ์ชื่อหรือเลือกจากรายชื่อ"
-                value={form.studentName}
-                onInput={updateField('studentName')}
+                label="Enrollment ID"
+                placeholder="รหัสการลงทะเบียน"
+                type="number"
+                value={form.enrollmentId}
+                onInput={updateField('enrollmentId')}
               />
 
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
-                  คอร์สเรียน
+                  เลือกคอร์ส (อ้างอิง)
                 </label>
                 <select
-                  value={form.course}
-                  onChange={updateField('course')}
+                  value={form.enrollmentId}
+                  onChange={updateField('enrollmentId')}
                   class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-sm text-sm focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
                 >
-                  <option value="">เลือกคอร์สเรียน</option>
-                  {mockCourses.map((c) => (
-                    <option key={c.id} value={c.name}>{c.name} (฿{c.price.toLocaleString()})</option>
+                  <option value="">-- เลือกคอร์สเพื่อกรอก ID --</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} {c.price ? `(฿${c.price})` : ''}</option>
                   ))}
                 </select>
               </div>
@@ -167,6 +170,8 @@ export function FinancePage({ path }) {
                 label="ยอดเงิน (บาท)"
                 type="number"
                 placeholder="0.00"
+                min="0"
+                step="0.01"
                 value={form.amount}
                 onInput={updateField('amount')}
               />
@@ -176,22 +181,32 @@ export function FinancePage({ path }) {
                   ช่องทางชำระเงิน
                 </label>
                 <div class="flex gap-2">
-                  {['โอนเงิน', 'เงินสด'].map((m) => (
+                  {[
+                    { label: 'โอนเงิน', value: 'transfer' },
+                    { label: 'เงินสด', value: 'cash' },
+                  ].map((m) => (
                     <button
-                      key={m}
+                      key={m.value}
                       type="button"
-                      onClick={() => updateField('method')({ target: { value: m } })}
+                      onClick={() => updateField('method')({ target: { value: m.value } })}
                       class={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-                        form.method === m
+                        form.method === m.value
                           ? 'bg-amber-500 text-white'
                           : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
-                      {m}
+                      {m.label}
                     </button>
                   ))}
                 </div>
               </div>
+
+              <SolidInput
+                label="ลิงก์สลิป (URL)"
+                placeholder="https://..."
+                value={form.slipUrl}
+                onInput={updateField('slipUrl')}
+              />
 
               {/* Slip Upload */}
               <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-8 text-center cursor-pointer hover:border-amber-400 transition-colors">
@@ -207,7 +222,7 @@ export function FinancePage({ path }) {
                 <Button variant="primary" size="md" type="submit" loading={isSubmitting} disabled={isSubmitting}>
                   บันทึกการรับเงิน
                 </Button>
-                <Button variant="outline" size="md" type="button" onClick={() => setForm({ studentName: '', course: '', amount: '', method: 'โอนเงิน' })}>
+                <Button variant="outline" size="md" type="button" onClick={() => setForm({ enrollmentId: '', amount: '', method: 'transfer', slipUrl: '' })}>
                   ล้างฟอร์ม
                 </Button>
               </div>

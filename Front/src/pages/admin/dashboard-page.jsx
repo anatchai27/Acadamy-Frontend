@@ -1,5 +1,6 @@
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DashboardOverviewWidget } from '../../components/dashboard/dashboard-overview';
+import { route } from 'preact-router';
 
 const recentActivities = [
   { text: 'ผู้ใช้ใหม่ลงทะเบียน: john@example.com', time: '5 นาทีที่แล้ว', icon: UserPlusIcon, color: 'primary' },
@@ -90,12 +91,13 @@ export function DashboardPage({ path }) {
             <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white mb-4">ดำเนินการด่วน</h3>
             <div class="space-y-2">
               {[
-                { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary' },
-                { label: 'สร้างคอร์สเรียน', icon: BookIcon, color: 'success' },
-                { label: 'ดูรายงาน', icon: ChartIcon, color: 'accent' },
+                { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary', onClick: () => route('/admin/users') },
+                { label: 'สร้างคอร์สเรียน', icon: BookIcon, color: 'success', onClick: () => route('/admin/courses') },
+                { label: 'ดูรายงาน', icon: ChartIcon, color: 'accent', onClick: () => route('/admin/finance') },
               ].map((action) => (
                 <button
                   key={action.label}
+                  onClick={action.onClick}
                   class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-tiwhub-body dark:text-tiwhub-bg/80 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors"
                 >
                   <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
