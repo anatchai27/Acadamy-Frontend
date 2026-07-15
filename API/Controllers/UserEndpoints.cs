@@ -2,6 +2,7 @@ using System.Text;
 using academy_API.Data;
 using academy_API.Models;
 using academy_API.Services.Contracts;
+using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -10,15 +11,22 @@ public static class UserEndpoints
 {
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/users")
+        var listGroup = app.MapGroup("/api/users")
             .WithTags("Users")
             .WithOpenApi()
             .RequireAuthorization();
 
-        group.MapGet("/", async (IUserService userService, CancellationToken ct) =>
-            await userService.GetAllAsync(ct));
+        listGroup.MapGet("/", async (HttpContext httpContext, IUserService userService, CancellationToken ct) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "User not associated with any institute." });
 
-        group.MapGet("/{id:int}", async (int id, IUserService userService, CancellationToken ct) =>
+            var users = await userService.GetByInstituteIdAsync(instituteId.Value, ct);
+            return Results.Ok(users);
+        });
+
+        listGroup.MapGet("/{id:int}", async (int id, IUserService userService, CancellationToken ct) =>
         {
             var user = await userService.GetByIdAsync(id, ct);
             return user is null
@@ -26,22 +34,135 @@ public static class UserEndpoints
                 : Results.Ok(user);
         });
 
-        group.MapPost("/register", RegisterUser)
+        listGroup.MapPost("/", async (
+            HttpContext httpContext,
+            TutoringDbContext db,
+            CreateStaffRequest request,
+            ITokenService tokenService,
+            CancellationToken ct) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            var email = request.Email?.Trim().ToLower();
+            if (string.IsNullOrEmpty(email))
+                return Results.BadRequest(new { error = "Email is required." });
+
+            if (string.IsNullOrEmpty(request.Password))
+                return Results.BadRequest(new { error = "Password is required." });
+
+            if (request.Role is not (UserRole.admin or UserRole.teacher or UserRole.staff))
+                return Results.BadRequest(new { error = "Invalid role. Choose admin, teacher, or staff." });
+
+            if (await db.Users.AnyAsync(u => u.Email == email, ct))
+                return Results.BadRequest(new { error = "Email is already registered." });
+
+            if (string.IsNullOrEmpty(request.FullName))
+                return Results.BadRequest(new { error = "Full name is required for teacher/staff." });
+
+            var passwordHash = tokenService.HashPassword(request.Password);
+
+            var user = new User
+            {
+                InstituteId = instituteId,
+                Email = email,
+                Phone = request.Phone,
+                Role = request.Role,
+                PasswordHash = passwordHash,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            db.Users.Add(user);
+            await db.SaveChangesAsync(ct);
+
+            if (request.Role is UserRole.teacher or UserRole.admin)
+            {
+                db.Teachers.Add(new Teacher
+                {
+                    InstituteId = instituteId,
+                    UserId = user.Id,
+                    FullName = request.FullName
+                });
+                await db.SaveChangesAsync(ct);
+            }
+
+            return Results.Created($"/api/users/{user.Id}", new
+            {
+                user.Id,
+                user.Email,
+                user.Role,
+                user.Phone,
+                fullName = request.FullName
+            });
+        });
+
+        listGroup.MapPut("/{id:int}/role", async (
+            int id,
+            HttpContext httpContext,
+            IUserService userService,
+            TutoringDbContext db,
+            UpdateRoleRequest request,
+            CancellationToken ct) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id && u.InstituteId == instituteId, ct);
+            if (user is null)
+                return Results.NotFound(new { error = "User not found in your institute." });
+
+            if (user.Role == UserRole.admin)
+                return Results.BadRequest(new { error = "Cannot change role of the primary admin." });
+
+            var success = await userService.UpdateRoleAsync(id, request.Role, ct);
+            return success
+                ? Results.Ok(new { status = "success", message = "อัปเดตสิทธิ์ผู้ใช้สำเร็จ" })
+                : Results.NotFound(new { error = "User not found." });
+        });
+
+        listGroup.MapDelete("/{id:int}", async (
+            int id,
+            HttpContext httpContext,
+            IUserService userService,
+            TutoringDbContext db,
+            CancellationToken ct) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id && u.InstituteId == instituteId, ct);
+            if (user is null)
+                return Results.NotFound(new { error = "User not found in your institute." });
+
+            if (user.Role == UserRole.admin)
+                return Results.BadRequest(new { error = "Cannot delete the primary admin." });
+
+            var success = await userService.DeleteUserAsync(id, ct);
+            return success
+                ? Results.Ok(new { status = "success", message = "ลบผู้ใช้สำเร็จ" })
+                : Results.NotFound(new { error = "User not found." });
+        });
+
+        listGroup.MapPost("/register", RegisterUser)
             .WithTags("Users")
             .WithOpenApi()
             .AllowAnonymous();
 
-        group.MapPost("/forget-password", ForgetPassword)
+        listGroup.MapPost("/forget-password", ForgetPassword)
             .WithTags("Users")
             .WithOpenApi()
             .AllowAnonymous();
 
-        group.MapPost("/reset-password", ResetPassword)
+        listGroup.MapPost("/reset-password", ResetPassword)
             .WithTags("Users")
             .WithOpenApi()
             .AllowAnonymous();
 
-        return app;
+        return listGroup;
     }
 
     private static async Task<IResult> RegisterUser(
@@ -259,3 +380,5 @@ public static class UserEndpoints
 
 public record ForgetPasswordRequest(string Email);
 public record ResetPasswordRequest(string Email, string Token, string NewPassword);
+public record CreateStaffRequest(string Email, string Password, string? Phone, UserRole Role, string FullName);
+public record UpdateRoleRequest(UserRole Role);

@@ -6,9 +6,9 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
 {
     private readonly Repositories.IProductRepository _repository = repository;
 
-    public async Task<IEnumerable<DTOs.ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DTOs.ProductResponse>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default)
     {
-        var products = await _repository.GetAllAsync(cancellationToken);
+        var products = await _repository.GetByInstituteIdAsync(instituteId, cancellationToken);
         return products.Select(MapToResponse);
     }
 
@@ -18,12 +18,15 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
         return product is null ? null : MapToResponse(product);
     }
 
-    public async Task<DTOs.ProductResponse> CreateAsync(DTOs.CreateProductRequest request, CancellationToken cancellationToken = default)
+    public async Task<DTOs.ProductResponse> CreateAsync(int instituteId, DTOs.CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         var product = new Models.Product
         {
+            InstituteId = instituteId,
             Name = request.Name,
-            Price = request.Price
+            Price = request.Price,
+            Description = request.Description,
+            IsActive = true
         };
 
         var created = await _repository.CreateAsync(product, cancellationToken);
@@ -35,7 +38,9 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
         var product = new Models.Product
         {
             Name = request.Name,
-            Price = request.Price
+            Price = request.Price,
+            Description = request.Description,
+            IsActive = request.IsActive
         };
 
         var updated = await _repository.UpdateAsync(id, product, cancellationToken);
@@ -48,5 +53,5 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
     }
 
     private static DTOs.ProductResponse MapToResponse(Models.Product product) =>
-        new(product.Id, product.Name, product.Price);
+        new(product.Id, product.Name, product.Price, product.Description);
 }

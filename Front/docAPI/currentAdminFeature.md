@@ -1,6 +1,6 @@
 # Academy Project — Current State & Code Review
 
-> **Updated:** 2026-07-15 v2.0  
+> **Updated:** 2026-07-15 v3.0  
 > **Frontend:** Preact + Vite 6 + Tailwind CSS v4  
 > **Backend:** ASP.NET Core 9.0 (rolled forward to .NET 10 runtime) + EF Core + MySQL (TiDB Cloud)  
 > **Architecture:** Multi-Tenant (JWT institute-scoped)
@@ -72,11 +72,14 @@ C:\Project\Acadamy-Frontend\
 | **Leave Requests** | Filterable list, Approve/Reject | 3 endpoints | ✅ Complete | |
 | **Homework** | Tab in academics | 4 endpoints | ✅ Complete | |
 | **Skill Scores** | Per-student tab in academics | 4 endpoints | ✅ Complete | Batch upsert |
+| **Skill Topics** | Manage modal in academics | 6 endpoints | ✅ Complete | CRUD added (MD-004) |
 | **Enrollment** | Course detail page | 1 endpoint | ✅ Complete | |
-| **Users** | List with search, delete stub | 2 endpoints | ✅ Integrated | Live API (FRONT-003) |
-| **Settings** | Interactive form, no API yet | — | ⏳ Partial | Stateful UI, API stub |
+| **Institute** | Settings page (full form) | 3 endpoints | ✅ Complete | Logo upload, tax info (MD-001) |
+| **Users / Staff** | List + invite modal | 6 endpoints | ✅ Complete | Create, role update, delete (MD-002) |
+| **Products** | Products page | 5 endpoints | ✅ Complete | DB-backed, scoped (MD-003) |
+| **Settings** | Interactive form, connected | PUT /api/institutes/me | ✅ Complete | Live API (MD-001) |
 
-> **Overall:** 12/13 modules integrated. Settings still needs a backend endpoint.
+> **Overall:** 16/16 modules fully integrated.
 
 ---
 

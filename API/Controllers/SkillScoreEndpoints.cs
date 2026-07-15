@@ -69,6 +69,39 @@ public static class SkillScoreEndpoints
             }
         });
 
+        group.MapPut("/topics/{id:int}", async (
+            int id,
+            SkillTopicRequest request,
+            ISkillScoreService service,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                await service.UpdateTopicAsync(id, request, ct);
+                return Results.Ok(new { Status = "success", Message = "แก้ไขหัวข้อทักษะสำเร็จ" });
+            }
+            catch (SkillScoreValidationException ex)
+            {
+                return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });
+            }
+        });
+
+        group.MapDelete("/topics/{id:int}", async (
+            int id,
+            ISkillScoreService service,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                await service.DeleteTopicAsync(id, ct);
+                return Results.Ok(new { Status = "success", Message = "ลบหัวข้อทักษะสำเร็จ" });
+            }
+            catch (SkillScoreValidationException ex)
+            {
+                return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });
+            }
+        });
+
         return app;
     }
 }

@@ -1,7 +1,7 @@
 import { Router } from 'preact-router';
 import { IndexPage } from './pages/index';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage } from './pages/admin';
+import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth } from './components/require-auth';
 import './app.css';
@@ -19,6 +19,7 @@ const AdminAcademics = requireAuth(AcademicsPage);
 const AdminFinance = requireAuth(FinancePage);
 const AdminUsers = requireAuth(UsersPage);
 const AdminSettings = requireAuth(SettingsPage);
+const AdminProducts = requireAuth(ProductsPage);
 
 export function App() {
   return (
@@ -42,6 +43,7 @@ export function App() {
         <AdminFinance path="/admin/finance" />
         <AdminUsers path="/admin/users" />
         <AdminSettings path="/admin/settings" />
+        <AdminProducts path="/admin/products" />
       </Router>
       <ToastContainer />
       <ConfirmDialogContainer />

@@ -13,6 +13,7 @@ public class UserServiceTests
     {
         var options = new DbContextOptionsBuilder<TutoringDbContext>()
             .UseInMemoryDatabase(dbName)
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         return new TutoringDbContext(options);
     }
@@ -577,5 +578,255 @@ public class UserServiceTests
         tokenMock.Verify(v => v.HashPassword("MyN3wP@ss!"), Times.Once);
         var updated = await context.Users.FirstAsync(u => u.Email == "u@ex.com");
         Assert.Equal("final-password-hash", updated.PasswordHash);
+    }
+
+    // 31 ──────────────────── GetByInstituteIdAsync ────────────────────
+
+    [Fact]
+    public async Task GetByInstituteIdAsync_ReturnsUsersForInstitute()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Users.AddRange(
+            new User { Id = 1, InstituteId = 5, Email = "a@ex.com", Role = UserRole.admin, PasswordHash = "h", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new User { Id = 2, InstituteId = 5, Email = "b@ex.com", Role = UserRole.teacher, PasswordHash = "h", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new User { Id = 3, InstituteId = 10, Email = "c@ex.com", Role = UserRole.student, PasswordHash = "h", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        var mockToken = CreateMockTokenService();
+        var pdpaRepoMock = new Mock<academy_API.Repositories.IPdpaConsentRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        userRepoMock.Setup(r => r.GetByInstituteIdAsync(5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(context.Users.Where(u => u.InstituteId == 5).ToList());
+
+        var sut = new UserService(userRepoMock.Object, pdpaRepoMock.Object, mockToken.Object, context);
+        var results = await sut.GetByInstituteIdAsync(5);
+
+        Assert.Equal(2, results.Count());
+        Assert.Contains(results, u => u.Email == "a@ex.com");
+        Assert.Contains(results, u => u.Email == "b@ex.com");
+    }
+
+    [Fact]
+    public async Task GetByInstituteIdAsync_NoUsers_ReturnsEmpty()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var mockToken = CreateMockTokenService();
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        userRepoMock.Setup(r => r.GetByInstituteIdAsync(99, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, mockToken.Object, context);
+        Assert.Empty(await sut.GetByInstituteIdAsync(99));
+    }
+
+    // 33 ──────────────────── UpdateRoleAsync ────────────────────
+
+    [Fact]
+    public async Task UpdateRoleAsync_ExistingUser_UpdatesRole()
+    {
+        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        mockRepo.Setup(r => r.UpdateRoleAsync(1, UserRole.teacher, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        Assert.True(await sut.UpdateRoleAsync(1, UserRole.teacher));
+        mockRepo.Verify(r => r.UpdateRoleAsync(1, UserRole.teacher, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateRoleAsync_NotFound_ReturnsFalse()
+    {
+        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        mockRepo.Setup(r => r.UpdateRoleAsync(999, UserRole.staff, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        Assert.False(await sut.UpdateRoleAsync(999, UserRole.staff));
+    }
+
+    // 35 ──────────────────── DeleteUserAsync ────────────────────
+
+    [Fact]
+    public async Task DeleteUserAsync_Existing_ReturnsTrue()
+    {
+        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        mockRepo.Setup(r => r.DeleteAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        Assert.True(await sut.DeleteUserAsync(1));
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_NotFound_ReturnsFalse()
+    {
+        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        mockRepo.Setup(r => r.DeleteAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        Assert.False(await sut.DeleteUserAsync(999));
+    }
+
+    // 37 ──────────────────── CreateWithConsentAsync ────────────────────
+
+    [Fact]
+    public async Task CreateWithConsentAsync_ValidRequest_CreatesUserAndPdpaConsent()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+
+        var tokenService = CreateMockTokenService();
+        tokenService.Setup(s => s.HashPassword(It.IsAny<string>())).Returns("hashed-pw");
+
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var pdpaRepoMock = new Mock<academy_API.Repositories.IPdpaConsentRepository>();
+
+        var sut = new UserService(userRepoMock.Object, pdpaRepoMock.Object, tokenService.Object, context);
+        var user = await sut.CreateWithConsentAsync(new UserCreateRequest
+        {
+            Email = "new@user.com",
+            Password = "Secure123!",
+            Phone = "0812345678",
+            Role = UserRole.staff,
+            AcceptPdpa = true,
+            PdpaConsentVersion = "1.0"
+        }, "127.0.0.1");
+
+        Assert.NotNull(user);
+        Assert.Equal("new@user.com", user.Email);
+        Assert.Equal(UserRole.staff, user.Role);
+        Assert.Equal("hashed-pw", user.PasswordHash);
+
+        var pdpa = await context.PdpaConsents.FirstOrDefaultAsync(p => p.UserId == user.Id);
+        Assert.NotNull(pdpa);
+        Assert.True(pdpa!.IsAccepted);
+        Assert.Equal("1.0", pdpa.ConsentVersion);
+    }
+
+    [Fact]
+    public async Task CreateWithConsentAsync_NoPdpa_ThrowsInvalidOperation()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+
+        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.CreateWithConsentAsync(new UserCreateRequest
+            {
+                Email = "u@ex.com", Password = "P@ss1234", AcceptPdpa = false
+            }, null));
+        Assert.Contains("PDPA", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateWithConsentAsync_DuplicateEmail_Throws()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Users.Add(new User { Email = "dup@ex.com", PasswordHash = "h", Role = UserRole.student, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        await context.SaveChangesAsync();
+
+        var tokenService = CreateMockTokenService();
+        tokenService.Setup(s => s.HashPassword(It.IsAny<string>())).Returns("h");
+
+        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, tokenService.Object, context);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.CreateWithConsentAsync(new UserCreateRequest
+            {
+                Email = "dup@ex.com", Password = "P@ss1234", AcceptPdpa = true
+            }, null));
+        Assert.Contains("already registered", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateWithConsentAsync_EmptyPassword_Throws()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+
+        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            sut.CreateWithConsentAsync(new UserCreateRequest
+            {
+                Email = "u@ex.com", Password = "", AcceptPdpa = true
+            }, null));
+        Assert.Contains("Password", ex.Message);
+    }
+
+    // 41 ──────────────────── GetCurrentUserAsync ────────────────────
+
+    [Fact]
+    public async Task GetCurrentUserAsync_ExistingUser_ReturnsProfile()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var user = new User
+        {
+            Id = 10,
+            Email = "profile@ex.com",
+            Role = UserRole.teacher,
+            PasswordHash = "h",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            Teacher = new Teacher { FullName = "คุณครูสมชาย", Specialization = "คณิตศาสตร์", PhotoUrl = "/photo.jpg" }
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        userRepoMock.Setup(r => r.GetByIdWithProfileAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var result = await sut.GetCurrentUserAsync(10);
+
+        Assert.NotNull(result);
+        Assert.Equal("success", result!.Status);
+        Assert.Equal(10, result.Data.UserId);
+        Assert.Equal("คุณครูสมชาย", result.Data.Profile.FullName);
+        Assert.Equal("/photo.jpg", result.Data.Profile.PhotoUrl);
+        Assert.Equal("คณิตศาสตร์", result.Data.Profile.Subjects);
+    }
+
+    [Fact]
+    public async Task GetCurrentUserAsync_NotFound_ReturnsNull()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        userRepoMock.Setup(r => r.GetByIdWithProfileAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        Assert.Null(await sut.GetCurrentUserAsync(999));
+    }
+
+    [Fact]
+    public async Task GetCurrentUserAsync_NoTeacherProfile_UsesEmailFallback()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var user = new User
+        {
+            Id = 20,
+            Email = "student@ex.com",
+            Role = UserRole.student,
+            PasswordHash = "h",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        userRepoMock.Setup(r => r.GetByIdWithProfileAsync(20, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var result = await sut.GetCurrentUserAsync(20);
+
+        Assert.NotNull(result);
+        Assert.Equal("student@ex.com", result!.Data.Profile.FullName);
+        Assert.Null(result.Data.Profile.PhotoUrl);
+        Assert.Null(result.Data.Profile.Subjects);
     }
 }

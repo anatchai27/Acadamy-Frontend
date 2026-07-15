@@ -1,49 +1,53 @@
+using academy_API.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace academy_API.Repositories;
 
-public class ProductRepository : IProductRepository
+public class ProductRepository(TutoringDbContext context) : IProductRepository
 {
-    private readonly List<Models.Product> _products = [];
-    private int _nextId = 1;
+    private readonly TutoringDbContext _context = context;
 
-    public Task<IEnumerable<Models.Product>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Models.Product>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_products.AsEnumerable());
+        return await _context.Products
+            .Where(p => p.InstituteId == instituteId && p.IsActive)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<Models.Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Models.Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_products.FirstOrDefault(p => p.Id == id));
+        return await _context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
-    public Task<Models.Product> CreateAsync(Models.Product product, CancellationToken cancellationToken = default)
+    public async Task<Models.Product> CreateAsync(Models.Product product, CancellationToken cancellationToken = default)
     {
-        product.Id = _nextId++;
-        _products.Add(product);
-        return Task.FromResult(product);
+        product.CreatedAt = DateTime.UtcNow;
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync(cancellationToken);
+        return product;
     }
 
-    public Task<Models.Product?> UpdateAsync(int id, Models.Product product, CancellationToken cancellationToken = default)
+    public async Task<Models.Product?> UpdateAsync(int id, Models.Product product, CancellationToken cancellationToken = default)
     {
-        var existing = _products.FirstOrDefault(p => p.Id == id);
-        if (existing is null)
-        {
-            return Task.FromResult<Models.Product?>(null);
-        }
+        var existing = await _context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (existing is null) return null;
 
         existing.Name = product.Name;
         existing.Price = product.Price;
-        return Task.FromResult<Models.Product?>(existing);
+        existing.Description = product.Description;
+        existing.IsActive = product.IsActive;
+        await _context.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 
-    public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var existing = _products.FirstOrDefault(p => p.Id == id);
-        if (existing is null)
-        {
-            return Task.FromResult(false);
-        }
+        var existing = await _context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (existing is null) return false;
 
-        _products.Remove(existing);
-        return Task.FromResult(true);
+        _context.Products.Remove(existing);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

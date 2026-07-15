@@ -8,6 +8,8 @@ public interface ISkillScoreService
     Task<SkillScoreListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
     Task CreateTopicAsync(SkillTopicRequest request, CancellationToken ct = default);
     Task<SkillTopicListResponse> GetTopicsByCourseIdAsync(int courseId, CancellationToken ct = default);
+    Task UpdateTopicAsync(int id, SkillTopicRequest request, CancellationToken ct = default);
+    Task DeleteTopicAsync(int id, CancellationToken ct = default);
 }
 
 public class SkillScoreService(Repositories.ISkillScoreRepository repository) : ISkillScoreService
@@ -51,6 +53,25 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
     {
         var topics = await _repository.GetTopicsByCourseIdDtoAsync(courseId);
         return new SkillTopicListResponse("success", new SkillTopicListData(topics));
+    }
+
+    public async Task UpdateTopicAsync(int id, SkillTopicRequest request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new SkillScoreValidationException("NAME_REQUIRED", "กรุณาระบุชื่อหัวข้อทักษะ");
+
+        var topic = new Models.SkillTopic
+        {
+            Name = request.Name.Trim(),
+            OrderIndex = request.OrderIndex
+        };
+
+        await _repository.UpdateTopicAsync(id, topic, ct);
+    }
+
+    public async Task DeleteTopicAsync(int id, CancellationToken ct = default)
+    {
+        await _repository.DeleteTopicAsync(id, ct);
     }
 }
 

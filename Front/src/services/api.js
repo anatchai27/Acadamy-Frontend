@@ -20,10 +20,13 @@ function buildQuery(params) {
 
 async function fetcher(endpoint, options = {}) {
   const { params, signal, ...fetchOptions } = options;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...fetchOptions.headers,
-  };
+  const headers = { ...fetchOptions.headers };
+
+  const hasBody = fetchOptions.body !== undefined;
+  const isFormData = hasBody && fetchOptions.body instanceof FormData;
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const url = `${API_BASE}${endpoint}${buildQuery(params)}`;
   const response = await fetch(url, {
@@ -53,7 +56,10 @@ async function fetcher(endpoint, options = {}) {
 
 export const api = {
   get: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'GET' }),
-  post: (endpoint, data) => fetcher(endpoint, { method: 'POST', body: JSON.stringify(data) }),
-  put: (endpoint, data) => fetcher(endpoint, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (endpoint) => fetcher(endpoint, { method: 'DELETE' }),
+  post: (endpoint, data, options = {}) => {
+    const isFormData = data instanceof FormData;
+    return fetcher(endpoint, { ...options, method: 'POST', body: isFormData ? data : JSON.stringify(data) });
+  },
+  put: (endpoint, data, options = {}) => fetcher(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
+  delete: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'DELETE' }),
 };

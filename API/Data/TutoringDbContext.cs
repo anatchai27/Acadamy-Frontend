@@ -29,6 +29,7 @@ public class TutoringDbContext : DbContext
     public DbSet<SkillScore> SkillScores => Set<SkillScore>();
     public DbSet<MakeupSlot> MakeupSlots => Set<MakeupSlot>();
     public DbSet<MakeupCredit> MakeupCredits => Set<MakeupCredit>();
+    public DbSet<Product> Products => Set<Product>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -518,6 +519,20 @@ public class TutoringDbContext : DbContext
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.UsedSessionId);
+        });
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("products");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id").IsRequired();
+            entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name").IsRequired();
+            entity.Property(e => e.Price).HasColumnName("price").HasColumnType("decimal(10,2)").IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000).HasColumnName("description");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasIndex(e => e.InstituteId);
         });
     }
 }

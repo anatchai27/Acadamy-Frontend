@@ -1,25 +1,91 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { showToast, showConfirm } from '../../components/ui';
+import { instituteService } from '../../services/institute-service';
+import { useAppContext } from '../../store/AppContext';
+import { useAbortController } from '../../hooks';
 
 export function SettingsPage({ path }) {
-  const [instituteName, setInstituteName] = useState('TiwHub Academy');
-  const [contactEmail, setContactEmail] = useState('admin@tiwhub.com');
-  const [contactPhone, setContactPhone] = useState('02-123-4567');
-  const [emailNotify, setEmailNotify] = useState(true);
-  const [lineNotify, setLineNotify] = useState(false);
-  const [smsNotify, setSmsNotify] = useState(false);
+  const { state, dispatch } = useAppContext();
+  const getSignal = useAbortController();
+  const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    contactPhone: '',
+    address: '',
+    taxId: '',
+    receiptNote: '',
+  });
+
+  const setField = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  useEffect(() => {
+    instituteService.getInstitute({ signal: getSignal() })
+      .then((res) => {
+        const data = res.data?.data || {};
+        setForm({
+          name: data.name || '',
+          email: data.email || '',
+          contactPhone: data.contactPhone || '',
+          address: data.address || '',
+          taxId: data.taxId || '',
+          receiptNote: data.receiptNote || '',
+        });
+        setLogoPreview(data.logoUrl || null);
+      })
+      .catch(() => showToast('ไม่สามารถโหลดข้อมูลสถาบันได้', 'error'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleLogoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('รองรับเฉพาะไฟล์รูปภาพเท่านั้น', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('ไฟล์ต้องมีขนาดไม่เกิน 2MB', 'error');
+      return;
+    }
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      // TODO: call API when available
-      // await instituteService.update({ name: instituteName, phone: contactPhone, email: contactEmail });
-      await new Promise((r) => setTimeout(r, 300));
-      showToast('บันทึกการตั้งค่าสำเร็จ', 'success');
-    } catch {
-      showToast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error');
+      await instituteService.updateInstitute({
+        name: form.name || undefined,
+        email: form.email || undefined,
+        contactPhone: form.contactPhone || undefined,
+        address: form.address || undefined,
+        taxId: form.taxId || undefined,
+        receiptNote: form.receiptNote || undefined,
+      });
+
+      if (logoFile) {
+        const uploadRes = await instituteService.uploadLogo(logoFile);
+        const newLogoUrl = uploadRes.data?.data?.logoUrl;
+        if (newLogoUrl) {
+          setLogoPreview(newLogoUrl);
+          setLogoFile(null);
+          dispatch({ type: 'SET_INSTITUTE_LOGO', payload: newLogoUrl });
+        }
+      }
+
+      dispatch({ type: 'SET_INSTITUTE_NAME', payload: form.name });
+      showToast('บันทึกข้อมูลสถาบันสำเร็จ', 'success');
+    } catch (err) {
+      showToast(err?.data?.message || 'บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error');
     } finally {
       setSaving(false);
     }
@@ -36,48 +102,57 @@ export function SettingsPage({ path }) {
     showToast('ฟังก์ชันลบบัญชีจะทำงานเมื่อเชื่อมต่อ API แล้ว', 'info');
   };
 
+  if (loading) {
+    return (
+      <AdminLayout path={path}>
+        <div class="flex items-center justify-center py-20">
+          <div class="h-8 w-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout path={path}>
-      {/* Header */}
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ตั้งค่าระบบ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการการตั้งค่าทั้งหมดของระบบ</p>
+        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการข้อมูลสถาบันและตั้งค่าระบบ</p>
       </div>
 
       <div class="space-y-6 max-w-3xl">
-        {/* General Info */}
+        {/* Branding */}
         <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 overflow-hidden">
           <div class="flex items-center gap-4 px-6 py-5 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light">
               <BuildingIcon class="h-5 w-5" />
             </div>
             <div>
-              <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white">ข้อมูลทั่วไป</h3>
-              <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70">จัดการข้อมูลพื้นฐานของสถาบัน</p>
+              <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white">ข้อมูลสถาบัน</h3>
+              <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70">จัดการข้อมูลสำหรับใบเสร็จและการแสดงผล</p>
             </div>
           </div>
           <div class="divide-y divide-tiwhub-border-light dark:divide-tiwhub-border/20">
-            <SettingsInput label="ชื่อสถาบัน" value={instituteName} onChange={setInstituteName} />
-            <SettingsInput label="อีเมลติดต่อ" value={contactEmail} onChange={setContactEmail} type="email" />
-            <SettingsInput label="เบอร์โทรศัพท์" value={contactPhone} onChange={setContactPhone} type="tel" />
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 overflow-hidden">
-          <div class="flex items-center gap-4 px-6 py-5 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light">
-              <BellIcon class="h-5 w-5" />
+            {/* Logo */}
+            <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
+              <label class="text-sm font-medium text-tiwhub-heading dark:text-white">โลโก้สถาบัน</label>
+              <div class="flex items-center gap-3">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="logo" class="h-10 w-10 rounded-lg object-cover border border-tiwhub-border-light" />
+                ) : (
+                  <div class="h-10 w-10 rounded-lg bg-tiwhub-primary/10 flex items-center justify-center text-tiwhub-primary text-sm font-bold">TH</div>
+                )}
+                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleLogoSelect} class="hidden" />
+                <button type="button" onClick={() => fileInputRef.current?.click()} class="px-3 py-1.5 text-xs font-medium border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
+                  อัปโหลด
+                </button>
+              </div>
             </div>
-            <div>
-              <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white">การแจ้งเตือน</h3>
-              <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70">ตั้งค่าการแจ้งเตือนผ่านช่องทางต่างๆ</p>
-            </div>
-          </div>
-          <div class="divide-y divide-tiwhub-border-light dark:divide-tiwhub-border/20">
-            <SettingsToggle label="แจ้งเตือนทางอีเมล" desc="รับแจ้งเตือนสำคัญผ่านอีเมล" checked={emailNotify} onChange={setEmailNotify} />
-            <SettingsToggle label="แจ้งเตือนทาง LINE" desc="รับแจ้งเตือนผ่าน LINE Official" checked={lineNotify} onChange={setLineNotify} />
-            <SettingsToggle label="แจ้งเตือนทาง SMS" desc="รับแจ้งเตือนด่วนผ่าน SMS" checked={smsNotify} onChange={setSmsNotify} />
+            <SettingsInput label="ชื่อสถาบัน" value={form.name} onChange={setField('name')} />
+            <SettingsInput label="อีเมลติดต่อ" value={form.email} onChange={setField('email')} type="email" />
+            <SettingsInput label="เบอร์โทรศัพท์" value={form.contactPhone} onChange={setField('contactPhone')} type="tel" />
+            <SettingsInput label="ที่อยู่ (สำหรับออกใบเสร็จ)" value={form.address} onChange={setField('address')} />
+            <SettingsInput label="เลขประจำตัวผู้เสียภาษี" value={form.taxId} onChange={setField('taxId')} />
+            <SettingsTextarea label="หมายเหตุท้ายใบเสร็จ" value={form.receiptNote} onChange={setField('receiptNote')} />
           </div>
         </div>
 
@@ -96,10 +171,7 @@ export function SettingsPage({ path }) {
             <p class="text-sm text-tiwhub-body dark:text-tiwhub-bg/80 mb-3">
               การลบบัญชีผู้ดูแลระบบจะลบข้อมูลทั้งหมดอย่างถาวร ไม่สามารถกู้คืนได้
             </p>
-            <button
-              onClick={handleDeleteAccount}
-              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-tiwhub-danger dark:text-tiwhub-danger bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15 hover:bg-tiwhub-danger/15 dark:hover:bg-tiwhub-danger/20 rounded-xl transition-colors border border-tiwhub-danger/20 dark:border-tiwhub-danger/20"
-            >
+            <button onClick={handleDeleteAccount} class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-tiwhub-danger dark:text-tiwhub-danger bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15 hover:bg-tiwhub-danger/15 dark:hover:bg-tiwhub-danger/20 rounded-xl transition-colors border border-tiwhub-danger/20 dark:border-tiwhub-danger/20">
               <TrashIcon class="h-4 w-4" />
               ลบบัญชีผู้ดูแลระบบ
             </button>
@@ -108,11 +180,7 @@ export function SettingsPage({ path }) {
 
         {/* Save */}
         <div class="flex items-center gap-3 pt-2">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            class="inline-flex items-center gap-2 bg-tiwhub-primary hover:bg-tiwhub-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50"
-          >
+          <button onClick={handleSave} disabled={saving} class="inline-flex items-center gap-2 bg-tiwhub-primary hover:bg-tiwhub-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             <SaveIcon class="h-4 w-4" />
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </button>
@@ -126,50 +194,26 @@ function SettingsInput({ label, value, onChange, type = 'text' }) {
   return (
     <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
       <label class="text-sm font-medium text-tiwhub-heading dark:text-white">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onInput={(e) => onChange(e.target.value)}
-        class="w-64 px-3.5 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary transition-all"
-      />
+      <input type={type} value={value} onInput={onChange} class="w-64 px-3.5 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary transition-all" />
     </div>
   );
 }
 
-function SettingsToggle({ label, desc, checked, onChange }) {
+function SettingsTextarea({ label, value, onChange }) {
   return (
-    <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
-      <div class="flex-1 min-w-0">
-        <label class="text-sm font-medium text-tiwhub-heading dark:text-white block">{label}</label>
-        {desc && <p class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70 mt-0.5">{desc}</p>}
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:ring-offset-1 ${
-          checked ? 'bg-tiwhub-primary' : 'bg-tiwhub-border dark:bg-tiwhub-border/30'
-        }`}
-      >
-        <span class={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-      </button>
+    <div class="flex items-start justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
+      <label class="text-sm font-medium text-tiwhub-heading dark:text-white pt-1">{label}</label>
+      <textarea value={value} onInput={onChange} rows={2} class="w-64 px-3.5 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary transition-all resize-none" />
     </div>
   );
 }
 
-/* ─── Icons ─── */
+/* ─── SVG Icons ─── */
 
 function BuildingIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-  );
-}
-
-function BellIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
     </svg>
   );
 }

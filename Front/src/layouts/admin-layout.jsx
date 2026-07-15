@@ -13,6 +13,7 @@ const menuItems = [
   { path: '/admin/requests', label: 'คำร้องขอ', icon: RequestIcon },
   { path: '/admin/academics', label: 'ระบบวิชาการ', icon: AcademicsIcon },
   { path: '/admin/finance', label: 'การเงิน', icon: FinanceIcon },
+  { path: '/admin/products', label: 'สินค้า', icon: PackageIcon },
   { path: '/admin/users', label: 'ผู้ใช้', icon: UsersMenuIcon },
   { path: '/admin/settings', label: 'ตั้งค่า', icon: SettingsIcon },
 ];
@@ -67,11 +68,17 @@ export function AdminLayout({ children, path }) {
     <div class="min-h-screen bg-tiwhub-bg dark:bg-tiwhub-heading">
       <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-tiwhub-surface dark:bg-tiwhub-heading border-r border-tiwhub-border-light dark:border-tiwhub-border/20">
         <div class="flex h-16 items-center gap-3 px-6 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-tiwhub-primary text-white font-bold text-sm shrink-0">
-            TH
-          </div>
+          {state.instituteLogo ? (
+            <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-lg object-cover shrink-0" />
+          ) : (
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-tiwhub-primary text-white font-bold text-sm shrink-0">
+              TH
+            </div>
+          )}
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-tiwhub-heading dark:text-white leading-tight">TiwHub</span>
+            <span class="text-lg font-bold text-tiwhub-heading dark:text-white leading-tight">
+              {state.instituteName || 'TiwHub'}
+            </span>
             <span class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70 leading-tight">Admin Panel</span>
           </div>
         </div>
@@ -127,9 +134,13 @@ export function AdminLayout({ children, path }) {
       {/* Mobile Header */}
       <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-b border-tiwhub-border-light dark:border-tiwhub-border/20 flex items-center justify-between px-4">
         <div class="flex items-center gap-2">
-          <div class="flex h-7 w-7 items-center justify-center rounded-md bg-tiwhub-primary text-white font-bold text-xs shrink-0">
-            TH
-          </div>
+          {state.instituteLogo ? (
+            <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-md object-cover shrink-0" />
+          ) : (
+            <div class="flex h-7 w-7 items-center justify-center rounded-md bg-tiwhub-primary text-white font-bold text-xs shrink-0">
+              TH
+            </div>
+          )}
           <span class="text-base font-semibold text-tiwhub-heading dark:text-white">{currentTitle}</span>
         </div>
         <div class="flex h-7 w-7 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold">
@@ -332,6 +343,14 @@ function UsersMenuIcon({ class: className }) {
   return (
     <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  );
+}
+
+function PackageIcon({ class: className }) {
+  return (
+    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
     </svg>
   );
 }

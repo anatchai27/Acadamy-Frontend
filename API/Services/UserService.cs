@@ -21,6 +21,9 @@ public class UserService(
     public async Task<IEnumerable<User>> GetAllAsync(CancellationToken ct = default)
         => await _repository.GetAllAsync(ct);
 
+    public async Task<IEnumerable<User>> GetByInstituteIdAsync(int instituteId, CancellationToken ct = default)
+        => await _repository.GetByInstituteIdAsync(instituteId, ct);
+
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _repository.GetByIdAsync(id, ct);
 
@@ -185,4 +188,10 @@ public class UserService(
             )
         );
     }
+
+    public async Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken ct = default)
+        => await _repository.UpdateRoleAsync(id, role, ct);
+
+    public async Task<bool> DeleteUserAsync(int id, CancellationToken ct = default)
+        => await _repository.DeleteAsync(id, ct);
 }

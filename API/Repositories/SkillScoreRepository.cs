@@ -1,6 +1,7 @@
 using academy_API.Data;
 using academy_API.DTOs;
 using academy_API.Models;
+using academy_API.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
@@ -12,6 +13,8 @@ public interface ISkillScoreRepository
     Task<List<SkillScoreDetailItem>> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
     Task CreateTopicAsync(SkillTopic topic, CancellationToken ct = default);
     Task<List<SkillTopicItem>> GetTopicsByCourseIdDtoAsync(int courseId, CancellationToken ct = default);
+    Task UpdateTopicAsync(int id, SkillTopic topic, CancellationToken ct = default);
+    Task DeleteTopicAsync(int id, CancellationToken ct = default);
 }
 
 public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreRepository
@@ -87,5 +90,26 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
             .OrderBy(t => t.OrderIndex)
             .Select(t => new SkillTopicItem(t.Id, t.Name, t.OrderIndex))
             .ToListAsync(ct);
+    }
+
+    public async Task UpdateTopicAsync(int id, SkillTopic topic, CancellationToken ct = default)
+    {
+        var existing = await _context.SkillTopics.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (existing is null)
+            throw new SkillScoreValidationException("NOT_FOUND", "ไม่พบหัวข้อทักษะ");
+
+        existing.Name = topic.Name;
+        existing.OrderIndex = topic.OrderIndex;
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteTopicAsync(int id, CancellationToken ct = default)
+    {
+        var existing = await _context.SkillTopics.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (existing is null)
+            throw new SkillScoreValidationException("NOT_FOUND", "ไม่พบหัวข้อทักษะ");
+
+        _context.SkillTopics.Remove(existing);
+        await _context.SaveChangesAsync(ct);
     }
 }

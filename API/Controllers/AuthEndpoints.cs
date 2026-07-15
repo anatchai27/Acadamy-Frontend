@@ -17,7 +17,7 @@ public static class AuthEndpoints
             .WithTags("Authentication")
             .WithOpenApi();
 
-        group.MapPost("/login", async (LoginRequest request, IUserService userService, ITokenService tokenService, CancellationToken ct) =>
+        group.MapPost("/login", async (LoginRequest request, IUserService userService, ITokenService tokenService, HttpContext httpContext, CancellationToken ct) =>
         {
             var result = await userService.LoginAsync(request.Email, request.Password, ct);
 
@@ -32,6 +32,15 @@ public static class AuthEndpoints
                 Email = result.Email,
                 Role = Enum.Parse<UserRole>(result.Role),
                 InstituteId = result.InstituteId
+            });
+
+            httpContext.Response.Cookies.Append("auth_token", result.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddHours(1),
+                Path = "/"
             });
 
             return Results.Ok(new LoginResponse(result.Token, result.UserId, result.Email, result.Role, refreshToken, result.InstituteId));
@@ -53,8 +62,14 @@ public static class AuthEndpoints
             return Results.Ok(result);
         }).RequireAuthorization();
 
-        group.MapPost("/logout", () =>
+        group.MapPost("/logout", (HttpContext httpContext) =>
         {
+            httpContext.Response.Cookies.Delete("auth_token", new CookieOptions
+            {
+                Path = "/",
+                Secure = false,
+                SameSite = SameSiteMode.Lax
+            });
             return Results.Ok(new { status = "success", message = "ออกจากระบบสำเร็จ" });
         }).RequireAuthorization();
 
@@ -63,6 +78,7 @@ public static class AuthEndpoints
             ITokenService tokenService,
             TutoringDbContext db,
             IConfiguration config,
+            HttpContext httpContext,
             CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.Token))
@@ -116,6 +132,15 @@ public static class AuthEndpoints
                     return Results.Unauthorized();
 
                 var refreshToken = tokenService.GenerateRefreshToken(user);
+
+                httpContext.Response.Cookies.Append("auth_token", refreshResult.Value.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Path = "/"
+                });
 
                 return Results.Ok(new
                 {
@@ -239,6 +264,15 @@ public static class AuthEndpoints
 
                 // 7. Generate JWT token
                 var token = tokenService.GenerateToken(user);
+
+                httpContext.Response.Cookies.Append("auth_token", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Path = "/"
+                });
 
                 return Results.Created($"/api/auth/me", new
                 {

@@ -4,6 +4,7 @@ public enum UserRole
 {
     admin,
     teacher,
+    staff,
     parent,
     student
 }
