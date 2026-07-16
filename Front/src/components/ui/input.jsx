@@ -8,7 +8,7 @@ export function Input({ type = 'text', label, placeholder, id, class: className 
   return (
     <div class="flex flex-col gap-1.5">
       {label && (
-        <label for={id} class="text-sm text-slate-900 font-medium">
+        <label for={id} class="text-sm text-zinc-800 font-medium">
           {label}
         </label>
       )}
@@ -18,13 +18,13 @@ export function Input({ type = 'text', label, placeholder, id, class: className 
           type={inputType}
           id={id}
           placeholder={placeholder}
-          class={`w-full px-4 py-3 bg-white border rounded-sm text-sm transition-all focus:outline-none focus:border-blue-800 text-slate-900 placeholder:text-slate-400 ${error ? 'border-red-500' : 'border-slate-300'} ${isPassword ? 'pr-12' : ''} ${className}`}
+          class={`w-full px-4 py-3 bg-white border rounded-xl text-sm transition-all focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800 placeholder:text-zinc-400 ${error ? 'border-red-400' : 'border-zinc-200'} ${isPassword ? 'pr-12' : ''} ${className}`}
           {...rest}
         />
         {isPassword && (
           <button
             type="button"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-0"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 bg-transparent border-none cursor-pointer p-0"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (

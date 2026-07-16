@@ -11,17 +11,17 @@ const recentActivities = [
 ];
 
 const colorIconBgMap = {
-  primary: 'bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15',
-  success: 'bg-tiwhub-success/10 dark:bg-tiwhub-success/15',
-  accent: 'bg-tiwhub-accent/10 dark:bg-tiwhub-accent/15',
-  danger: 'bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15',
+  primary: 'bg-oasis-primary/5',
+  success: 'bg-oasis-success/5',
+  accent: 'bg-oasis-warning/5',
+  danger: 'bg-oasis-danger/5',
 };
 
 const colorTextMap = {
-  primary: 'text-tiwhub-primary dark:text-tiwhub-primary-light',
-  success: 'text-tiwhub-success dark:text-tiwhub-success',
-  accent: 'text-tiwhub-accent dark:text-tiwhub-accent-light',
-  danger: 'text-tiwhub-danger dark:text-tiwhub-danger',
+  primary: 'text-oasis-primary',
+  success: 'text-oasis-success',
+  accent: 'text-oasis-warning',
+  danger: 'text-oasis-danger',
 };
 
 export function DashboardPage({ path }) {
@@ -29,8 +29,8 @@ export function DashboardPage({ path }) {
     <AdminLayout path={path}>
       {/* Welcome */}
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ภาพรวมระบบ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">ดูข้อมูลสำคัญและการเปลี่ยนแปลงของระบบคุณ</p>
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">ภาพรวมระบบ</h2>
+        <p class="text-sm text-zinc-500 mt-1">ดูข้อมูลสำคัญและการเปลี่ยนแปลงของระบบคุณ</p>
       </div>
 
       {/* Dashboard Overview Widget - Grid 2x2 */}
@@ -39,10 +39,10 @@ export function DashboardPage({ path }) {
       {/* Two Column Layout */}
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-15">
         {/* Activity Feed */}
-        <div class="lg:col-span-2 bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
-            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white">กิจกรรมล่าสุด</h3>
-            <button class="text-sm font-medium text-tiwhub-primary dark:text-tiwhub-primary-light hover:text-tiwhub-primary-dark dark:hover:text-tiwhub-accent transition-colors">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-zinc-200/80">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
+            <h3 class="text-lg font-semibold text-zinc-900">กิจกรรมล่าสุด</h3>
+            <button class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors">
               ดูทั้งหมด
             </button>
           </div>
@@ -51,15 +51,15 @@ export function DashboardPage({ path }) {
               <div
                 key={i}
                 class={`flex items-start gap-4 py-3 ${
-                  i < recentActivities.length - 1 ? 'border-b border-tiwhub-border-light dark:border-tiwhub-border/20' : ''
+                  i < recentActivities.length - 1 ? 'border-b border-zinc-100' : ''
                 }`}
               >
                 <div class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorIconBgMap[activity.color]}`}>
                   <activity.icon class={`h-4 w-4 ${colorTextMap[activity.color]}`} />
                 </div>
                 <div class="flex-1 min-w-0 flex items-center justify-between gap-4">
-                  <span class="text-sm text-tiwhub-body dark:text-tiwhub-bg/80 truncate">{activity.text}</span>
-                  <span class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/60 whitespace-nowrap">{activity.time}</span>
+                  <span class="text-sm text-zinc-600 truncate">{activity.text}</span>
+                  <span class="text-xs text-zinc-400 whitespace-nowrap">{activity.time}</span>
                 </div>
               </div>
             ))}
@@ -69,8 +69,8 @@ export function DashboardPage({ path }) {
         {/* Quick Stats Sidebar */}
         <div class="space-y-6">
           {/* Top Courses */}
-          <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 p-6">
-            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white mb-4">คอร์สยอดนิยม</h3>
+          <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6">
+            <h3 class="text-lg font-semibold text-zinc-900 mb-4">คอร์สยอดนิยม</h3>
             <div class="space-y-4">
               {[
                 { title: 'JavaScript Basics', students: 45, color: 'primary' },
@@ -78,17 +78,17 @@ export function DashboardPage({ path }) {
                 { title: 'Python for Beginners', students: 32, color: 'accent' },
               ].map((course) => (
                 <div key={course.title} class="flex items-center gap-3">
-                  <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-').replace('dark:text-', 'dark:bg-')}`} />
-                  <span class="flex-1 text-sm text-tiwhub-body dark:text-tiwhub-bg/80 truncate">{course.title}</span>
-                  <span class="text-xs font-medium text-tiwhub-muted dark:text-tiwhub-muted/60">{course.students} คน</span>
+                  <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-')}`} />
+                  <span class="flex-1 text-sm text-zinc-600 truncate">{course.title}</span>
+                  <span class="text-xs font-medium text-zinc-400">{course.students} คน</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 p-6">
-            <h3 class="text-lg font-semibold text-tiwhub-heading dark:text-white mb-4">ดำเนินการด่วน</h3>
+          <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6">
+            <h3 class="text-lg font-semibold text-zinc-900 mb-4">ดำเนินการด่วน</h3>
             <div class="space-y-2">
               {[
                 { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary', onClick: () => route('/admin/users') },
@@ -98,7 +98,7 @@ export function DashboardPage({ path }) {
                 <button
                   key={action.label}
                   onClick={action.onClick}
-                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-tiwhub-body dark:text-tiwhub-bg/80 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors"
+                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
                 >
                   <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
                   {action.label}

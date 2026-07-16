@@ -2,40 +2,39 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary brand */
-  --color-tiwhub-primary: #1e3a8a;
-  --color-tiwhub-primary-light: #3b5cc7;
-  --color-tiwhub-primary-dark: #13255c;
-  /* Accent brand */
-  --color-tiwhub-accent: #f59e0b;
-  --color-tiwhub-accent-light: #fbbf24;
-  --color-tiwhub-accent-dark: #d97706;
-  /* Surface / Neutral */
-  --color-tiwhub-bg: #f8fafc;
-  --color-tiwhub-surface: #ffffff;
-  --color-tiwhub-surface-hover: #f1f5f9;
-  --color-tiwhub-heading: #0f172a;
-  --color-tiwhub-body: #475569;
-  --color-tiwhub-muted: #94a3b8;
-  --color-tiwhub-border: #cbd5e1;
-  --color-tiwhub-border-light: #e2e8f0;
-  --color-deep-navy: #0f172a;
-  /* Semantic */
-  --color-tiwhub-success: #10b981;
-  --color-tiwhub-warning: #f59e0b;
-  --color-tiwhub-danger: #ef4444;
-  /* Typography */
+  --color-oasis-primary: #8b5cf6;
+  --color-oasis-primary-light: #a78bfa;
+  --color-oasis-primary-dark: #7c3aed;
+  --color-oasis-accent: #f472b6;
+  --color-oasis-accent-light: #f9a8d4;
+  --color-oasis-accent-dark: #ec4899;
+  --color-oasis-bg: #fafafa;
+  --color-oasis-surface: #ffffff;
+  --color-oasis-surface-hover: #f4f4f5;
+  --color-oasis-heading: #18181b;
+  --color-oasis-body: #52525b;
+  --color-oasis-muted: #a1a1aa;
+  --color-oasis-border: #e4e4e7;
+  --color-oasis-border-light: #f4f4f5;
+  --color-oasis-success: #10b981;
+  --color-oasis-success-light: #d1fae5;
+  --color-oasis-success-dark: #059669;
+  --color-oasis-warning: #f59e0b;
+  --color-oasis-warning-light: #fef3c7;
+  --color-oasis-warning-dark: #d97706;
+  --color-oasis-danger: #ef4444;
+  --color-oasis-danger-light: #fee2e2;
+  --color-oasis-danger-dark: #dc2626;
   --font-family-sans: 'Sarabun', sans-serif;
-  /* Animations */
   --animate-fade-in: fade-in 0.3s ease-in-out;
   --animate-slide-up: slide-up 0.4s ease-out;
   --animate-scale-in: scale-in 0.3s ease-out;
   @keyframes fade-in {
-    0% { opacity: 0; transform: translateY(-10px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
   @keyframes slide-up {
-    0% { opacity: 0; transform: translateY(20px); }
+    0% { opacity: 0; transform: translateY(12px); }
     100% { opacity: 1; transform: translateY(0); }
   }
   @keyframes scale-in {
@@ -61,15 +60,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-  }
-}
-
-@layer base {
-  body {
-    font-family: var(--font-family-sans);
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 }

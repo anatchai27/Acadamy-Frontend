@@ -65,26 +65,26 @@ export function AdminLayout({ children, path }) {
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
 
   return (
-    <div class="min-h-screen bg-tiwhub-bg dark:bg-tiwhub-heading">
-      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-tiwhub-surface dark:bg-tiwhub-heading border-r border-tiwhub-border-light dark:border-tiwhub-border/20">
-        <div class="flex h-16 items-center gap-3 px-6 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
+    <div class="min-h-screen bg-oasis-bg">
+      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-white border-r border-zinc-200/60">
+        <div class="flex h-16 items-center gap-3 px-6 border-b border-zinc-200/60">
           {state.instituteLogo ? (
-            <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-lg object-cover shrink-0" />
+            <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-xl object-cover shrink-0" />
           ) : (
-            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-tiwhub-primary text-white font-bold text-sm shrink-0">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-oasis-primary text-white font-semibold text-sm shrink-0">
               TH
             </div>
           )}
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-tiwhub-heading dark:text-white leading-tight">
+            <span class="text-lg font-semibold text-zinc-900 leading-tight tracking-tight">
               {state.instituteName || 'TiwHub'}
             </span>
-            <span class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70 leading-tight">Admin Panel</span>
+            <span class="text-xs text-zinc-400 leading-tight">Admin Panel</span>
           </div>
         </div>
 
         <nav class="flex-1 space-y-1 px-3 py-5 overflow-y-auto">
-          <p class="px-3 mb-2 text-xs font-semibold text-tiwhub-muted/60 dark:text-tiwhub-muted/40 uppercase tracking-wider">
+          <p class="px-3 mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             เมนูหลัก
           </p>
           {menuItems.map((item) => {
@@ -95,35 +95,35 @@ export function AdminLayout({ children, path }) {
                 onClick={() => route(item.path)}
                 class={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-tiwhub-primary/10 text-tiwhub-primary dark:bg-tiwhub-primary/15 dark:text-tiwhub-primary-light shadow-sm ring-1 ring-tiwhub-primary/10 dark:ring-tiwhub-primary/20'
-                    : 'text-tiwhub-body hover:bg-tiwhub-surface-hover hover:text-tiwhub-heading dark:text-tiwhub-muted dark:hover:bg-tiwhub-heading/40 dark:hover:text-tiwhub-bg'
+                    ? 'bg-oasis-primary/5 text-oasis-primary shadow-sm'
+                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
                 }`}
               >
-                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-tiwhub-primary dark:text-tiwhub-primary-light' : ''}`} />
+                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-oasis-primary' : ''}`} />
                 {item.label}
                 {isActive && (
-                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-tiwhub-primary dark:bg-tiwhub-primary-light" />
+                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-oasis-primary" />
                 )}
               </button>
             );
           })}
         </nav>
 
-        <div class="border-t border-tiwhub-border-light dark:border-tiwhub-border/20 p-4">
+        <div class="border-t border-zinc-200/60 p-4">
           <div class="flex items-center gap-3 mb-3 px-1">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold shrink-0">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold shrink-0">
               {avatarChar}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-tiwhub-heading dark:text-white truncate">
+              <p class="text-sm font-medium text-zinc-900 truncate">
                 {displayName}
               </p>
-              <p class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70">{displayRole}</p>
+              <p class="text-xs text-zinc-400">{displayRole}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-tiwhub-body hover:text-tiwhub-danger hover:bg-tiwhub-danger/10 dark:text-tiwhub-muted dark:hover:text-tiwhub-danger dark:hover:bg-tiwhub-danger/10 transition-all duration-200"
+            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-500 hover:text-oasis-danger hover:bg-oasis-danger/5 transition-all duration-200"
           >
             <LogoutIcon class="h-5 w-5 shrink-0" />
             ออกจากระบบ
@@ -132,64 +132,64 @@ export function AdminLayout({ children, path }) {
       </aside>
 
       {/* Mobile Header */}
-      <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-b border-tiwhub-border-light dark:border-tiwhub-border/20 flex items-center justify-between px-4">
+      <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-white/80 backdrop-blur-lg border-b border-zinc-200/60 flex items-center justify-between px-4">
         <div class="flex items-center gap-2">
           {state.instituteLogo ? (
-            <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-md object-cover shrink-0" />
+            <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-lg object-cover shrink-0" />
           ) : (
-            <div class="flex h-7 w-7 items-center justify-center rounded-md bg-tiwhub-primary text-white font-bold text-xs shrink-0">
+            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-oasis-primary text-white font-semibold text-xs shrink-0">
               TH
             </div>
           )}
-          <span class="text-base font-semibold text-tiwhub-heading dark:text-white">{currentTitle}</span>
+          <span class="text-base font-semibold text-zinc-900">{currentTitle}</span>
         </div>
-        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold">
+        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold">
           {avatarChar}
         </div>
       </header>
 
       {/* Desktop Top Bar */}
-      <header class="hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
+      <header class="hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 bg-white/80 backdrop-blur-lg border-b border-zinc-200/60">
         <div class="flex items-center gap-4">
           <div>
-            <h1 class="text-lg font-semibold text-tiwhub-heading dark:text-white">{currentTitle}</h1>
-            <p class="text-xs text-tiwhub-muted dark:text-tiwhub-muted/70">
+            <h1 class="text-lg font-semibold text-zinc-900 tracking-tight">{currentTitle}</h1>
+            <p class="text-xs text-zinc-400">
               {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
           <button
             onClick={() => route('/admin/attendance')}
-            class="px-4 py-2 text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors flex items-center gap-2"
+            class="px-4 py-2 text-sm font-medium text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl transition-colors flex items-center gap-2 shadow-sm"
           >
             <QrScanIcon class="h-4 w-4" />
             สแกน QR
           </button>
         </div>
         <div class="flex items-center gap-4">
-          <button class="relative p-2 text-tiwhub-muted hover:text-tiwhub-body dark:hover:text-tiwhub-bg transition-colors rounded-lg hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40">
+          <button class="relative p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-xl hover:bg-zinc-50">
             <BellIcon class="h-5 w-5" />
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-tiwhub-danger ring-2 ring-tiwhub-surface dark:ring-tiwhub-heading" />
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-oasis-danger ring-2 ring-white" />
           </button>
           <div class="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setDropdownOpen(!dropdownOpen); }}
-              class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors"
+              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-zinc-50 transition-colors"
             >
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light text-xs font-semibold">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold">
                 {avatarChar}
               </div>
-              <span class="text-sm font-medium text-tiwhub-body dark:text-tiwhub-muted">{displayName}</span>
-              <ChevronDownIcon class="h-4 w-4 text-tiwhub-muted" />
+              <span class="text-sm font-medium text-zinc-600">{displayName}</span>
+              <ChevronDownIcon class="h-4 w-4 text-zinc-400" />
             </button>
             {dropdownOpen && (
-              <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-30">
-                <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
-                  <p class="text-sm font-medium text-slate-900 dark:text-white">{displayName}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">{displayRole}</p>
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-zinc-200/80 py-1 z-30">
+                <div class="px-4 py-2 border-b border-zinc-100">
+                  <p class="text-sm font-medium text-zinc-900">{displayName}</p>
+                  <p class="text-xs text-zinc-500">{displayRole}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-700 hover:bg-oasis-danger/5 hover:text-oasis-danger transition-colors"
                 >
                   <LogoutIcon class="h-4 w-4" />
                   ออกจากระบบ
@@ -206,7 +206,7 @@ export function AdminLayout({ children, path }) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-tiwhub-surface/80 dark:bg-tiwhub-heading/80 backdrop-blur-lg border-t border-tiwhub-border-light dark:border-tiwhub-border/20 flex items-center justify-around safe-area-bottom">
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-white/80 backdrop-blur-lg border-t border-zinc-200/60 flex items-center justify-around safe-area-bottom">
         {menuItems.map((item) => {
           const isActive = currentPath === item.path;
           return (
@@ -215,8 +215,8 @@ export function AdminLayout({ children, path }) {
               onClick={() => route(item.path)}
               class={`flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${
                 isActive
-                  ? 'text-tiwhub-primary dark:text-tiwhub-primary-light'
-                  : 'text-tiwhub-muted dark:text-tiwhub-muted/60'
+                  ? 'text-oasis-primary'
+                  : 'text-zinc-400'
               }`}
             >
               <item.icon class="h-5 w-5" />

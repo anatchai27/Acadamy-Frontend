@@ -12,14 +12,17 @@ import { Button } from './button';
  */
 export function AuthPageShell({ navActionLabel, navActionHref, children }) {
   return (
-    <div class="min-h-screen bg-slate-50 flex items-center justify-center pt-24 pb-10 px-6">
-      <nav class="fixed top-0 left-0 right-0 bg-slate-50/90 backdrop-blur-sm border-b border-slate-200 z-10">
+    <div class="min-h-screen bg-oasis-bg flex items-center justify-center pt-24 pb-10 px-6">
+      <nav class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-b border-zinc-200/60 z-10">
         <div class="container mx-auto px-6 py-4 flex items-center justify-between">
           <span
-            class="text-xl font-bold text-slate-900 tracking-tight cursor-pointer"
+            class="text-xl font-semibold text-zinc-900 tracking-tight cursor-pointer"
             onClick={() => route('/')}
           >
-            TiwHub
+            <span class="flex items-center gap-2">
+              <span class="w-6 h-6 bg-oasis-primary rounded-full inline-block" />
+              TiwHub
+            </span>
           </span>
           {navActionLabel && navActionHref && (
             <Button variant="outline" size="sm" onClick={() => route(navActionHref)}>

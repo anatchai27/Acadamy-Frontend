@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
+import { QRCode } from 'react-qr-code';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, showToast } from '../../components/ui';
 import { studentService } from '../../services';
@@ -226,13 +227,15 @@ export function StudentProfilePage({ path, id }) {
             <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">บัตร QR Code</h3>
             <p class="text-xs text-slate-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
 
-            <div class="w-48 h-48 mx-auto bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mb-4">
+            <div class="w-48 h-48 mx-auto bg-white dark:bg-slate-700 rounded-xl flex items-center justify-center mb-4 p-2">
               {qrToken ? (
-                <div class="text-center px-4">
-                  <QrLargeIcon class="h-16 w-16 mx-auto text-amber-500 mb-2" />
-                  <p class="text-xs font-mono text-slate-600 dark:text-slate-300 break-all leading-relaxed">
-                    {qrToken.qrToken}
-                  </p>
+                <div class="flex flex-col items-center gap-2">
+                  <QRCode
+                    value={qrToken.qrToken || String(qrToken)}
+                    size={160}
+                    bgColor="transparent"
+                    fgColor="#1e293b"
+                  />
                   {qrToken.expiresAt && (
                     <p class="text-xs text-slate-400 mt-2">
                       หมดอายุ {formatDate(qrToken.expiresAt)}

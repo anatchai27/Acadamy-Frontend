@@ -83,14 +83,14 @@ export function LogoUpload({ value, onChange, error }) {
 
   return (
     <div class="flex flex-col gap-1.5">
-      <label class="text-sm text-slate-900 font-medium">โลโก้สถาบัน</label>
+      <label class="text-sm text-zinc-800 font-medium">โลโก้สถาบัน</label>
       <div
-        class={`relative w-40 h-40 border-2 border-dashed rounded-sm flex items-center justify-center cursor-pointer transition-colors ${
+        class={`relative w-40 h-40 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-colors ${
           error
-            ? 'border-red-500 bg-red-50'
+            ? 'border-red-400 bg-red-50'
             : isDragging
-            ? 'border-blue-800 bg-blue-50'
-            : 'border-slate-300 bg-white hover:border-slate-400'
+            ? 'border-oasis-primary bg-oasis-primary/5'
+            : 'border-zinc-200 bg-white hover:border-zinc-300'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragOver={handleDragOver}
@@ -99,10 +99,10 @@ export function LogoUpload({ value, onChange, error }) {
       >
         {preview ? (
           <>
-            <img src={preview} alt="โลโก้สถาบัน" class="w-full h-full object-cover rounded-sm" />
+            <img src={preview} alt="โลโก้สถาบัน" class="w-full h-full object-cover rounded-xl" />
             <button
               type="button"
-              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-sm p-1 hover:bg-red-600 transition-colors"
+              class="absolute -top-2 -right-2 bg-oasis-danger text-white rounded-full p-1.5 hover:bg-oasis-danger-dark transition-colors shadow-sm"
               onClick={handleRemove}
               title="ลบรูปภาพ"
             >
@@ -112,8 +112,8 @@ export function LogoUpload({ value, onChange, error }) {
         ) : (
           <div class="flex flex-col items-center gap-2 p-4">
             <CameraIcon />
-            <span class="text-xs text-slate-500 text-center">คลิกหรือลากไฟล์มาวาง</span>
-            <span class="text-xs text-slate-400">.jpg .png .webp (สูงสุด 2MB)</span>
+            <span class="text-xs text-zinc-500 text-center">คลิกหรือลากไฟล์มาวาง</span>
+            <span class="text-xs text-zinc-400">.jpg .png .webp (สูงสุด 2MB)</span>
           </div>
         )}
         <input

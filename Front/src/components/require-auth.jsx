@@ -14,8 +14,8 @@ export function requireAuth(Component) {
 
     if (state.isAuthLoading) {
       return (
-        <div class="flex items-center justify-center min-h-screen bg-tiwhub-bg dark:bg-tiwhub-heading">
-          <div class="h-10 w-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
+          <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
         </div>
       );
     }
