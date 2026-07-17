@@ -5,8 +5,10 @@ using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Services;
 using academy_API.Services.Contracts;
+using academy_API.Services.Interface;
 using academy_API.Controllers;
 using academy_API.Utilities;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -103,6 +105,11 @@ builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["Line:ChannelAccessToken"]}");
 });
 
+// Register THAI DATA CLOUD S3-compatible storage
+builder.Services.Configure<ThaiDataCloudOptions>(
+    builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
+builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
+
 // Register TutoringDbContext with TiDB Cloud connection
 var connectionString = builder.Configuration.GetConnectionString("TutoringDbConnection")
     ?? throw new InvalidOperationException("Connection string 'TutoringDbConnection' not found.");
@@ -156,6 +163,7 @@ app.MapLeaveRequestEndpoints();
 app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
+app.MapFileUploadEndpoints();
 
 // Database connection test endpoint
 app.MapGet("/api/v1/test-connection", (IDbConnectionValidator validator) =>

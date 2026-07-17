@@ -63,47 +63,6 @@ public static class InstituteEndpoints
             return Results.Ok(new { status = "success", message = "บันทึกข้อมูลสถาบันสำเร็จ" });
         });
 
-        group.MapPost("/logo", async (HttpContext httpContext, TutoringDbContext db, IFormFile file, CancellationToken ct) =>
-        {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
-            if (file is null || file.Length == 0)
-                return Results.BadRequest(new { error = "No file uploaded." });
-
-            if (!file.ContentType.StartsWith("image/"))
-                return Results.BadRequest(new { error = "Only image files are allowed." });
-
-            if (file.Length > 2 * 1024 * 1024)
-                return Results.BadRequest(new { error = "File size must not exceed 2MB." });
-
-            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "logos");
-            Directory.CreateDirectory(uploadsDir);
-
-            var ext = Path.GetExtension(file.FileName);
-            var fileName = $"institute_{instituteId}_{DateTime.UtcNow:yyyyMMddHHmmss}{ext}";
-            var filePath = Path.Combine(uploadsDir, fileName);
-
-            await using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream, ct);
-            }
-
-            var logoUrl = $"/uploads/logos/{fileName}";
-
-            var institute = await db.Institutes.FirstOrDefaultAsync(i => i.Id == instituteId, ct);
-            if (institute is not null)
-            {
-                institute.LogoUrl = logoUrl;
-                institute.UpdatedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync(ct);
-            }
-
-            return Results.Ok(new { status = "success", data = new { logoUrl } });
-        })
-        .DisableAntiforgery();
-
         return app;
     }
 }

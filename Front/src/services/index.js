@@ -72,3 +72,10 @@ export {
   enrollmentService,
   enrollStudent,
 } from './enrollment-service';
+export {
+  uploadService,
+  uploadPaymentSlip,
+  uploadHomeworkFile,
+  uploadHomeworkSubmission,
+  uploadStudentPhoto,
+} from './upload-service';

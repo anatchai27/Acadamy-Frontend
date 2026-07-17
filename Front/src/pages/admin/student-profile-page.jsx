@@ -72,8 +72,8 @@ export function StudentProfilePage({ path, id }) {
     return (
       <AdminLayout path={path}>
         <div class="flex flex-col items-center justify-center py-20 gap-3">
-          <div class="h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <span class="text-slate-400">กำลังโหลดข้อมูล...</span>
+          <div class="flex h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <span class="text-zinc-400">กำลังโหลดข้อมูล...</span>
         </div>
       </AdminLayout>
     );
@@ -83,10 +83,10 @@ export function StudentProfilePage({ path, id }) {
     return (
       <AdminLayout path={path}>
         <div class="text-center py-20">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <UserXIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <UserXIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">{error}</h3>
+          <h3 class="text-lg font-semibold text-zinc-700 mb-1">{error}</h3>
           <Button variant="outline" size="md" onClick={handleBack}>กลับไปหน้านักเรียน</Button>
         </div>
       </AdminLayout>
@@ -102,7 +102,7 @@ export function StudentProfilePage({ path, id }) {
         <button
           type="button"
           onClick={handleBack}
-          class="text-sm text-tiwhub-muted hover:text-tiwhub-heading dark:hover:text-white transition-colors flex items-center gap-1 mb-2"
+          class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-2"
         >
           <ChevronLeftIcon class="h-4 w-4" />
           กลับไปหน้านักเรียน
@@ -110,22 +110,22 @@ export function StudentProfilePage({ path, id }) {
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-2xl font-bold">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-bold">
               {student.nickname?.[0] || student.fullName?.[0] || '?'}
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">
+              <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
                 {student.fullName || '-'}
               </h2>
               <div class="flex items-center gap-2 mt-1">
                 {student.nickname && (
-                  <span class="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+                  <span class="inline-flex items-center gap-1 text-sm text-zinc-500">
                     <TagIcon class="h-3.5 w-3.5" />
                     {student.nickname}
                   </span>
                 )}
                 {student.grade && (
-                  <span class="inline-flex items-center rounded-md bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                  <span class="inline-flex items-center rounded-md bg-oasis-primary/5 px-2.5 py-0.5 text-xs font-medium text-oasis-primary">
                     {student.grade}
                   </span>
                 )}
@@ -153,9 +153,9 @@ export function StudentProfilePage({ path, id }) {
         {/* Left Column — Student Details */}
         <div class="lg:col-span-2 space-y-6">
           {/* Personal Info Card */}
-          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white">ข้อมูลส่วนตัว</h3>
+          <div class="bg-white rounded-xl border border-zinc-200/80 overflow-hidden">
+            <div class="px-6 py-4 border-b border-zinc-100">
+              <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
             </div>
             <div class="p-6">
               <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">

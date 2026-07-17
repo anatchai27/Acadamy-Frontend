@@ -5,17 +5,17 @@ import { logout } from '../services/auth-service';
 import { showConfirm } from '../components/ui';
 
 const menuItems = [
-  { path: '/admin/dashboard', label: 'หน้าหลัก', icon: DashboardIcon },
-  { path: '/admin/students', label: 'นักเรียน', icon: StudentIcon },
-  { path: '/admin/teachers', label: 'ครูผู้สอน', icon: TeacherIcon },
-  { path: '/admin/courses', label: 'คอร์สเรียน', icon: CourseIcon },
-  { path: '/admin/attendance', label: 'เช็คชื่อ', icon: AttendanceIcon },
-  { path: '/admin/requests', label: 'คำร้องขอ', icon: RequestIcon },
-  { path: '/admin/academics', label: 'ระบบวิชาการ', icon: AcademicsIcon },
-  { path: '/admin/finance', label: 'การเงิน', icon: FinanceIcon },
-  { path: '/admin/products', label: 'สินค้า', icon: PackageIcon },
-  { path: '/admin/users', label: 'ผู้ใช้', icon: UsersMenuIcon },
-  { path: '/admin/settings', label: 'ตั้งค่า', icon: SettingsIcon },
+  { path: '/admin/dashboard', label: 'หน้าหลัก', icon: DashboardIcon, roles: ['admin', 'teacher', 'staff'] },
+  { path: '/admin/students', label: 'นักเรียน', icon: StudentIcon, roles: ['admin', 'teacher', 'staff'] },
+  { path: '/admin/teachers', label: 'ครูผู้สอน', icon: TeacherIcon, roles: ['admin'] },
+  { path: '/admin/courses', label: 'คอร์สเรียน', icon: CourseIcon, roles: ['admin', 'teacher'] },
+  { path: '/admin/attendance', label: 'เช็คชื่อ', icon: AttendanceIcon, roles: ['admin', 'teacher'] },
+  { path: '/admin/requests', label: 'คำร้องขอ', icon: RequestIcon, roles: ['admin', 'teacher'] },
+  { path: '/admin/academics', label: 'ระบบวิชาการ', icon: AcademicsIcon, roles: ['admin', 'teacher'] },
+  { path: '/admin/finance', label: 'การเงิน', icon: FinanceIcon, roles: ['admin'] },
+  { path: '/admin/products', label: 'สินค้า', icon: PackageIcon, roles: ['admin', 'staff'] },
+  { path: '/admin/users', label: 'ผู้ใช้', icon: UsersMenuIcon, roles: ['admin'] },
+  { path: '/admin/settings', label: 'ตั้งค่า', icon: SettingsIcon, roles: ['admin'] },
 ];
 
 function getPageTitle(path) {
@@ -63,6 +63,8 @@ export function AdminLayout({ children, path }) {
     || 'admin';
   const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : profile?.role === 'teacher' ? 'ผู้สอน' : 'สมาชิก';
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
+  const userRole = profile?.role || 'admin';
+  const filteredMenuItems = menuItems.filter((item) => item.roles.includes(userRole));
 
   return (
     <div class="min-h-screen bg-oasis-bg">
@@ -87,7 +89,7 @@ export function AdminLayout({ children, path }) {
           <p class="px-3 mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             เมนูหลัก
           </p>
-          {menuItems.map((item) => {
+{filteredMenuItems.map((item) => {
             const isActive = currentPath === item.path;
             return (
               <button
@@ -207,7 +209,7 @@ export function AdminLayout({ children, path }) {
 
       {/* Mobile Bottom Navigation */}
       <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-white/80 backdrop-blur-lg border-t border-zinc-200/60 flex items-center justify-around safe-area-bottom">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isActive = currentPath === item.path;
           return (
             <button

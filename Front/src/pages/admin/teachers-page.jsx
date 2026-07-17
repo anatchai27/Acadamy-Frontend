@@ -90,8 +90,8 @@ export function TeachersPage({ path }) {
       {/* Header */}
       <div class="mb-8 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ครูผู้สอน</h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">ครูผู้สอน</h2>
+          <p class="text-sm text-zinc-500 mt-1">
             {teachers.length > 0 ? `ทั้งหมด ${teachers.length} คน` : 'จัดการข้อมูลครูผู้สอน'}
           </p>
         </div>
@@ -105,8 +105,8 @@ export function TeachersPage({ path }) {
 
       {/* Add Teacher Form */}
       {showForm && (
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">เพิ่มครูผู้สอนใหม่</h3>
+        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">เพิ่มครูผู้สอนใหม่</h3>
           <form onSubmit={handleSubmitTeacher}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SolidInput
@@ -138,7 +138,7 @@ export function TeachersPage({ path }) {
                 onInput={updateField('photoUrl')}
               />
               <div class="md:col-span-2">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">
+                <label class="text-sm font-medium text-zinc-800 mb-1.5 block">
                   ประวัติ / ข้อมูลเพิ่มเติม
                 </label>
                 <textarea
@@ -146,11 +146,11 @@ export function TeachersPage({ path }) {
                   onInput={updateField('bio')}
                   placeholder="ประสบการณ์สอน หรือข้อมูลเพิ่มเติม"
                   rows={3}
-                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white placeholder-slate-400 resize-none transition-colors"
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800 placeholder:text-zinc-400 resize-none transition-colors"
                 />
               </div>
             </div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 บันทึก
               </Button>
@@ -175,19 +175,19 @@ export function TeachersPage({ path }) {
       {/* Loading */}
       {loading && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลดข้อมูล...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && teachers.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <UserGroupIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <UserGroupIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ไม่พบข้อมูลครูผู้สอน</h3>
-          <p class="text-sm text-slate-400 mb-6">
+          <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบข้อมูลครูผู้สอน</h3>
+          <p class="text-sm text-zinc-400 mb-6">
             {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีครูผู้สอนในสถาบัน'}
           </p>
           {!search && (
@@ -204,22 +204,22 @@ export function TeachersPage({ path }) {
           {teachers.map((teacher) => (
             <div
               key={teacher.id}
-              class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow overflow-hidden"
+              class="bg-white rounded-xl border border-zinc-200/80 hover:shadow-md transition-shadow overflow-hidden"
             >
               <div class="p-5">
                 <div class="flex items-start gap-4">
-                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xl font-bold">
+                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-bold">
                     {teacher.fullName?.[0] || '?'}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">
+                    <h3 class="text-base font-semibold text-zinc-900 truncate">
                       {teacher.fullName || '-'}
                     </h3>
                     {teacher.userEmail && (
-                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{teacher.userEmail}</p>
+                      <p class="text-xs text-zinc-500 mt-0.5 truncate">{teacher.userEmail}</p>
                     )}
                     {teacher.specialization && (
-                      <span class="mt-2 inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+                      <span class="mt-2 inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
                         {teacher.specialization}
                       </span>
                     )}
@@ -227,13 +227,13 @@ export function TeachersPage({ path }) {
                 </div>
 
                 {teacher.bio && (
-                  <p class="mt-3 text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{teacher.bio}</p>
+                  <p class="mt-3 text-sm text-zinc-600 line-clamp-2">{teacher.bio}</p>
                 )}
 
                 {teacher.hourlyRate != null && (
                   <div class="mt-3 flex items-center gap-2 text-sm">
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400">ค่าสอน/ชม.</span>
-                    <span class="font-bold text-amber-600 dark:text-amber-400">{formatCurrency(teacher.hourlyRate)}</span>
+                    <span class="text-xs font-medium text-zinc-500">ค่าสอน/ชม.</span>
+                    <span class="font-bold text-oasis-primary">{formatCurrency(teacher.hourlyRate)}</span>
                   </div>
                 )}
               </div>

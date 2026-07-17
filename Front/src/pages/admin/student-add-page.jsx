@@ -91,21 +91,21 @@ export function StudentAddPage({ path }) {
         <button
           type="button"
           onClick={() => route('/admin/students')}
-          class="text-sm text-tiwhub-muted hover:text-tiwhub-heading dark:hover:text-white transition-colors flex items-center gap-1 mb-2"
+          class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-2"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           กลับไปหน้านักเรียน
         </button>
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">เพิ่มนักเรียนใหม่</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">กรอกข้อมูลนักเรียนให้ครบถ้วน</p>
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">เพิ่มนักเรียนใหม่</h2>
+        <p class="text-sm text-zinc-500 mt-1">กรอกข้อมูลนักเรียนให้ครบถ้วน</p>
       </div>
 
       <form onSubmit={handleSubmit} class="max-w-3xl">
         {/* Section 1: Student Info */}
-        <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-6 mb-6">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">ข้อมูลส่วนตัวนักเรียน</h3>
+        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลส่วนตัวนักเรียน</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SolidInput
               label="ชื่อ-นามสกุล"
@@ -140,7 +140,7 @@ export function StudentAddPage({ path }) {
             />
           </div>
           <div class="mt-4">
-            <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">
+            <label class="text-sm font-medium text-zinc-800 mb-1.5 block">
               ข้อมูลทางการแพทย์ (ถ้ามี)
             </label>
             <Textarea
@@ -153,32 +153,32 @@ export function StudentAddPage({ path }) {
         </div>
 
         {/* Section 2: Parents */}
-        <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-6 mb-6">
+        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white">ข้อมูลผู้ปกครอง</h3>
+            <h3 class="text-base font-semibold text-zinc-900">ข้อมูลผู้ปกครอง</h3>
             <button
               type="button"
               onClick={addParent}
-              class="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
+              class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors"
             >
               + เพิ่มผู้ปกครอง
             </button>
           </div>
           <div class="space-y-6">
             {parents.map((parent) => (
-              <div key={parent._key} class="border border-slate-200 dark:border-slate-600 rounded-sm p-4 relative">
+              <div key={parent._key} class="border border-zinc-200 rounded-xl p-4 relative">
                 {parents.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeParent(parent._key)}
-                    class="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors"
+                    class="absolute top-2 right-2 text-zinc-400 hover:text-oasis-danger transition-colors"
                   >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 )}
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">
+                <p class="text-xs font-medium text-zinc-500 mb-3">
                   ผู้ปกครองคนที่ {parents.findIndex((p) => p._key === parent._key) + 1}
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -196,13 +196,13 @@ export function StudentAddPage({ path }) {
                     onInput={updateParent(parent._key, 'phone')}
                   />
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                    <label class="text-sm font-medium text-zinc-800">
                       ความสัมพันธ์
                     </label>
                     <select
                       value={parent.relationship}
                       onChange={updateParent(parent._key, 'relationship')}
-                      class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-sm text-sm focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
+                      class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
                     >
                       <option value="แม่">แม่</option>
                       <option value="พ่อ">พ่อ</option>
@@ -217,8 +217,8 @@ export function StudentAddPage({ path }) {
         </div>
 
         {/* Section 3: PDPA */}
-        <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-6 mb-6">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">การยินยอม PDPA</h3>
+        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">การยินยอม PDPA</h3>
           <Checkbox
             id="consent"
             label="ฉันยอมรับข้อตกลงและเงื่อนไขการใช้งานข้อมูลส่วนบุคคล (PDPA)"

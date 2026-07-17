@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
@@ -26,12 +26,13 @@ export function CoursesPage({ path }) {
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const getSignal = useAbortController();
+  const debounceRef = useRef(null);
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (query = '') => {
     setLoading(true);
     try {
       const params = {};
-      if (search.trim()) params.search = search.trim();
+      if (query.trim()) params.search = query.trim();
       const res = await courseService.getCourses(params, { signal: getSignal() });
       const payload = res.data?.data || res.data || {};
       setCourses(payload.courses || (Array.isArray(payload) ? payload : []));
@@ -51,9 +52,16 @@ export function CoursesPage({ path }) {
   };
 
   useEffect(() => {
-    fetchCourses();
+    fetchCourses(search);
     fetchTeachers();
   }, []);
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchCourses(value), 300);
+  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -109,7 +117,7 @@ export function CoursesPage({ path }) {
       }
 
       closeForm();
-      fetchCourses();
+      fetchCourses(search);
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ กรุณาลองใหม่';
       showToast(msg, 'error');
@@ -120,7 +128,7 @@ export function CoursesPage({ path }) {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchCourses();
+    fetchCourses(search);
   };
 
   const activeCount = courses.filter((c) => c.totalSessions > 0).length;
@@ -130,8 +138,8 @@ export function CoursesPage({ path }) {
       {/* Header */}
       <div class="mb-8 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">คอร์สเรียน</h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">คอร์สเรียน</h2>
+          <p class="text-sm text-zinc-500 mt-1">
             {courses.length > 0
               ? `ทั้งหมด ${courses.length} คอร์ส · เปิดสอน ${activeCount}`
               : 'จัดการคอร์สเรียนทั้งหมด'}
@@ -147,8 +155,8 @@ export function CoursesPage({ path }) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
+        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขคอร์สเรียน' : 'เพิ่มคอร์สเรียนใหม่'}
           </h3>
           <form onSubmit={handleSubmit}>
@@ -185,13 +193,13 @@ export function CoursesPage({ path }) {
                 onInput={updateField('price')}
               />
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                <label class="text-sm font-medium text-zinc-800">
                   ครูผู้สอน
                 </label>
                 <select
                   value={form.teacherId}
                   onChange={updateField('teacherId')}
-                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white"
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
                 >
                   <option value="">เลือกครูผู้สอน</option>
                   {teachers.map((t) => (
@@ -200,7 +208,7 @@ export function CoursesPage({ path }) {
                 </select>
               </div>
             </div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 {editingId ? 'อัปเดตคอร์ส' : 'บันทึกคอร์ส'}
               </Button>
@@ -213,34 +221,31 @@ export function CoursesPage({ path }) {
       )}
 
       {/* Search */}
-      <form onSubmit={handleSearchSubmit} class="mb-6 flex gap-2">
-        <div class="flex-1">
-          <SolidInput
-            type="text"
-            placeholder="ค้นหาชื่อคอร์สหรือวิชา..."
-            value={search}
-            onInput={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" size="md" type="submit">ค้นหา</Button>
+      <form class="mb-6">
+        <SolidInput
+          type="text"
+          placeholder="ค้นหาชื่อคอร์สหรือวิชา..."
+          value={search}
+          onInput={handleSearch}
+        />
       </form>
 
       {/* Loading */}
       {loading && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลดข้อมูล...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && courses.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <BookIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <BookIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ไม่พบคอร์สเรียน</h3>
-          <p class="text-sm text-slate-400 mb-6">
+          <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบคอร์สเรียน</h3>
+          <p class="text-sm text-zinc-400 mb-6">
             {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}
           </p>
           {!search && (
@@ -257,19 +262,19 @@ export function CoursesPage({ path }) {
           {courses.map((course) => (
             <div
               key={course.id}
-              class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200 overflow-hidden"
+              class="bg-white rounded-xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden"
             >
               <div class="p-5">
                 <div class="flex items-start justify-between gap-2 mb-3">
-                  <h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">
+                  <h3 class="text-base font-semibold text-zinc-900 truncate">
                     {course.name || '-'}
                   </h3>
-                  <span class="shrink-0 inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  <span class="shrink-0 inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
                     {course.subject || '-'}
                   </span>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500">
                   {course.teacherName && (
                     <span class="inline-flex items-center gap-1">
                       <UserIcon class="h-3 w-3" />
@@ -283,27 +288,27 @@ export function CoursesPage({ path }) {
                     </span>
                   )}
                   {course.price != null && (
-                    <span class="font-bold text-amber-600 dark:text-amber-400">
+                    <span class="font-bold text-oasis-primary">
                       {formatCurrency(course.price)}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div class="border-t border-slate-100 dark:border-slate-700 flex items-stretch">
+              <div class="border-t border-zinc-100 flex items-stretch">
                 <button
                   type="button"
                   onClick={() => route(`/admin/courses/${course.id}/sessions`)}
-                  class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                  class="flex-1 px-4 py-3 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors flex items-center justify-center gap-1.5"
                 >
                   <CalendarIcon class="h-4 w-4" />
                   ตารางสอน
                 </button>
-                <div class="w-px bg-slate-100 dark:bg-slate-700" />
+                <div class="w-px bg-zinc-100" />
                 <button
                   type="button"
                   onClick={() => openEdit(course)}
-                  class="flex-1 px-4 py-3 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-center gap-1.5"
+                  class="flex-1 px-4 py-3 text-sm font-medium text-oasis-primary hover:bg-oasis-primary/5 transition-colors flex items-center justify-center gap-1.5"
                 >
                   <EditIcon class="h-4 w-4" />
                   แก้ไข

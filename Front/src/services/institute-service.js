@@ -11,7 +11,7 @@ export function updateInstitute(payload, options = {}) {
 export function uploadLogo(file, options = {}) {
   const formData = new FormData();
   formData.append('file', file);
-  return api.post('/institutes/logo', formData, {
+  return api.post('/uploads/logo', formData, {
     ...options,
     headers: { 'Content-Type': 'multipart/form-data' },
   });

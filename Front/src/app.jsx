@@ -1,5 +1,6 @@
 import { Router } from 'preact-router';
 import { IndexPage } from './pages/index';
+import { NotFoundPage } from './pages/not-found-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
 import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
@@ -44,6 +45,7 @@ export function App() {
         <AdminUsers path="/admin/users" />
         <AdminSettings path="/admin/settings" />
         <AdminProducts path="/admin/products" />
+        <NotFoundPage default />
       </Router>
       <ToastContainer />
       <ConfirmDialogContainer />

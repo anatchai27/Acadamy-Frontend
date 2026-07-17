@@ -26,7 +26,18 @@ export function useConfirmDialog() {
 export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resolver }) {
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [visible]);
 
   const handleResolve = (value) => {
     setVisible(false);
