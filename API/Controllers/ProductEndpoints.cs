@@ -1,5 +1,4 @@
 using academy_API.Services.Contracts;
-using academy_API.Utilities;
 
 namespace academy_API.Controllers;
 
@@ -14,11 +13,7 @@ public static class ProductEndpoints
 
         group.MapGet("/", async (HttpContext httpContext, IProductService service, CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
-            var products = await service.GetByInstituteIdAsync(instituteId.Value, ct);
+            var products = await service.GetAllAsync(ct);
             return Results.Ok(products);
         });
 
@@ -30,11 +25,7 @@ public static class ProductEndpoints
 
         group.MapPost("/", async (HttpContext httpContext, DTOs.CreateProductRequest request, IProductService service, CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
-            var created = await service.CreateAsync(instituteId.Value, request, ct);
+            var created = await service.CreateAsync(request, ct);
             return Results.Created($"/api/products/{created.Id}", created);
         });
 

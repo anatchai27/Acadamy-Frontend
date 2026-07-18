@@ -7,8 +7,8 @@ namespace academy_API.Repositories;
 
 public interface ILeaveRequestRepository
 {
-    Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(int? instituteId, string? status, int page, int limit, CancellationToken ct = default);
-    Task<LeaveRequest?> GetByIdAsync(int id, int? instituteId, CancellationToken ct = default);
+    Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(string? status, int page, int limit, CancellationToken ct = default);
+    Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken ct = default);
     Task ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
     Task RejectAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
     Task InsertMakeupCreditAsync(int studentId, int courseId, CancellationToken ct = default);
@@ -18,16 +18,13 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
 {
     private readonly TutoringDbContext _context = context;
 
-    public async Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(int? instituteId, string? status, int page, int limit, CancellationToken ct = default)
+    public async Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(string? status, int page, int limit, CancellationToken ct = default)
     {
         var query = _context.LeaveRequests
             .Include(l => l.Student)
             .Include(l => l.Session)
                 .ThenInclude(s => s.Course)
             .AsQueryable();
-
-        if (instituteId.HasValue)
-            query = query.Where(l => l.Student.InstituteId == instituteId.Value);
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(l => l.Status == status);
@@ -54,18 +51,13 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
         return (items, totalCount);
     }
 
-    public async Task<LeaveRequest?> GetByIdAsync(int id, int? instituteId, CancellationToken ct = default)
+    public async Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var query = _context.LeaveRequests
+        return await _context.LeaveRequests
             .Include(l => l.Student)
             .Include(l => l.Session)
                 .ThenInclude(s => s.Course)
-            .AsQueryable();
-
-        if (instituteId.HasValue)
-            query = query.Where(l => l.Student.InstituteId == instituteId.Value);
-
-        return await query.FirstOrDefaultAsync(l => l.Id == id, ct);
+            .FirstOrDefaultAsync(l => l.Id == id, ct);
     }
 
     public async Task ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default)

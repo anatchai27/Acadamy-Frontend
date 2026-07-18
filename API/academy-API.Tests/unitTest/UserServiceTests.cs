@@ -2,6 +2,7 @@ using academy_API.Data;
 using academy_API.Models;
 using academy_API.Services;
 using academy_API.Services.Contracts;
+using academy_API.Tests;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
@@ -15,7 +16,7 @@ public class UserServiceTests
             .UseInMemoryDatabase(dbName)
             .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
-        return new TutoringDbContext(options);
+        return new TutoringDbContext(options, new MockTenantProvider());
     }
 
     private static User CreateTestUser(string email = "test@example.com", string passwordHash = "$2a$11$hashedpassword", UserRole role = UserRole.student) => new()

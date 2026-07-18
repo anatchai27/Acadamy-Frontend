@@ -1,14 +1,14 @@
 using academy_API.Models;
+using academy_API.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Data;
 
-public class TutoringDbContext : DbContext
+public class TutoringDbContext(
+    DbContextOptions<TutoringDbContext> options,
+    ITenantProvider tenantProvider) : DbContext(options)
 {
-    public TutoringDbContext(DbContextOptions<TutoringDbContext> options)
-        : base(options)
-    {
-    }
+    private readonly int _currentInstituteId = tenantProvider.InstituteId;
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Student> Students => Set<Student>();
@@ -42,10 +42,6 @@ public class TutoringDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
             entity.Property(e => e.LogoUrl).HasMaxLength(1000).HasColumnName("logo_url");
             entity.Property(e => e.ContactPhone).HasMaxLength(50).HasColumnName("contact_phone");
-            entity.Property(e => e.Address).HasMaxLength(500).HasColumnName("address");
-            entity.Property(e => e.TaxId).HasMaxLength(50).HasColumnName("tax_id");
-            entity.Property(e => e.ReceiptNote).HasMaxLength(500).HasColumnName("receipt_note");
-            entity.Property(e => e.Email).HasMaxLength(255).HasColumnName("email");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
@@ -193,16 +189,26 @@ public class TutoringDbContext : DbContext
             entity.ToTable("sessions");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.CourseId).HasColumnName("course_id");
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Course)
                   .WithMany()
                   .HasForeignKey(e => e.CourseId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.Property(e => e.SubstituteTeacherId).HasColumnName("substitute_teacher_id").IsRequired(false);
+            entity.HasOne(e => e.SubstituteTeacher)
+                  .WithMany()
+                  .HasForeignKey(e => e.SubstituteTeacherId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
             entity.Property(e => e.ScheduledAt).HasColumnName("scheduled_at");
             entity.Property(e => e.DurationMin).HasColumnName("duration_min");
             entity.Property(e => e.RoomId).HasMaxLength(50).HasColumnName("room_id");
             entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.ActualStartAt).HasColumnName("actual_start_at");
+            entity.Property(e => e.ActualEndAt).HasColumnName("actual_end_at");
 
             entity.HasMany(e => e.Attendances)
                   .WithOne(a => a.Session)
@@ -210,6 +216,8 @@ public class TutoringDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.CourseId);
+            entity.HasIndex(e => e.SubstituteTeacherId);
+            entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<Attendance>(entity =>
@@ -285,6 +293,11 @@ public class TutoringDbContext : DbContext
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                  entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+                  entity.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired(false);
+                  entity.Property(e => e.UpdatedBy).HasColumnName("updated_by").IsRequired(false);
+                  entity.Property(e => e.CapacityLimit).HasColumnName("capacity_limit").IsRequired(false);
+                  entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
 
             entity.HasIndex(e => e.InstituteId);
             entity.HasIndex(e => e.TeacherId);
@@ -295,12 +308,17 @@ public class TutoringDbContext : DbContext
             entity.ToTable("payments");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.EnrollmentId).HasColumnName("enrollment_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.Amount).HasColumnName("amount").HasColumnType("decimal(10,2)");
             entity.Property(e => e.Method).HasMaxLength(20).HasColumnName("method");
             entity.Property(e => e.PaidAt).HasColumnName("paid_at");
             entity.Property(e => e.SlipUrl).HasMaxLength(1000).HasColumnName("slip_url");
             entity.Property(e => e.InvoiceNo).HasMaxLength(50).HasColumnName("invoice_no");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                  entity.Property(e => e.DiscountAmount).HasColumnName("discount_amount").HasColumnType("decimal(10,2)");
+                  entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+                  entity.Property(e => e.GatewayRefId).HasMaxLength(255).HasColumnName("gateway_ref_id");
+                  entity.Property(e => e.NetAmount).HasColumnName("net_amount").HasColumnType("decimal(10,2)");
 
             entity.HasOne(e => e.Enrollment)
                   .WithMany()
@@ -309,6 +327,7 @@ public class TutoringDbContext : DbContext
 
             entity.HasIndex(e => e.InvoiceNo).IsUnique();
             entity.HasIndex(e => e.EnrollmentId);
+                  entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -336,6 +355,7 @@ public class TutoringDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.SessionId).HasColumnName("session_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Student)
                   .WithMany()
@@ -359,9 +379,15 @@ public class TutoringDbContext : DbContext
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.SessionId);
             entity.HasIndex(e => e.ApprovedBy);
+            entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<Homework>(entity =>
@@ -369,6 +395,7 @@ public class TutoringDbContext : DbContext
             entity.ToTable("homeworks");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.CourseId).HasColumnName("course_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Course)
                   .WithMany()
@@ -387,8 +414,14 @@ public class TutoringDbContext : DbContext
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.AssignedBy);
+            entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<HomeworkSubmission>(entity =>
@@ -397,6 +430,7 @@ public class TutoringDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.HomeworkId).HasColumnName("homework_id");
             entity.Property(e => e.StudentId).HasColumnName("student_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Homework)
                   .WithMany()
@@ -408,6 +442,11 @@ public class TutoringDbContext : DbContext
                   .HasForeignKey(e => e.StudentId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.Property(e => e.SubmittedAt).HasColumnName("submitted_at");
             entity.Property(e => e.FileUrl).HasMaxLength(1000).HasColumnName("file_url");
             entity.Property(e => e.Score).HasColumnName("score").HasColumnType("decimal(5,2)");
@@ -415,6 +454,7 @@ public class TutoringDbContext : DbContext
 
             entity.HasIndex(e => e.HomeworkId);
             entity.HasIndex(e => e.StudentId);
+            entity.HasIndex(e => e.InstituteId);
             entity.HasIndex(e => new { e.HomeworkId, e.StudentId }).IsUnique();
         });
 
@@ -495,6 +535,7 @@ public class TutoringDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.CourseId).HasColumnName("course_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Student)
                   .WithMany()
@@ -516,9 +557,15 @@ public class TutoringDbContext : DbContext
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.UsedSessionId);
+            entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -534,5 +581,25 @@ public class TutoringDbContext : DbContext
 
             entity.HasIndex(e => e.InstituteId);
         });
+
+        ApplyTenantFilters(modelBuilder);
     }
+
+    private void ApplyTenantFilters(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Session>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Attendance>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Payment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Homework>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<HomeworkSubmission>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Enrollment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<MakeupCredit>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Teacher>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Course>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Product>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<User>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+    }
+
 }

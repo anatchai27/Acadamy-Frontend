@@ -1,9 +1,9 @@
 namespace academy_API.Models;
 
-public class User
+public class User : IMultiTenantEntity
 {
     public int Id { get; set; }
-    public int? InstituteId { get; set; }
+    public int InstituteId { get; set; }
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public UserRole Role { get; set; }

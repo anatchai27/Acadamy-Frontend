@@ -48,15 +48,15 @@ public class PaymentServiceTests
         };
 
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payments);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(8000m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(2, result.Data.Payments.Count);
@@ -72,15 +72,15 @@ public class PaymentServiceTests
         var payment = MakePayment(890, "INV-202606-0001", "ด.ช. สมชาย รักเรียน", "คณิตศาสตร์ ม.1 (เทอม 1)", 4500m, "transfer");
 
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([payment]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(4500m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         var item = result.Data.Payments[0];
         Assert.Equal(890, item.Id);
@@ -99,15 +99,15 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_EmptyResult_ReturnsEmptyListAndZeroTotal()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         Assert.Empty(result.Data.Payments);
         Assert.Equal(0m, result.Data.Summary.TotalAmountInRange);
@@ -122,19 +122,19 @@ public class PaymentServiceTests
         var endDate = new DateTime(2026, 6, 30, 23, 59, 59, DateTimeKind.Utc);
 
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, startDate, endDate, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(startDate, endDate, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, startDate, endDate, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(startDate, endDate, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, startDate, endDate, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(startDate, endDate, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
         var sut = CreateSut(repoMock);
-        await sut.GetHistoryAsync(null, startDate, endDate, null, 1, 20);
+        await sut.GetHistoryAsync(startDate, endDate, null, 1, 20);
 
-        repoMock.Verify(r => r.GetPaymentsAsync(null, startDate, endDate, null, 1, 20, It.IsAny<CancellationToken>()), Times.Once);
-        repoMock.Verify(r => r.GetTotalAmountAsync(null, startDate, endDate, null, It.IsAny<CancellationToken>()), Times.Once);
-        repoMock.Verify(r => r.GetPaymentCountAsync(null, startDate, endDate, null, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetPaymentsAsync(startDate, endDate, null, 1, 20, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetTotalAmountAsync(startDate, endDate, null, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetPaymentCountAsync(startDate, endDate, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 5
@@ -142,17 +142,17 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_WithMethodFilter_PassesMethodToRepo()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, "transfer", 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, "transfer", 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, "transfer", It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, "transfer", It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, "transfer", It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, "transfer", It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
         var sut = CreateSut(repoMock);
-        await sut.GetHistoryAsync(null, null, null, "transfer", 1, 20);
+        await sut.GetHistoryAsync(null, null, "transfer", 1, 20);
 
-        repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, "transfer", 1, 20, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetPaymentsAsync(null, null, "transfer", 1, 20, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 6
@@ -160,17 +160,17 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_WithPagination_PassesPageAndLimit()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 3, 10, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 3, 10, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
         var sut = CreateSut(repoMock);
-        await sut.GetHistoryAsync(null, null, null, null, 3, 10);
+        await sut.GetHistoryAsync(null, null, null, 3, 10);
 
-        repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, null, 3, 10, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, 3, 10, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 7
@@ -178,15 +178,15 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_MultiplePages_CalculatesTotalPagesCorrectly()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 10, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 10, It.IsAny<CancellationToken>()))
             .ReturnsAsync([MakePayment(1, "INV-001", "สมชาย", "คณิต", 1000m, "cash")]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1000m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(25);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 10);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 10);
 
         Assert.Equal(3, result.Data.Pagination.TotalPages);
     }
@@ -196,15 +196,15 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_TotalCountDivisibleByLimit_CalculatesExactPages()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(60);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         Assert.Equal(3, result.Data.Pagination.TotalPages);
     }
@@ -214,18 +214,18 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_SummaryReflectsFilteredTotal()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([
                 MakePayment(1, "INV-001", "สมชาย", "คณิต", 1500.50m, "cash"),
                 MakePayment(2, "INV-002", "สมหญิง", "อังกฤษ", 2750.75m, "transfer"),
             ]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(4251.25m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         Assert.Equal(4251.25m, result.Data.Summary.TotalAmountInRange);
     }
@@ -246,15 +246,15 @@ public class PaymentServiceTests
         };
 
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync([payment]);
-        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1000m);
-        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentCountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
         var sut = CreateSut(repoMock);
-        var result = await sut.GetHistoryAsync(null, null, null, null, 1, 20);
+        var result = await sut.GetHistoryAsync(null, null, null, 1, 20);
 
         var item = result.Data.Payments[0];
         Assert.Null(item.StudentName);

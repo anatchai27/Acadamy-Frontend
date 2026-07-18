@@ -90,7 +90,7 @@ export function DataTable({
                       <div class="inline-flex gap-2">
                         {actions.map((action, i) => (
                           <button
-                            key={i}
+                            key={action.label}
                             type="button"
                             onClick={() => action.onClick(row)}
                             class={`px-3 py-1.5 text-xs font-medium rounded-xl transition-colors ${

@@ -26,8 +26,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         var response = new
         {
             StatusCode = context.Response.StatusCode,
-            Message = "An unexpected error occurred. Please try again later.",
-            Detail = exception.Message
+            Message = "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง"
         };
 
         return context.Response.WriteAsJsonAsync(response);

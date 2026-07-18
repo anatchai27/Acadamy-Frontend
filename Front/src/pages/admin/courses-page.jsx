@@ -155,7 +155,7 @@ export function CoursesPage({ path }) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
           <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขคอร์สเรียน' : 'เพิ่มคอร์สเรียนใหม่'}
           </h3>
@@ -262,7 +262,7 @@ export function CoursesPage({ path }) {
           {courses.map((course) => (
             <div
               key={course.id}
-              class="bg-white rounded-xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden"
+              class="bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden"
             >
               <div class="p-5">
                 <div class="flex items-start justify-between gap-2 mb-3">
@@ -288,7 +288,7 @@ export function CoursesPage({ path }) {
                     </span>
                   )}
                   {course.price != null && (
-                    <span class="font-bold text-oasis-primary">
+                    <span class="font-semibold text-oasis-primary">
                       {formatCurrency(course.price)}
                     </span>
                   )}

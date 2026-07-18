@@ -1,5 +1,6 @@
 using System.Text;
 using academy_API.Data;
+using academy_API.Data.Interceptors;
 using academy_API.Middlewares;
 using academy_API.Models;
 using academy_API.Repositories;
@@ -110,20 +111,28 @@ builder.Services.Configure<ThaiDataCloudOptions>(
     builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
 builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
 
+// Register tenant provider
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantProvider, TenantProvider>();
+builder.Services.AddScoped<AuditTenantSaveChangesInterceptor>();
+
 // Register TutoringDbContext with TiDB Cloud connection
 var connectionString = builder.Configuration.GetConnectionString("TutoringDbConnection")
     ?? throw new InvalidOperationException("Connection string 'TutoringDbConnection' not found.");
 
-builder.Services.AddDbContext<TutoringDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
-        mysqlOptions =>
-        {
-            mysqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
-            mysqlOptions.CommandTimeout(30);
-        }));
+builder.Services.AddDbContextPool<TutoringDbContext>(
+    (sp, options) =>
+        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
+            mysqlOptions =>
+            {
+                mysqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null);
+                mysqlOptions.CommandTimeout(30);
+            })
+            .AddInterceptors(sp.GetRequiredService<AuditTenantSaveChangesInterceptor>()),
+    poolSize: 128);
 
 var app = builder.Build();
 

@@ -19,7 +19,7 @@ public class SkillScoreServiceTests
         var result = await sut.BatchUpdateAsync(new BatchSkillScoreRequest(10, [
             new SkillScoreItem(1, 4.5m, null),
             new SkillScoreItem(2, 3.0m, "good")
-        ]), 1, 42);
+        ]), 42);
 
         Assert.Equal("success", result.Status);
         repoMock.Verify(r => r.BatchUpsertAsync(10, It.IsAny<List<SkillScoreItem>>(), 42, It.IsAny<CancellationToken>()), Times.Once);
@@ -31,7 +31,7 @@ public class SkillScoreServiceTests
     {
         var sut = new SkillScoreService(CreateMockRepo().Object);
         var ex = await Assert.ThrowsAsync<SkillScoreValidationException>(
-            () => sut.BatchUpdateAsync(new BatchSkillScoreRequest(10, []), 1, 42));
+            () => sut.BatchUpdateAsync(new BatchSkillScoreRequest(10, []), 42));
         Assert.Equal("NO_SCORES", ex.ErrorCode);
     }
 

@@ -37,7 +37,7 @@ public static class AuthEndpoints
             httpContext.Response.Cookies.Append("auth_token", result.Token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddHours(1),
                 Path = "/"
@@ -67,7 +67,7 @@ public static class AuthEndpoints
             httpContext.Response.Cookies.Delete("auth_token", new CookieOptions
             {
                 Path = "/",
-                Secure = false,
+                Secure = true,
                 SameSite = SameSiteMode.Lax
             });
             return Results.Ok(new { status = "success", message = "ออกจากระบบสำเร็จ" });
@@ -120,12 +120,9 @@ public static class AuthEndpoints
                     return Results.Unauthorized();
 
                 // Check institute is not suspended
-                if (user.InstituteId.HasValue)
-                {
-                    var institute = await db.Institutes.FirstOrDefaultAsync(i => i.Id == user.InstituteId.Value, ct);
-                    if (institute is null || !institute.IsActive)
-                        return Results.Json(new { status = "error", error_code = "INSTITUTE_SUSPENDED", message = "สถาบันถูกระงับการใช้งาน" }, statusCode: 403);
-                }
+                var institute = await db.Institutes.FirstOrDefaultAsync(i => i.Id == user.InstituteId, ct);
+                if (institute is null || !institute.IsActive)
+                    return Results.Json(new { status = "error", error_code = "INSTITUTE_SUSPENDED", message = "สถาบันถูกระงับการใช้งาน" }, statusCode: 403);
 
                 var refreshResult = tokenService.ValidateAndRefresh(request.Token, user);
                 if (refreshResult is null)
@@ -298,5 +295,5 @@ public static class AuthEndpoints
 }
 
 public record LoginRequest(string Email, string Password);
-public record LoginResponse(string Token, int UserId, string Email, string Role, string RefreshToken, int? InstituteId);
+public record LoginResponse(string Token, int UserId, string Email, string Role, string RefreshToken, int InstituteId);
 public record RefreshTokenRequest(string Token);

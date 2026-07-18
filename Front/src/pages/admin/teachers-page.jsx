@@ -105,7 +105,7 @@ export function TeachersPage({ path }) {
 
       {/* Add Teacher Form */}
       {showForm && (
-        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
           <h3 class="text-base font-semibold text-zinc-900 mb-4">เพิ่มครูผู้สอนใหม่</h3>
           <form onSubmit={handleSubmitTeacher}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,11 +204,11 @@ export function TeachersPage({ path }) {
           {teachers.map((teacher) => (
             <div
               key={teacher.id}
-              class="bg-white rounded-xl border border-zinc-200/80 hover:shadow-md transition-shadow overflow-hidden"
+              class="bg-white rounded-2xl border border-zinc-200/80 hover:shadow-md transition-shadow overflow-hidden"
             >
               <div class="p-5">
                 <div class="flex items-start gap-4">
-                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-bold">
+                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-semibold">
                     {teacher.fullName?.[0] || '?'}
                   </div>
                   <div class="flex-1 min-w-0">
@@ -227,13 +227,13 @@ export function TeachersPage({ path }) {
                 </div>
 
                 {teacher.bio && (
-                  <p class="mt-3 text-sm text-zinc-600 line-clamp-2">{teacher.bio}</p>
+                  <p class="mt-3 text-sm text-zinc-500 line-clamp-2">{teacher.bio}</p>
                 )}
 
                 {teacher.hourlyRate != null && (
                   <div class="mt-3 flex items-center gap-2 text-sm">
                     <span class="text-xs font-medium text-zinc-500">ค่าสอน/ชม.</span>
-                    <span class="font-bold text-oasis-primary">{formatCurrency(teacher.hourlyRate)}</span>
+                    <span class="font-semibold text-oasis-primary">{formatCurrency(teacher.hourlyRate)}</span>
                   </div>
                 )}
               </div>

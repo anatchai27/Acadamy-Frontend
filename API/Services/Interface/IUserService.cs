@@ -18,7 +18,7 @@ public interface IUserService
     Task<bool> DeleteUserAsync(int id, CancellationToken cancellationToken = default);
 }
 
-public record UserLoginResult(string Token, int UserId, string Email, string Role, int? InstituteId);
+public record UserLoginResult(string Token, int UserId, string Email, string Role, int InstituteId);
 public record CurrentUserResponse(string Status, CurrentUserData Data);
-public record CurrentUserData(int UserId, string Email, string? Phone, string Role, int? InstituteId, CurrentUserProfile Profile);
+public record CurrentUserData(int UserId, string Email, string? Phone, string Role, int InstituteId, CurrentUserProfile Profile);
 public record CurrentUserProfile(string FullName, string? PhotoUrl, string? Subjects);

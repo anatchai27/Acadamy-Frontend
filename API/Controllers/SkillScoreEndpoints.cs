@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 
 namespace academy_API.Controllers;
 
@@ -31,11 +30,10 @@ public static class SkillScoreEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
                 var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userId = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var id) ? id : 0;
 
-                var result = await service.BatchUpdateAsync(request, instituteId, userId, ct);
+                var result = await service.BatchUpdateAsync(request, userId, ct);
                 return Results.Ok(result);
             }
             catch (SkillScoreValidationException ex)

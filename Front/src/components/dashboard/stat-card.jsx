@@ -35,7 +35,7 @@ export function StatCard({ id, title, value, trendText, trendDirection, isAlertS
     : config.valueDefault;
 
   return (
-    <div class={`bg-white rounded-2xl border border-zinc-200/80 p-5 shadow-sm transition-all hover:shadow-md ${borderClass}`}>
+    <div class={`bg-zinc-50 rounded-2xl border border-zinc-100 p-5 shadow-sm transition-all hover:shadow-md ${borderClass}`}>
       <div class="flex items-start justify-between mb-4">
         <div class={`flex h-10 w-10 items-center justify-center rounded-xl ${config.iconContainer}`}>
           {icon}

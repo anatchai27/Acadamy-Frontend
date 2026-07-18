@@ -7,12 +7,12 @@ namespace academy_API.Repositories;
 
 public interface IAttendanceRepository
 {
-    Task<Student?> ValidateQrTokenAsync(string qrToken, int? instituteId, CancellationToken ct = default);
+    Task<Student?> ValidateQrTokenAsync(string qrToken, CancellationToken ct = default);
     Task<bool> IsDuplicateScanAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task<Attendance> RecordCheckinAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task<int> DecrementSessionsAsync(int studentId, CancellationToken ct = default);
     Task<Attendance> RecordManualAsync(int sessionId, int studentId, string status, CancellationToken ct = default);
-    Task<List<DailyAttendanceRow>> GetDailyAttendanceAsync(int? instituteId, int? sessionId, DateTime date, CancellationToken ct = default);
+    Task<List<DailyAttendanceRow>> GetDailyAttendanceAsync(int? sessionId, DateTime date, CancellationToken ct = default);
     Task<Session?> GetSessionByIdAsync(int sessionId, CancellationToken ct = default);
     Task<List<Parent>> GetParentsWithLineAsync(int studentId, CancellationToken ct = default);
     Task ScanCheckinWithTransactionAsync(int studentId, int sessionId, CancellationToken ct = default);
@@ -23,12 +23,9 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
 {
     private readonly TutoringDbContext _context = context;
 
-    public async Task<Student?> ValidateQrTokenAsync(string qrToken, int? instituteId, CancellationToken ct = default)
+    public async Task<Student?> ValidateQrTokenAsync(string qrToken, CancellationToken ct = default)
     {
-        var query = _context.Students.AsQueryable();
-        if (instituteId.HasValue)
-            query = query.Where(s => s.InstituteId == instituteId.Value);
-        return await query.FirstOrDefaultAsync(s => s.QrToken == qrToken, ct);
+        return await _context.Students.FirstOrDefaultAsync(s => s.QrToken == qrToken, ct);
     }
 
     public async Task<bool> IsDuplicateScanAsync(int studentId, int sessionId, CancellationToken ct = default)
@@ -80,14 +77,11 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
         return attendance;
     }
 
-    public async Task<List<DailyAttendanceRow>> GetDailyAttendanceAsync(int? instituteId, int? sessionId, DateTime date, CancellationToken ct = default)
+    public async Task<List<DailyAttendanceRow>> GetDailyAttendanceAsync(int? sessionId, DateTime date, CancellationToken ct = default)
     {
         var query = _context.Attendances
             .Include(a => a.Student)
             .AsQueryable();
-
-        if (instituteId.HasValue)
-            query = query.Where(a => a.Student.InstituteId == instituteId.Value);
 
         if (sessionId.HasValue)
             query = query.Where(a => a.SessionId == sessionId.Value);

@@ -106,7 +106,7 @@ export function SettingsPage({ path }) {
     return (
       <AdminLayout path={path}>
         <div class="flex items-center justify-center py-20">
-          <div class="h-8 w-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <div class="h-8 w-8 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
         </div>
       </AdminLayout>
     );
@@ -115,34 +115,32 @@ export function SettingsPage({ path }) {
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ตั้งค่าระบบ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการข้อมูลสถาบันและตั้งค่าระบบ</p>
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">ตั้งค่าระบบ</h2>
+        <p class="text-sm text-zinc-500 mt-1">จัดการข้อมูลสถาบันและตั้งค่าระบบ</p>
       </div>
 
       <div class="space-y-6 max-w-3xl">
-        {/* Branding */}
-        <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 overflow-hidden">
-          <div class="flex items-center gap-4 px-6 py-5 border-b border-tiwhub-border-light dark:border-tiwhub-border/20">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tiwhub-primary/10 dark:bg-tiwhub-primary/15 text-tiwhub-primary dark:text-tiwhub-primary-light">
+        <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+          <div class="flex items-center gap-4 px-6 py-5 border-b border-zinc-100">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oasis-primary/5 text-oasis-primary">
               <BuildingIcon class="h-5 w-5" />
             </div>
             <div>
-              <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white">ข้อมูลสถาบัน</h3>
-              <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70">จัดการข้อมูลสำหรับใบเสร็จและการแสดงผล</p>
+              <h3 class="text-base font-semibold text-zinc-900">ข้อมูลสถาบัน</h3>
+              <p class="text-sm text-zinc-500">จัดการข้อมูลสำหรับใบเสร็จและการแสดงผล</p>
             </div>
           </div>
-          <div class="divide-y divide-tiwhub-border-light dark:divide-tiwhub-border/20">
-            {/* Logo */}
-            <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
-              <label class="text-sm font-medium text-tiwhub-heading dark:text-white">โลโก้สถาบัน</label>
+          <div class="divide-y divide-zinc-100">
+            <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
+              <label class="text-sm font-medium text-zinc-800">โลโก้สถาบัน</label>
               <div class="flex items-center gap-3">
                 {logoPreview ? (
-                  <img src={logoPreview} alt="logo" class="h-10 w-10 rounded-lg object-cover border border-tiwhub-border-light" />
+                  <img src={logoPreview} alt="logo" class="h-10 w-10 rounded-lg object-cover border border-zinc-200" />
                 ) : (
-                  <div class="h-10 w-10 rounded-lg bg-tiwhub-primary/10 flex items-center justify-center text-tiwhub-primary text-sm font-bold">TH</div>
+                  <div class="h-10 w-10 rounded-lg bg-oasis-primary/5 flex items-center justify-center text-oasis-primary text-sm font-bold">TH</div>
                 )}
                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleLogoSelect} class="hidden" />
-                <button type="button" onClick={() => fileInputRef.current?.click()} class="px-3 py-1.5 text-xs font-medium border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
+                <button type="button" onClick={() => fileInputRef.current?.click()} class="px-3 py-1.5 text-xs font-medium border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
                   อัปโหลด
                 </button>
               </div>
@@ -156,31 +154,29 @@ export function SettingsPage({ path }) {
           </div>
         </div>
 
-        {/* Danger Zone */}
-        <div class="bg-tiwhub-surface dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-danger/20 dark:border-tiwhub-danger/20 overflow-hidden">
-          <div class="flex items-center gap-4 px-6 py-5 border-b border-tiwhub-danger/10 dark:border-tiwhub-danger/10">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15 text-tiwhub-danger dark:text-tiwhub-danger">
+        <div class="bg-zinc-50 rounded-2xl border border-oasis-danger/20 overflow-hidden">
+          <div class="flex items-center gap-4 px-6 py-5 border-b border-oasis-danger/10">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oasis-danger/5 text-oasis-danger">
               <WarningIcon class="h-5 w-5" />
             </div>
             <div>
-              <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white">โซนอันตราย</h3>
-              <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70">การดำเนินการที่ไม่สามารถย้อนกลับได้</p>
+              <h3 class="text-base font-semibold text-zinc-900">โซนอันตราย</h3>
+              <p class="text-sm text-zinc-500">การดำเนินการที่ไม่สามารถย้อนกลับได้</p>
             </div>
           </div>
           <div class="px-6 py-4">
-            <p class="text-sm text-tiwhub-body dark:text-tiwhub-bg/80 mb-3">
+            <p class="text-sm text-zinc-600 mb-3">
               การลบบัญชีผู้ดูแลระบบจะลบข้อมูลทั้งหมดอย่างถาวร ไม่สามารถกู้คืนได้
             </p>
-            <button onClick={handleDeleteAccount} class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-tiwhub-danger dark:text-tiwhub-danger bg-tiwhub-danger/10 dark:bg-tiwhub-danger/15 hover:bg-tiwhub-danger/15 dark:hover:bg-tiwhub-danger/20 rounded-xl transition-colors border border-tiwhub-danger/20 dark:border-tiwhub-danger/20">
+            <button onClick={handleDeleteAccount} class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-oasis-danger bg-oasis-danger/5 hover:bg-oasis-danger/10 rounded-xl transition-colors border border-oasis-danger/20">
               <TrashIcon class="h-4 w-4" />
               ลบบัญชีผู้ดูแลระบบ
             </button>
           </div>
         </div>
 
-        {/* Save */}
         <div class="flex items-center gap-3 pt-2">
-          <button onClick={handleSave} disabled={saving} class="inline-flex items-center gap-2 bg-tiwhub-primary hover:bg-tiwhub-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50">
+          <button onClick={handleSave} disabled={saving} class="inline-flex items-center gap-2 bg-oasis-primary hover:bg-oasis-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             <SaveIcon class="h-4 w-4" />
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </button>
@@ -192,18 +188,18 @@ export function SettingsPage({ path }) {
 
 function SettingsInput({ label, value, onChange, type = 'text' }) {
   return (
-    <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
-      <label class="text-sm font-medium text-tiwhub-heading dark:text-white">{label}</label>
-      <input type={type} value={value} onInput={onChange} class="w-64 px-3.5 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary transition-all" />
+    <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
+      <label class="text-sm font-medium text-zinc-800">{label}</label>
+      <input type={type} value={value} onInput={onChange} class="w-64 px-3.5 py-2 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
     </div>
   );
 }
 
 function SettingsTextarea({ label, value, onChange }) {
   return (
-    <div class="flex items-start justify-between px-6 py-4 gap-4 hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
-      <label class="text-sm font-medium text-tiwhub-heading dark:text-white pt-1">{label}</label>
-      <textarea value={value} onInput={onChange} rows={2} class="w-64 px-3.5 py-2 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-tiwhub-surface dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-tiwhub-primary/20 focus:border-tiwhub-primary transition-all resize-none" />
+    <div class="flex items-start justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
+      <label class="text-sm font-medium text-zinc-800 pt-1">{label}</label>
+      <textarea value={value} onInput={onChange} rows={2} class="w-64 px-3.5 py-2 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all resize-none" />
     </div>
   );
 }

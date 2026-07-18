@@ -1,6 +1,7 @@
 using academy_API.Data;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Tests;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Tests.unitTest;
@@ -12,7 +13,7 @@ public class ProductRepositoryTests
         var options = new DbContextOptionsBuilder<TutoringDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-        return new TutoringDbContext(options);
+        return new TutoringDbContext(options, new MockTenantProvider());
     }
 
     // 1 ──────────────────── GetByInstituteIdAsync ────────────────────

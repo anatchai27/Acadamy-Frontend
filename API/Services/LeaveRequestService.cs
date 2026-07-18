@@ -4,21 +4,21 @@ namespace academy_API.Services;
 
 public interface ILeaveRequestService
 {
-    Task<LeaveRequestResponse> GetAllAsync(int? instituteId, string? status, int page, int limit, CancellationToken ct = default);
-    Task ApproveAsync(int id, int? instituteId, int approvedByUserId, CancellationToken ct = default);
-    Task RejectAsync(int id, int? instituteId, int approvedByUserId, CancellationToken ct = default);
+    Task<LeaveRequestResponse> GetAllAsync(string? status, int page, int limit, CancellationToken ct = default);
+    Task ApproveAsync(int id, int approvedByUserId, CancellationToken ct = default);
+    Task RejectAsync(int id, int approvedByUserId, CancellationToken ct = default);
 }
 
 public class LeaveRequestService(Repositories.ILeaveRequestRepository repository) : ILeaveRequestService
 {
     private readonly Repositories.ILeaveRequestRepository _repository = repository;
 
-    public async Task<LeaveRequestResponse> GetAllAsync(int? instituteId, string? status, int page, int limit, CancellationToken ct = default)
+    public async Task<LeaveRequestResponse> GetAllAsync(string? status, int page, int limit, CancellationToken ct = default)
     {
         page = Math.Max(1, page);
         limit = Math.Clamp(limit, 1, 100);
 
-        var (items, totalCount) = await _repository.SearchAsync(instituteId, status, page, limit, ct);
+        var (items, totalCount) = await _repository.SearchAsync(status, page, limit, ct);
         var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
         return new LeaveRequestResponse(
@@ -30,9 +30,9 @@ public class LeaveRequestService(Repositories.ILeaveRequestRepository repository
         );
     }
 
-    public async Task ApproveAsync(int id, int? instituteId, int approvedByUserId, CancellationToken ct = default)
+    public async Task ApproveAsync(int id, int approvedByUserId, CancellationToken ct = default)
     {
-        var request = await _repository.GetByIdAsync(id, instituteId, ct)
+        var request = await _repository.GetByIdAsync(id, ct)
             ?? throw new LeaveRequestValidationException("NOT_FOUND", "ไม่พบคำร้องขอ");
 
         if (request.Status != "pending")
@@ -41,9 +41,9 @@ public class LeaveRequestService(Repositories.ILeaveRequestRepository repository
         await _repository.ApproveAsync(request, approvedByUserId, ct);
     }
 
-    public async Task RejectAsync(int id, int? instituteId, int approvedByUserId, CancellationToken ct = default)
+    public async Task RejectAsync(int id, int approvedByUserId, CancellationToken ct = default)
     {
-        var request = await _repository.GetByIdAsync(id, instituteId, ct)
+        var request = await _repository.GetByIdAsync(id, ct)
             ?? throw new LeaveRequestValidationException("NOT_FOUND", "ไม่พบคำร้องขอ");
 
         if (request.Status != "pending")

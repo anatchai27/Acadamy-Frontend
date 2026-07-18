@@ -1,6 +1,5 @@
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -23,8 +22,7 @@ public static class AttendanceEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.GetDailyAsync(instituteId, session_id, date, ct);
+                var result = await service.GetDailyAsync(session_id, date, ct);
                 return Results.Ok(result);
             }
             catch (AttendanceValidationException ex)
@@ -45,8 +43,7 @@ public static class AttendanceEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.ScanAsync(request, instituteId, ct);
+                var result = await service.ScanAsync(request, ct);
                 return Results.Ok(result);
             }
             catch (AttendanceValidationException ex)
@@ -71,8 +68,7 @@ public static class AttendanceEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.ManualAsync(request, instituteId, ct);
+                var result = await service.ManualAsync(request, ct);
                 return Results.Ok(result);
             }
             catch (AttendanceValidationException ex)

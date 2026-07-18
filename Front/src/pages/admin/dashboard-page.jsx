@@ -39,7 +39,7 @@ export function DashboardPage({ path }) {
       {/* Two Column Layout */}
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-15">
         {/* Activity Feed */}
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-zinc-200/80">
+        <div class="lg:col-span-2 bg-zinc-50 rounded-2xl border border-zinc-100">
           <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
             <h3 class="text-lg font-semibold text-zinc-900">กิจกรรมล่าสุด</h3>
             <button class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors">
@@ -49,7 +49,7 @@ export function DashboardPage({ path }) {
           <div class="p-6 space-y-0">
             {recentActivities.map((activity, i) => (
               <div
-                key={i}
+                key={activity.text}
                 class={`flex items-start gap-4 py-3 ${
                   i < recentActivities.length - 1 ? 'border-b border-zinc-100' : ''
                 }`}
@@ -58,7 +58,7 @@ export function DashboardPage({ path }) {
                   <activity.icon class={`h-4 w-4 ${colorTextMap[activity.color]}`} />
                 </div>
                 <div class="flex-1 min-w-0 flex items-center justify-between gap-4">
-                  <span class="text-sm text-zinc-600 truncate">{activity.text}</span>
+                  <span class="text-sm text-zinc-500 truncate">{activity.text}</span>
                   <span class="text-xs text-zinc-400 whitespace-nowrap">{activity.time}</span>
                 </div>
               </div>
@@ -69,7 +69,7 @@ export function DashboardPage({ path }) {
         {/* Quick Stats Sidebar */}
         <div class="space-y-6">
           {/* Top Courses */}
-          <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6">
+          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-6">
             <h3 class="text-lg font-semibold text-zinc-900 mb-4">คอร์สยอดนิยม</h3>
             <div class="space-y-4">
               {[
@@ -79,7 +79,7 @@ export function DashboardPage({ path }) {
               ].map((course) => (
                 <div key={course.title} class="flex items-center gap-3">
                   <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-')}`} />
-                  <span class="flex-1 text-sm text-zinc-600 truncate">{course.title}</span>
+                  <span class="flex-1 text-sm text-zinc-500 truncate">{course.title}</span>
                   <span class="text-xs font-medium text-zinc-400">{course.students} คน</span>
                 </div>
               ))}
@@ -87,7 +87,7 @@ export function DashboardPage({ path }) {
           </div>
 
           {/* Quick Actions */}
-          <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6">
+          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-6">
             <h3 class="text-lg font-semibold text-zinc-900 mb-4">ดำเนินการด่วน</h3>
             <div class="space-y-2">
               {[
@@ -98,7 +98,7 @@ export function DashboardPage({ path }) {
                 <button
                   key={action.label}
                   onClick={action.onClick}
-                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-500 hover:bg-zinc-50 transition-colors"
                 >
                   <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
                   {action.label}

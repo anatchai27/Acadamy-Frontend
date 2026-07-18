@@ -2,7 +2,6 @@ using System.Text;
 using academy_API.Data;
 using academy_API.Models;
 using academy_API.Services.Contracts;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -18,11 +17,11 @@ public static class UserEndpoints
 
         listGroup.MapGet("/", async (HttpContext httpContext, IUserService userService, CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
+            var instituteIdClaim = httpContext.User.FindFirst("institute_id")?.Value;
+            if (string.IsNullOrEmpty(instituteIdClaim) || !int.TryParse(instituteIdClaim, out var instituteId))
+                return Results.BadRequest(new { error = "Institute not identified." });
 
-            var users = await userService.GetByInstituteIdAsync(instituteId.Value, ct);
+            var users = await userService.GetByInstituteIdAsync(instituteId, ct);
             return Results.Ok(users);
         });
 
@@ -41,10 +40,6 @@ public static class UserEndpoints
             ITokenService tokenService,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
             var email = request.Email?.Trim().ToLower();
             if (string.IsNullOrEmpty(email))
                 return Results.BadRequest(new { error = "Email is required." });
@@ -65,7 +60,7 @@ public static class UserEndpoints
 
             var user = new User
             {
-                InstituteId = instituteId,
+                InstituteId = 0,
                 Email = email,
                 Phone = request.Phone,
                 Role = request.Role,
@@ -81,7 +76,7 @@ public static class UserEndpoints
             {
                 db.Teachers.Add(new Teacher
                 {
-                    InstituteId = instituteId,
+                    InstituteId = 0,
                     UserId = user.Id,
                     FullName = request.FullName
                 });
@@ -106,11 +101,7 @@ public static class UserEndpoints
             UpdateRoleRequest request,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id && u.InstituteId == instituteId, ct);
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
             if (user is null)
                 return Results.NotFound(new { error = "User not found in your institute." });
 
@@ -130,11 +121,7 @@ public static class UserEndpoints
             TutoringDbContext db,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "User not associated with any institute." });
-
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id && u.InstituteId == instituteId, ct);
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
             if (user is null)
                 return Results.NotFound(new { error = "User not found in your institute." });
 
@@ -227,14 +214,14 @@ public static class UserEndpoints
                 };
 
                 // 3. Create user with consent
-                var created = await CreateUserInternal(db, userRequest, instituteId, ipAddress, ct);
+                var created = await CreateUserInternal(db, userRequest, instituteId ?? 0, ipAddress, ct);
 
                 // 4. Create Teacher record if Role is admin or teacher
                 if (request.Role is UserRole.admin or UserRole.teacher)
                 {
                     var teacher = new Teacher
                     {
-                        InstituteId = instituteId,
+                        InstituteId = instituteId ?? 0,
                         UserId = created.Id,
                         FullName = adminFullName
                     };
@@ -272,7 +259,7 @@ public static class UserEndpoints
     private static async Task<User> CreateUserInternal(
         TutoringDbContext db,
         UserCreateRequest request,
-        int? instituteId,
+        int instituteId,
         string? ipAddress,
         CancellationToken ct)
     {

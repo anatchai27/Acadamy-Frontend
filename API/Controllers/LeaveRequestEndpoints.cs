@@ -1,6 +1,5 @@
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 
 namespace academy_API.Controllers;
 
@@ -21,8 +20,7 @@ public static class LeaveRequestEndpoints
             int limit = 20,
             CancellationToken ct = default) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var result = await service.GetAllAsync(instituteId, status, page, limit, ct);
+            var result = await service.GetAllAsync(status, page, limit, ct);
             return Results.Ok(result);
         });
 
@@ -34,12 +32,11 @@ public static class LeaveRequestEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
                 var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                     return Results.Unauthorized();
 
-                await service.ApproveAsync(id, instituteId, userId, ct);
+                await service.ApproveAsync(id, userId, ct);
                 return Results.Ok(new { Status = "success", Message = "อนุมัติคำร้องขอสำเร็จ" });
             }
             catch (LeaveRequestValidationException ex)
@@ -56,12 +53,11 @@ public static class LeaveRequestEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
                 var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                     return Results.Unauthorized();
 
-                await service.RejectAsync(id, instituteId, userId, ct);
+                await service.RejectAsync(id, userId, ct);
                 return Results.Ok(new { Status = "success", Message = "ปฏิเสธคำร้องขอสำเร็จ" });
             }
             catch (LeaveRequestValidationException ex)

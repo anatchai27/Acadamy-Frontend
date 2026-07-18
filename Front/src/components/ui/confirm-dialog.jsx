@@ -51,7 +51,7 @@ export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resol
 
   return (
     <div class={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => handleResolve(false)} />
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-lg" onClick={() => handleResolve(false)} />
 
       <div class={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden transition-all duration-200 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
         <div class="p-6">

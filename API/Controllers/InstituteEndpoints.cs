@@ -27,10 +27,6 @@ public static class InstituteEndpoints
                     i.Name,
                     i.LogoUrl,
                     i.ContactPhone,
-                    i.Address,
-                    i.TaxId,
-                    i.ReceiptNote,
-                    i.Email,
                     i.IsActive
                 })
                 .FirstOrDefaultAsync(ct);
@@ -52,10 +48,6 @@ public static class InstituteEndpoints
 
             if (request.Name is not null) institute.Name = request.Name;
             if (request.ContactPhone is not null) institute.ContactPhone = request.ContactPhone;
-            if (request.Address is not null) institute.Address = request.Address;
-            if (request.TaxId is not null) institute.TaxId = request.TaxId;
-            if (request.ReceiptNote is not null) institute.ReceiptNote = request.ReceiptNote;
-            if (request.Email is not null) institute.Email = request.Email;
             institute.UpdatedAt = DateTime.UtcNow;
 
             await db.SaveChangesAsync(ct);
@@ -71,8 +63,4 @@ public record UpdateInstituteRequest
 {
     public string? Name { get; init; }
     public string? ContactPhone { get; init; }
-    public string? Address { get; init; }
-    public string? TaxId { get; init; }
-    public string? ReceiptNote { get; init; }
-    public string? Email { get; init; }
 }

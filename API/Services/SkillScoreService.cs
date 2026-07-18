@@ -4,7 +4,7 @@ namespace academy_API.Services;
 
 public interface ISkillScoreService
 {
-    Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int? instituteId, int updatedByUserId, CancellationToken ct = default);
+    Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int updatedByUserId, CancellationToken ct = default);
     Task<SkillScoreListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
     Task CreateTopicAsync(SkillTopicRequest request, CancellationToken ct = default);
     Task<SkillTopicListResponse> GetTopicsByCourseIdAsync(int courseId, CancellationToken ct = default);
@@ -16,7 +16,7 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
 {
     private readonly Repositories.ISkillScoreRepository _repository = repository;
 
-    public async Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int? instituteId, int updatedByUserId, CancellationToken ct = default)
+    public async Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int updatedByUserId, CancellationToken ct = default)
     {
         if (request.Scores is null || request.Scores.Count == 0)
             throw new SkillScoreValidationException("NO_SCORES", "กรุณาระบุคะแนนอย่างน้อย 1 รายการ");

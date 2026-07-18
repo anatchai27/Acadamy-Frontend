@@ -104,7 +104,7 @@ export function StudentAddPage({ path }) {
 
       <form onSubmit={handleSubmit} class="max-w-3xl">
         {/* Section 1: Student Info */}
-        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
           <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลส่วนตัวนักเรียน</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SolidInput
@@ -153,7 +153,7 @@ export function StudentAddPage({ path }) {
         </div>
 
         {/* Section 2: Parents */}
-        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-semibold text-zinc-900">ข้อมูลผู้ปกครอง</h3>
             <button
@@ -217,7 +217,7 @@ export function StudentAddPage({ path }) {
         </div>
 
         {/* Section 3: PDPA */}
-        <div class="bg-white rounded-xl border border-zinc-200/80 p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
           <h3 class="text-base font-semibold text-zinc-900 mb-4">การยินยอม PDPA</h3>
           <Checkbox
             id="consent"

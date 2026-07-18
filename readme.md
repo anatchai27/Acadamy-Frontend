@@ -2,8 +2,9 @@
 
 > **Tech Stack:** Preact + Vite 6 + Tailwind CSS v4 + TypeScript  
 > **Backend:** ASP.NET Core 9/10 (Multi-Tenant, Cookie Auth)  
-> **Design System:** Minimalist Soft (Oasis Theme) — violet accent, zinc neutrals, soft rounded corners  
-> **Last Updated:** 2026-07-16
+> **Design System:** Minimalist Soft (Oasis Theme) — orange amber accent, dark navy heading, soft teal secondary, warm gray background  
+> **Mood & Tone:** อบอุ่น, เข้าถึงง่าย, สบายตา, ลดความตึงเครียด  
+> **Last Updated:** 2026-07-17
 
 ---
 
@@ -245,26 +246,34 @@ useEffect(() => {
 
 - **ใช้ Tailwind utility classes เท่านั้น** — ไม่ใช้ CSS modules หรือ styled-components
 - **ใช้ custom theme tokens** (`oasis-primary`, `oasis-accent`, etc.) แทน hardcoded colors
+- **Page Background:** `bg-oasis-bg` (`#f4f2f2` / warm gray)
+- **Floating Card Layout:** เนื้อหาหลักอยู่ใน `bg-white rounded-3xl border border-zinc-200/80 p-8 shadow-sm` — ลอยบนพื้นหลัง, my-4, mr-4
 - **Color Palette:**
-  - `oasis-primary: #8b5cf6` (violet) — primary action, active states
-  - `oasis-accent: #f472b6` (pink) — secondary accent
-  - `oasis-bg: #fafafa` (zinc-50) — page background
-  - `oasis-surface: #ffffff` — card/surface background
-  - `oasis-heading: #18181b` (zinc-900) — heading text
-  - `oasis-body: #52525b` (zinc-600) — body text
-  - `oasis-muted: #a1a1aa` (zinc-400) — muted text
-  - `oasis-border: #e4e4e7` (zinc-200) — borders
+  - `oasis-primary: #ff9e20` (orange amber) — primary action, active states
+  - `oasis-primary-light: #ffb84d` — hover states
+  - `oasis-primary-dark: #e08500` — active/pressed
+  - `oasis-accent: #215e61` (teal) — secondary accent, badges
+  - `oasis-accent-light: #2d7d81` — light variant
+  - `oasis-accent-dark: #163f41` — dark variant
+  - `oasis-bg: #f4f2f2` (warm gray) — page background + sidebar
+  - `oasis-surface: #ffffff` — floating card background
+  - `oasis-heading: #1d2128` (dark navy) — heading text
+  - `oasis-body: #4a4e55` — body text
+  - `oasis-muted: #94989e` — muted text
+  - `oasis-border: #d8d6d6` — borders
   - `oasis-success: #10b981` (emerald) — success
   - `oasis-warning: #f59e0b` (amber) — warning
   - `oasis-danger: #ef4444` (red) — danger
-- **Border radius** ใช้ `rounded-xl` / `rounded-2xl` — soft, friendly look
-- **Cards** ใช้ `bg-white border border-zinc-200/80 rounded-2xl shadow-sm`
+- **Sidebar:** `bg-oasis-bg` (same as page bg), active item `bg-zinc-200/60 text-zinc-900`, inactive `text-zinc-500 hover:text-zinc-900`
+- **Data Cards:** `bg-zinc-50 rounded-2xl border border-zinc-100 p-5 shadow-sm` — subtle card on card
+- **Border radius** ใช้ `rounded-xl` / `rounded-2xl` / `rounded-3xl` (floating card) — soft, friendly look
+- **Cards** ใช้ `bg-white rounded-2xl border border-zinc-200/80 shadow-sm` (inside floating card)
 - **Data tables** ใช้ `rounded-xl border border-zinc-200/80` — soft table container
-- **Status badges** ใช้ `rounded-full` — pill shape
-- **Interactive elements** ใช้ `hover:bg-zinc-50` แทน `hover:bg-slate-100`
-- **Section toggles** (scan/manual) ใช้ `bg-zinc-100 p-1 rounded-xl` พร้อม active indicator `bg-white shadow-sm`
+- **Status badges** ใช้ `rounded-full` — pill shape, soft bg (`bg-oasis-success-light` etc.)
+- **Interactive elements** ใช้ `hover:bg-zinc-100` / `hover:bg-zinc-50`
+- **Section toggles** (scan/manual, form/history) ใช้ `bg-zinc-100 p-1 rounded-xl` พร้อม active indicator `bg-white shadow-sm`
 - **Responsive** ใช้ breakpoints: `sm:`, `md:`, `lg:`
-- **Dark mode** ยังคงรองรับ แต่ดีไซน์พื้นฐานเป็น light-first
+- **Font:** Sarabun (Thai-optimized), body `font-weight: 400`, headings `font-weight: 600` + `tracking-tight`
 
 ### 7. Routing Convention
 

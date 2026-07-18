@@ -7,6 +7,13 @@ public class ProductRepository(TutoringDbContext context) : IProductRepository
 {
     private readonly TutoringDbContext _context = context;
 
+    public async Task<IEnumerable<Models.Product>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Products
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Models.Product>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default)
     {
         return await _context.Products

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { ScannerCamera, StatusBadge, Button, showToast } from '../../components/ui';
+import { ScannerCamera, StatusBadge, showToast } from '../../components/ui';
 import { attendanceService } from '../../services';
 import { useAbortController } from '../../hooks';
 
@@ -137,7 +137,7 @@ export function AttendancePage({ path }) {
             <ScannerCamera onScan={handleScan} onError={handleScanError} />
           </div>
 
-          <div class="bg-white rounded-2xl border border-zinc-200/80 p-4 max-h-[600px] overflow-y-auto shadow-sm">
+          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-4 max-h-[600px] overflow-y-auto">
             <h3 class="text-sm font-semibold text-zinc-700 mb-3 sticky top-0 bg-white pb-2">
               สแกนล่าสุด ({recentScans.length})
             </h3>
@@ -166,7 +166,7 @@ export function AttendancePage({ path }) {
           </div>
         </div>
       ) : (
-        <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm">
+        <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-zinc-100">
             <p class="text-sm text-zinc-600">
               ทั้งหมด {students.length} คน &middot; 

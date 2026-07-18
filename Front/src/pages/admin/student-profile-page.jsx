@@ -110,7 +110,7 @@ export function StudentProfilePage({ path, id }) {
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-bold">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-semibold">
               {student.nickname?.[0] || student.fullName?.[0] || '?'}
             </div>
             <div>
@@ -153,8 +153,8 @@ export function StudentProfilePage({ path, id }) {
         {/* Left Column — Student Details */}
         <div class="lg:col-span-2 space-y-6">
           {/* Personal Info Card */}
-          <div class="bg-white rounded-xl border border-zinc-200/80 overflow-hidden">
-            <div class="px-6 py-4 border-b border-zinc-100">
+          <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden">
+            <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
             </div>
             <div class="p-6">
@@ -165,38 +165,38 @@ export function StudentProfilePage({ path, id }) {
                 <InfoField label="วันที่สร้างข้อมูล" value={formatDate(student.createdAt)} />
               </dl>
               {student.medicalInfo && (
-                <div class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
-                  <dt class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ข้อมูลทางการแพทย์</dt>
-                  <dd class="text-sm text-slate-900 dark:text-white">{student.medicalInfo}</dd>
+                <div class="mt-5 pt-5 border-t border-zinc-100">
+                  <dt class="text-xs font-medium text-zinc-500 mb-1">ข้อมูลทางการแพทย์</dt>
+                  <dd class="text-sm text-zinc-900">{student.medicalInfo}</dd>
                 </div>
               )}
             </div>
           </div>
 
           {/* Parents Card */}
-          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white">ผู้ปกครอง</h3>
+          <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden">
+            <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+              <h3 class="text-base font-semibold text-zinc-900">ผู้ปกครอง</h3>
               {student.parents && student.parents.length > 0 && (
-                <span class="text-xs text-slate-400">{student.parents.length} คน</span>
+                <span class="text-xs text-zinc-400">{student.parents.length} คน</span>
               )}
             </div>
             <div class="p-6">
               {student.parents && student.parents.length > 0 ? (
                 <div class="space-y-4">
                   {student.parents.map((p, i) => (
-                    <div key={p.id || i} class="flex items-start gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-700/40">
-                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-sm font-bold">
+                    <div key={p.id || i} class="flex items-start gap-4 p-4 rounded-xl bg-zinc-50">
+                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-sm font-semibold">
                         {p.fullName?.[0] || '?'}
                       </div>
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                          <p class="text-sm font-semibold text-slate-900 dark:text-white">{p.fullName || '-'}</p>
-                          <span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                            {relationshipLabels[p.relationship] || p.relationship || 'ผู้ปกครอง'}
+                          <p class="text-sm font-semibold text-zinc-900">{p.fullName || '-'}</p>
+                          <span class="inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
+                            {relationshipLabels[p.relationship] || p.relationship || 'ผู้ปกครอง'} 
                           </span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-zinc-500">
                           {p.phone && (
                             <span class="inline-flex items-center gap-1">
                               <PhoneIcon class="h-3 w-3" />
@@ -215,7 +215,7 @@ export function StudentProfilePage({ path, id }) {
                   ))}
                 </div>
               ) : (
-                <p class="text-sm text-slate-400 text-center py-4">ไม่มีข้อมูลผู้ปกครอง</p>
+                <p class="text-sm text-zinc-400 text-center py-4">ไม่มีข้อมูลผู้ปกครอง</p>
               )}
             </div>
           </div>
@@ -223,11 +223,11 @@ export function StudentProfilePage({ path, id }) {
 
         {/* Right Column — QR Code */}
         <div class="space-y-6">
-          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">บัตร QR Code</h3>
-            <p class="text-xs text-slate-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
+          <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 text-center">
+            <h3 class="text-base font-semibold text-zinc-900 mb-1">บัตร QR Code</h3>
+            <p class="text-xs text-zinc-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
 
-            <div class="w-48 h-48 mx-auto bg-white dark:bg-slate-700 rounded-xl flex items-center justify-center mb-4 p-2">
+            <div class="w-48 h-48 mx-auto bg-white rounded-xl flex items-center justify-center mb-4 p-2 border border-zinc-200">
               {qrToken ? (
                 <div class="flex flex-col items-center gap-2">
                   <QRCode
@@ -237,15 +237,15 @@ export function StudentProfilePage({ path, id }) {
                     fgColor="#1e293b"
                   />
                   {qrToken.expiresAt && (
-                    <p class="text-xs text-slate-400 mt-2">
+                    <p class="text-xs text-zinc-400 mt-2">
                       หมดอายุ {formatDate(qrToken.expiresAt)}
                     </p>
                   )}
                 </div>
               ) : (
                 <div class="text-center">
-                  <QrLargeIcon class="h-16 w-16 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                  <p class="text-xs text-slate-400">ยังไม่มีการสร้าง QR</p>
+                  <QrLargeIcon class="h-16 w-16 mx-auto text-zinc-300 mb-2" />
+                  <p class="text-xs text-zinc-400">ยังไม่มีการสร้าง QR</p>
                 </div>
               )}
             </div>
@@ -263,8 +263,8 @@ export function StudentProfilePage({ path, id }) {
           </div>
 
           {/* Quick Info Card */}
-          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">ข้อมูลระบบ</h3>
+          <div class="bg-white rounded-2xl border border-zinc-200/80 p-6">
+            <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลระบบ</h3>
             <dl class="space-y-3 text-sm">
               <InfoFieldSmall label="รหัสนักเรียน" value={student.id} mono />
               <InfoFieldSmall label="สร้างเมื่อ" value={formatDate(student.createdAt)} />
@@ -281,8 +281,8 @@ export function StudentProfilePage({ path, id }) {
 function InfoField({ label, value }) {
   return (
     <div>
-      <dt class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">{label}</dt>
-      <dd class="text-sm text-slate-900 dark:text-white font-medium">{value || '-'}</dd>
+      <dt class="text-xs font-medium text-zinc-500 mb-0.5">{label}</dt>
+      <dd class="text-sm text-zinc-900 font-medium">{value || '-'}</dd>
     </div>
   );
 }
@@ -290,8 +290,8 @@ function InfoField({ label, value }) {
 function InfoFieldSmall({ label, value, mono }) {
   return (
     <div class="flex items-center justify-between">
-      <dt class="text-xs text-slate-500 dark:text-slate-400">{label}</dt>
-      <dd class={`text-sm font-medium text-slate-900 dark:text-white ${mono ? 'font-mono' : ''}`}>
+      <dt class="text-xs text-zinc-500">{label}</dt>
+      <dd class={`text-sm font-medium text-zinc-900 ${mono ? 'font-mono' : ''}`}>
         {value || '-'}
       </dd>
     </div>

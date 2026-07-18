@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast } from '../../components/ui';
+import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
 import { sessionService, courseService } from '../../services';
 import { useAbortController } from '../../hooks';
 
 const STATUS_MAP = {
-  scheduled: { label: 'ตามตาราง', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  completed: { label: 'เสร็จสิ้น', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  cancelled: { label: 'ยกเลิก', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  scheduled: { label: 'ตามตาราง', color: 'bg-oasis-primary/10 text-oasis-primary' },
+  completed: { label: 'เสร็จสิ้น', color: 'bg-oasis-success-light text-oasis-success-dark' },
+  cancelled: { label: 'ยกเลิก', color: 'bg-oasis-danger-light text-oasis-danger-dark' },
 };
 
 const emptyForm = {
@@ -113,7 +113,7 @@ export function SessionsPage({ path, courseId }) {
       <button
         type="button"
         onClick={() => route('/admin/courses')}
-        class="text-sm text-tiwhub-muted hover:text-tiwhub-heading dark:hover:text-white transition-colors flex items-center gap-1 mb-4"
+        class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-4"
       >
         <ChevronLeftIcon class="h-4 w-4" />
         กลับไปหน้าคอร์สเรียน
@@ -121,10 +121,10 @@ export function SessionsPage({ path, courseId }) {
 
       <div class="mb-8 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
             {course?.name || 'ตารางสอน'}
           </h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+          <p class="text-sm text-zinc-500 mt-1">
             {course?.subject && `${course.subject} · `}จัดการคาบเรียนทั้งหมด
           </p>
         </div>
@@ -137,16 +137,16 @@ export function SessionsPage({ path, courseId }) {
       </div>
 
       {showForm && (
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">เพิ่มคาบเรียนใหม่</h3>
+        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">เพิ่มคาบเรียนใหม่</h3>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SolidInput
+              <DatePickerInput
                 label="วันที่และเวลาเริ่ม *"
-                type="datetime-local"
-                required
-                value={form.scheduledAt}
-                onInput={updateField('scheduledAt')}
+                showTime
+                value={form.scheduledAt ? new Date(form.scheduledAt) : null}
+                onChange={(date) => setForm((prev) => ({ ...prev, scheduledAt: date ? date.toISOString() : '' }))}
+                placeholder="เลือกวันที่และเวลา"
               />
               <SolidInput
                 label="ระยะเวลา (นาที) *"
@@ -163,7 +163,7 @@ export function SessionsPage({ path, courseId }) {
                 onInput={updateField('roomId')}
               />
             </div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 บันทึก
               </Button>
@@ -177,18 +177,18 @@ export function SessionsPage({ path, courseId }) {
 
       {loading && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลดข้อมูล...</p>
         </div>
       )}
 
       {!loading && sessions.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <CalendarIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <CalendarIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ยังไม่มีคาบเรียน</h3>
-          <p class="text-sm text-slate-400 mb-6">เพิ่มคาบเรียนเพื่อเริ่มจัดการตารางสอน</p>
+          <h3 class="text-lg font-semibold text-zinc-700 mb-1">ยังไม่มีคาบเรียน</h3>
+          <p class="text-sm text-zinc-400 mb-6">เพิ่มคาบเรียนเพื่อเริ่มจัดการตารางสอน</p>
           <Button variant="primary" size="md" onClick={openCreate}>+ เพิ่มคาบเรียนแรก</Button>
         </div>
       )}
@@ -198,29 +198,29 @@ export function SessionsPage({ path, courseId }) {
           {sessions.map((session) => (
             <div
               key={session.id}
-              class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              class="bg-white rounded-2xl border border-zinc-200/80 p-5 flex flex-col sm:flex-row sm:items-center gap-4"
             >
               <div class="flex items-center gap-3 flex-1 min-w-0">
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
-                  <CalendarIcon class="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5">
+                  <CalendarIcon class="h-5 w-5 text-oasis-primary" />
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  <p class="text-sm font-semibold text-zinc-900">
                     {formatDate(session.scheduledAt)}
                   </p>
                   {session.durationMin != null && (
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                    <p class="text-xs text-zinc-500">
                       {session.durationMin} นาที
                     </p>
                   )}
                   <div class="flex flex-wrap items-center gap-1.5 mt-1">
                     {session.roomId && (
-                      <span class="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                      <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                         {session.roomId}
                       </span>
                     )}
                     {session.status && (
-                      <span class={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_MAP[session.status]?.color || 'bg-slate-100 text-slate-600'}`}>
+                      <span class={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_MAP[session.status]?.color || 'bg-zinc-100 text-zinc-600'}`}>
                         {STATUS_MAP[session.status]?.label || session.status}
                       </span>
                     )}

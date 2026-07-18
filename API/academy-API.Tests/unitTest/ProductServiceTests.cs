@@ -20,10 +20,10 @@ public class ProductServiceTests
         CreatedAt = DateTime.UtcNow
     };
 
-    // 1 ──────────────────── GetByInstituteIdAsync ────────────────────
+    // 1 ──────────────────── GetAllAsync ────────────────────
 
     [Fact]
-    public async Task GetByInstituteIdAsync_ReturnsProductsForInstitute()
+    public async Task GetAllAsync_ReturnsProductsForInstitute()
     {
         var mockRepo = CreateMockRepo();
         var products = new List<Product>
@@ -31,23 +31,23 @@ public class ProductServiceTests
             CreateTestProduct(id: 1, instituteId: 5, name: "Product A"),
             CreateTestProduct(id: 2, instituteId: 5, name: "Product B")
         };
-        mockRepo.Setup(r => r.GetByInstituteIdAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(products);
+        mockRepo.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(products);
 
         var sut = new ProductService(mockRepo.Object);
-        var result = await sut.GetByInstituteIdAsync(5);
+        var result = await sut.GetAllAsync();
 
         Assert.Equal(2, result.Count());
         Assert.Contains(result, p => p.Name == "Product A");
     }
 
     [Fact]
-    public async Task GetByInstituteIdAsync_EmptyInstitute_ReturnsEmpty()
+    public async Task GetAllAsync_EmptyInstitute_ReturnsEmpty()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.GetByInstituteIdAsync(99, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        mockRepo.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         var sut = new ProductService(mockRepo.Object);
-        var result = await sut.GetByInstituteIdAsync(99);
+        var result = await sut.GetAllAsync();
 
         Assert.Empty(result);
     }
@@ -92,7 +92,7 @@ public class ProductServiceTests
             });
 
         var sut = new ProductService(mockRepo.Object);
-        var result = await sut.CreateAsync(5, new CreateProductRequest("หนังสือเรียน", 500m, "คณิตศาสตร์ ม.1"));
+        var result = await sut.CreateAsync(new CreateProductRequest("หนังสือเรียน", 500m, "คณิตศาสตร์ ม.1"));
 
         Assert.NotNull(result);
         Assert.Equal(42, result.Id);
@@ -109,7 +109,7 @@ public class ProductServiceTests
             .ReturnsAsync((Product p, CancellationToken _) => { p.Id = 10; return p; });
 
         var sut = new ProductService(mockRepo.Object);
-        var result = await sut.CreateAsync(5, new CreateProductRequest("สินค้า", 100m, null));
+        var result = await sut.CreateAsync(new CreateProductRequest("สินค้า", 100m, null));
 
         Assert.Null(result.Description);
     }

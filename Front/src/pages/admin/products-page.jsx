@@ -86,38 +86,38 @@ export function ProductsPage({ path }) {
     <AdminLayout path={path}>
       <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">สินค้าและบริการ</h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการสินค้าเสริมสำหรับออกใบเสร็จ</p>
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">สินค้าและบริการ</h2>
+          <p class="text-sm text-zinc-500 mt-1">จัดการสินค้าเสริมสำหรับออกใบเสร็จ</p>
         </div>
-        <button onClick={openCreate} class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-[0.98] shrink-0">
+        <button onClick={openCreate} class="inline-flex items-center gap-2 bg-oasis-primary hover:bg-oasis-primary-dark text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-[0.98] shrink-0">
           <PlusIcon class="h-4 w-4" />
           เพิ่มสินค้า
         </button>
       </div>
 
       {showForm && (
-        <div class="bg-white dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 p-6 mb-6 max-w-lg">
-          <h3 class="text-base font-semibold text-tiwhub-heading dark:text-white mb-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6 mb-6 max-w-lg">
+          <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่'}
           </h3>
           <form onSubmit={handleSubmit} class="space-y-4">
             <div>
-              <label class="text-sm font-medium text-tiwhub-heading dark:text-white block mb-1">ชื่อสินค้า *</label>
-              <input type="text" value={form.name} onInput={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="เช่น เสื้อสถาบัน" class="w-full px-4 py-2.5 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-white dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+              <label class="text-sm font-medium text-zinc-800 block mb-1">ชื่อสินค้า *</label>
+              <input type="text" value={form.name} onInput={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="เช่น เสื้อสถาบัน" class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
             </div>
             <div>
-              <label class="text-sm font-medium text-tiwhub-heading dark:text-white block mb-1">ราคา *</label>
-              <input type="number" step="0.01" min="0" value={form.price} onInput={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" class="w-full px-4 py-2.5 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-white dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+              <label class="text-sm font-medium text-zinc-800 block mb-1">ราคา *</label>
+              <input type="number" step="0.01" min="0" value={form.price} onInput={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
             </div>
             <div>
-              <label class="text-sm font-medium text-tiwhub-heading dark:text-white block mb-1">รายละเอียด (optional)</label>
-              <textarea value={form.description} onInput={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} class="w-full px-4 py-2.5 text-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 rounded-xl bg-white dark:bg-tiwhub-heading/50 text-tiwhub-heading dark:text-white placeholder-tiwhub-muted focus:outline-none focus:ring-2 focus:ring-blue-500/25 resize-none" />
+              <label class="text-sm font-medium text-zinc-800 block mb-1">รายละเอียด (optional)</label>
+              <textarea value={form.description} onInput={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all resize-none" />
             </div>
             <div class="flex gap-3 pt-2">
-              <button type="submit" disabled={submitting} class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50 transition-all">
+              <button type="submit" disabled={submitting} class="px-4 py-2 text-sm font-semibold text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl disabled:opacity-50 transition-all shadow-sm">
                 {submitting ? 'กำลังบันทึก...' : editingId ? 'บันทึก' : 'เพิ่ม'}
               </button>
-              <button type="button" onClick={() => setShowForm(false)} class="px-4 py-2 text-sm font-medium text-tiwhub-body dark:text-tiwhub-muted hover:text-tiwhub-heading rounded-xl hover:bg-tiwhub-surface-hover dark:hover:bg-tiwhub-heading/40 transition-colors">
+              <button type="button" onClick={() => setShowForm(false)} class="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-800 rounded-xl hover:bg-zinc-50 transition-colors">
                 ยกเลิก
               </button>
             </div>
@@ -125,32 +125,32 @@ export function ProductsPage({ path }) {
         </div>
       )}
 
-      <div class="bg-white dark:bg-tiwhub-heading/80 rounded-2xl shadow-sm border border-tiwhub-border-light dark:border-tiwhub-border/20 overflow-hidden">
+      <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
-              <tr class="border-b border-tiwhub-border-light dark:border-tiwhub-border/20 bg-tiwhub-bg/50 dark:bg-tiwhub-heading/30">
-                <th class="text-left px-6 py-3 text-xs font-semibold text-tiwhub-muted dark:text-tiwhub-muted/60 uppercase tracking-wider">ชื่อสินค้า</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-tiwhub-muted dark:text-tiwhub-muted/60 uppercase tracking-wider">ราคา</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-tiwhub-muted dark:text-tiwhub-muted/60 uppercase tracking-wider hidden sm:table-cell">รายละเอียด</th>
-                <th class="text-right px-6 py-3 text-xs font-semibold text-tiwhub-muted dark:text-tiwhub-muted/60 uppercase tracking-wider"><span class="sr-only">จัดการ</span></th>
+              <tr class="border-b border-zinc-100 bg-zinc-50/50">
+                <th class="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">ชื่อสินค้า</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">ราคา</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider hidden sm:table-cell">รายละเอียด</th>
+                <th class="text-right px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><span class="sr-only">จัดการ</span></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-tiwhub-border-light dark:divide-tiwhub-border/20">
+            <tbody class="divide-y divide-zinc-100">
               {loading ? (
-                <tr><td colspan="4" class="px-6 py-12 text-center text-sm text-tiwhub-muted"><div class="mx-auto mb-2 h-6 w-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin inline-block" /> กำลังโหลด...</td></tr>
+                <tr><td colspan="4" class="px-6 py-12 text-center text-sm text-zinc-400"><div class="mx-auto mb-2 h-6 w-6 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin inline-block" /> กำลังโหลด...</td></tr>
               ) : products.length === 0 ? (
-                <tr><td colspan="4" class="px-6 py-12 text-center text-sm text-tiwhub-muted">ยังไม่มีสินค้า</td></tr>
+                <tr><td colspan="4" class="px-6 py-12 text-center text-sm text-zinc-400">ยังไม่มีสินค้า</td></tr>
               ) : (
                 products.map((p) => (
-                  <tr key={p.id} class="hover:bg-blue-50/40 dark:hover:bg-blue-500/5 transition-colors">
-                    <td class="px-6 py-4 text-sm font-semibold text-tiwhub-heading dark:text-white">{p.name}</td>
-                    <td class="px-6 py-4 text-sm text-tiwhub-body dark:text-tiwhub-bg/80">฿{Number(p.price).toLocaleString()}</td>
-                    <td class="px-6 py-4 text-sm text-tiwhub-muted dark:text-tiwhub-muted/60 hidden sm:table-cell">{p.description || '-'}</td>
+                  <tr key={p.id} class="hover:bg-oasis-primary/5 transition-colors">
+                    <td class="px-6 py-4 text-sm font-semibold text-zinc-900">{p.name}</td>
+                    <td class="px-6 py-4 text-sm text-zinc-600">฿{Number(p.price).toLocaleString()}</td>
+                    <td class="px-6 py-4 text-sm text-zinc-400 hidden sm:table-cell">{p.description || '-'}</td>
                     <td class="px-6 py-4 text-right">
                       <div class="flex items-center justify-end gap-1">
-                        <button onClick={() => openEdit(p)} class="p-1.5 text-tiwhub-muted hover:text-blue-600 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"><EditIcon class="h-4 w-4" /></button>
-                        <button onClick={() => handleDelete(p)} class="p-1.5 text-tiwhub-muted hover:text-red-600 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"><TrashIcon class="h-4 w-4" /></button>
+                        <button onClick={() => openEdit(p)} class="p-1.5 text-zinc-400 hover:text-oasis-primary rounded-xl hover:bg-oasis-primary/5 transition-all"><EditIcon class="h-4 w-4" /></button>
+                        <button onClick={() => handleDelete(p)} class="p-1.5 text-zinc-400 hover:text-oasis-danger rounded-xl hover:bg-oasis-danger/5 transition-all"><TrashIcon class="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>

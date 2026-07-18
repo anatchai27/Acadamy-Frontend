@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast } from '../../components/ui';
+import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 
@@ -24,18 +24,18 @@ export function AcademicsPage({ path }) {
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ระบบวิชาการ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการการบ้านและการประเมินทักษะ</p>
+        <h2 class="text-2xl font-bold text-zinc-900">ระบบวิชาการ</h2>
+        <p class="text-sm text-zinc-500 mt-1">จัดการการบ้านและการประเมินทักษะ</p>
       </div>
 
-      <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
+      <div class="inline-flex rounded-xl border border-zinc-200 overflow-hidden mb-6">
         <button
           type="button"
           onClick={() => setTab('homework')}
           class={`px-5 py-2.5 text-sm font-medium transition-colors ${
             tab === 'homework'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-oasis-primary text-white'
+              : 'bg-white text-zinc-600 hover:bg-zinc-50'
           }`}
         >
           การบ้าน
@@ -45,8 +45,8 @@ export function AcademicsPage({ path }) {
           onClick={() => setTab('skills')}
           class={`px-5 py-2.5 text-sm font-medium transition-colors ${
             tab === 'skills'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-oasis-primary text-white'
+              : 'bg-white text-zinc-600 hover:bg-zinc-50'
           }`}
         >
           ประเมินทักษะ
@@ -55,13 +55,13 @@ export function AcademicsPage({ path }) {
 
       {courses.length > 0 && (
         <div class="mb-6 max-w-xs">
-          <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">
+          <label class="text-sm font-medium text-zinc-800 mb-1.5 block">
             เลือกคอร์สเรียน
           </label>
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white"
+            class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/20 text-zinc-900"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -180,13 +180,13 @@ function HomeworkTab({ courseId }) {
   };
 
   if (!courseId) {
-    return <p class="text-sm text-slate-400 text-center py-16">กรุณาเลือกคอร์สเรียน</p>;
+    return <p class="text-sm text-zinc-400 text-center py-16">กรุณาเลือกคอร์สเรียน</p>;
   }
 
   return (
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">รายการการบ้าน</h3>
+        <h3 class="text-lg font-semibold text-zinc-900">รายการการบ้าน</h3>
         <Button variant="primary" size="sm" onClick={openCreate}>
           <span class="flex items-center gap-1.5">
             <PlusIcon class="h-4 w-4" />
@@ -196,8 +196,8 @@ function HomeworkTab({ courseId }) {
       </div>
 
       {showForm && (
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
-          <h4 class="text-base font-semibold text-slate-900 dark:text-white mb-4">สั่งการบ้านใหม่</h4>
+        <div class="bg-white rounded-xl border border-zinc-200 p-6 mb-6">
+          <h4 class="text-base font-semibold text-zinc-900 mb-4">สั่งการบ้านใหม่</h4>
           <form onSubmit={handleSubmitHomework}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="md:col-span-2">
@@ -210,20 +210,21 @@ function HomeworkTab({ courseId }) {
                 />
               </div>
               <div class="md:col-span-2">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">รายละเอียด</label>
+                <label class="text-sm font-medium text-zinc-800 mb-1.5 block">รายละเอียด</label>
                 <textarea
                   value={form.description}
                   onInput={updateField('description')}
                   placeholder="คำอธิบายการบ้าน"
                   rows={3}
-                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white placeholder-slate-400 resize-none transition-colors"
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/20 text-zinc-900 placeholder-zinc-400 resize-none transition-colors"
                 />
               </div>
-              <SolidInput
+              <DatePickerInput
                 label="กำหนดส่ง"
-                type="datetime-local"
-                value={form.dueDate}
-                onInput={updateField('dueDate')}
+                showTime
+                value={form.dueDate ? new Date(form.dueDate) : null}
+                onChange={(date) => setForm((prev) => ({ ...prev, dueDate: date ? date.toISOString() : '' }))}
+                placeholder="เลือกวันที่และเวลา"
               />
               <SolidInput
                 label="ลิงก์ไฟล์แนบ"
@@ -232,7 +233,7 @@ function HomeworkTab({ courseId }) {
                 onInput={updateField('fileUrl')}
               />
             </div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 สั่งการบ้าน
               </Button>
@@ -246,38 +247,38 @@ function HomeworkTab({ courseId }) {
 
       {loading && (
         <div class="text-center py-12">
-          <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลด...</p>
+          <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลด...</p>
         </div>
       )}
 
       {!loading && homeworks.length === 0 && (
-        <p class="text-sm text-slate-400 text-center py-12">ยังไม่มีการบ้านในคอร์สนี้</p>
+        <p class="text-sm text-zinc-400 text-center py-12">ยังไม่มีการบ้านในคอร์สนี้</p>
       )}
 
       {homeworks.map((hw) => (
-        <div key={hw.id} class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 mb-3 overflow-hidden">
+        <div key={hw.id} class="bg-white rounded-xl border border-zinc-200 mb-3 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSubmissions(hw.id)}
-            class="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+            class="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-zinc-50 transition-colors"
           >
             <div class="flex-1 min-w-0">
-              <h4 class="text-sm font-semibold text-slate-900 dark:text-white">{hw.title}</h4>
+              <h4 class="text-sm font-semibold text-zinc-900">{hw.title}</h4>
               {hw.dueAt && (
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p class="text-xs text-zinc-500 mt-1">
                   ส่งภายใน {new Date(hw.dueAt).toLocaleDateString('th-TH')}
                 </p>
               )}
             </div>
-            <span class="text-xs text-slate-400 shrink-0">
+            <span class="text-xs text-zinc-400 shrink-0">
               {hw.submissionCount != null && `${hw.submissionCount} คนส่ง`}
               <ChevronDownIcon class={`h-4 w-4 ml-1 inline transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
             </span>
           </button>
 
           {expandedHw === hw.id && (
-            <div class="border-t border-slate-100 dark:border-slate-700 p-5">
+            <div class="border-t border-zinc-100 p-5">
               <SubmissionsList
                 submissions={submissions[hw.id] || []}
                 onGrade={handleGrade}
@@ -295,27 +296,27 @@ function SubmissionsList({ submissions, onGrade }) {
   const [feedbackInputs, setFeedbackInputs] = useState({});
 
   if (!submissions || submissions.length === 0) {
-    return <p class="text-sm text-slate-400 text-center py-4">ยังไม่มีนักเรียนส่งงาน</p>;
+    return <p class="text-sm text-zinc-400 text-center py-4">ยังไม่มีนักเรียนส่งงาน</p>;
   }
 
   return (
     <div class="space-y-2">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">นักเรียนที่ส่งงาน ({submissions.length} คน)</p>
+      <p class="text-xs font-medium text-zinc-500 mb-2">นักเรียนที่ส่งงาน ({submissions.length} คน)</p>
       {submissions.map((sub) => (
-        <div key={sub.id} class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-slate-50 dark:border-slate-700 first:border-0">
+        <div key={sub.id} class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-zinc-50 first:border-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-900 dark:text-white">
+            <p class="text-sm font-medium text-zinc-800">
               {sub.studentName || `นักเรียน #${sub.studentId}`}
             </p>
             {sub.submittedAt && (
-              <p class="text-xs text-slate-500 dark:text-slate-400">
+              <p class="text-xs text-zinc-500">
                 ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}
               </p>
             )}
           </div>
           <div class="flex flex-wrap items-center gap-2 shrink-0">
             {sub.score != null ? (
-              <span class="text-sm font-bold text-amber-600 dark:text-amber-400">{sub.score}</span>
+              <span class="text-sm font-bold text-oasis-warning">{sub.score}</span>
             ) : (
               <>
                 <input
@@ -323,7 +324,7 @@ function SubmissionsList({ submissions, onGrade }) {
                   placeholder="ความเห็น"
                   value={feedbackInputs[sub.id] ?? ''}
                   onInput={(e) => setFeedbackInputs((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                  class="w-28 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 placeholder-slate-400"
+                  class="w-28 px-2 py-1.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-900 focus:outline-none focus:border-oasis-primary placeholder-zinc-400"
                 />
                 <input
                   type="number"
@@ -331,13 +332,13 @@ function SubmissionsList({ submissions, onGrade }) {
                   placeholder="คะแนน"
                   value={gradeInputs[sub.id] ?? ''}
                   onInput={(e) => setGradeInputs((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                  class="w-20 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                  class="w-20 px-2 py-1.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-900 focus:outline-none focus:border-oasis-primary"
                 />
                 <button
                   type="button"
                   onClick={() => onGrade(sub.id, Number(gradeInputs[sub.id]), feedbackInputs[sub.id])}
                   disabled={!gradeInputs[sub.id]}
-                  class="px-3 py-1.5 text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                  class="px-3 py-1.5 text-xs font-medium text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl disabled:opacity-40 transition-colors"
                 >
                   บันทึก
                 </button>
@@ -418,38 +419,38 @@ function SkillScoresTab({ courseId }) {
   };
 
   if (!courseId) {
-    return <p class="text-sm text-slate-400 text-center py-16">กรุณาเลือกคอร์สเรียน</p>;
+    return <p class="text-sm text-zinc-400 text-center py-16">กรุณาเลือกคอร์สเรียน</p>;
   }
 
   if (loading) {
     return (
       <div class="text-center py-12">
-        <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-        <p class="text-sm text-slate-400">กำลังโหลด...</p>
+        <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+        <p class="text-sm text-zinc-400">กำลังโหลด...</p>
       </div>
     );
   }
 
   if (topics.length === 0) {
-    return <p class="text-sm text-slate-400 text-center py-12">ยังไม่มีหัวข้อทักษะในคอร์สนี้</p>;
+    return <p class="text-sm text-zinc-400 text-center py-12">ยังไม่มีหัวข้อทักษะในคอร์สนี้</p>;
   }
 
   return (
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">ประเมินทักษะ</h3>
+        <h3 class="text-lg font-semibold text-zinc-900">ประเมินทักษะ</h3>
         <Button variant="primary" size="sm" onClick={handleBatchSave} loading={saving} disabled={saving}>
           บันทึกคะแนนทั้งหมด
         </Button>
       </div>
 
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div class="bg-white rounded-xl border border-zinc-200 overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-slate-50 dark:bg-slate-700/50">
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">นักเรียน</th>
+            <tr class="bg-zinc-50">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase">นักเรียน</th>
               {topics.map((t) => (
-                <th key={t.id} class="text-center px-3 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase min-w-[100px]">
+                <th key={t.id} class="text-center px-3 py-3 text-xs font-semibold text-zinc-500 uppercase min-w-[100px]">
                   {t.name}
                 </th>
               ))}
@@ -458,12 +459,12 @@ function SkillScoresTab({ courseId }) {
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colspan={topics.length + 1} class="text-center py-8 text-sm text-slate-400">ยังไม่มีนักเรียนในคอร์สนี้</td>
+                <td colspan={topics.length + 1} class="text-center py-8 text-sm text-zinc-400">ยังไม่มีนักเรียนในคอร์สนี้</td>
               </tr>
             ) : (
               students.map((student) => (
-                <tr key={student.id} class="border-t border-slate-100 dark:border-slate-700">
-                  <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">
+                <tr key={student.id} class="border-t border-zinc-100">
+                  <td class="px-4 py-3 text-sm font-medium text-zinc-800">
                     {student.fullName || '-'}
                   </td>
                   {topics.map((topic) => {
@@ -476,7 +477,7 @@ function SkillScoresTab({ courseId }) {
                           min="0"
                           value={scoreValues[key] ?? ''}
                           onInput={(e) => handleScoreChange(student.id, topic.id, e.target.value)}
-                          class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                          class="w-20 px-2 py-1.5 text-sm text-center border border-zinc-200 rounded-xl bg-white text-zinc-900 focus:outline-none focus:border-oasis-primary"
                           placeholder="-"
                         />
                       </td>

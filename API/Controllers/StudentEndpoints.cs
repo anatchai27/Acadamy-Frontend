@@ -1,7 +1,6 @@
 using academy_API.DTOs;
 using academy_API.Services;
 using academy_API.Services.Contracts;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -23,8 +22,7 @@ public static class StudentEndpoints
             int limit = 20,
             CancellationToken ct = default) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var result = await service.GetAllAsync(instituteId, search, page, limit, ct);
+            var result = await service.GetAllAsync(search, page, limit, ct);
             return Results.Ok(result);
         });
 
@@ -34,8 +32,7 @@ public static class StudentEndpoints
             HttpContext httpContext,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var profile = await service.GetByIdAsync(id, instituteId, ct);
+            var profile = await service.GetByIdAsync(id, ct);
             return profile is null
                 ? Results.NotFound(new { Status = "error", Message = "ไม่พบข้อมูลนักเรียน" })
                 : Results.Ok(profile);
@@ -49,7 +46,10 @@ public static class StudentEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
+                var instituteIdClaim = httpContext.User.FindFirst("institute_id")?.Value;
+                if (string.IsNullOrEmpty(instituteIdClaim) || !int.TryParse(instituteIdClaim, out var instituteId))
+                    return Results.BadRequest(new { Status = "error", Message = "Institute not identified." });
+
                 var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString()
                     ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
@@ -79,8 +79,7 @@ public static class StudentEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.UpdateAsync(id, instituteId, request, ct);
+                var result = await service.UpdateAsync(id, request, ct);
                 return Results.Ok(result);
             }
             catch (StudentValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
@@ -109,8 +108,7 @@ public static class StudentEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.GetQrTokenAsync(id, instituteId, ct);
+                var result = await service.GetQrTokenAsync(id, ct);
                 return Results.Ok(result);
             }
             catch (StudentValidationException ex) when (ex.ErrorCode == "NOT_FOUND")

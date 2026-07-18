@@ -15,3 +15,4 @@ export { SolidInput } from './solid-input';
 export { DataTable } from './data-table';
 export { ScannerCamera } from './scanner-camera';
 export { LogoUpload } from './logo-upload';
+export { DatePickerInput } from './datepicker/datepicker-input';

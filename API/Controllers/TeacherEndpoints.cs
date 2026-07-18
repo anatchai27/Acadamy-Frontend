@@ -1,5 +1,4 @@
 using academy_API.Data;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -15,11 +14,7 @@ public static class TeacherEndpoints
 
         group.MapGet("/", async (HttpContext httpContext, TutoringDbContext db, CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
             var query = db.Teachers.AsQueryable();
-
-            if (instituteId.HasValue)
-                query = query.Where(t => t.InstituteId == instituteId.Value);
 
             return await query
                 .OrderBy(t => t.FullName)
@@ -40,7 +35,6 @@ public static class TeacherEndpoints
 
         group.MapGet("/{id:int}", async (int id, HttpContext httpContext, TutoringDbContext db, CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
             var teacher = await db.Teachers
                 .Where(t => t.Id == id)
                 .Select(t => new
@@ -60,9 +54,6 @@ public static class TeacherEndpoints
             if (teacher is null)
                 return Results.NotFound(new { Error = "Teacher not found." });
 
-            if (instituteId.HasValue && teacher.InstituteId != instituteId)
-                return Results.Json(new { Error = "Access denied." }, statusCode: 403);
-
             return Results.Ok(teacher);
         });
 
@@ -71,10 +62,9 @@ public static class TeacherEndpoints
             if (string.IsNullOrWhiteSpace(request.FullName))
                 return Results.BadRequest(new { Error = "FullName is required." });
 
-            var instituteId = httpContext.GetInstituteId();
             var teacher = new Models.Teacher
             {
-                InstituteId = instituteId,
+                InstituteId = 0,
                 FullName = request.FullName.Trim(),
                 Specialization = request.Specialization?.Trim(),
                 Bio = request.Bio?.Trim(),

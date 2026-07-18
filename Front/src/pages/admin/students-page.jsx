@@ -114,7 +114,7 @@ export function StudentsPage({ path }) {
                 {/* Card Top — Avatar + Identity */}
                 <div class="p-5">
                   <div class="flex items-start gap-4">
-                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-bold">
+                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-semibold">
                       {student.nickname?.[0] || student.fullName?.[0] || '?'}
                     </div>
                     <div class="flex-1 min-w-0">
@@ -193,7 +193,7 @@ export function StudentsPage({ path }) {
                   type="button"
                   disabled={pagination.currentPage <= 1}
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
                 >
                   <ChevronLeftIcon class="h-4 w-4" />
                   ก่อนหน้า
@@ -215,7 +215,7 @@ export function StudentsPage({ path }) {
                         <button
                           type="button"
                           onClick={() => handlePageChange(p)}
-                          class={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                          class={`px-3 py-1.5 rounded-xl border text-sm font-medium transition-colors ${
                             p === pagination.currentPage
                               ? 'bg-oasis-primary text-white border-oasis-primary'
                               : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
@@ -230,7 +230,7 @@ export function StudentsPage({ path }) {
                   type="button"
                   disabled={!pagination.hasNext}
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
                 >
                   ถัดไป
                   <ChevronRightIcon class="h-4 w-4" />

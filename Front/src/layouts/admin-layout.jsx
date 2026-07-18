@@ -67,8 +67,8 @@ export function AdminLayout({ children, path }) {
   const filteredMenuItems = menuItems.filter((item) => item.roles.includes(userRole));
 
   return (
-    <div class="min-h-screen bg-oasis-bg">
-      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-white border-r border-zinc-200/60">
+<div class="min-h-screen bg-oasis-bg text-zinc-800">
+      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-oasis-bg border-r border-zinc-200/60">
         <div class="flex h-16 items-center gap-3 px-6 border-b border-zinc-200/60">
           {state.instituteLogo ? (
             <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-xl object-cover shrink-0" />
@@ -89,7 +89,7 @@ export function AdminLayout({ children, path }) {
           <p class="px-3 mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             เมนูหลัก
           </p>
-{filteredMenuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isActive = currentPath === item.path;
             return (
               <button
@@ -97,15 +97,12 @@ export function AdminLayout({ children, path }) {
                 onClick={() => route(item.path)}
                 class={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-oasis-primary/5 text-oasis-primary shadow-sm'
-                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                    ? 'bg-zinc-200/60 text-zinc-900'
+                    : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               >
-                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-oasis-primary' : ''}`} />
+                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-zinc-900' : ''}`} />
                 {item.label}
-                {isActive && (
-                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-oasis-primary" />
-                )}
               </button>
             );
           })}
@@ -113,7 +110,7 @@ export function AdminLayout({ children, path }) {
 
         <div class="border-t border-zinc-200/60 p-4">
           <div class="flex items-center gap-3 mb-3 px-1">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold shrink-0">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold shrink-0">
               {avatarChar}
             </div>
             <div class="flex-1 min-w-0">
@@ -145,7 +142,7 @@ export function AdminLayout({ children, path }) {
           )}
           <span class="text-base font-semibold text-zinc-900">{currentTitle}</span>
         </div>
-        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold">
+        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold">
           {avatarChar}
         </div>
       </header>
@@ -168,16 +165,16 @@ export function AdminLayout({ children, path }) {
           </button>
         </div>
         <div class="flex items-center gap-4">
-          <button class="relative p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-xl hover:bg-zinc-50">
+          <button class="relative p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-xl hover:bg-zinc-100">
             <BellIcon class="h-5 w-5" />
             <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-oasis-danger ring-2 ring-white" />
           </button>
           <div class="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setDropdownOpen(!dropdownOpen); }}
-              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-zinc-50 transition-colors"
+              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-zinc-100 transition-colors"
             >
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xs font-semibold">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold">
                 {avatarChar}
               </div>
               <span class="text-sm font-medium text-zinc-600">{displayName}</span>
@@ -202,9 +199,13 @@ export function AdminLayout({ children, path }) {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content — floating card */}
       <main class="md:ml-64 pt-14 md:pt-0">
-        <div class="p-4 md:p-8 max-w-7xl mx-auto">{children}</div>
+        <div class="p-4 md:p-8 max-w-7xl mx-auto">
+          <div class="bg-white my-4 rounded-3xl border border-zinc-200/80 p-8 shadow-sm">
+            {children}
+          </div>
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation */}

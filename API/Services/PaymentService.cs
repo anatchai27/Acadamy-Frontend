@@ -4,9 +4,9 @@ namespace academy_API.Services;
 
 public interface IPaymentService
 {
-    Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, int? instituteId, CancellationToken ct = default);
+    Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default);
     Task<PaymentHistoryResponse> GetHistoryAsync(
-        int? instituteId, DateTime? startDate, DateTime? endDate, string? method,
+        DateTime? startDate, DateTime? endDate, string? method,
         int page, int limit, CancellationToken ct = default);
 }
 
@@ -17,9 +17,9 @@ public class PaymentService(
     private readonly Repositories.IPaymentRepository _repository = repository;
     private readonly Contracts.ILineNotificationService _lineService = lineService;
 
-    public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, int? instituteId, CancellationToken ct = default)
+    public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
-        var enrollment = await _repository.GetEnrollmentWithStudentAsync(request.EnrollmentId, instituteId, ct)
+        var enrollment = await _repository.GetEnrollmentWithStudentAsync(request.EnrollmentId, ct)
             ?? throw new PaymentValidationException("ENROLLMENT_NOT_FOUND", "ไม่พบข้อมูลการลงทะเบียน");
 
         var validMethods = new HashSet<string> { "transfer", "credit_card", "cash" };
@@ -79,12 +79,12 @@ public class PaymentService(
     }
 
     public async Task<PaymentHistoryResponse> GetHistoryAsync(
-        int? instituteId, DateTime? startDate, DateTime? endDate, string? method,
+        DateTime? startDate, DateTime? endDate, string? method,
         int page, int limit, CancellationToken ct = default)
     {
-        var paymentsTask = _repository.GetPaymentsAsync(instituteId, startDate, endDate, method, page, limit, ct);
-        var totalAmountTask = _repository.GetTotalAmountAsync(instituteId, startDate, endDate, method, ct);
-        var countTask = _repository.GetPaymentCountAsync(instituteId, startDate, endDate, method, ct);
+        var paymentsTask = _repository.GetPaymentsAsync(startDate, endDate, method, page, limit, ct);
+        var totalAmountTask = _repository.GetTotalAmountAsync(startDate, endDate, method, ct);
+        var countTask = _repository.GetPaymentCountAsync(startDate, endDate, method, ct);
 
         var payments = await paymentsTask;
         var totalAmount = await totalAmountTask;

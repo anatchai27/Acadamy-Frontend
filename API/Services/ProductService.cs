@@ -6,9 +6,9 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
 {
     private readonly Repositories.IProductRepository _repository = repository;
 
-    public async Task<IEnumerable<DTOs.ProductResponse>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DTOs.ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var products = await _repository.GetByInstituteIdAsync(instituteId, cancellationToken);
+        var products = await _repository.GetAllAsync(cancellationToken);
         return products.Select(MapToResponse);
     }
 
@@ -18,11 +18,10 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
         return product is null ? null : MapToResponse(product);
     }
 
-    public async Task<DTOs.ProductResponse> CreateAsync(int instituteId, DTOs.CreateProductRequest request, CancellationToken cancellationToken = default)
+    public async Task<DTOs.ProductResponse> CreateAsync(DTOs.CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         var product = new Models.Product
         {
-            InstituteId = instituteId,
             Name = request.Name,
             Price = request.Price,
             Description = request.Description,

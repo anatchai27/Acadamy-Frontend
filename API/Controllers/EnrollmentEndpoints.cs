@@ -1,6 +1,5 @@
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -22,8 +21,7 @@ public static class EnrollmentEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.EnrollAsync(request, instituteId, ct);
+                var result = await service.EnrollAsync(request, ct);
                 return Results.Created($"/api/enrollments/{result.Data.EnrollmentId}", result);
             }
             catch (EnrollmentValidationException ex)

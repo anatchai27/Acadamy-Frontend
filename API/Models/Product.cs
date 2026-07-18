@@ -1,6 +1,6 @@
 namespace academy_API.Models;
 
-public class Product
+public class Product : IMultiTenantEntity
 {
     public int Id { get; set; }
     public int InstituteId { get; set; }

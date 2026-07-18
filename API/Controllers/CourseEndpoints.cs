@@ -1,6 +1,5 @@
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -21,8 +20,7 @@ public static class CourseEndpoints
             int? teacher_id,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var result = await service.GetAllAsync(instituteId, search, teacher_id, ct);
+            var result = await service.GetAllAsync(search, teacher_id, ct);
             return Results.Ok(result);
         });
 
@@ -32,8 +30,7 @@ public static class CourseEndpoints
             HttpContext httpContext,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var course = await service.GetByIdAsync(id, instituteId, ct);
+            var course = await service.GetByIdAsync(id, ct);
             return course is null
                 ? Results.NotFound(new { Status = "error", Message = "ไม่พบคอร์สเรียน" })
                 : Results.Ok(new
@@ -58,7 +55,10 @@ public static class CourseEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
+                var instituteIdClaim = httpContext.User.FindFirst("institute_id")?.Value;
+                if (string.IsNullOrEmpty(instituteIdClaim) || !int.TryParse(instituteIdClaim, out var instituteId))
+                    return Results.BadRequest(new { Status = "error", Message = "Institute not identified." });
+
                 var result = await service.CreateAsync(request, instituteId, ct);
                 return Results.Created($"/api/courses/{result.Data.CourseId}", result);
             }
@@ -81,8 +81,7 @@ public static class CourseEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.UpdateAsync(id, request, instituteId, ct);
+                var result = await service.UpdateAsync(id, request, ct);
                 return Results.Ok(result);
             }
             catch (CourseValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
