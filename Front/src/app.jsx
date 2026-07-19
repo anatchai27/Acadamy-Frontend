@@ -25,6 +25,7 @@ export function App() {
   return (
     <>
     {/* todo: add a route for index page */}
+    
       <Router>
         <LoginPage path="/" />
         <LoginPage path="/login" />
