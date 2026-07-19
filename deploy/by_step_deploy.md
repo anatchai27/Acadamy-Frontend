@@ -96,7 +96,7 @@ sudo apt install -y dotnet-runtime-9.0 nginx git curl
 # 4. Clone โค้ด
 mkdir -p ~/projects
 cd ~/projects
-git clone https://github.com/<your-org>/<your-repo>.git tiwhub
+git clone https://github.com/anatchai27/Acadamy-Frontend.git tiwhub
 cd tiwhub
 
 # 5. สร้าง directory
