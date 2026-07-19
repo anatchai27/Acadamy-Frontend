@@ -5,6 +5,7 @@ import { Button, Input, Checkbox, AuthFormLayout, AuthPageShell } from '../../co
 import { showToast } from '../../components/ui';
 import { useAppContext } from '../../store/AppContext';
 import { authService } from '../../services';
+import { setAuthStorage } from '../../services/auth-service';
 
 export function LoginPage() {
   const { dispatch } = useAppContext();
@@ -19,7 +20,13 @@ export function LoginPage() {
     setIsSubmitting(true);
     try {
       const response = await authService.login({ email: data.email, password: data.password });
-      const user = response.data;
+      const payload = response.data?.data || response.data || {};
+      const token = payload?.token || response.data?.token || null;
+      const user = payload?.user || response.data?.user || payload;
+
+      if (token) {
+        setAuthStorage(token, user);
+      }
 
       dispatch({ type: 'SET_USER', payload: user });
 

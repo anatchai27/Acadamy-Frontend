@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const TOKEN_KEY = 'auth_token';
 
 let onUnauthorized = null;
 
@@ -21,6 +22,18 @@ function buildQuery(params) {
 async function fetcher(endpoint, options = {}) {
   const { params, signal, ...fetchOptions } = options;
   const headers = { ...fetchOptions.headers };
+
+  const storedToken = (() => {
+    try {
+      return window.localStorage.getItem(TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  })();
+
+  if (storedToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${storedToken}`;
+  }
 
   const hasBody = fetchOptions.body !== undefined;
   const isFormData = hasBody && fetchOptions.body instanceof FormData;

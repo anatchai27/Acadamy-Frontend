@@ -2,7 +2,7 @@ import { createContext } from 'preact';
 import { useContext, useReducer, useEffect, useCallback } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AppReducer } from './AppReducer';
-import { getMe } from '../services/auth-service';
+import { clearAuthStorage, getMe } from '../services/auth-service';
 import { setOnUnauthorized } from '../services/api';
 
 const initialState = {
@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(AppReducer, initialState);
 
   const handleUnauthorized = useCallback(() => {
+    clearAuthStorage();
     dispatch({ type: 'CLEAR_USER' });
     route('/login');
   }, []);
