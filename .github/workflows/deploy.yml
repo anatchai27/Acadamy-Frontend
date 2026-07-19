@@ -34,10 +34,10 @@ jobs:
 
       - name: Copy files to temp folder
         run: |
-          mkdir -p temp-deploy/frontend/dist
-          mkdir -p temp-deploy/backend/publish-folder
-          cp -r Front/dist/* temp-deploy/frontend/dist/
-          cp -r publish/api/* temp-deploy/backend/publish-folder/
+          mkdir -p temp-deploy/my-app
+          mkdir -p temp-deploy/my-api
+          cp -r Front/dist/* temp-deploy/my-app/
+          cp -r publish/api/* temp-deploy/my-api/
 
       - name: Upload artifacts to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -58,13 +58,13 @@ jobs:
           script: |
             # 1. Deploy Frontend
             sudo rm -rf /var/www/my-app/*
-            sudo cp -r /var/www/temp-deploy/frontend/dist/* /var/www/my-app/
+            sudo cp -r /var/www/temp-deploy/my-app/* /var/www/my-app/
             sudo chown -R www-data:www-data /var/www/my-app
 
             # 2. Deploy Backend
             sudo systemctl stop my-api.service || true
             sudo rm -rf /var/www/my-api/*
-            sudo cp -r /var/www/temp-deploy/backend/publish-folder/* /var/www/my-api/
+            sudo cp -r /var/www/temp-deploy/my-api/* /var/www/my-api/
             sudo chown -R www-data:www-data /var/www/my-api
 
             # 3. Restart services
