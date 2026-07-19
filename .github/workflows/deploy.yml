@@ -32,44 +32,63 @@ jobs:
           npm install
           npm run build
 
-      - name: Copy files to temp folder
-        run: |
-          mkdir -p temp-deploy/my-app
-          mkdir -p temp-deploy/my-api
-          cp -r Front/dist/* temp-deploy/my-app/
-          cp -r publish/api/* temp-deploy/my-api/
-
-      - name: Upload artifacts to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "temp-deploy/*"
-          target: "/var/www/"
-          strip_components: 1
-
-      - name: Deploy on VPS
+      - name: Prepare Frontend target on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # 1. Deploy Frontend
-            sudo rm -rf /var/www/my-app/*
-            sudo cp -r /var/www/temp-deploy/my-app/* /var/www/my-app/
-            sudo chown -R www-data:www-data /var/www/my-app
+            sudo mkdir -p /var/www/my-app
+            sudo find /var/www/my-app -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
-            # 2. Deploy Backend
+      - name: Deploy Frontend assets to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "Front/dist/*"
+          target: "/var/www/my-app"
+          strip_components: 2
+
+      - name: Prepare Backend target on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
             sudo systemctl stop my-api.service || true
-            sudo rm -rf /var/www/my-api/*
-            sudo cp -r /var/www/temp-deploy/my-api/* /var/www/my-api/
-            sudo chown -R www-data:www-data /var/www/my-api
+            sudo mkdir -p /var/www/my-api
+            sudo find /var/www/my-api -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
-            # 3. Restart services
+      - name: Deploy Backend binary to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "publish/api/*"
+          target: "/var/www/my-api"
+          strip_components: 2
+
+      - name: Fix permissions and restart services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Frontend: ensure Nginx can read static files.
+            sudo chown -R www-data:www-data /var/www/my-app
+            sudo find /var/www/my-app -type d -exec chmod 755 {} \;
+            sudo find /var/www/my-app -type f -exec chmod 644 {} \;
+
+            # Backend: service runs as www-data in this project.
+            sudo chown -R www-data:www-data /var/www/my-api
+            sudo find /var/www/my-api -type d -exec chmod 755 {} \;
+            sudo find /var/www/my-api -type f -exec chmod 644 {} \;
+
             sudo systemctl start my-api.service
             sudo systemctl restart nginx
-
-            # 4. Cleanup
-            sudo rm -rf /var/www/temp-deploy/*
