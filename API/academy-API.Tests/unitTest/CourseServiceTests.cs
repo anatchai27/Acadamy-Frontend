@@ -53,11 +53,11 @@ public class CourseServiceTests
     public async Task GetByIdAsync_ExistingCourse_ReturnsCourse()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(10, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Course { Id = 10, Name = "Math 101", Subject = "Math", InstituteId = 1 });
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.GetByIdAsync(10, 1);
+        var result = await sut.GetByIdAsync(10);
 
         Assert.NotNull(result);
         Assert.Equal("Math 101", result!.Name);
@@ -68,11 +68,11 @@ public class CourseServiceTests
     public async Task GetByIdAsync_NotFound_ReturnsNull()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(999, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Course?)null);
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.GetByIdAsync(999, 1);
+        var result = await sut.GetByIdAsync(999);
         Assert.Null(result);
     }
 
@@ -81,11 +81,11 @@ public class CourseServiceTests
     public async Task UpdateAsync_ExistingCourse_ReturnsSuccess()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.UpdateAsync(10, It.IsAny<UpdateCourseRequest>(), 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.UpdateAsync(10, It.IsAny<UpdateCourseRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Course { Id = 10, Name = "Updated Name" });
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.UpdateAsync(10, new UpdateCourseRequest("Updated Name", null, null, null, null), 1);
+        var result = await sut.UpdateAsync(10, new UpdateCourseRequest("Updated Name", null, null, null, null));
 
         Assert.Equal("success", result.Status);
         Assert.Equal("อัปเดตคอร์สเรียนสำเร็จ", result.Message);
@@ -96,12 +96,12 @@ public class CourseServiceTests
     public async Task UpdateAsync_NotFound_ThrowsNotFoundException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.UpdateAsync(999, It.IsAny<UpdateCourseRequest>(), 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.UpdateAsync(999, It.IsAny<UpdateCourseRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Course?)null);
 
         var sut = new CourseService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.UpdateAsync(999, new UpdateCourseRequest(null, null, null, null, null), 1));
+            () => sut.UpdateAsync(999, new UpdateCourseRequest(null, null, null, null, null)));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
@@ -110,12 +110,12 @@ public class CourseServiceTests
     public async Task UpdateAsync_CrossInstitute_ThrowsForbiddenException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.UpdateAsync(10, It.IsAny<UpdateCourseRequest>(), 2, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.UpdateAsync(10, It.IsAny<UpdateCourseRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("FORBIDDEN"));
 
         var sut = new CourseService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.UpdateAsync(10, new UpdateCourseRequest(null, null, null, null, null), 2));
+            () => sut.UpdateAsync(10, new UpdateCourseRequest(null, null, null, null, null)));
         Assert.Equal("FORBIDDEN", ex.ErrorCode);
     }
 
@@ -126,7 +126,7 @@ public class CourseServiceTests
     public async Task CreateSessionAsync_ValidRequest_ReturnsCreateResponse()
     {
         var sessionRepoMock = CreateMockSessionRepo();
-        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, 1, It.IsAny<CancellationToken>()))
+        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Course { Id = 1, Name = "Math 101" });
         sessionRepoMock.Setup(r => r.CreateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Session s, CancellationToken _) => { s.Id = 5; return s; });
@@ -144,7 +144,7 @@ public class CourseServiceTests
     public async Task CreateSessionAsync_CourseNotFound_ThrowsException()
     {
         var sessionRepoMock = CreateMockSessionRepo();
-        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(999, 1, It.IsAny<CancellationToken>()))
+        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Course?)null);
 
         var sut = new SessionService(sessionRepoMock.Object);
@@ -159,7 +159,7 @@ public class CourseServiceTests
     {
         Session? captured = null;
         var sessionRepoMock = CreateMockSessionRepo();
-        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, 1, It.IsAny<CancellationToken>()))
+        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Course { Id = 1, Name = "Math" });
         sessionRepoMock.Setup(r => r.CreateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Session s, CancellationToken _) => { captured = s; s.Id = 5; return s; });
@@ -175,13 +175,13 @@ public class CourseServiceTests
     public async Task GetByCourseIdAsync_ReturnsSessionsList()
     {
         var sessionRepoMock = CreateMockSessionRepo();
-        sessionRepoMock.Setup(r => r.GetByCourseIdAsync(1, 1, It.IsAny<CancellationToken>()))
+        sessionRepoMock.Setup(r => r.GetByCourseIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync([
                 new Session { Id = 1, CourseId = 1, Course = new Course { Name = "Math" }, ScheduledAt = DateTime.UtcNow, DurationMin = 60, Status = "scheduled" }
             ]);
 
         var sut = new SessionService(sessionRepoMock.Object);
-        var result = await sut.GetByCourseIdAsync(1, 1);
+        var result = await sut.GetByCourseIdAsync(1);
 
         Assert.Equal("success", result.Status);
         Assert.Single(result.Data.Sessions);

@@ -5,9 +5,9 @@ import { leaveRequestService } from '../../services';
 import { useAbortController } from '../../hooks';
 
 const STATUS_MAP = {
-  pending: { label: 'รอตรวจสอบ', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  approved: { label: 'อนุมัติแล้ว', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  rejected: { label: 'ปฏิเสธ', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  pending: { label: 'รอตรวจสอบ', color: 'bg-oasis-warning/5 text-oasis-warning' },
+  approved: { label: 'อนุมัติแล้ว', color: 'bg-oasis-success/5 text-oasis-success' },
+  rejected: { label: 'ปฏิเสธ', color: 'bg-oasis-danger/5 text-oasis-danger' },
 };
 
 const TYPE_MAP = {
@@ -91,11 +91,11 @@ export function RequestsPage({ path }) {
     <AdminLayout path={path}>
       {/* Header */}
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">คำร้องขอ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">คำร้องขอ</h2>
+        <p class="text-sm text-zinc-500 mt-1">
           ตรวจสอบและจัดการคำขอลา / ชดเชยของนักเรียน
           {pendingCount > 0 && (
-            <span class="ml-2 inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+            <span class="ml-2 inline-flex items-center rounded-full bg-oasis-warning/5 px-2 py-0.5 text-xs font-medium text-oasis-warning">
               รอดำเนินการ {pendingCount} รายการ
             </span>
           )}
@@ -103,7 +103,7 @@ export function RequestsPage({ path }) {
       </div>
 
       {/* Status Filter */}
-      <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
+      <div class="inline-flex rounded-xl border border-zinc-200 overflow-hidden mb-6">
         {[
           { value: 'pending', label: 'รอตรวจสอบ' },
           { value: 'approved', label: 'อนุมัติแล้ว' },
@@ -115,8 +115,8 @@ export function RequestsPage({ path }) {
             onClick={() => setFilter(opt.value)}
             class={`px-4 py-2 text-sm font-medium transition-colors ${
               filter === opt.value
-                ? 'bg-amber-500 text-white'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                ? 'bg-oasis-primary text-white'
+                : 'bg-white text-zinc-600 hover:bg-zinc-50'
             }`}
           >
             {opt.label}
@@ -127,19 +127,19 @@ export function RequestsPage({ path }) {
       {/* Loading */}
       {loading && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลดข้อมูล...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && requests.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <ClipboardIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <ClipboardIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ไม่มีคำร้องขอ</h3>
-          <p class="text-sm text-slate-400">
+          <h3 class="text-lg font-semibold text-zinc-600 mb-1">ไม่มีคำร้องขอ</h3>
+          <p class="text-sm text-zinc-400">
             {filter === 'pending' ? 'ไม่มีคำร้องขอที่รอดำเนินการ' : `ไม่มีคำร้องขอสถานะ "${STATUS_MAP[filter]?.label || filter}"`}
           </p>
         </div>
@@ -151,19 +151,19 @@ export function RequestsPage({ path }) {
           {requests.map((req) => (
             <div
               key={req.id}
-              class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5"
+              class="bg-white rounded-2xl border border-zinc-200 p-5"
             >
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
-                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">
+                    <h3 class="text-base font-semibold text-zinc-900">
                       {req.studentName || `นักเรียน #${req.studentId}`}
                     </h3>
-                    <span class={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_MAP[req.status]?.color || 'bg-slate-100 text-slate-600'}`}>
+                    <span class={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_MAP[req.status]?.color || 'bg-zinc-100 text-zinc-600'}`}>
                       {STATUS_MAP[req.status]?.label || req.status}
                     </span>
                   </div>
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
                     <span>ประเภท: {TYPE_MAP[req.type] || req.type}</span>
                     {req.sessionScheduledAt && <span>วันที่: {new Date(req.sessionScheduledAt).toLocaleDateString('th-TH')}</span>}
                     {req.reason && (
@@ -178,7 +178,7 @@ export function RequestsPage({ path }) {
                       type="button"
                       onClick={() => handleReject(req.id)}
                       disabled={actionLoading === req.id}
-                      class="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+                      class="px-4 py-2 text-sm font-medium text-oasis-danger border border-oasis-danger/20 rounded-xl hover:bg-oasis-danger/5 disabled:opacity-50 transition-colors"
                     >
                       ปฏิเสธ
                     </button>

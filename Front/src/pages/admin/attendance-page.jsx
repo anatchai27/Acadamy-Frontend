@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { ScannerCamera, StatusBadge, Button, showToast } from '../../components/ui';
+import { ScannerCamera, StatusBadge, showToast } from '../../components/ui';
 import { attendanceService } from '../../services';
 import { useAbortController } from '../../hooks';
 
@@ -83,17 +83,17 @@ export function AttendancePage({ path }) {
   };
 
   const statusOptions = [
-    { value: 'present', label: 'มา', activeClass: 'bg-emerald-500 text-white' },
-    { value: 'late', label: 'สาย', activeClass: 'bg-amber-500 text-white' },
-    { value: 'leave', label: 'ลา', activeClass: 'bg-slate-500 text-white' },
-    { value: 'absent', label: 'ขาด', activeClass: 'bg-red-500 text-white' },
+    { value: 'present', label: 'มา', activeClass: 'bg-oasis-success text-white shadow-sm' },
+    { value: 'late', label: 'สาย', activeClass: 'bg-oasis-warning text-white shadow-sm' },
+    { value: 'leave', label: 'ลา', activeClass: 'bg-zinc-500 text-white shadow-sm' },
+    { value: 'absent', label: 'ขาด', activeClass: 'bg-oasis-danger text-white shadow-sm' },
   ];
 
   if (loading) {
     return (
       <AdminLayout path={path}>
         <div class="flex items-center justify-center py-20">
-          <span class="text-slate-400">กำลังโหลดข้อมูล...</span>
+          <span class="text-zinc-400">กำลังโหลดข้อมูล...</span>
         </div>
       </AdminLayout>
     );
@@ -102,18 +102,18 @@ export function AttendancePage({ path }) {
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">เช็คชื่อ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">เช็คชื่อ</h2>
+        <p class="text-sm text-zinc-500 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
       </div>
 
-      <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
+      <div class="inline-flex rounded-xl bg-zinc-100 p-1 mb-6">
         <button
           type="button"
           onClick={() => setMode('scan')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             mode === 'scan'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-700'
           }`}
         >
           สแกน QR Code
@@ -121,10 +121,10 @@ export function AttendancePage({ path }) {
         <button
           type="button"
           onClick={() => setMode('manual')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             mode === 'manual'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-700'
           }`}
         >
           เช็คชื่อด้วยมือ
@@ -137,26 +137,26 @@ export function AttendancePage({ path }) {
             <ScannerCamera onScan={handleScan} onError={handleScanError} />
           </div>
 
-          <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-4 max-h-[600px] overflow-y-auto">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 sticky top-0 bg-white dark:bg-slate-800 pb-2">
+          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-4 max-h-[600px] overflow-y-auto">
+            <h3 class="text-sm font-semibold text-zinc-700 mb-3 sticky top-0 bg-white pb-2">
               สแกนล่าสุด ({recentScans.length})
             </h3>
             {recentScans.length === 0 ? (
-              <p class="text-sm text-slate-400 text-center py-8">ยังไม่มีการสแกน</p>
+              <p class="text-sm text-zinc-400 text-center py-8">ยังไม่มีการสแกน</p>
             ) : (
               <div class="space-y-2">
                 {recentScans.map((scan) => (
                   <div
                     key={`${scan.qrData}_${scan.time}`}
-                    class={`flex items-center justify-between p-2.5 rounded-sm ${
-                      scan.status === 'present' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
+                    class={`flex items-center justify-between p-2.5 rounded-xl ${
+                      scan.status === 'present' ? 'bg-oasis-success-light/50' : 'bg-oasis-danger-light/50'
                     }`}
                   >
                     <div class="min-w-0">
-                      <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                      <p class="text-sm font-medium text-zinc-800 truncate">
                         {scan.name}
                       </p>
-                      <p class="text-xs text-slate-500">{scan.time}</p>
+                      <p class="text-xs text-zinc-500">{scan.time}</p>
                     </div>
                     <StatusBadge status={scan.status} />
                   </div>
@@ -166,9 +166,9 @@ export function AttendancePage({ path }) {
           </div>
         </div>
       ) : (
-        <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <p class="text-sm text-slate-600 dark:text-slate-300">
+        <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-zinc-100">
+            <p class="text-sm text-zinc-600">
               ทั้งหมด {students.length} คน &middot; 
               มา {students.filter((s) => s.status === 'present').length} &middot;
               สาย {students.filter((s) => s.status === 'late').length} &middot;
@@ -176,28 +176,28 @@ export function AttendancePage({ path }) {
               ขาด {students.filter((s) => s.status === 'absent').length}
             </p>
           </div>
-          <div class="divide-y divide-slate-200 dark:divide-slate-700">
+          <div class="divide-y divide-zinc-100">
             {students.length === 0 ? (
-              <p class="text-sm text-slate-400 text-center py-8">ยังไม่มีข้อมูลการเข้าเรียนวันนี้</p>
+              <p class="text-sm text-zinc-400 text-center py-8">ยังไม่มีข้อมูลการเข้าเรียนวันนี้</p>
             ) : (
               students.map((student) => (
-                <div key={student.studentId} class="flex items-center justify-between px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div key={student.studentId} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors">
                   <div class="flex items-center gap-3 min-w-0">
-                    <span class="text-sm font-medium text-slate-900 dark:text-white">
+                    <span class="text-sm font-medium text-zinc-900">
                       {student.fullName || '-'}
                     </span>
                     {student.status && <StatusBadge status={student.status} />}
                   </div>
-                  <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden shrink-0">
+                  <div class="inline-flex rounded-xl bg-zinc-100 p-0.5 shrink-0">
                     {statusOptions.map((opt) => (
                       <button
                         key={opt.value}
                         type="button"
                         onClick={() => handleManualStatus(student.studentId, opt.value)}
-                        class={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                        class={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                           student.status === opt.value
                             ? opt.activeClass
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            : 'text-zinc-500 hover:text-zinc-700'
                         }`}
                       >
                         {opt.label}

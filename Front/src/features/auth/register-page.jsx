@@ -108,12 +108,13 @@ export function RegisterPage() {
       const payload = {
         institute: {
           name: data.institute_name,
-          contact_phone: data.contact_phone,
-          logo_base64: logoBase64 || undefined,
+          contactPhone: data.contact_phone,
+          logoBase64: logoBase64 || undefined,
         },
         admin: {
-          full_name: data.admin_full_name,
+          fullName: data.admin_full_name,
         },
+        role: 'admin',
         email: data.admin_email,
         password: data.admin_password,
         phone: data.admin_phone,
@@ -159,68 +160,65 @@ export function RegisterPage() {
   return (
     <div class="min-h-screen flex flex-col md:flex-row">
       {/* ===== LEFT PANEL: Branding (40%) ===== */}
-      <div class="md:w-[40%] bg-tiwhub-primary flex flex-col items-center justify-center px-10 py-16 text-center">
-        <div class="w-24 h-24 border-4 border-white rounded-sm flex items-center justify-center mb-8">
-          <span class="text-5xl font-bold text-white tracking-tight">TH</span>
+      <div class="md:w-[40%] bg-oasis-primary flex flex-col items-center justify-center px-6 md:px-10 py-10 md:py-16 text-center">
+        <div class="w-20 h-20 md:w-24 md:h-24 border-4 border-white rounded-2xl flex items-center justify-center mb-6 md:mb-8">
+          <span class="text-3xl md:text-5xl font-bold text-white tracking-tight">TH</span>
         </div>
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+        <h1 class="text-2xl md:text-4xl font-bold text-white mb-4 tracking-tight">
           TiwHub
         </h1>
-        <p class="text-lg text-white/80 leading-relaxed max-w-sm">
-          จัดการสถาบันง่าย
+        <p class="text-base md:text-lg text-white/80 leading-relaxed max-w-sm">
+          จัดการสถาบันง่าย จบในที่เดียว
         </p>
-        <p class="text-lg text-white/80 leading-relaxed max-w-sm">
-          จบในที่เดียว
-        </p>
-        <div class="mt-12 flex gap-8">
+        <div class="mt-8 md:mt-12 flex gap-6 md:gap-8">
           <div class="text-center">
-            <p class="text-3xl font-bold text-white">500+</p>
-            <p class="text-sm text-white/60 mt-1">สถาบันที่เชื่อมั่น</p>
+            <p class="text-2xl md:text-3xl font-bold text-white">500+</p>
+            <p class="text-xs md:text-sm text-white/60 mt-1">สถาบันที่เชื่อมั่น</p>
           </div>
           <div class="text-center">
-            <p class="text-3xl font-bold text-white">50,000+</p>
-            <p class="text-sm text-white/60 mt-1">นักเรียนในระบบ</p>
+            <p class="text-2xl md:text-3xl font-bold text-white">50,000+</p>
+            <p class="text-xs md:text-sm text-white/60 mt-1">นักเรียนในระบบ</p>
           </div>
         </div>
       </div>
 
       {/* ===== RIGHT PANEL: Form (60%) ===== */}
-      <div class="md:w-[60%] flex items-center justify-center bg-white px-6 py-10 md:py-0">
+      <div class="md:w-[60%] flex items-center justify-center bg-white px-4 md:px-6 py-8 md:py-10">
         <div class="w-full max-w-md">
           {/* Step Indicator */}
-          <div class="flex items-center gap-4 mb-10">
+          <div class="flex items-center gap-3 md:gap-4 mb-8 md:mb-10">
             <div class="flex items-center gap-2">
               <div
-                class={`w-8 h-8 rounded-sm flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                class={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold border-2 transition-colors ${
                   step >= 1
-                    ? 'bg-tiwhub-primary border-tiwhub-primary text-white'
-                    : 'bg-white border-slate-300 text-slate-400'
+                    ? 'bg-oasis-primary border-oasis-primary text-white'
+                    : 'bg-white border-zinc-300 text-zinc-400'
                 }`}
               >
                 1
               </div>
               <span
                 class={`text-sm font-medium transition-colors ${
-                  step >= 1 ? 'text-tiwhub-primary' : 'text-slate-400'
+                  step >= 1 ? 'text-oasis-primary' : 'text-zinc-400'
                 }`}
               >
                 ข้อมูลสถาบัน
               </span>
             </div>
-            <div class={`flex-1 h-0.5 transition-colors ${step === 2 ? 'bg-tiwhub-primary' : 'bg-slate-200'}`} />
+            <div class={`flex-1 h-0.5 transition-colors ${step === 2 ? 'bg-oasis-primary' : 'bg-zinc-200'}`} />
             <div class="flex items-center gap-2">
               <div
-                class={`w-8 h-8 rounded-sm flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                class={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold border-2 transition-colors ${
                   step === 2
-                    ? 'bg-tiwhub-primary border-tiwhub-primary text-white'
-                    : 'bg-white border-slate-300 text-slate-400'
+                    ? 'bg-oasis-primary border-oasis-primary text-white'
+                    : 'bg-white border-zinc-300 text-zinc-400'
                 }`}
               >
                 2
               </div>
               <span
                 class={`text-sm font-medium transition-colors ${
-                  step === 2 ? 'text-tiwhub-primary' : 'text-slate-400'
+                  step === 2 ? 'text-oasis-primary' : 'text-zinc-400'
                 }`}
               >
                 ข้อมูลผู้ดูแล
@@ -229,13 +227,13 @@ export function RegisterPage() {
           </div>
 
           {/* Step Title */}
-          <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">
+          <p class="text-xs uppercase tracking-wide text-zinc-500 mb-1">
             ขั้นตอนที่ {step}/2
           </p>
-          <h2 class="text-2xl font-bold text-slate-900 mb-2">
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight mb-2">
             {step === 1 ? 'ข้อมูลสถาบัน' : 'เริ่มต้นใช้งาน TiwHub'}
           </h2>
-          <p class="text-slate-600 text-sm mb-8">
+          <p class="text-zinc-500 text-sm mb-8">
             {step === 1
               ? 'กรอกข้อมูลสถาบันสอนพิเศษของคุณ'
               : 'สร้างบัญชีสำหรับสถาบันสอนพิเศษของคุณฟรี'}
@@ -310,7 +308,7 @@ export function RegisterPage() {
                   variant="primary"
                   size="lg"
                   type="button"
-                  class="w-full mt-4 !bg-tiwhub-heading hover:!bg-tiwhub-heading/90"
+                  class="w-full mt-4 !bg-oasis-primary hover:!bg-oasis-primary-dark"
                   disabled={!canGoToStep2}
                   onClick={handleStep1Next}
                 >
@@ -471,7 +469,7 @@ export function RegisterPage() {
                         href="/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-xs text-blue-800 underline hover:no-underline ml-6"
+                        class="text-xs text-oasis-primary underline hover:no-underline ml-6"
                       >
                         อ่านนโยบายความเป็นส่วนตัว
                       </a>
@@ -494,7 +492,7 @@ export function RegisterPage() {
                     variant="primary"
                     size="lg"
                     type="submit"
-                    class="flex-1 !bg-tiwhub-accent hover:!bg-tiwhub-accent-dark !text-white font-bold"
+                    class="flex-1 !bg-oasis-primary hover:!bg-oasis-primary-dark !text-white font-bold"
                     loading={submitting}
                     disabled={!canSubmit}
                   >
@@ -505,7 +503,7 @@ export function RegisterPage() {
             )}
           </form>
 
-          <p class="mt-8 text-center text-sm text-slate-500">
+          <p class="mt-8 text-center text-sm text-zinc-500">
             มีบัญชีอยู่แล้ว?{' '}
             <Button variant="link" size="sm" onClick={() => route('/login')}>
               เข้าสู่ระบบ

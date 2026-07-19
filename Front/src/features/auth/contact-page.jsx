@@ -20,7 +20,6 @@ export function ContactPage() {
     },
   });
 
-  // VALIDATE FORM
   const onError = () => showToast('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง', 'error');
 
   const onSubmit = async (data) => {
@@ -28,10 +27,13 @@ export function ContactPage() {
   };
 
   return (
-    <div class="min-h-screen bg-slate-50">
-      <nav class="bg-slate-50/90 backdrop-blur-sm border-b border-slate-200">
+    <div class="min-h-screen bg-oasis-bg">
+      <nav class="bg-white/80 backdrop-blur-lg border-b border-zinc-200/60">
         <div class="container mx-auto px-6 py-4 flex items-center justify-between">
-          <span class="text-xl font-bold text-slate-900 tracking-tight cursor-pointer" onClick={() => route('/')}>TiwHub</span>
+          <span class="flex items-center gap-2 text-xl font-semibold text-zinc-900 tracking-tight cursor-pointer" onClick={() => route('/')}>
+            <span class="w-6 h-6 bg-oasis-primary rounded-full inline-block" />
+            TiwHub
+          </span>
           <div class="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => route('/login')}>เข้าสู่ระบบ</Button>
             <Button variant="primary" size="sm" onClick={() => route('/register')}>ลงทะเบียน</Button>
@@ -42,7 +44,7 @@ export function ContactPage() {
       <div class="container mx-auto px-6 py-12">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
           <div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">ติดต่อทีมงาน TiwHub</h2>
+            <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight mb-6">ติดต่อทีมงาน TiwHub</h2>
             <div class="space-y-6">
               {[
                 { label: 'เบอร์โทรศัพท์', value: '02-XXX-XXXX' },
@@ -51,14 +53,14 @@ export function ContactPage() {
                 { label: 'LINE OA', value: '@tiwhub' },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <h3 class="text-sm font-semibold text-slate-900 mb-1">{label}</h3>
-                  <p class="text-slate-600">{value}</p>
+                  <h3 class="text-sm font-semibold text-zinc-900 mb-1">{label}</h3>
+                  <p class="text-zinc-500">{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div class="bg-white border border-slate-300 rounded-sm p-8">
+          <div class="bg-white border border-zinc-200/80 rounded-2xl p-8 shadow-sm">
             <form
               onSubmit={handleSubmit(onSubmit, onError)}
               class="flex flex-col gap-5"

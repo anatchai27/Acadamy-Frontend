@@ -7,10 +7,18 @@ export function requireAuth(Component) {
     const { state } = useAppContext();
 
     useEffect(() => {
-      if (!state.isAuthenticated) {
+      if (!state.isAuthenticated && !state.isAuthLoading) {
         route('/login', true);
       }
-    }, [state.isAuthenticated]);
+    }, [state.isAuthenticated, state.isAuthLoading]);
+
+    if (state.isAuthLoading) {
+      return (
+        <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
+          <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+        </div>
+      );
+    }
 
     if (!state.isAuthenticated) {
       return null;

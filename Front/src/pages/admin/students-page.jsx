@@ -50,8 +50,8 @@ export function StudentsPage({ path }) {
       {/* Header */}
       <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">จัดการนักเรียน</h2>
-          <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">
+          <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">จัดการนักเรียน</h2>
+          <p class="text-sm text-zinc-500 mt-1">
             {pagination.totalItems > 0
               ? `ทั้งหมด ${pagination.totalItems} คน · หน้า ${pagination.currentPage}/${pagination.totalPages || 1}`
               : 'ดูและจัดการข้อมูลนักเรียนทั้งหมด'}
@@ -78,19 +78,19 @@ export function StudentsPage({ path }) {
       {/* Loading State */}
       {loading && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-          <p class="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+          <div class="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+          <p class="text-sm text-zinc-400">กำลังโหลดข้อมูล...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && students.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <UserGroupIcon class="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
+            <UserGroupIcon class="h-10 w-10 text-zinc-300" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">ไม่พบข้อมูลนักเรียน</h3>
-          <p class="text-sm text-slate-400 mb-6">
+          <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบข้อมูลนักเรียน</h3>
+          <p class="text-sm text-zinc-400 mb-6">
             {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีนักเรียนในสถาบัน'}
           </p>
           {!search && (
@@ -108,27 +108,31 @@ export function StudentsPage({ path }) {
             {students.map((student) => (
               <div
                 key={student.id}
-                class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+                class="group bg-white rounded-xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
                 onClick={() => route(`/admin/students/${student.id}`)}
               >
                 {/* Card Top — Avatar + Identity */}
                 <div class="p-5">
                   <div class="flex items-start gap-4">
-                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xl font-bold">
-                      {student.nickname?.[0] || student.fullName?.[0] || '?'}
-                    </div>
+<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-semibold overflow-hidden">
+                    {student.photoUrl ? (
+                      <img src={student.photoUrl} alt={student.fullName} class="w-full h-full object-cover" />
+                    ) : (
+                      student.nickname?.[0] || student.fullName?.[0] || '?'
+                    )}
+                  </div>
                     <div class="flex-1 min-w-0">
-                      <h3 class="text-base font-semibold text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                      <h3 class="text-base font-semibold text-zinc-900 truncate group-hover:text-oasis-primary transition-colors">
                         {student.fullName || '-'}
                       </h3>
                       {student.nickname && (
-                        <span class="inline-flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <span class="inline-flex items-center gap-1 mt-1 text-xs text-zinc-500">
                           <TagIcon class="h-3 w-3" />
                           {student.nickname}
                         </span>
                       )}
                       {student.grade && (
-                        <span class="mt-1.5 inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                        <span class="mt-1.5 inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                           {student.grade}
                         </span>
                       )}
@@ -137,25 +141,25 @@ export function StudentsPage({ path }) {
                 </div>
 
                 {/* Divider */}
-                <div class="border-t border-slate-100 dark:border-slate-700" />
+                <div class="border-t border-zinc-100" />
 
                 {/* Card Bottom — Parent Info + Actions */}
                 <div class="px-5 py-3.5 flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     {student.primaryParentName && (
-                      <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <div class="flex items-center gap-1.5 text-xs text-zinc-500">
                         <UserIcon class="h-3.5 w-3.5 shrink-0" />
                         <span class="truncate">{student.primaryParentName}</span>
                       </div>
                     )}
                     {student.primaryParentPhone && (
-                      <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                      <div class="flex items-center gap-1.5 mt-0.5 text-xs text-zinc-400">
                         <PhoneIcon class="h-3.5 w-3.5 shrink-0" />
                         {student.primaryParentPhone}
                       </div>
                     )}
                     {!student.primaryParentName && !student.primaryParentPhone && (
-                      <span class="text-xs text-slate-400">ไม่มีข้อมูลผู้ปกครอง</span>
+                      <span class="text-xs text-zinc-400">ไม่มีข้อมูลผู้ปกครอง</span>
                     )}
                   </div>
 
@@ -163,7 +167,7 @@ export function StudentsPage({ path }) {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); route(`/admin/students/${student.id}`); }}
-                      class="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                      class="p-2 rounded-lg text-zinc-400 hover:text-oasis-primary hover:bg-oasis-primary/5 transition-colors"
                       title="ดูโปรไฟล์"
                     >
                       <EyeIcon class="h-4 w-4" />
@@ -171,7 +175,7 @@ export function StudentsPage({ path }) {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); route(`/admin/students/${student.id}?edit=1`); }}
-                      class="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      class="p-2 rounded-lg text-zinc-400 hover:text-oasis-primary hover:bg-oasis-primary/5 transition-colors"
                       title="แก้ไข"
                     >
                       <EditIcon class="h-4 w-4" />
@@ -185,7 +189,7 @@ export function StudentsPage({ path }) {
           {/* Pagination */}
           {pagination.totalPages > 1 && (
             <div class="flex items-center justify-between gap-4 text-sm pb-6">
-              <span class="text-slate-500 dark:text-slate-400">
+              <span class="text-zinc-500">
                 หน้า {pagination.currentPage} จาก {pagination.totalPages} ({pagination.totalItems} รายการ)
               </span>
               <div class="flex items-center gap-1">
@@ -193,7 +197,7 @@ export function StudentsPage({ path }) {
                   type="button"
                   disabled={pagination.currentPage <= 1}
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
                 >
                   <ChevronLeftIcon class="h-4 w-4" />
                   ก่อนหน้า
@@ -210,15 +214,15 @@ export function StudentsPage({ path }) {
                     return (
                       <span key={p} class="contents">
                         {showEllipsis && (
-                          <span class="px-2 text-slate-400">...</span>
+                          <span class="px-2 text-zinc-400">...</span>
                         )}
                         <button
                           type="button"
                           onClick={() => handlePageChange(p)}
-                          class={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                          class={`px-3 py-1.5 rounded-xl border text-sm font-medium transition-colors ${
                             p === pagination.currentPage
-                              ? 'bg-amber-500 text-white border-amber-500'
-                              : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                              ? 'bg-oasis-primary text-white border-oasis-primary'
+                              : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                           }`}
                         >
                           {p}
@@ -230,7 +234,7 @@ export function StudentsPage({ path }) {
                   type="button"
                   disabled={!pagination.hasNext}
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
                 >
                   ถัดไป
                   <ChevronRightIcon class="h-4 w-4" />

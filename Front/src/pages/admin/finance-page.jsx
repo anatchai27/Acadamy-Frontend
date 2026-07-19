@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { DataTable, SolidInput, Button, StatusBadge, showToast } from '../../components/ui';
-import { financeService, courseService } from '../../services';
+import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
+import { financeService, courseService, uploadService } from '../../services';
+import { useAbortController } from '../../hooks';
 
 const paymentColumns = [
   {
@@ -18,7 +19,7 @@ const paymentColumns = [
     key: 'amount',
     label: 'ยอดเงิน',
     align: 'right',
-    render: (value) => <span class="font-bold">฿{Number(value).toLocaleString()}</span>,
+    render: (value) => <span class="font-semibold">฿{Number(value).toLocaleString()}</span>,
   },
   { key: 'method', label: 'ช่องทาง', align: 'center' },
   {
@@ -40,9 +41,12 @@ export function FinancePage({ path }) {
   const [form, setForm] = useState({
     enrollmentId: '', amount: '', method: 'transfer', slipUrl: '',
   });
+  const [slipFile, setSlipFile] = useState(null);
+  const [slipPreview, setSlipPreview] = useState(null);
+  const getSignal = useAbortController();
 
   useEffect(() => {
-    courseService.getCourses()
+    courseService.getCourses({ signal: getSignal() })
       .then((res) => {
         const payload = res.data?.data || res.data || {};
         setCourses(payload.courses || (Array.isArray(payload) ? payload : []));
@@ -56,7 +60,7 @@ export function FinancePage({ path }) {
       const params = {};
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
-      const res = await financeService.getPayments(params);
+      const res = await financeService.getPayments(params, { signal: getSignal() });
       const payload = res.data?.data || res.data || {};
       setPayments(payload.payments || (Array.isArray(payload) ? payload : []));
     } catch {
@@ -87,12 +91,20 @@ export function FinancePage({ path }) {
         enrollmentId: Number(form.enrollmentId),
         amount: Number(form.amount),
         method: form.method,
-        slipUrl: form.slipUrl.trim() || undefined,
+        slipUrl: undefined,
       };
       const res = await financeService.createPayment(payload);
+      const paymentId = res.data?.data?.id || res.data?.id;
       const invoiceNo = res.data?.data?.invoiceNo || res.data?.invoiceNo || `INV-${Date.now()}`;
+
+      if (slipFile && paymentId) {
+        await uploadService.uploadPaymentSlip(slipFile, paymentId);
+      }
+
       showToast(`บันทึกสำเร็จ! เลข Invoice: ${invoiceNo}`, 'success');
       setForm({ enrollmentId: '', amount: '', method: 'transfer', slipUrl: '' });
+      setSlipFile(null);
+      setSlipPreview(null);
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
       showToast(msg, 'error');
@@ -108,19 +120,19 @@ export function FinancePage({ path }) {
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">การเงิน</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการบันทึกรายรับและดูประวัติการเงิน</p>
+        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">การเงิน</h2>
+        <p class="text-sm text-zinc-500 mt-1">จัดการบันทึกรายรับและดูประวัติการเงิน</p>
       </div>
 
       {/* Mode Switcher */}
-      <div class="inline-flex rounded-sm border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
+      <div class="inline-flex rounded-xl bg-zinc-100 p-1 mb-6">
         <button
           type="button"
           onClick={() => setMode('form')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             mode === 'form'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-700'
           }`}
         >
           บันทึกรับเงิน
@@ -128,10 +140,10 @@ export function FinancePage({ path }) {
         <button
           type="button"
           onClick={() => setMode('history')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             mode === 'history'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-700'
           }`}
         >
           ประวัติการเงิน
@@ -141,7 +153,7 @@ export function FinancePage({ path }) {
       {mode === 'form' ? (
         <div class="max-w-2xl">
           <form onSubmit={handleSubmitPayment}>
-            <div class="bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-6 space-y-5">
+            <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 space-y-5 shadow-sm">
               <SolidInput
                 label="Enrollment ID"
                 placeholder="รหัสการลงทะเบียน"
@@ -151,13 +163,13 @@ export function FinancePage({ path }) {
               />
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                <label class="text-sm font-medium text-zinc-800">
                   เลือกคอร์ส (อ้างอิง)
                 </label>
                 <select
                   value={form.enrollmentId}
                   onChange={updateField('enrollmentId')}
-                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-sm text-sm focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
                 >
                   <option value="">-- เลือกคอร์สเพื่อกรอก ID --</option>
                   {courses.map((c) => (
@@ -177,7 +189,7 @@ export function FinancePage({ path }) {
               />
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                <label class="text-sm font-medium text-zinc-800">
                   ช่องทางชำระเงิน
                 </label>
                 <div class="flex gap-2">
@@ -189,10 +201,10 @@ export function FinancePage({ path }) {
                       key={m.value}
                       type="button"
                       onClick={() => updateField('method')({ target: { value: m.value } })}
-                      class={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
+                      class={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                         form.method === m.value
-                          ? 'bg-amber-500 text-white'
-                          : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          ? 'bg-oasis-primary text-white shadow-sm'
+                          : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
                       {m.label}
@@ -201,22 +213,14 @@ export function FinancePage({ path }) {
                 </div>
               </div>
 
-              <SolidInput
-                label="ลิงก์สลิป (URL)"
-                placeholder="https://..."
-                value={form.slipUrl}
-                onInput={updateField('slipUrl')}
-              />
-
-              {/* Slip Upload */}
-              <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-8 text-center cursor-pointer hover:border-amber-400 transition-colors">
-                <svg class="h-8 w-8 mx-auto mb-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                  ลากไฟล์สลิปมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์
-                </p>
-              </div>
+              <ImageUpload
+              label="สลิปการชำระเงิน"
+              preview={slipPreview}
+              onChange={(base64, file) => {
+                setSlipPreview(base64);
+                setSlipFile(file);
+              }}
+            />
 
               <div class="flex gap-3 pt-2">
                 <Button variant="primary" size="md" type="submit" loading={isSubmitting} disabled={isSubmitting}>
@@ -232,25 +236,19 @@ export function FinancePage({ path }) {
       ) : (
         /* Payment History */
         <div>
-          <div class="flex flex-wrap items-end gap-3 mb-6 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 p-4">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">ตั้งแต่วันที่</label>
-              <input
-                type="date"
-                value={startDate}
-                onInput={(e) => setStartDate(e.target.value)}
-                class="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-sm text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">ถึงวันที่</label>
-              <input
-                type="date"
-                value={endDate}
-                onInput={(e) => setEndDate(e.target.value)}
-                class="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-sm text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
-              />
-            </div>
+          <div class="flex flex-wrap items-end gap-3 mb-6 bg-zinc-50 rounded-2xl border border-zinc-100 p-4">
+            <DatePickerInput
+              label="ตั้งแต่วันที่"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(date) => setStartDate(date ? date.toISOString().split('T')[0] : '')}
+              placeholder="เลือกวันที่เริ่มต้น"
+            />
+            <DatePickerInput
+              label="ถึงวันที่"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(date) => setEndDate(date ? date.toISOString().split('T')[0] : '')}
+              placeholder="เลือกวันที่สิ้นสุด"
+            />
             <Button variant="primary" size="md" onClick={handleDateFilter}>
               กรองข้อมูล
             </Button>

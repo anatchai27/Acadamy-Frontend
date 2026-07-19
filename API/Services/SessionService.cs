@@ -4,17 +4,17 @@ namespace academy_API.Services;
 
 public interface ISessionService
 {
-    Task<SessionListResponse> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default);
-    Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int? instituteId, CancellationToken ct = default);
+    Task<SessionListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
+    Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int instituteId, CancellationToken ct = default);
 }
 
 public class SessionService(Repositories.ISessionRepository repository) : ISessionService
 {
     private readonly Repositories.ISessionRepository _repository = repository;
 
-    public async Task<SessionListResponse> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default)
+    public async Task<SessionListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
     {
-        var sessions = await _repository.GetByCourseIdAsync(courseId, instituteId, ct);
+        var sessions = await _repository.GetByCourseIdAsync(courseId, ct);
         var items = sessions.Select(s => new SessionItem(
             s.Id,
             s.CourseId,
@@ -28,9 +28,9 @@ public class SessionService(Repositories.ISessionRepository repository) : ISessi
         return new SessionListResponse("success", new SessionListData(items));
     }
 
-    public async Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int? instituteId, CancellationToken ct = default)
+    public async Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int instituteId, CancellationToken ct = default)
     {
-        var course = await _repository.GetCourseByIdAsync(courseId, instituteId, ct)
+        var course = await _repository.GetCourseByIdAsync(courseId, ct)
             ?? throw new SessionValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนหรือไม่มีสิทธิ์เข้าถึง");
 
         var session = new Models.Session

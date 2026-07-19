@@ -8,10 +8,10 @@ namespace academy_API.Repositories;
 public interface IHomeworkRepository
 {
     Task<Homework> CreateAsync(Homework homework, CancellationToken ct = default);
-    Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default);
+    Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<List<HomeworkSubmissionItem>> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);
     Task<HomeworkSubmission?> GetSubmissionByIdAsync(int submissionId, CancellationToken ct = default);
-    Task<Homework?> GetHomeworkByIdAsync(int homeworkId, int? instituteId, CancellationToken ct = default);
+    Task<Homework?> GetHomeworkByIdAsync(int homeworkId, CancellationToken ct = default);
     Task UpdateSubmissionGradeAsync(HomeworkSubmission submission, CancellationToken ct = default);
 }
 
@@ -26,7 +26,7 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
         return homework;
     }
 
-    public async Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default)
+    public async Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
     {
         return await _context.Homeworks
             .Where(h => h.CourseId == courseId)
@@ -66,16 +66,11 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
             .FirstOrDefaultAsync(s => s.Id == submissionId, ct);
     }
 
-    public async Task<Homework?> GetHomeworkByIdAsync(int homeworkId, int? instituteId, CancellationToken ct = default)
+    public async Task<Homework?> GetHomeworkByIdAsync(int homeworkId, CancellationToken ct = default)
     {
-        var query = _context.Homeworks
+        return await _context.Homeworks
             .Include(h => h.Course)
-            .AsQueryable();
-
-        if (instituteId.HasValue)
-            query = query.Where(h => h.Course.InstituteId == instituteId.Value);
-
-        return await query.FirstOrDefaultAsync(h => h.Id == homeworkId, ct);
+            .FirstOrDefaultAsync(h => h.Id == homeworkId, ct);
     }
 
     public async Task UpdateSubmissionGradeAsync(HomeworkSubmission submission, CancellationToken ct = default)

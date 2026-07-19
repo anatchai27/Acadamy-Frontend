@@ -19,7 +19,7 @@ public class HomeworkServiceTests
 
         var sut = new HomeworkService(repoMock.Object);
         var result = await sut.CreateAsync(
-            new HomeworkRequest(1, "HW1", "desc", null, DateTime.UtcNow.AddDays(7)), 1, 42);
+            new HomeworkRequest(1, "HW1", "desc", null, DateTime.UtcNow.AddDays(7)), 42);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(10, result.Data.HomeworkId);
@@ -32,7 +32,7 @@ public class HomeworkServiceTests
     {
         var sut = new HomeworkService(CreateMockRepo().Object);
         var ex = await Assert.ThrowsAsync<HomeworkValidationException>(
-            () => sut.CreateAsync(new HomeworkRequest(1, "", null, null, DateTime.UtcNow), 1, 42));
+            () => sut.CreateAsync(new HomeworkRequest(1, "", null, null, DateTime.UtcNow), 42));
         Assert.Equal("TITLE_REQUIRED", ex.ErrorCode);
     }
 
@@ -41,11 +41,11 @@ public class HomeworkServiceTests
     public async Task GetByCourseIdAsync_ReturnsList()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByCourseIdAsync(1, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByCourseIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync([new HomeworkItem(1, "HW1", null, null, DateTime.UtcNow, 0)]);
 
         var sut = new HomeworkService(repoMock.Object);
-        var result = await sut.GetByCourseIdAsync(1, 1);
+        var result = await sut.GetByCourseIdAsync(1);
 
         Assert.Equal("success", result.Status);
         Assert.Single(result.Data.Homeworks);
@@ -56,12 +56,12 @@ public class HomeworkServiceTests
     public async Task GetSubmissionsAsync_HomeworkNotFound_ThrowsException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetHomeworkByIdAsync(999, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetHomeworkByIdAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Homework?)null);
 
         var sut = new HomeworkService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<HomeworkValidationException>(
-            () => sut.GetSubmissionsAsync(999, 1));
+            () => sut.GetSubmissionsAsync(999));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
@@ -76,7 +76,7 @@ public class HomeworkServiceTests
         repoMock.Setup(r => r.UpdateSubmissionGradeAsync(submission, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = new HomeworkService(repoMock.Object);
-        var result = await sut.GradeSubmissionAsync(5, new GradeSubmissionRequest(9.5m, "Good"), 1);
+        var result = await sut.GradeSubmissionAsync(5, new GradeSubmissionRequest(9.5m, "Good"));
 
         Assert.Equal("success", result.Status);
         Assert.Equal(9.5m, submission.Score);
@@ -93,7 +93,7 @@ public class HomeworkServiceTests
 
         var sut = new HomeworkService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<HomeworkValidationException>(
-            () => sut.GradeSubmissionAsync(999, new GradeSubmissionRequest(5, null), 1));
+            () => sut.GradeSubmissionAsync(999, new GradeSubmissionRequest(5, null)));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 }

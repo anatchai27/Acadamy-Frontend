@@ -8,12 +8,7 @@ export function getPayments(params = {}, options = {}) {
   return api.get('/payments', { params, ...options });
 }
 
-export function getPaymentById(id) {
-  return api.get(`/payments/${id}`);
-}
-
 export const financeService = {
   createPayment,
   getPayments,
-  getPaymentById,
 };

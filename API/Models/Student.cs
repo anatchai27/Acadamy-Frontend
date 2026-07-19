@@ -1,9 +1,9 @@
 namespace academy_API.Models;
 
-public class Student
+public class Student : IMultiTenantEntity
 {
     public int Id { get; set; }
-    public int? InstituteId { get; set; }
+    public int InstituteId { get; set; }
     public int? UserId { get; set; }
     public string FullName { get; set; } = null!;
     public string? Nickname { get; set; }

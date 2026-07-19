@@ -90,7 +90,7 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p class="mt-6 text-center text-sm text-slate-600">
+        <p class="mt-6 text-center text-sm text-zinc-600">
           ยังไม่มีบัญชี?{' '}
           <Button variant="link" size="sm" onClick={() => route('/register')}>
             ลงทะเบียนสถาบันใหม่

@@ -23,7 +23,9 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
         var product = new Models.Product
         {
             Name = request.Name,
-            Price = request.Price
+            Price = request.Price,
+            Description = request.Description,
+            IsActive = true
         };
 
         var created = await _repository.CreateAsync(product, cancellationToken);
@@ -35,7 +37,9 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
         var product = new Models.Product
         {
             Name = request.Name,
-            Price = request.Price
+            Price = request.Price,
+            Description = request.Description,
+            IsActive = request.IsActive
         };
 
         var updated = await _repository.UpdateAsync(id, product, cancellationToken);
@@ -48,5 +52,5 @@ public class ProductService(Repositories.IProductRepository repository) : IProdu
     }
 
     private static DTOs.ProductResponse MapToResponse(Models.Product product) =>
-        new(product.Id, product.Name, product.Price);
+        new(product.Id, product.Name, product.Price, product.Description);
 }

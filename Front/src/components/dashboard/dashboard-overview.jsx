@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { StatCard } from './stat-card';
 import { studentService, attendanceService, financeService, leaveRequestService } from '../../services';
+import { useAbortController } from '../../hooks';
 
 const defaultData = {
   students: {

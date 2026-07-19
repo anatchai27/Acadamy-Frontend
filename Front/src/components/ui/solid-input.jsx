@@ -23,7 +23,7 @@ export function SolidInput({
   return (
     <div class="flex flex-col gap-1.5">
       {label && (
-        <label for={id} class="text-sm font-medium text-slate-900 dark:text-slate-200">
+        <label for={id} class="text-sm font-medium text-zinc-800">
           {label}
           {required && <span class="text-red-500 ml-0.5">*</span>}
         </label>
@@ -34,15 +34,15 @@ export function SolidInput({
           type={inputType}
           id={id}
           placeholder={placeholder}
-          class={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-sm text-sm transition-all focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 text-slate-900 dark:text-white placeholder:text-slate-400 ${
-            error ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+          class={`w-full px-4 py-2.5 bg-white border rounded-xl text-sm transition-all focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800 placeholder:text-zinc-400 ${
+            error ? 'border-red-400' : 'border-zinc-200'
           } ${isPassword ? 'pr-12' : ''} ${className}`}
           {...rest}
         />
         {isPassword && (
           <button
             type="button"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-0"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 bg-transparent border-none cursor-pointer p-0"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (

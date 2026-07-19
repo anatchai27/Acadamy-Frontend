@@ -32,7 +32,7 @@ public class StudentServiceTests
             });
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.CreateAsync(CreateValidRequest(), null, "127.0.0.1");
+        var result = await sut.CreateAsync(CreateValidRequest(), 1, "127.0.0.1");
 
         Assert.Equal("success", result.Status);
         Assert.Equal(105, result.Data.StudentId);
@@ -47,7 +47,7 @@ public class StudentServiceTests
         var request = CreateValidRequest(fullName: "");
 
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.CreateAsync(request, null, "127.0.0.1"));
+            () => sut.CreateAsync(request, 1, "127.0.0.1"));
         Assert.Equal("VALIDATION_FAILED", ex.ErrorCode);
     }
 
@@ -59,7 +59,7 @@ public class StudentServiceTests
         var request = CreateValidRequest(fullName: "   ");
 
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.CreateAsync(request, null, "127.0.0.1"));
+            () => sut.CreateAsync(request, 1, "127.0.0.1"));
         Assert.Equal("VALIDATION_FAILED", ex.ErrorCode);
     }
 
@@ -74,7 +74,7 @@ public class StudentServiceTests
             new PdpaInfo(true, "1.0"));
 
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.CreateAsync(request, null, "127.0.0.1"));
+            () => sut.CreateAsync(request, 1, "127.0.0.1"));
         Assert.Contains("ผู้ปกครอง", ex.Message);
     }
 
@@ -86,7 +86,7 @@ public class StudentServiceTests
         var request = CreateValidRequest(parentName: "");
 
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.CreateAsync(request, null, "127.0.0.1"));
+            () => sut.CreateAsync(request, 1, "127.0.0.1"));
         Assert.Equal("VALIDATION_FAILED", ex.ErrorCode);
     }
 
@@ -98,7 +98,7 @@ public class StudentServiceTests
         var request = CreateValidRequest(parentPhone: "08123");
 
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.CreateAsync(request, null, "127.0.0.1"));
+            () => sut.CreateAsync(request, 1, "127.0.0.1"));
         Assert.Contains("10 หลัก", ex.Message);
     }
 
@@ -112,7 +112,7 @@ public class StudentServiceTests
 
         var sut = new StudentService(mockRepo.Object);
         var request = CreateValidRequest(parentPhone: "0891234567");
-        var result = await sut.CreateAsync(request, null, "127.0.0.1");
+        var result = await sut.CreateAsync(request, 1, "127.0.0.1");
         Assert.Equal("success", result.Status);
     }
 
@@ -128,7 +128,7 @@ public class StudentServiceTests
         var sut = new StudentService(mockRepo.Object);
         var request = CreateValidRequest(fullName: "  สมชาย  ");
 
-        await sut.CreateAsync(request, null, "127.0.0.1");
+        await sut.CreateAsync(request, 1, "127.0.0.1");
         Assert.Equal("สมชาย", captured!.FullName);
     }
 
@@ -142,7 +142,7 @@ public class StudentServiceTests
             .ReturnsAsync((Student s, List<Parent> _, PdpaConsent _, CancellationToken _) => { captured = s; s.Id = 1; return s; });
 
         var sut = new StudentService(mockRepo.Object);
-        await sut.CreateAsync(CreateValidRequest(), null, "127.0.0.1");
+        await sut.CreateAsync(CreateValidRequest(), 1, "127.0.0.1");
 
         Assert.NotNull(captured!.QrToken);
         Assert.NotEmpty(captured.QrToken);
@@ -161,7 +161,7 @@ public class StudentServiceTests
         var request = CreateValidRequest(pdpaAccepted: true);
         request = request with { Pdpa = new PdpaInfo(true, null) };
 
-        await sut.CreateAsync(request, null, "127.0.0.1");
+        await sut.CreateAsync(request, 1, "127.0.0.1");
         Assert.Equal("1.0", captured!.ConsentVersion);
     }
 
@@ -186,7 +186,7 @@ public class StudentServiceTests
             });
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetByIdAsync(105, null);
+        var result = await sut.GetByIdAsync(105);
 
         Assert.NotNull(result);
         Assert.Equal("success", result!.Status);
@@ -204,7 +204,7 @@ public class StudentServiceTests
             .ReturnsAsync((Student?)null);
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetByIdAsync(999, null);
+        var result = await sut.GetByIdAsync(999);
         Assert.Null(result);
     }
 
@@ -214,11 +214,11 @@ public class StudentServiceTests
     public async Task GetAllAsync_ReturnsPaginatedResponse()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.SearchAsync(null, null, 1, 20, It.IsAny<CancellationToken>()))
+        mockRepo.Setup(r => r.SearchAsync(null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<StudentListItem>(), 0));
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetAllAsync(null, null, 1, 20);
+        var result = await sut.GetAllAsync(null, 1, 20);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(1, result.Data.Pagination.CurrentPage);
@@ -229,11 +229,11 @@ public class StudentServiceTests
     public async Task GetAllAsync_NegativePage_ClampsToOne()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.SearchAsync(null, null, 1, 20, It.IsAny<CancellationToken>()))
+        mockRepo.Setup(r => r.SearchAsync(null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<StudentListItem>(), 0));
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetAllAsync(null, null, -5, 20);
+        var result = await sut.GetAllAsync(null, -5, 20);
 
         Assert.Equal(1, result.Data.Pagination.CurrentPage);
     }
@@ -243,11 +243,11 @@ public class StudentServiceTests
     public async Task GetAllAsync_CalculatesHasNextCorrectly()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.SearchAsync(null, null, 1, 5, It.IsAny<CancellationToken>()))
+        mockRepo.Setup(r => r.SearchAsync(null, 1, 5, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<StudentListItem>(), 12));
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetAllAsync(null, null, 1, 5);
+        var result = await sut.GetAllAsync(null, 1, 5);
 
         Assert.Equal(3, result.Data.Pagination.TotalPages);
         Assert.True(result.Data.Pagination.HasNext);
@@ -259,11 +259,11 @@ public class StudentServiceTests
     public async Task UpdateAsync_ExistingStudent_ReturnsSuccess()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.UpdateAsync(105, null, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
+        mockRepo.Setup(r => r.UpdateAsync(105, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Student { Id = 105 });
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.UpdateAsync(105, null, new UpdateStudentRequest(
+        var result = await sut.UpdateAsync(105, new UpdateStudentRequest(
             new StudentUpdate("ใหม่", null, null, null, null, null), null));
 
         Assert.Equal("success", result.Status);
@@ -275,12 +275,13 @@ public class StudentServiceTests
     public async Task UpdateAsync_NotFound_ThrowsNotFoundException()
     {
         var mockRepo = CreateMockRepo();
-        mockRepo.Setup(r => r.UpdateAsync(999, null, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
+        mockRepo.Setup(r => r.UpdateAsync(999, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Student?)null);
 
         var sut = new StudentService(mockRepo.Object);
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.UpdateAsync(999, null, new UpdateStudentRequest(null, null)));
+            () => sut.UpdateAsync(999, new UpdateStudentRequest(null, null)));
+
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
@@ -299,7 +300,7 @@ public class StudentServiceTests
             });
 
         var sut = new StudentService(mockRepo.Object);
-        var result = await sut.GetQrTokenAsync(105, null);
+        var result = await sut.GetQrTokenAsync(105);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(105, result.Data.StudentId);
@@ -317,7 +318,7 @@ public class StudentServiceTests
 
         var sut = new StudentService(mockRepo.Object);
         var ex = await Assert.ThrowsAsync<StudentValidationException>(
-            () => sut.GetQrTokenAsync(999, null));
+            () => sut.GetQrTokenAsync(999));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 }

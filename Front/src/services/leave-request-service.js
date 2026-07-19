@@ -4,10 +4,6 @@ export function getLeaveRequests(params = {}, options = {}) {
   return api.get('/leave-requests', { params, ...options });
 }
 
-export function getLeaveRequestById(id) {
-  return api.get(`/leave-requests/${id}`);
-}
-
 export function approveLeaveRequest(id) {
   return api.post(`/leave-requests/${id}/approve`);
 }
@@ -18,7 +14,6 @@ export function rejectLeaveRequest(id) {
 
 export const leaveRequestService = {
   getLeaveRequests,
-  getLeaveRequestById,
   approveLeaveRequest,
   rejectLeaveRequest,
 };

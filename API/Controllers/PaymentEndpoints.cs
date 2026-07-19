@@ -1,6 +1,5 @@
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
@@ -22,8 +21,7 @@ public static class PaymentEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.CreateAsync(request, instituteId, ct);
+                var result = await service.CreateAsync(request, ct);
                 return Results.Created($"/api/payments/{result.Data.PaymentId}", result);
             }
             catch (PaymentValidationException ex)
@@ -54,8 +52,7 @@ public static class PaymentEndpoints
             if (!string.IsNullOrEmpty(end_date) && DateTime.TryParse(end_date, out var ed))
                 endDate = ed.Date.AddDays(1).AddTicks(-1);
 
-            var instituteId = httpContext.GetInstituteId();
-            var result = await service.GetHistoryAsync(instituteId, startDate, endDate, method, page, limit, ct);
+            var result = await service.GetHistoryAsync(startDate, endDate, method, page, limit, ct);
             return Results.Ok(result);
         });
 

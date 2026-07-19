@@ -7,9 +7,9 @@ namespace academy_API.Repositories;
 
 public interface ISessionRepository
 {
-    Task<Course?> GetCourseByIdAsync(int courseId, int? instituteId, CancellationToken ct = default);
+    Task<Course?> GetCourseByIdAsync(int courseId, CancellationToken ct = default);
     Task<Session> CreateAsync(Session session, CancellationToken ct = default);
-    Task<List<Session>> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default);
+    Task<List<Session>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<Session?> GetByIdAsync(int id, CancellationToken ct = default);
 }
 
@@ -17,12 +17,9 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
 {
     private readonly TutoringDbContext _context = context;
 
-    public async Task<Course?> GetCourseByIdAsync(int courseId, int? instituteId, CancellationToken ct = default)
+    public async Task<Course?> GetCourseByIdAsync(int courseId, CancellationToken ct = default)
     {
-        var query = _context.Courses.AsQueryable();
-        if (instituteId.HasValue)
-            query = query.Where(c => c.InstituteId == instituteId.Value);
-        return await query.FirstOrDefaultAsync(c => c.Id == courseId, ct);
+        return await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId, ct);
     }
 
     public async Task<Session> CreateAsync(Session session, CancellationToken ct = default)
@@ -32,16 +29,10 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
         return session;
     }
 
-    public async Task<List<Session>> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default)
+    public async Task<List<Session>> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
     {
-        var query = _context.Sessions
+        return await _context.Sessions
             .Include(s => s.Course)
-            .AsQueryable();
-
-        if (instituteId.HasValue)
-            query = query.Where(s => s.Course.InstituteId == instituteId.Value);
-
-        return await query
             .Where(s => s.CourseId == courseId)
             .OrderBy(s => s.ScheduledAt)
             .ToListAsync(ct);

@@ -4,17 +4,17 @@ namespace academy_API.Services;
 
 public interface IHomeworkService
 {
-    Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int? instituteId, int assignedByUserId, CancellationToken ct = default);
-    Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default);
-    Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, int? instituteId, CancellationToken ct = default);
-    Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, int? instituteId, CancellationToken ct = default);
+    Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int assignedByUserId, CancellationToken ct = default);
+    Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
+    Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);
+    Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, CancellationToken ct = default);
 }
 
 public class HomeworkService(Repositories.IHomeworkRepository repository) : IHomeworkService
 {
     private readonly Repositories.IHomeworkRepository _repository = repository;
 
-    public async Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int? instituteId, int assignedByUserId, CancellationToken ct = default)
+    public async Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int assignedByUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Title))
             throw new HomeworkValidationException("TITLE_REQUIRED", "กรุณาระบุหัวข้อการบ้าน");
@@ -34,22 +34,22 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
         return new HomeworkResponse("success", "สร้างการบ้านสำเร็จ", new HomeworkData(created.Id, created.Title, created.DueAt));
     }
 
-    public async Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, int? instituteId, CancellationToken ct = default)
+    public async Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
     {
-        var items = await _repository.GetByCourseIdAsync(courseId, instituteId, ct);
+        var items = await _repository.GetByCourseIdAsync(courseId, ct);
         return new HomeworkListResponse("success", new HomeworkListData(items));
     }
 
-    public async Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, int? instituteId, CancellationToken ct = default)
+    public async Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default)
     {
-        var homework = await _repository.GetHomeworkByIdAsync(homeworkId, instituteId, ct)
+        var homework = await _repository.GetHomeworkByIdAsync(homeworkId, ct)
             ?? throw new HomeworkValidationException("NOT_FOUND", "ไม่พบการบ้าน");
 
         var submissions = await _repository.GetSubmissionsAsync(homeworkId, ct);
         return new HomeworkSubmissionsResponse("success", new HomeworkSubmissionsData(submissions));
     }
 
-    public async Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, int? instituteId, CancellationToken ct = default)
+    public async Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, CancellationToken ct = default)
     {
         var submission = await _repository.GetSubmissionByIdAsync(submissionId, ct)
             ?? throw new HomeworkValidationException("NOT_FOUND", "ไม่พบงานที่ส่ง");

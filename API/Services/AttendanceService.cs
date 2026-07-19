@@ -5,9 +5,9 @@ namespace academy_API.Services;
 
 public interface IAttendanceService
 {
-    Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, int? instituteId, CancellationToken ct = default);
-    Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, int? instituteId, CancellationToken ct = default);
-    Task<DailyAttendanceResponse> GetDailyAsync(int? instituteId, int? sessionId, string? date, CancellationToken ct = default);
+    Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default);
+    Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default);
+    Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default);
 }
 
 public class AttendanceService(
@@ -17,9 +17,9 @@ public class AttendanceService(
     private readonly IAttendanceRepository _repository = attendanceRepository;
     private readonly Services.Contracts.ILineNotificationService _lineService = lineNotificationService;
 
-    public async Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, int? instituteId, CancellationToken ct = default)
+    public async Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default)
     {
-        var student = await _repository.ValidateQrTokenAsync(request.QrToken, instituteId, ct);
+        var student = await _repository.ValidateQrTokenAsync(request.QrToken, ct);
         if (student is null)
             throw new AttendanceValidationException("INVALID_QR", "QR Token ไม่ถูกต้องหรือหมดอายุแล้ว");
 
@@ -52,7 +52,7 @@ public class AttendanceService(
             new ScanAttendanceData(student.Id, student.FullName, "present", DateTime.UtcNow, sessionsRemaining));
     }
 
-    public async Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, int? instituteId, CancellationToken ct = default)
+    public async Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default)
     {
         var validStatuses = new HashSet<string> { "present", "late", "absent", "leave" };
         if (!validStatuses.Contains(request.Status))
@@ -68,7 +68,7 @@ public class AttendanceService(
             new ManualAttendanceData(0, request.Status));
     }
 
-    public async Task<DailyAttendanceResponse> GetDailyAsync(int? instituteId, int? sessionId, string? date, CancellationToken ct = default)
+    public async Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default)
     {
         var parsedDate = DateTime.UtcNow.Date;
         if (!string.IsNullOrWhiteSpace(date) &&
@@ -83,7 +83,7 @@ public class AttendanceService(
                 sessionInfo = new DailySessionInfo(session.Id, session.Course.Name, session.ScheduledAt);
         }
 
-        var rows = await _repository.GetDailyAttendanceAsync(instituteId, sessionId, parsedDate, ct);
+        var rows = await _repository.GetDailyAttendanceAsync(sessionId, parsedDate, ct);
 
         return new DailyAttendanceResponse("success", new DailyAttendanceData(sessionInfo, rows));
     }

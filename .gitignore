@@ -1,8 +1,30 @@
-/node_modules
-dist/
-API/academy-API.Tests/bin/
-API/academy-API.Tests/obj/
+# .NET
 API/bin/
 API/obj/
+API/*.user
+API/*.suo
+API/*.cache
+API/TestResults/
+
+# Frontend
 Front/node_modules/
+Front/dist/
+Front/.env.local
+Front/.env.development.local
+Front/.env.test.local
+Front/.env.production.local
+
+# IDE
 .vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+API/academy-API.Tests/bin/
+API/academy-API.Tests/obj/Debug/net9.0/academy-API.Tests.sourcelink.json
+API/academy-API.Tests/obj/

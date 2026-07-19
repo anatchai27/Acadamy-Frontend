@@ -21,6 +21,9 @@ public class UserService(
     public async Task<IEnumerable<User>> GetAllAsync(CancellationToken ct = default)
         => await _repository.GetAllAsync(ct);
 
+    public async Task<IEnumerable<User>> GetByInstituteIdAsync(int instituteId, CancellationToken ct = default)
+        => await _repository.GetByInstituteIdAsync(instituteId, ct);
+
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _repository.GetByIdAsync(id, ct);
 
@@ -112,12 +115,62 @@ public class UserService(
 
     public async Task<UserLoginResult?> LoginAsync(string email, string password, CancellationToken ct = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        var row = await _context.Database.SqlQueryRaw<LoginUserRow>(
+            """
+            SELECT id AS Id,
+                   email AS Email,
+                   role AS Role,
+                   password_hash AS PasswordHash,
+                   institute_id AS InstituteId
+            FROM users
+            WHERE email = {0}
+            LIMIT 1
+            """,
+            email)
+            .FirstOrDefaultAsync(ct);
 
-        if (user is null || !_tokenService.VerifyPassword(password, user.PasswordHash))
+        if (row is null || !_tokenService.VerifyPassword(password, row.PasswordHash))
         {
             return null;
         }
+
+        if (!Enum.TryParse<UserRole>(row.Role, true, out var parsedRole))
+        {
+            return null;
+        }
+
+        var instituteId = row.InstituteId;
+
+        // Backward compatibility for legacy records where users.institute_id is null.
+        if (!instituteId.HasValue)
+        {
+            instituteId = await _context.Teachers
+                .Where(t => t.UserId == row.Id)
+                .Select(t => (int?)t.InstituteId)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        if (!instituteId.HasValue)
+        {
+            instituteId = await _context.Students
+                .Where(s => s.UserId == row.Id)
+                .Select(s => (int?)s.InstituteId)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        if (!instituteId.HasValue)
+        {
+            return null;
+        }
+
+        var user = new User
+        {
+            Id = row.Id,
+            Email = row.Email,
+            Role = parsedRole,
+            PasswordHash = row.PasswordHash,
+            InstituteId = instituteId.Value
+        };
 
         var token = _tokenService.GenerateToken(user);
 
@@ -129,6 +182,8 @@ public class UserService(
             InstituteId: user.InstituteId
         );
     }
+
+    private sealed record LoginUserRow(int Id, string Email, string Role, string PasswordHash, int? InstituteId);
 
     public async Task<bool> ForgetPasswordAsync(string email, string resetLink, CancellationToken ct = default)
     {
@@ -185,4 +240,10 @@ public class UserService(
             )
         );
     }
+
+    public async Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken ct = default)
+        => await _repository.UpdateRoleAsync(id, role, ct);
+
+    public async Task<bool> DeleteUserAsync(int id, CancellationToken ct = default)
+        => await _repository.DeleteAsync(id, ct);
 }

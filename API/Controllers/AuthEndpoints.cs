@@ -17,7 +17,7 @@ public static class AuthEndpoints
             .WithTags("Authentication")
             .WithOpenApi();
 
-        group.MapPost("/login", async (LoginRequest request, IUserService userService, ITokenService tokenService, CancellationToken ct) =>
+        group.MapPost("/login", async (LoginRequest request, IUserService userService, ITokenService tokenService, HttpContext httpContext, CancellationToken ct) =>
         {
             var result = await userService.LoginAsync(request.Email, request.Password, ct);
 
@@ -32,6 +32,15 @@ public static class AuthEndpoints
                 Email = result.Email,
                 Role = Enum.Parse<UserRole>(result.Role),
                 InstituteId = result.InstituteId
+            });
+
+            httpContext.Response.Cookies.Append("auth_token", result.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddHours(1),
+                Path = "/"
             });
 
             return Results.Ok(new LoginResponse(result.Token, result.UserId, result.Email, result.Role, refreshToken, result.InstituteId));
@@ -53,8 +62,14 @@ public static class AuthEndpoints
             return Results.Ok(result);
         }).RequireAuthorization();
 
-        group.MapPost("/logout", () =>
+        group.MapPost("/logout", (HttpContext httpContext) =>
         {
+            httpContext.Response.Cookies.Delete("auth_token", new CookieOptions
+            {
+                Path = "/",
+                Secure = true,
+                SameSite = SameSiteMode.Lax
+            });
             return Results.Ok(new { status = "success", message = "ออกจากระบบสำเร็จ" });
         }).RequireAuthorization();
 
@@ -63,6 +78,7 @@ public static class AuthEndpoints
             ITokenService tokenService,
             TutoringDbContext db,
             IConfiguration config,
+            HttpContext httpContext,
             CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.Token))
@@ -104,18 +120,24 @@ public static class AuthEndpoints
                     return Results.Unauthorized();
 
                 // Check institute is not suspended
-                if (user.InstituteId.HasValue)
-                {
-                    var institute = await db.Institutes.FirstOrDefaultAsync(i => i.Id == user.InstituteId.Value, ct);
-                    if (institute is null || !institute.IsActive)
-                        return Results.Json(new { status = "error", error_code = "INSTITUTE_SUSPENDED", message = "สถาบันถูกระงับการใช้งาน" }, statusCode: 403);
-                }
+                var institute = await db.Institutes.FirstOrDefaultAsync(i => i.Id == user.InstituteId, ct);
+                if (institute is null || !institute.IsActive)
+                    return Results.Json(new { status = "error", error_code = "INSTITUTE_SUSPENDED", message = "สถาบันถูกระงับการใช้งาน" }, statusCode: 403);
 
                 var refreshResult = tokenService.ValidateAndRefresh(request.Token, user);
                 if (refreshResult is null)
                     return Results.Unauthorized();
 
                 var refreshToken = tokenService.GenerateRefreshToken(user);
+
+                httpContext.Response.Cookies.Append("auth_token", refreshResult.Value.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Path = "/"
+                });
 
                 return Results.Ok(new
                 {
@@ -156,13 +178,13 @@ public static class AuthEndpoints
             ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-            return Results.BadRequest(new { Error = "Email and password are required." });
+            return Results.BadRequest(new { error = "Email and password are required." });
 
         if (request.Role != UserRole.admin)
-            return Results.BadRequest(new { Error = "Role must be 'admin' for institute registration." });
+            return Results.BadRequest(new { error = "Role must be 'admin' for institute registration." });
 
         if (request.Institute?.Name == null)
-            return Results.BadRequest(new { Error = "Institute name is required." });
+            return Results.BadRequest(new { error = "Institute name is required." });
 
         try
         {
@@ -191,7 +213,7 @@ public static class AuthEndpoints
                 if (await db.Users.AnyAsync(u => u.Email == request.Email, ct))
                 {
                     await transaction.RollbackAsync(ct);
-                    return Results.BadRequest(new { Error = "Email is already registered." });
+                    return Results.BadRequest(new { error = "Email is already registered." });
                 }
 
                 // 3. Hash password
@@ -240,6 +262,15 @@ public static class AuthEndpoints
                 // 7. Generate JWT token
                 var token = tokenService.GenerateToken(user);
 
+                httpContext.Response.Cookies.Append("auth_token", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Path = "/"
+                });
+
                 return Results.Created($"/api/auth/me", new
                 {
                     status = "success",
@@ -264,5 +295,5 @@ public static class AuthEndpoints
 }
 
 public record LoginRequest(string Email, string Password);
-public record LoginResponse(string Token, int UserId, string Email, string Role, string RefreshToken, int? InstituteId);
+public record LoginResponse(string Token, int UserId, string Email, string Role, string RefreshToken, int InstituteId);
 public record RefreshTokenRequest(string Token);

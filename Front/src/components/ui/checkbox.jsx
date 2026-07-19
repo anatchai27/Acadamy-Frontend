@@ -11,9 +11,9 @@ export function Checkbox({ id, checked, onChange, onBlur, label, required = fals
           onBlur={onBlur}
           required={required}
           ref={inputRef}
-          class="w-4 h-4 rounded-sm border-slate-300 text-blue-800 focus:ring-blue-800 focus:ring-2"
+          class="w-4 h-4 rounded-md border-zinc-200 text-oasis-primary focus:ring-oasis-primary/30 focus:ring-2"
         />
-        {label && <span class="text-sm text-slate-600">{label}</span>}
+        {label && <span class="text-sm text-zinc-600">{label}</span>}
       </label>
       {error && <span class="text-xs text-red-500">{error}</span>}
     </div>

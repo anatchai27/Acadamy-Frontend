@@ -10,6 +10,7 @@ const initialState = {
   user: null,
   userProfile: null,
   isAuthenticated: false,
+  isAuthLoading: true,
 };
 
 const AppContext = createContext(null);
@@ -35,6 +36,9 @@ export function AppProvider({ children }) {
       })
       .catch(() => {
         dispatch({ type: 'CLEAR_USER' });
+      })
+      .finally(() => {
+        dispatch({ type: 'SET_AUTH_LOADING', payload: false });
       });
   }, []);
 

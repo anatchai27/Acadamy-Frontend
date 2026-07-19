@@ -1,41 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
 
 @theme {
-  /* Primary brand */
-  --color-tiwhub-primary: #1e3a8a;
-  --color-tiwhub-primary-light: #3b5cc7;
-  --color-tiwhub-primary-dark: #13255c;
-  /* Accent brand */
-  --color-tiwhub-accent: #f59e0b;
-  --color-tiwhub-accent-light: #fbbf24;
-  --color-tiwhub-accent-dark: #d97706;
-  /* Surface / Neutral */
-  --color-tiwhub-bg: #f8fafc;
-  --color-tiwhub-surface: #ffffff;
-  --color-tiwhub-surface-hover: #f1f5f9;
-  --color-tiwhub-heading: #0f172a;
-  --color-tiwhub-body: #475569;
-  --color-tiwhub-muted: #94a3b8;
-  --color-tiwhub-border: #cbd5e1;
-  --color-tiwhub-border-light: #e2e8f0;
-  --color-deep-navy: #0f172a;
-  /* Semantic */
-  --color-tiwhub-success: #10b981;
-  --color-tiwhub-warning: #f59e0b;
-  --color-tiwhub-danger: #ef4444;
-  /* Typography */
+  --color-oasis-primary: #2563eb;
+  --color-oasis-primary-light: #60a5fa;
+  --color-oasis-primary-dark: #1d4ed8;
+  --color-oasis-accent: #06b6d4;
+  --color-oasis-accent-light: #67e8f9;
+  --color-oasis-accent-dark: #0891b2;
+  --color-oasis-bg: #f8fafc;
+  --color-oasis-surface: #ffffff;
+  --color-oasis-surface-hover: #f1f5f9;
+  --color-oasis-heading: #0f172a;
+  --color-oasis-body: #475569;
+  --color-oasis-muted: #94a3b8;
+  --color-oasis-border: #e2e8f0;
+  --color-oasis-border-light: #f1f5f9;
+  --color-oasis-success: #10b981;
+  --color-oasis-success-light: #d1fae5;
+  --color-oasis-success-dark: #059669;
+  --color-oasis-warning: #f59e0b;
+  --color-oasis-warning-light: #fef3c7;
+  --color-oasis-warning-dark: #d97706;
+  --color-oasis-danger: #ef4444;
+  --color-oasis-danger-light: #fee2e2;
+  --color-oasis-danger-dark: #dc2626;
   --font-family-sans: 'Sarabun', sans-serif;
-  /* Animations */
   --animate-fade-in: fade-in 0.3s ease-in-out;
   --animate-slide-up: slide-up 0.4s ease-out;
   --animate-scale-in: scale-in 0.3s ease-out;
   @keyframes fade-in {
-    0% { opacity: 0; transform: translateY(-10px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
   @keyframes slide-up {
-    0% { opacity: 0; transform: translateY(20px); }
+    0% { opacity: 0; transform: translateY(12px); }
     100% { opacity: 1; transform: translateY(0); }
   }
   @keyframes scale-in {
@@ -56,20 +56,14 @@
   body {
     font-family: var(--font-family-sans);
     font-weight: 400;
+    background-color: var(--color-oasis-bg);
+    color: var(--color-oasis-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-  }
-}
-
-@layer base {
-  body {
-    font-family: var(--font-family-sans);
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 }

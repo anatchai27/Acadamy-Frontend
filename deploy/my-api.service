@@ -1,0 +1,20 @@
+[Unit]
+Description=TiwHub Academy .NET API Service
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/my-api
+ExecStart=/usr/bin/dotnet /var/www/my-api/academy-API.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=dotnet-api
+
+User=www-data
+Group=www-data
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://localhost:5000
+
+[Install]
+WantedBy=multi-user.target

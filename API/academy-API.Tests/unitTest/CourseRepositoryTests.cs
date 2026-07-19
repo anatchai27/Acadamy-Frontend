@@ -1,6 +1,7 @@
 using academy_API.Data;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Tests;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Tests.unitTest;
@@ -12,7 +13,7 @@ public class CourseRepositoryTests
         var options = new DbContextOptionsBuilder<TutoringDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-        return new TutoringDbContext(options);
+        return new TutoringDbContext(options, new MockTenantProvider());
     }
 
     // ──────────────────── CourseRepository ────────────────────
@@ -29,7 +30,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
-        var courses = await repo.SearchAsync(null, null, null);
+        var courses = await repo.SearchAsync(null, null);
 
         Assert.Single(courses);
         Assert.Equal("ครูสมชาย", courses[0].TeacherName);
@@ -46,7 +47,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
-        var courses = await repo.SearchAsync(null, "Math", null);
+        var courses = await repo.SearchAsync("Math", null);
 
         Assert.Single(courses);
         Assert.Equal("Math", courses[0].Name);
@@ -77,7 +78,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
-        var result = await repo.UpdateAsync(1, new DTOs.UpdateCourseRequest("New", null, null, null, null), 1);
+        var result = await repo.UpdateAsync(1, new DTOs.UpdateCourseRequest("New", null, null, null, null));
 
         Assert.NotNull(result);
         Assert.Equal("New", result!.Name);
@@ -93,7 +94,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
-        var result = await repo.GetByIdAsync(1, 1);
+        var result = await repo.GetByIdAsync(1);
 
         Assert.Null(result);
     }
@@ -127,7 +128,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new SessionRepository(context);
-        var sessions = await repo.GetByCourseIdAsync(1, 1);
+        var sessions = await repo.GetByCourseIdAsync(1);
 
         Assert.Single(sessions);
         Assert.Equal("scheduled", sessions[0].Status);
@@ -149,7 +150,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new LeaveRequestRepository(context);
-        var (items, total) = await repo.SearchAsync(1, null, 1, 20);
+        var (items, total) = await repo.SearchAsync(null, 1, 20);
 
         Assert.Equal(1, total);
         Assert.Equal("สมชาย", items[0].StudentName);
@@ -185,7 +186,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new HomeworkRepository(context);
-        var items = await repo.GetByCourseIdAsync(1, null);
+        var items = await repo.GetByCourseIdAsync(1);
 
         Assert.Single(items);
         Assert.Equal("HW1", items[0].Title);

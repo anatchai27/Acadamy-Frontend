@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using academy_API.DTOs;
 using academy_API.Services;
-using academy_API.Utilities;
 
 namespace academy_API.Controllers;
 
@@ -22,11 +21,10 @@ public static class HomeworkEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
                 var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userId = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var id) ? id : 0;
 
-                var result = await service.CreateAsync(request, instituteId, userId, ct);
+                var result = await service.CreateAsync(request, userId, ct);
                 return Results.Created($"/api/homeworks/{result.Data.HomeworkId}", result);
             }
             catch (HomeworkValidationException ex)
@@ -41,8 +39,7 @@ public static class HomeworkEndpoints
             HttpContext httpContext,
             CancellationToken ct) =>
         {
-            var instituteId = httpContext.GetInstituteId();
-            var result = await service.GetByCourseIdAsync(courseId, instituteId, ct);
+            var result = await service.GetByCourseIdAsync(courseId, ct);
             return Results.Ok(result);
         });
 
@@ -54,8 +51,7 @@ public static class HomeworkEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.GetSubmissionsAsync(homeworkId, instituteId, ct);
+                var result = await service.GetSubmissionsAsync(homeworkId, ct);
                 return Results.Ok(result);
             }
             catch (HomeworkValidationException ex)
@@ -73,8 +69,7 @@ public static class HomeworkEndpoints
         {
             try
             {
-                var instituteId = httpContext.GetInstituteId();
-                var result = await service.GradeSubmissionAsync(submissionId, request, instituteId, ct);
+                var result = await service.GradeSubmissionAsync(submissionId, request, ct);
                 return Results.Ok(result);
             }
             catch (HomeworkValidationException ex)

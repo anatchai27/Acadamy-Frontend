@@ -16,8 +16,12 @@ export async function registerInstitute(payload) {
   return api.post('/auth/register-institute', payload);
 }
 
+export async function refreshToken(token) {
+  return api.post('/auth/refresh-token', { token });
+}
+
 export async function forgotPassword(email) {
-  return api.post('/users/forgot-password', { email });
+  return api.post('/users/forget-password', { email });
 }
 
 export async function resetPassword({ email, token, newPassword }) {
@@ -29,6 +33,7 @@ export const authService = {
   logout,
   getMe,
   registerInstitute,
+  refreshToken,
   forgotPassword,
   resetPassword,
 };

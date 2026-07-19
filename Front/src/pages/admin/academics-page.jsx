@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast } from '../../components/ui';
+import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 
@@ -24,18 +24,18 @@ export function AcademicsPage({ path }) {
   return (
     <AdminLayout path={path}>
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-tiwhub-heading dark:text-white">ระบบวิชาการ</h2>
-        <p class="text-sm text-tiwhub-muted dark:text-tiwhub-muted/70 mt-1">จัดการการบ้านและการประเมินทักษะ</p>
+        <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">ระบบวิชาการ</h2>
+        <p class="text-sm text-slate-500 mt-1">จัดการการบ้านและการประเมินทักษะ</p>
       </div>
 
-      <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden mb-6">
+      <div class="inline-flex rounded-xl bg-slate-100 p-1 mb-6">
         <button
           type="button"
           onClick={() => setTab('homework')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             tab === 'homework'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           การบ้าน
@@ -43,10 +43,10 @@ export function AcademicsPage({ path }) {
         <button
           type="button"
           onClick={() => setTab('skills')}
-          class={`px-5 py-2.5 text-sm font-medium transition-colors ${
+          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
             tab === 'skills'
-              ? 'bg-amber-500 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           ประเมินทักษะ
@@ -55,13 +55,11 @@ export function AcademicsPage({ path }) {
 
       {courses.length > 0 && (
         <div class="mb-6 max-w-xs">
-          <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">
-            เลือกคอร์สเรียน
-          </label>
+          <label class="text-sm font-medium text-slate-700 mb-1.5 block">เลือกคอร์สเรียน</label>
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white"
+            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -110,9 +108,7 @@ function HomeworkTab({ courseId }) {
     }
   };
 
-  useEffect(() => {
-    fetchHomeworks();
-  }, [courseId]);
+  useEffect(() => { fetchHomeworks(); }, [courseId]);
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -186,7 +182,7 @@ function HomeworkTab({ courseId }) {
   return (
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">รายการการบ้าน</h3>
+        <h3 class="text-lg font-semibold text-slate-900">รายการการบ้าน</h3>
         <Button variant="primary" size="sm" onClick={openCreate}>
           <span class="flex items-center gap-1.5">
             <PlusIcon class="h-4 w-4" />
@@ -196,8 +192,8 @@ function HomeworkTab({ courseId }) {
       </div>
 
       {showForm && (
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
-          <h4 class="text-base font-semibold text-slate-900 dark:text-white mb-4">สั่งการบ้านใหม่</h4>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-6 shadow-sm">
+          <h4 class="text-base font-semibold text-slate-900 mb-4">สั่งการบ้านใหม่</h4>
           <form onSubmit={handleSubmitHomework}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="md:col-span-2">
@@ -210,20 +206,21 @@ function HomeworkTab({ courseId }) {
                 />
               </div>
               <div class="md:col-span-2">
-                <label class="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1.5 block">รายละเอียด</label>
+                <label class="text-sm font-medium text-slate-700 mb-1.5 block">รายละเอียด</label>
                 <textarea
                   value={form.description}
                   onInput={updateField('description')}
                   placeholder="คำอธิบายการบ้าน"
                   rows={3}
-                  class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white placeholder-slate-400 resize-none transition-colors"
+                  class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 placeholder-slate-400 resize-none transition-colors"
                 />
               </div>
-              <SolidInput
+              <DatePickerInput
                 label="กำหนดส่ง"
-                type="datetime-local"
-                value={form.dueDate}
-                onInput={updateField('dueDate')}
+                showTime
+                value={form.dueDate ? new Date(form.dueDate) : null}
+                onChange={(date) => setForm((prev) => ({ ...prev, dueDate: date ? date.toISOString() : '' }))}
+                placeholder="เลือกวันที่และเวลา"
               />
               <SolidInput
                 label="ลิงก์ไฟล์แนบ"
@@ -232,7 +229,7 @@ function HomeworkTab({ courseId }) {
                 onInput={updateField('fileUrl')}
               />
             </div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 สั่งการบ้าน
               </Button>
@@ -246,7 +243,7 @@ function HomeworkTab({ courseId }) {
 
       {loading && (
         <div class="text-center py-12">
-          <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+          <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
           <p class="text-sm text-slate-400">กำลังโหลด...</p>
         </div>
       )}
@@ -256,32 +253,29 @@ function HomeworkTab({ courseId }) {
       )}
 
       {homeworks.map((hw) => (
-        <div key={hw.id} class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 mb-3 overflow-hidden">
+        <div key={hw.id} class="bg-white rounded-2xl border border-slate-200 mb-3 overflow-hidden shadow-sm">
           <button
             type="button"
             onClick={() => toggleSubmissions(hw.id)}
-            class="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+            class="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
           >
             <div class="flex-1 min-w-0">
-              <h4 class="text-sm font-semibold text-slate-900 dark:text-white">{hw.title}</h4>
+              <h4 class="text-sm font-semibold text-slate-900">{hw.title}</h4>
               {hw.dueAt && (
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p class="text-xs text-slate-500 mt-1">
                   ส่งภายใน {new Date(hw.dueAt).toLocaleDateString('th-TH')}
                 </p>
               )}
             </div>
-            <span class="text-xs text-slate-400 shrink-0">
+            <span class="text-xs text-slate-400 shrink-0 flex items-center gap-1">
               {hw.submissionCount != null && `${hw.submissionCount} คนส่ง`}
-              <ChevronDownIcon class={`h-4 w-4 ml-1 inline transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon class={`h-4 w-4 transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
             </span>
           </button>
 
           {expandedHw === hw.id && (
-            <div class="border-t border-slate-100 dark:border-slate-700 p-5">
-              <SubmissionsList
-                submissions={submissions[hw.id] || []}
-                onGrade={handleGrade}
-              />
+            <div class="border-t border-slate-100 p-5">
+              <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
             </div>
           )}
         </div>
@@ -300,22 +294,22 @@ function SubmissionsList({ submissions, onGrade }) {
 
   return (
     <div class="space-y-2">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">นักเรียนที่ส่งงาน ({submissions.length} คน)</p>
+      <p class="text-xs font-medium text-slate-500 mb-2">นักเรียนที่ส่งงาน ({submissions.length} คน)</p>
       {submissions.map((sub) => (
-        <div key={sub.id} class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-slate-50 dark:border-slate-700 first:border-0">
+        <div key={sub.id} class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-slate-50 first:border-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-900 dark:text-white">
+            <p class="text-sm font-medium text-slate-700">
               {sub.studentName || `นักเรียน #${sub.studentId}`}
             </p>
             {sub.submittedAt && (
-              <p class="text-xs text-slate-500 dark:text-slate-400">
+              <p class="text-xs text-slate-500">
                 ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}
               </p>
             )}
           </div>
           <div class="flex flex-wrap items-center gap-2 shrink-0">
             {sub.score != null ? (
-              <span class="text-sm font-bold text-amber-600 dark:text-amber-400">{sub.score}</span>
+              <span class="text-sm font-bold text-amber-600">{sub.score}</span>
             ) : (
               <>
                 <input
@@ -323,7 +317,7 @@ function SubmissionsList({ submissions, onGrade }) {
                   placeholder="ความเห็น"
                   value={feedbackInputs[sub.id] ?? ''}
                   onInput={(e) => setFeedbackInputs((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                  class="w-28 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 placeholder-slate-400"
+                  class="w-28 px-2 py-1.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:border-blue-600 placeholder-slate-400"
                 />
                 <input
                   type="number"
@@ -331,13 +325,13 @@ function SubmissionsList({ submissions, onGrade }) {
                   placeholder="คะแนน"
                   value={gradeInputs[sub.id] ?? ''}
                   onInput={(e) => setGradeInputs((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                  class="w-20 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                  class="w-20 px-2 py-1.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:border-blue-600"
                 />
                 <button
                   type="button"
                   onClick={() => onGrade(sub.id, Number(gradeInputs[sub.id]), feedbackInputs[sub.id])}
                   disabled={!gradeInputs[sub.id]}
-                  class="px-3 py-1.5 text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                  class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-40 transition-colors"
                 >
                   บันทึก
                 </button>
@@ -378,9 +372,7 @@ function SkillScoresTab({ courseId }) {
     }
   };
 
-  useEffect(() => {
-    fetchTopicsAndStudents();
-  }, [courseId]);
+  useEffect(() => { fetchTopicsAndStudents(); }, [courseId]);
 
   const handleScoreChange = (studentId, topicId, value) => {
     setScoreValues((prev) => ({ ...prev, [`${studentId}_${topicId}`]: value }));
@@ -424,7 +416,7 @@ function SkillScoresTab({ courseId }) {
   if (loading) {
     return (
       <div class="text-center py-12">
-        <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+        <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
         <p class="text-sm text-slate-400">กำลังโหลด...</p>
       </div>
     );
@@ -437,19 +429,19 @@ function SkillScoresTab({ courseId }) {
   return (
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">ประเมินทักษะ</h3>
+        <h3 class="text-lg font-semibold text-slate-900">ประเมินทักษะ</h3>
         <Button variant="primary" size="sm" onClick={handleBatchSave} loading={saving} disabled={saving}>
           บันทึกคะแนนทั้งหมด
         </Button>
       </div>
 
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-slate-50 dark:bg-slate-700/50">
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">นักเรียน</th>
+            <tr class="bg-slate-50">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">นักเรียน</th>
               {topics.map((t) => (
-                <th key={t.id} class="text-center px-3 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase min-w-[100px]">
+                <th key={t.id} class="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase min-w-[100px]">
                   {t.name}
                 </th>
               ))}
@@ -462,8 +454,8 @@ function SkillScoresTab({ courseId }) {
               </tr>
             ) : (
               students.map((student) => (
-                <tr key={student.id} class="border-t border-slate-100 dark:border-slate-700">
-                  <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">
+                <tr key={student.id} class="border-t border-slate-100">
+                  <td class="px-4 py-3 text-sm font-medium text-slate-700">
                     {student.fullName || '-'}
                   </td>
                   {topics.map((topic) => {
@@ -476,7 +468,7 @@ function SkillScoresTab({ courseId }) {
                           min="0"
                           value={scoreValues[key] ?? ''}
                           onInput={(e) => handleScoreChange(student.id, topic.id, e.target.value)}
-                          class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                          class="w-20 px-2 py-1.5 text-sm text-center border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:border-blue-600"
                           placeholder="-"
                         />
                       </td>

@@ -14,11 +14,11 @@ public class LeaveRequestServiceTests
     public async Task GetAllAsync_ReturnsPaginatedResponse()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.SearchAsync(1, null, 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.SearchAsync(null, 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<LeaveRequestItem>(), 0));
 
         var sut = new LeaveRequestService(repoMock.Object);
-        var result = await sut.GetAllAsync(1, null, 1, 20);
+        var result = await sut.GetAllAsync(null, 1, 20);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(1, result.Data.Pagination.CurrentPage);
@@ -29,13 +29,13 @@ public class LeaveRequestServiceTests
     public async Task GetAllAsync_WithStatusFilter_PassesToRepo()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.SearchAsync(1, "pending", 1, 20, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.SearchAsync("pending", 1, 20, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<LeaveRequestItem>(), 0));
 
         var sut = new LeaveRequestService(repoMock.Object);
-        await sut.GetAllAsync(1, "pending", 1, 20);
+        await sut.GetAllAsync("pending", 1, 20);
 
-        repoMock.Verify(r => r.SearchAsync(1, "pending", 1, 20, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.SearchAsync("pending", 1, 20, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 3
@@ -43,12 +43,12 @@ public class LeaveRequestServiceTests
     public async Task ApproveAsync_ValidPendingRequest_CallsApprove()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(5, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LeaveRequest { Id = 5, StudentId = 10, Status = "pending", Session = new Session { CourseId = 3 } });
         repoMock.Setup(r => r.ApproveAsync(It.IsAny<LeaveRequest>(), 42, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = new LeaveRequestService(repoMock.Object);
-        await sut.ApproveAsync(5, 1, 42);
+        await sut.ApproveAsync(5, 42);
 
         repoMock.Verify(r => r.ApproveAsync(It.Is<LeaveRequest>(lr => lr.Id == 5), 42, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -58,12 +58,12 @@ public class LeaveRequestServiceTests
     public async Task ApproveAsync_NotFound_ThrowsException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(999, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync((LeaveRequest?)null);
 
         var sut = new LeaveRequestService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<LeaveRequestValidationException>(
-            () => sut.ApproveAsync(999, 1, 42));
+            () => sut.ApproveAsync(999, 42));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
@@ -72,12 +72,12 @@ public class LeaveRequestServiceTests
     public async Task ApproveAsync_AlreadyApproved_ThrowsException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(5, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LeaveRequest { Id = 5, Status = "approved" });
 
         var sut = new LeaveRequestService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<LeaveRequestValidationException>(
-            () => sut.ApproveAsync(5, 1, 42));
+            () => sut.ApproveAsync(5, 42));
         Assert.Equal("INVALID_STATUS", ex.ErrorCode);
     }
 
@@ -86,12 +86,12 @@ public class LeaveRequestServiceTests
     public async Task RejectAsync_ValidPendingRequest_CallsReject()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(5, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LeaveRequest { Id = 5, StudentId = 10, Status = "pending" });
         repoMock.Setup(r => r.RejectAsync(It.IsAny<LeaveRequest>(), 42, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = new LeaveRequestService(repoMock.Object);
-        await sut.RejectAsync(5, 1, 42);
+        await sut.RejectAsync(5, 42);
 
         repoMock.Verify(r => r.RejectAsync(It.Is<LeaveRequest>(lr => lr.Id == 5), 42, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -101,12 +101,12 @@ public class LeaveRequestServiceTests
     public async Task RejectAsync_AlreadyRejected_ThrowsException()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetByIdAsync(5, 1, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LeaveRequest { Id = 5, Status = "rejected" });
 
         var sut = new LeaveRequestService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<LeaveRequestValidationException>(
-            () => sut.RejectAsync(5, 1, 42));
+            () => sut.RejectAsync(5, 42));
         Assert.Equal("INVALID_STATUS", ex.ErrorCode);
     }
 }

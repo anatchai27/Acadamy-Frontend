@@ -1,12 +1,16 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using academy_API.Data;
 using academy_API.Middlewares;
 using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Services;
 using academy_API.Services.Contracts;
+using academy_API.Services.Interface;
 using academy_API.Controllers;
 using academy_API.Utilities;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,14 +21,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure JSON serialization to accept string enum values
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -50,12 +61,25 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["auth_token"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 
 // Register application services
-builder.Services.AddSingleton<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
@@ -88,6 +112,15 @@ builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService
     client.BaseAddress = new Uri("https://api.line.me/");
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["Line:ChannelAccessToken"]}");
 });
+
+// Register THAI DATA CLOUD S3-compatible storage
+builder.Services.Configure<ThaiDataCloudOptions>(
+    builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
+builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
+
+// Register tenant provider
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantProvider, TenantProvider>();
 
 // Register TutoringDbContext with TiDB Cloud connection
 var connectionString = builder.Configuration.GetConnectionString("TutoringDbConnection")
@@ -141,6 +174,8 @@ app.MapPaymentEndpoints();
 app.MapLeaveRequestEndpoints();
 app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
+app.MapInstituteEndpoints();
+app.MapFileUploadEndpoints();
 
 // Database connection test endpoint
 app.MapGet("/api/v1/test-connection", (IDbConnectionValidator validator) =>
