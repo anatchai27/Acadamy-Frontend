@@ -2,15 +2,14 @@ import { Router } from 'preact-router';
 import { IndexPage } from './pages/index';
 import { NotFoundPage } from './pages/not-found-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentAddPage, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage } from './pages/admin';
+import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, AttendancePage, FinancePage, TeachersPage, ProductsPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth } from './components/require-auth';
 import './app.css';
 
 const AdminDashboard = requireAuth(DashboardPage);
 const AdminStudents = requireAuth(StudentsPage);
-const AdminStudentAdd = requireAuth(StudentAddPage);
-const AdminStudentProfile = requireAuth(StudentProfilePage);
+const AdminStudentControll = requireAuth(StudentControll);
 const AdminTeachers = requireAuth(TeachersPage);
 const AdminCourses = requireAuth(CoursesPage);
 const AdminSessions = requireAuth(SessionsPage);
@@ -33,8 +32,8 @@ export function App() {
         <ContactPage path="/contact" />
         <AdminDashboard path="/admin/dashboard" />
         <AdminStudents path="/admin/students" />
-        <AdminStudentAdd path="/admin/students/add" />
-        <AdminStudentProfile path="/admin/students/:id" />
+        <AdminStudentControll path="/admin/students/add" />
+        <AdminStudentControll path="/admin/students/:id" />
         <AdminTeachers path="/admin/teachers" />
         <AdminCourses path="/admin/courses" />
         <AdminSessions path="/admin/courses/:courseId/sessions" />

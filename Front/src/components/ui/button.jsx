@@ -3,8 +3,8 @@ export function Button({ children, variant = 'primary', size = 'md', onClick, ty
   
   const variants = {
     primary: 'bg-oasis-primary hover:bg-oasis-primary-dark text-white shadow-sm',
-    secondary: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800',
-    outline: 'bg-transparent border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300',
+    secondary: 'bg-slate-100 hover:bg-slate-200 text-slate-800',
+    outline: 'bg-transparent border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300',
     link: 'bg-transparent border-none text-oasis-primary font-medium hover:text-oasis-primary-dark p-0 rounded-none',
   };
   

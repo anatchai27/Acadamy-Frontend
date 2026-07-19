@@ -178,13 +178,13 @@ public static class AuthEndpoints
             ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-            return Results.BadRequest(new { Error = "Email and password are required." });
+            return Results.BadRequest(new { error = "Email and password are required." });
 
         if (request.Role != UserRole.admin)
-            return Results.BadRequest(new { Error = "Role must be 'admin' for institute registration." });
+            return Results.BadRequest(new { error = "Role must be 'admin' for institute registration." });
 
         if (request.Institute?.Name == null)
-            return Results.BadRequest(new { Error = "Institute name is required." });
+            return Results.BadRequest(new { error = "Institute name is required." });
 
         try
         {
@@ -213,7 +213,7 @@ public static class AuthEndpoints
                 if (await db.Users.AnyAsync(u => u.Email == request.Email, ct))
                 {
                     await transaction.RollbackAsync(ct);
-                    return Results.BadRequest(new { Error = "Email is already registered." });
+                    return Results.BadRequest(new { error = "Email is already registered." });
                 }
 
                 // 3. Hash password
@@ -265,7 +265,7 @@ public static class AuthEndpoints
                 httpContext.Response.Cookies.Append("auth_token", token, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false,
+                    Secure = true,
                     SameSite = SameSiteMode.Lax,
                     Expires = DateTimeOffset.UtcNow.AddHours(1),
                     Path = "/"

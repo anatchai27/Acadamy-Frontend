@@ -108,12 +108,13 @@ export function RegisterPage() {
       const payload = {
         institute: {
           name: data.institute_name,
-          contact_phone: data.contact_phone,
-          logo_base64: logoBase64 || undefined,
+          contactPhone: data.contact_phone,
+          logoBase64: logoBase64 || undefined,
         },
         admin: {
-          full_name: data.admin_full_name,
+          fullName: data.admin_full_name,
         },
+        role: 'admin',
         email: data.admin_email,
         password: data.admin_password,
         phone: data.admin_phone,
@@ -159,36 +160,33 @@ export function RegisterPage() {
   return (
     <div class="min-h-screen flex flex-col md:flex-row">
       {/* ===== LEFT PANEL: Branding (40%) ===== */}
-      <div class="md:w-[40%] bg-oasis-primary flex flex-col items-center justify-center px-10 py-16 text-center">
-        <div class="w-24 h-24 border-4 border-white rounded-2xl flex items-center justify-center mb-8">
-          <span class="text-5xl font-bold text-white tracking-tight">TH</span>
+      <div class="md:w-[40%] bg-oasis-primary flex flex-col items-center justify-center px-6 md:px-10 py-10 md:py-16 text-center">
+        <div class="w-20 h-20 md:w-24 md:h-24 border-4 border-white rounded-2xl flex items-center justify-center mb-6 md:mb-8">
+          <span class="text-3xl md:text-5xl font-bold text-white tracking-tight">TH</span>
         </div>
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+        <h1 class="text-2xl md:text-4xl font-bold text-white mb-4 tracking-tight">
           TiwHub
         </h1>
-        <p class="text-lg text-white/80 leading-relaxed max-w-sm">
-          จัดการสถาบันง่าย
+        <p class="text-base md:text-lg text-white/80 leading-relaxed max-w-sm">
+          จัดการสถาบันง่าย จบในที่เดียว
         </p>
-        <p class="text-lg text-white/80 leading-relaxed max-w-sm">
-          จบในที่เดียว
-        </p>
-        <div class="mt-12 flex gap-8">
+        <div class="mt-8 md:mt-12 flex gap-6 md:gap-8">
           <div class="text-center">
-            <p class="text-3xl font-bold text-white">500+</p>
-            <p class="text-sm text-white/60 mt-1">สถาบันที่เชื่อมั่น</p>
+            <p class="text-2xl md:text-3xl font-bold text-white">500+</p>
+            <p class="text-xs md:text-sm text-white/60 mt-1">สถาบันที่เชื่อมั่น</p>
           </div>
           <div class="text-center">
-            <p class="text-3xl font-bold text-white">50,000+</p>
-            <p class="text-sm text-white/60 mt-1">นักเรียนในระบบ</p>
+            <p class="text-2xl md:text-3xl font-bold text-white">50,000+</p>
+            <p class="text-xs md:text-sm text-white/60 mt-1">นักเรียนในระบบ</p>
           </div>
         </div>
       </div>
 
       {/* ===== RIGHT PANEL: Form (60%) ===== */}
-      <div class="md:w-[60%] flex items-center justify-center bg-white px-6 py-10 md:py-0">
+      <div class="md:w-[60%] flex items-center justify-center bg-white px-4 md:px-6 py-8 md:py-10">
         <div class="w-full max-w-md">
           {/* Step Indicator */}
-          <div class="flex items-center gap-4 mb-10">
+          <div class="flex items-center gap-3 md:gap-4 mb-8 md:mb-10">
             <div class="flex items-center gap-2">
               <div
                 class={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold border-2 transition-colors ${

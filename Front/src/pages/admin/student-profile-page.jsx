@@ -66,7 +66,7 @@ export function StudentProfilePage({ path, id }) {
   };
 
   const handleBack = () => route('/admin/students');
-  const handleEdit = () => route(`/admin/students/${id}?edit=1`);
+  const handleEdit = () => route(`/admin/students/${id}`);
 
   if (loading) {
     return (
@@ -110,8 +110,12 @@ export function StudentProfilePage({ path, id }) {
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-semibold">
-              {student.nickname?.[0] || student.fullName?.[0] || '?'}
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-semibold overflow-hidden">
+              {student.photoUrl ? (
+                <img src={student.photoUrl} alt={student.fullName} class="w-full h-full object-cover" />
+              ) : (
+                student.nickname?.[0] || student.fullName?.[0] || '?'
+              )}
             </div>
             <div>
               <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">

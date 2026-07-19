@@ -2,8 +2,8 @@
 
 > **Tech Stack:** Preact + Vite 6 + Tailwind CSS v4 + TypeScript  
 > **Backend:** ASP.NET Core 9/10 (Multi-Tenant, Cookie Auth)  
-> **Design System:** Minimalist Soft (Oasis Theme) — orange amber accent, dark navy heading, soft teal secondary, warm gray background  
-> **Mood & Tone:** อบอุ่น, เข้าถึงง่าย, สบายตา, ลดความตึงเครียด  
+> **Design System:** Minimalist Soft (Oasis Theme) — blue primary, slate neutrals, cyan accent, professional trust  
+> **Mood & Tone:** Professional, Trust, สบายตา, ลดความตึงเครียด  
 > **Last Updated:** 2026-07-17
 
 ---
@@ -246,25 +246,25 @@ useEffect(() => {
 
 - **ใช้ Tailwind utility classes เท่านั้น** — ไม่ใช้ CSS modules หรือ styled-components
 - **ใช้ custom theme tokens** (`oasis-primary`, `oasis-accent`, etc.) แทน hardcoded colors
-- **Page Background:** `bg-oasis-bg` (`#f4f2f2` / warm gray)
-- **Floating Card Layout:** เนื้อหาหลักอยู่ใน `bg-white rounded-3xl border border-zinc-200/80 p-8 shadow-sm` — ลอยบนพื้นหลัง, my-4, mr-4
+- **Page Background:** `bg-oasis-bg` (`#f8fafc` / slate-50)
+- **Floating Card Layout:** เนื้อหาหลักอยู่ใน `bg-white rounded-3xl border border-slate-200 p-8 shadow-sm` — ลอยบนพื้นหลัง, my-4, mr-4
 - **Color Palette:**
-  - `oasis-primary: #ff9e20` (orange amber) — primary action, active states
-  - `oasis-primary-light: #ffb84d` — hover states
-  - `oasis-primary-dark: #e08500` — active/pressed
-  - `oasis-accent: #215e61` (teal) — secondary accent, badges
-  - `oasis-accent-light: #2d7d81` — light variant
-  - `oasis-accent-dark: #163f41` — dark variant
-  - `oasis-bg: #f4f2f2` (warm gray) — page background + sidebar
+  - `oasis-primary: #2563eb` (blue-600) — primary action, active states
+  - `oasis-primary-light: #60a5fa` (blue-400) — hover states
+  - `oasis-primary-dark: #1d4ed8` (blue-700) — active/pressed
+  - `oasis-accent: #06b6d4` (cyan-500) — secondary accent, badges
+  - `oasis-accent-light: #67e8f9` (cyan-300) — light variant
+  - `oasis-accent-dark: #0891b2` (cyan-600) — dark variant
+  - `oasis-bg: #f8fafc` (slate-50) — page background + sidebar
   - `oasis-surface: #ffffff` — floating card background
-  - `oasis-heading: #1d2128` (dark navy) — heading text
-  - `oasis-body: #4a4e55` — body text
-  - `oasis-muted: #94989e` — muted text
-  - `oasis-border: #d8d6d6` — borders
+  - `oasis-heading: #0f172a` (slate-900) — heading text
+  - `oasis-body: #475569` (slate-600) — body text
+  - `oasis-muted: #94a3b8` (slate-400) — muted text
+  - `oasis-border: #e2e8f0` (slate-200) — borders
   - `oasis-success: #10b981` (emerald) — success
   - `oasis-warning: #f59e0b` (amber) — warning
   - `oasis-danger: #ef4444` (red) — danger
-- **Sidebar:** `bg-oasis-bg` (same as page bg), active item `bg-zinc-200/60 text-zinc-900`, inactive `text-zinc-500 hover:text-zinc-900`
+- **Sidebar:** `bg-oasis-bg` (same as page bg), active item `bg-blue-50 text-blue-700`, inactive `text-slate-500 hover:text-slate-800`
 - **Data Cards:** `bg-zinc-50 rounded-2xl border border-zinc-100 p-5 shadow-sm` — subtle card on card
 - **Border radius** ใช้ `rounded-xl` / `rounded-2xl` / `rounded-3xl` (floating card) — soft, friendly look
 - **Cards** ใช้ `bg-white rounded-2xl border border-zinc-200/80 shadow-sm` (inside floating card)

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { DataTable, SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
-import { financeService, courseService } from '../../services';
+import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
+import { financeService, courseService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 
 const paymentColumns = [
@@ -41,6 +41,8 @@ export function FinancePage({ path }) {
   const [form, setForm] = useState({
     enrollmentId: '', amount: '', method: 'transfer', slipUrl: '',
   });
+  const [slipFile, setSlipFile] = useState(null);
+  const [slipPreview, setSlipPreview] = useState(null);
   const getSignal = useAbortController();
 
   useEffect(() => {
@@ -89,12 +91,20 @@ export function FinancePage({ path }) {
         enrollmentId: Number(form.enrollmentId),
         amount: Number(form.amount),
         method: form.method,
-        slipUrl: form.slipUrl.trim() || undefined,
+        slipUrl: undefined,
       };
       const res = await financeService.createPayment(payload);
+      const paymentId = res.data?.data?.id || res.data?.id;
       const invoiceNo = res.data?.data?.invoiceNo || res.data?.invoiceNo || `INV-${Date.now()}`;
+
+      if (slipFile && paymentId) {
+        await uploadService.uploadPaymentSlip(slipFile, paymentId);
+      }
+
       showToast(`บันทึกสำเร็จ! เลข Invoice: ${invoiceNo}`, 'success');
       setForm({ enrollmentId: '', amount: '', method: 'transfer', slipUrl: '' });
+      setSlipFile(null);
+      setSlipPreview(null);
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
       showToast(msg, 'error');
@@ -203,22 +213,14 @@ export function FinancePage({ path }) {
                 </div>
               </div>
 
-              <SolidInput
-                label="ลิงก์สลิป (URL)"
-                placeholder="https://..."
-                value={form.slipUrl}
-                onInput={updateField('slipUrl')}
-              />
-
-              {/* Slip Upload */}
-              <div class="border-2 border-dashed border-zinc-200 rounded-xl p-8 text-center cursor-pointer hover:border-oasis-primary/50 transition-colors">
-                <svg class="h-8 w-8 mx-auto mb-2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <p class="text-sm text-zinc-500">
-                  ลากไฟล์สลิปมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์
-                </p>
-              </div>
+              <ImageUpload
+              label="สลิปการชำระเงิน"
+              preview={slipPreview}
+              onChange={(base64, file) => {
+                setSlipPreview(base64);
+                setSlipFile(file);
+              }}
+            />
 
               <div class="flex gap-3 pt-2">
                 <Button variant="primary" size="md" type="submit" loading={isSubmitting} disabled={isSubmitting}>

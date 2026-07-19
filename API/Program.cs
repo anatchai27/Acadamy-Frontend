@@ -1,6 +1,7 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using academy_API.Data;
-using academy_API.Data.Interceptors;
 using academy_API.Middlewares;
 using academy_API.Models;
 using academy_API.Repositories;
@@ -20,12 +21,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure JSON serialization to accept string enum values
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -114,25 +121,21 @@ builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
 // Register tenant provider
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantProvider, TenantProvider>();
-builder.Services.AddScoped<AuditTenantSaveChangesInterceptor>();
 
 // Register TutoringDbContext with TiDB Cloud connection
 var connectionString = builder.Configuration.GetConnectionString("TutoringDbConnection")
     ?? throw new InvalidOperationException("Connection string 'TutoringDbConnection' not found.");
 
-builder.Services.AddDbContextPool<TutoringDbContext>(
-    (sp, options) =>
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
-            mysqlOptions =>
-            {
-                mysqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null);
-                mysqlOptions.CommandTimeout(30);
-            })
-            .AddInterceptors(sp.GetRequiredService<AuditTenantSaveChangesInterceptor>()),
-    poolSize: 128);
+builder.Services.AddDbContext<TutoringDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
+        mysqlOptions =>
+        {
+            mysqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+            mysqlOptions.CommandTimeout(30);
+        }));
 
 var app = builder.Build();
 

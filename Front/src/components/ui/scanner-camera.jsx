@@ -125,7 +125,7 @@ export function ScannerCamera({ onScan, onError, active = true }) {
               <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-oasis-primary rounded-br-2xl" />
             </div>
             <div class="absolute inset-x-8 top-8 bottom-8 overflow-hidden pointer-events-none">
-              <div class="w-full h-0.5 bg-oasis-primary/80 shadow-[0_0_8px_2px_rgba(139,92,246,0.4)] animate-pulse" />
+              <div class="w-full h-0.5 bg-blue-500/80 shadow-[0_0_8px_2px_rgba(59,130,246,0.4)] animate-pulse" />
             </div>
           </>
         )}

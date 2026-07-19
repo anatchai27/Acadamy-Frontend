@@ -11,4 +11,14 @@ export default defineConfig({
       'react-dom': 'preact/compat',
     },
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['preact', 'preact-router', 'react-datepicker', 'react-qr-code', 'jsqr'],
+        },
+      },
+    },
+  },
 });

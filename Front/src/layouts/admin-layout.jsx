@@ -67,26 +67,26 @@ export function AdminLayout({ children, path }) {
   const filteredMenuItems = menuItems.filter((item) => item.roles.includes(userRole));
 
   return (
-<div class="min-h-screen bg-oasis-bg text-zinc-800">
-      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-oasis-bg border-r border-zinc-200/60">
-        <div class="flex h-16 items-center gap-3 px-6 border-b border-zinc-200/60">
+<div class="min-h-screen bg-slate-50 text-slate-700">
+      <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 bg-white border-r border-slate-200 shadow-sm">
+        <div class="flex h-16 items-center gap-3 px-6 border-b border-slate-100">
           {state.instituteLogo ? (
-            <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-xl object-cover shrink-0" />
+            <img src={state.instituteLogo} alt="logo" class="h-9 w-9 rounded-xl object-cover shrink-0 ring-2 ring-blue-100" />
           ) : (
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-oasis-primary text-white font-semibold text-sm shrink-0">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-sm shrink-0 shadow-sm">
               TH
             </div>
           )}
           <div class="flex flex-col">
-            <span class="text-lg font-semibold text-zinc-900 leading-tight tracking-tight">
+            <span class="text-lg font-bold text-slate-900 leading-tight tracking-tight">
               {state.instituteName || 'TiwHub'}
             </span>
-            <span class="text-xs text-zinc-400 leading-tight">Admin Panel</span>
+            <span class="text-xs text-slate-400 leading-tight">Admin Panel</span>
           </div>
         </div>
 
-        <nav class="flex-1 space-y-1 px-3 py-5 overflow-y-auto">
-          <p class="px-3 mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+        <nav class="flex-1 space-y-0.5 px-3 py-5 overflow-y-auto">
+          <p class="px-3 mb-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
             เมนูหลัก
           </p>
           {filteredMenuItems.map((item) => {
@@ -95,34 +95,37 @@ export function AdminLayout({ children, path }) {
               <button
                 key={item.path}
                 onClick={() => route(item.path)}
-                class={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-zinc-200/60 text-zinc-900'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-blue-50 text-blue-700 shadow-sm'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`}
               >
-                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-zinc-900' : ''}`} />
+                <item.icon class={`h-5 w-5 shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                 {item.label}
+                {isActive && (
+                  <div class="ml-auto w-1 h-5 rounded-full bg-blue-600" />
+                )}
               </button>
             );
           })}
         </nav>
 
-        <div class="border-t border-zinc-200/60 p-4">
+        <div class="border-t border-slate-100 p-4">
           <div class="flex items-center gap-3 mb-3 px-1">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold shrink-0">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shrink-0 shadow-sm">
               {avatarChar}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-zinc-900 truncate">
+              <p class="text-sm font-semibold text-slate-900 truncate">
                 {displayName}
               </p>
-              <p class="text-xs text-zinc-400">{displayRole}</p>
+              <p class="text-xs text-slate-400">{displayRole}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-500 hover:text-oasis-danger hover:bg-oasis-danger/5 transition-all duration-200"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
           >
             <LogoutIcon class="h-5 w-5 shrink-0" />
             ออกจากระบบ
@@ -131,64 +134,64 @@ export function AdminLayout({ children, path }) {
       </aside>
 
       {/* Mobile Header */}
-      <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-white/80 backdrop-blur-lg border-b border-zinc-200/60 flex items-center justify-between px-4">
+      <header class="md:hidden fixed top-0 left-0 right-0 z-20 h-14 bg-white/80 backdrop-blur-lg border-b border-slate-200 flex items-center justify-between px-4 shadow-sm">
         <div class="flex items-center gap-2">
           {state.instituteLogo ? (
             <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-lg object-cover shrink-0" />
           ) : (
-            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-oasis-primary text-white font-semibold text-xs shrink-0">
+            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-xs shrink-0">
               TH
             </div>
           )}
-          <span class="text-base font-semibold text-zinc-900">{currentTitle}</span>
+          <span class="text-base font-semibold text-slate-900">{currentTitle}</span>
         </div>
-        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold">
+        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shadow-sm">
           {avatarChar}
         </div>
       </header>
 
       {/* Desktop Top Bar */}
-      <header class="hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 bg-white/80 backdrop-blur-lg border-b border-zinc-200/60">
+      <header class="hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
         <div class="flex items-center gap-4">
           <div>
-            <h1 class="text-lg font-semibold text-zinc-900 tracking-tight">{currentTitle}</h1>
-            <p class="text-xs text-zinc-400">
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">{currentTitle}</h1>
+            <p class="text-xs text-slate-400">
               {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
           <button
             onClick={() => route('/admin/attendance')}
-            class="px-4 py-2 text-sm font-medium text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+            class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all flex items-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98]"
           >
             <QrScanIcon class="h-4 w-4" />
             สแกน QR
           </button>
         </div>
         <div class="flex items-center gap-4">
-          <button class="relative p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-xl hover:bg-zinc-100">
+          <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
             <BellIcon class="h-5 w-5" />
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-oasis-danger ring-2 ring-white" />
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
           </button>
           <div class="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setDropdownOpen(!dropdownOpen); }}
-              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-zinc-100 transition-colors"
+              class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
             >
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200/60 text-zinc-700 text-xs font-semibold">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shrink-0 shadow-sm">
                 {avatarChar}
               </div>
-              <span class="text-sm font-medium text-zinc-600">{displayName}</span>
-              <ChevronDownIcon class="h-4 w-4 text-zinc-400" />
+              <span class="text-sm font-medium text-slate-600">{displayName}</span>
+              <ChevronDownIcon class="h-4 w-4 text-slate-400" />
             </button>
             {dropdownOpen && (
-              <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-zinc-200/80 py-1 z-30">
-                <div class="px-4 py-2 border-b border-zinc-100">
-                  <p class="text-sm font-medium text-zinc-900">{displayName}</p>
-                  <p class="text-xs text-zinc-500">{displayRole}</p>
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-30">
+                <div class="px-4 py-2 border-b border-slate-100">
+                  <p class="text-sm font-semibold text-slate-900">{displayName}</p>
+                  <p class="text-xs text-slate-500">{displayRole}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-700 hover:bg-oasis-danger/5 hover:text-oasis-danger transition-colors"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
                   <LogoutIcon class="h-4 w-4" />
                   ออกจากระบบ
@@ -202,14 +205,14 @@ export function AdminLayout({ children, path }) {
       {/* Main Content — floating card */}
       <main class="md:ml-64 pt-14 md:pt-0">
         <div class="p-4 md:p-8 max-w-7xl mx-auto">
-          <div class="bg-white my-4 rounded-3xl border border-zinc-200/80 p-8 shadow-sm">
+          <div class="bg-white my-4 rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm">
             {children}
           </div>
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-white/80 backdrop-blur-lg border-t border-zinc-200/60 flex items-center justify-around safe-area-bottom">
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 bg-white/80 backdrop-blur-lg border-t border-slate-200 flex items-center justify-around safe-area-bottom shadow-sm">
         {filteredMenuItems.map((item) => {
           const isActive = currentPath === item.path;
           return (
@@ -218,8 +221,8 @@ export function AdminLayout({ children, path }) {
               onClick={() => route(item.path)}
               class={`flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${
                 isActive
-                  ? 'text-oasis-primary'
-                  : 'text-zinc-400'
+                  ? 'text-blue-600'
+                  : 'text-slate-400'
               }`}
             >
               <item.icon class="h-5 w-5" />

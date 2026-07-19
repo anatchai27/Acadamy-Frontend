@@ -1,14 +1,14 @@
 const statusConfig = {
-  present: { label: 'มาเรียน', class: 'bg-oasis-success-light text-oasis-success-dark' },
-  active: { label: 'ใช้งาน', class: 'bg-oasis-success-light text-oasis-success-dark' },
-  paid: { label: 'ชำระแล้ว', class: 'bg-oasis-success-light text-oasis-success-dark' },
-  success: { label: 'สำเร็จ', class: 'bg-oasis-success-light text-oasis-success-dark' },
-  late: { label: 'มาสาย', class: 'bg-oasis-warning-light text-oasis-warning-dark' },
-  pending: { label: 'รอดำเนินการ', class: 'bg-oasis-warning-light text-oasis-warning-dark' },
-  absent: { label: 'ขาด', class: 'bg-oasis-danger-light text-oasis-danger-dark' },
-  inactive: { label: 'ไม่ใช้งาน', class: 'bg-oasis-danger-light text-oasis-danger-dark' },
-  unpaid: { label: 'ค้างชำระ', class: 'bg-oasis-danger-light text-oasis-danger-dark' },
-  leave: { label: 'ลา', class: 'bg-zinc-100 text-zinc-600' },
+  present: { label: 'มาเรียน', class: 'bg-emerald-100 text-emerald-700' },
+  active: { label: 'ใช้งาน', class: 'bg-emerald-100 text-emerald-700' },
+  paid: { label: 'ชำระแล้ว', class: 'bg-emerald-100 text-emerald-700' },
+  success: { label: 'สำเร็จ', class: 'bg-emerald-100 text-emerald-700' },
+  late: { label: 'มาสาย', class: 'bg-amber-100 text-amber-700' },
+  pending: { label: 'รอดำเนินการ', class: 'bg-amber-100 text-amber-700' },
+  absent: { label: 'ขาด', class: 'bg-red-100 text-red-700' },
+  inactive: { label: 'ไม่ใช้งาน', class: 'bg-red-100 text-red-700' },
+  unpaid: { label: 'ค้างชำระ', class: 'bg-red-100 text-red-700' },
+  leave: { label: 'ลา', class: 'bg-slate-100 text-slate-600' },
 };
 
 export function StatusBadge({ status, label, class: className = '' }) {

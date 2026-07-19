@@ -4,10 +4,6 @@ export function getHomeworks(courseId, params = {}, options = {}) {
   return api.get(`/homeworks/course/${courseId}`, { params, ...options });
 }
 
-export function getHomeworkById(id) {
-  return api.get(`/homeworks/${id}`);
-}
-
 export function createHomework(payload) {
   return api.post('/homeworks', payload);
 }
@@ -22,7 +18,6 @@ export function gradeSubmission(submissionId, payload) {
 
 export const homeworkService = {
   getHomeworks,
-  getHomeworkById,
   createHomework,
   getSubmissions,
   gradeSubmission,

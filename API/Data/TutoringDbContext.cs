@@ -51,13 +51,12 @@ public class TutoringDbContext(
         {
             entity.ToTable("users");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.InstituteId).HasColumnName("institute_id").IsRequired(false);
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Institute)
                   .WithMany()
                   .HasForeignKey(e => e.InstituteId)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.InstituteId);
             entity.HasIndex(e => e.Email).IsUnique();
@@ -79,14 +78,13 @@ public class TutoringDbContext(
         {
             entity.ToTable("students");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.InstituteId).HasColumnName("institute_id").IsRequired(false);
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(s => s.Institute)
                   .WithMany()
                   .HasForeignKey(s => s.InstituteId)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(s => s.User)
                   .WithOne(u => u.Student)
@@ -112,14 +110,13 @@ public class TutoringDbContext(
         {
             entity.ToTable("teachers");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.InstituteId).HasColumnName("institute_id").IsRequired(false);
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(t => t.Institute)
                   .WithMany()
                   .HasForeignKey(t => t.InstituteId)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(t => t.User)
                   .WithOne(u => u.Teacher)
@@ -272,13 +269,12 @@ public class TutoringDbContext(
         {
             entity.ToTable("courses");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.InstituteId).HasColumnName("institute_id").IsRequired(false);
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Institute)
                   .WithMany()
                   .HasForeignKey(e => e.InstituteId)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
             entity.Property(e => e.Subject).HasMaxLength(255).HasColumnName("subject");
@@ -585,8 +581,10 @@ public class TutoringDbContext(
         ApplyTenantFilters(modelBuilder);
     }
 
-    private void ApplyTenantFilters(ModelBuilder modelBuilder)
+private void ApplyTenantFilters(ModelBuilder modelBuilder)
     {
+        if (_currentInstituteId == 0) return;
+
         modelBuilder.Entity<Session>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Attendance>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Payment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

@@ -1,12 +1,12 @@
-using Amazon.S3;
-using Amazon.S3.Model;
+using Aliyun.OSS;
+using Aliyun.OSS.Common;
 using Microsoft.Extensions.Options;
 
 namespace academy_API.Services.Interface;
 
 public class S3FileStorageService : IFileStorageService, IDisposable
 {
-    private readonly IAmazonS3 _s3Client;
+    private readonly OssClient _ossClient;
     private readonly string _bucketName;
     private readonly string _publicUrl;
 
@@ -16,26 +16,22 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         _bucketName = config.BucketName;
         _publicUrl = config.PublicUrl.TrimEnd('/');
 
-        var s3Config = new AmazonS3Config
-        {
-            ServiceURL = config.ServiceUrl,
-            ForcePathStyle = true
-        };
-
-        _s3Client = new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
+        var ossConfig = new ClientConfiguration();
+        _ossClient = new OssClient(config.ServiceUrl, config.AccessKey, config.SecretKey, ossConfig);
     }
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
-        var putRequest = new PutObjectRequest
+        var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        buffer.Position = 0;
+
+        var objectMeta = new ObjectMetadata
         {
-            BucketName = _bucketName,
-            Key = fileName,
-            InputStream = fileStream,
             ContentType = contentType
         };
 
-        await _s3Client.PutObjectAsync(putRequest, ct);
+        var result = await Task.Run(() => _ossClient.PutObject(_bucketName, fileName, buffer, objectMeta), ct);
 
         return $"{_publicUrl}/{_bucketName}/{fileName}";
     }
@@ -45,14 +41,8 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         var key = ExtractKeyFromUrl(fileUrl);
         if (string.IsNullOrEmpty(key)) return false;
 
-        var deleteRequest = new DeleteObjectRequest
-        {
-            BucketName = _bucketName,
-            Key = key
-        };
-
-        var response = await _s3Client.DeleteObjectAsync(deleteRequest, ct);
-        return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
+        var result = await Task.Run(() => _ossClient.DeleteObject(_bucketName, key), ct);
+        return result.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
     public string GetPublicUrl(string key) => $"{_publicUrl}/{_bucketName}/{key}";
@@ -65,7 +55,6 @@ public class S3FileStorageService : IFileStorageService, IDisposable
 
     public void Dispose()
     {
-        _s3Client?.Dispose();
     }
 }
 

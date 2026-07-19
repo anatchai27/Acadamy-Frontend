@@ -88,6 +88,38 @@ public static class TeacherEndpoints
             });
         });
 
+        group.MapPut("/{id:int}", async (int id, TeacherRequest request, HttpContext httpContext, TutoringDbContext db, CancellationToken ct) =>
+        {
+            var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == id, ct);
+            if (teacher is null)
+                return Results.NotFound(new { error = "Teacher not found." });
+
+            if (string.IsNullOrWhiteSpace(request.FullName))
+                return Results.BadRequest(new { error = "FullName is required." });
+
+            teacher.FullName = request.FullName.Trim();
+            teacher.Specialization = request.Specialization?.Trim();
+            teacher.Bio = request.Bio?.Trim();
+            teacher.HourlyRate = request.HourlyRate;
+            teacher.PhotoUrl = request.PhotoUrl?.Trim();
+
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new { status = "success", message = "แก้ไขข้อมูลครูสำเร็จ" });
+        });
+
+        group.MapDelete("/{id:int}", async (int id, HttpContext httpContext, TutoringDbContext db, CancellationToken ct) =>
+        {
+            var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == id, ct);
+            if (teacher is null)
+                return Results.NotFound(new { error = "Teacher not found." });
+
+            db.Teachers.Remove(teacher);
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new { status = "success", message = "ลบครูผู้สอนสำเร็จ" });
+        });
+
         return app;
     }
 }

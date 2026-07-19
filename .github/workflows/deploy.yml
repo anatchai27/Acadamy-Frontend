@@ -1,0 +1,75 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build .NET API
+        run: |
+          cd API
+          dotnet publish -c Release -o ../publish/api --self-contained false
+
+      - name: Build Frontend
+        run: |
+          cd Front
+          npm install
+          npm run build
+
+      - name: Copy files to temp folder
+        run: |
+          mkdir -p temp-deploy/frontend/dist
+          mkdir -p temp-deploy/backend/publish-folder
+          cp -r Front/dist/* temp-deploy/frontend/dist/
+          cp -r publish/api/* temp-deploy/backend/publish-folder/
+
+      - name: Upload artifacts to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "temp-deploy/*"
+          target: "/var/www/"
+          strip_components: 1
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # 1. Deploy Frontend
+            sudo rm -rf /var/www/my-app/*
+            sudo cp -r /var/www/temp-deploy/frontend/dist/* /var/www/my-app/
+            sudo chown -R www-data:www-data /var/www/my-app
+
+            # 2. Deploy Backend
+            sudo systemctl stop my-api.service || true
+            sudo rm -rf /var/www/my-api/*
+            sudo cp -r /var/www/temp-deploy/backend/publish-folder/* /var/www/my-api/
+            sudo chown -R www-data:www-data /var/www/my-api
+
+            # 3. Restart services
+            sudo systemctl start my-api.service
+            sudo systemctl restart nginx
+
+            # 4. Cleanup
+            sudo rm -rf /var/www/temp-deploy/*

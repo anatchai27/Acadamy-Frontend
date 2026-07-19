@@ -1,11 +1,21 @@
 export { api } from './api';
-export { userService, createUser, getUsers, getUserById } from './user-service';
+export {
+  userService,
+  createStaff,
+  registerUser,
+  createUser,
+  getUsers,
+  getUserById,
+  updateUserRole,
+  deleteUser,
+} from './user-service';
 export {
   authService,
   login,
   logout,
   getMe,
   registerInstitute,
+  refreshToken,
   forgotPassword,
   resetPassword,
 } from './auth-service';
@@ -27,7 +37,6 @@ export {
   financeService,
   createPayment,
   getPayments,
-  getPaymentById,
 } from './finance-service';
 export {
   teacherService,
@@ -43,6 +52,14 @@ export {
   updateCourse,
 } from './course-service';
 export {
+  productService,
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from './product-service';
+export {
   sessionService,
   getSessions,
   createSession,
@@ -50,14 +67,12 @@ export {
 export {
   leaveRequestService,
   getLeaveRequests,
-  getLeaveRequestById,
   approveLeaveRequest,
   rejectLeaveRequest,
 } from './leave-request-service';
 export {
   homeworkService,
   getHomeworks,
-  getHomeworkById,
   createHomework,
   getSubmissions,
   gradeSubmission,
@@ -78,4 +93,5 @@ export {
   uploadHomeworkFile,
   uploadHomeworkSubmission,
   uploadStudentPhoto,
+  uploadTeacherPhoto,
 } from './upload-service';

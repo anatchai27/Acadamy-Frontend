@@ -188,6 +188,47 @@ public static class FileUploadEndpoints
         })
         .DisableAntiforgery();
 
+        group.MapPost("/teacher-photo", async (
+            HttpContext httpContext,
+            IFormFile file,
+            int teacherId,
+            IFileStorageService storage,
+            TutoringDbContext db,
+            CancellationToken ct) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            if (file is null || file.Length == 0)
+                return Results.BadRequest(new { error = "No file uploaded." });
+
+            if (!file.ContentType.StartsWith("image/"))
+                return Results.BadRequest(new { error = "Only image files are allowed." });
+
+            if (file.Length > 5 * 1024 * 1024)
+                return Results.BadRequest(new { error = "File size must not exceed 5MB." });
+
+            var ext = Path.GetExtension(file.FileName);
+            var fileName = $"photos/teacher_{teacherId}_{DateTime.UtcNow:yyyyMMddHHmmss}{ext}";
+
+            await using var stream = file.OpenReadStream();
+            var fileUrl = await storage.UploadAsync(stream, fileName, file.ContentType, ct);
+
+            var teacher = await db.Teachers
+                .Where(t => t.Id == teacherId && t.InstituteId == instituteId)
+                .FirstOrDefaultAsync(ct);
+
+            if (teacher is not null)
+            {
+                teacher.PhotoUrl = fileUrl;
+                await db.SaveChangesAsync(ct);
+            }
+
+            return Results.Ok(new { status = "success", data = new { photoUrl = fileUrl } });
+        })
+        .DisableAntiforgery();
+
         return app;
     }
 }

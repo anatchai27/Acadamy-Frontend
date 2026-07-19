@@ -114,9 +114,13 @@ export function StudentsPage({ path }) {
                 {/* Card Top — Avatar + Identity */}
                 <div class="p-5">
                   <div class="flex items-start gap-4">
-                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-semibold">
-                      {student.nickname?.[0] || student.fullName?.[0] || '?'}
-                    </div>
+<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-xl font-semibold overflow-hidden">
+                    {student.photoUrl ? (
+                      <img src={student.photoUrl} alt={student.fullName} class="w-full h-full object-cover" />
+                    ) : (
+                      student.nickname?.[0] || student.fullName?.[0] || '?'
+                    )}
+                  </div>
                     <div class="flex-1 min-w-0">
                       <h3 class="text-base font-semibold text-zinc-900 truncate group-hover:text-oasis-primary transition-colors">
                         {student.fullName || '-'}

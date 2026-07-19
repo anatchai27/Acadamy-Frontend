@@ -12,7 +12,7 @@ public class TenantProvider(IHttpContextAccessor httpContextAccessor) : ITenantP
             if (context?.Items["InstituteId"] is int instituteId)
                 return instituteId;
 
-            throw new UnauthorizedAccessException("CRITICAL: Tenant Context is missing. Request aborted.");
+            return 0;
         }
     }
 }
