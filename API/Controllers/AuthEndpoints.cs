@@ -37,7 +37,7 @@ public static class AuthEndpoints
             httpContext.Response.Cookies.Append("auth_token", result.Token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = false,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddHours(1),
                 Path = "/"

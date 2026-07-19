@@ -72,7 +72,11 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            var token = context.Request.Cookies["auth_token"];
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                token = context.Request.Cookies["auth_token"];
+            }
             if (!string.IsNullOrEmpty(token))
             {
                 context.Token = token;
