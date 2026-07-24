@@ -128,14 +128,14 @@ export function FinancePage({ path }) {
       </div>
 
       {/* Mode Switcher */}
-      <div class="inline-flex rounded-xl bg-zinc-100 p-1 mb-6">
+      <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
         <button
           type="button"
           onClick={() => setMode('form')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            mode === 'form'
-              ? 'bg-white text-zinc-900 shadow-sm'
-              : 'text-zinc-500 hover:text-zinc-700'
+          class={`px-5 py-2 text-sm font-medium transition-all ${
+            isNeo
+              ? (mode === 'form' ? 'neo-tab-active' : 'neo-tab-inactive')
+              : `rounded-lg transition-all ${mode === 'form' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`
           }`}
         >
           บันทึกรับเงิน
@@ -143,10 +143,10 @@ export function FinancePage({ path }) {
         <button
           type="button"
           onClick={() => setMode('history')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            mode === 'history'
-              ? 'bg-white text-zinc-900 shadow-sm'
-              : 'text-zinc-500 hover:text-zinc-700'
+          class={`px-5 py-2 text-sm font-medium transition-all ${
+            isNeo
+              ? (mode === 'history' ? 'neo-tab-active' : 'neo-tab-inactive')
+              : `rounded-lg transition-all ${mode === 'history' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`
           }`}
         >
           ประวัติการเงิน
@@ -166,13 +166,13 @@ export function FinancePage({ path }) {
               />
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-zinc-800">
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
                   เลือกคอร์ส (อ้างอิง)
                 </label>
                 <select
                   value={form.enrollmentId}
                   onChange={updateField('enrollmentId')}
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                 >
                   <option value="">-- เลือกคอร์สเพื่อกรอก ID --</option>
                   {courses.map((c) => (

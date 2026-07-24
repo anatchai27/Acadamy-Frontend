@@ -93,7 +93,7 @@ export function AttendancePage({ path }) {
         <p class="text-sm text-zinc-500 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
       </div>
 
-      <div class="inline-flex rounded-xl bg-zinc-100 p-1 mb-6">
+      <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
         <button
           type="button"
           onClick={() => setMode('scan')}

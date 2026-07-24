@@ -133,3 +133,54 @@
   transform: translateY(-2px) scale(1.01);
   box-shadow: 4px 4px 0px #000;
 }
+
+.neo-tab-group {
+  display: inline-flex;
+  border: 2px solid #000;
+}
+
+.neo-tab-active {
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+}
+
+.neo-tab-inactive {
+  background: transparent;
+  color: #000;
+}
+
+.neo-tab-inactive:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.neo-select {
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+}
+
+.neo-select:focus {
+  outline: none !important;
+  box-shadow: 2px 2px 0px #000 !important;
+}
+
+.neo-label {
+  color: #000 !important;
+  font-weight: 500;
+}
+
+.neo-form-divider {
+  border-color: #000 !important;
+}
+
+.neo-accordion-header {
+  transition: background 0.1s ease;
+}
+
+.neo-accordion-header:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.neo-accordion-content {
+  border-color: #000;
+}

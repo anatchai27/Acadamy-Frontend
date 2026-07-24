@@ -105,16 +105,16 @@ export function ProductsPage({ path }) {
           </h3>
           <form onSubmit={handleSubmit} class="space-y-4">
             <div>
-              <label class="text-sm font-medium text-zinc-800 block mb-1">ชื่อสินค้า *</label>
-              <input type="text" value={form.name} onInput={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="เช่น เสื้อสถาบัน" class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
+              <label class={`text-sm font-medium block mb-1 ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ชื่อสินค้า *</label>
+              <input type="text" value={form.name} onInput={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="เช่น เสื้อสถาบัน" class={`w-full px-4 py-2.5 text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl bg-white placeholder-zinc-400 focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'}`} />
             </div>
             <div>
-              <label class="text-sm font-medium text-zinc-800 block mb-1">ราคา *</label>
-              <input type="number" step="0.01" min="0" value={form.price} onInput={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
+              <label class={`text-sm font-medium block mb-1 ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ราคา *</label>
+              <input type="number" step="0.01" min="0" value={form.price} onInput={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" class={`w-full px-4 py-2.5 text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl bg-white placeholder-zinc-400 focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'}`} />
             </div>
             <div>
-              <label class="text-sm font-medium text-zinc-800 block mb-1">รายละเอียด (optional)</label>
-              <textarea value={form.description} onInput={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all resize-none" />
+              <label class={`text-sm font-medium block mb-1 ${isNeo ? 'text-black' : 'text-zinc-800'}`}>รายละเอียด (optional)</label>
+              <textarea value={form.description} onInput={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} class={`w-full px-4 py-2.5 text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl bg-white placeholder-zinc-400 focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'} resize-none`} />
             </div>
             <div class="flex gap-3 pt-2">
               <button type="submit" disabled={submitting} class={`px-4 py-2 text-sm font-semibold text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl disabled:opacity-50 transition-all shadow-sm ${isNeo ? 'neo-btn' : ''}`}>

@@ -135,7 +135,7 @@ export function SettingsPage({ path }) {
           </div>
           <div class="divide-y divide-zinc-100">
             <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
-              <label class="text-sm font-medium text-zinc-800">โลโก้สถาบัน</label>
+              <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>โลโก้สถาบัน</label>
               <div class="flex items-center gap-3">
                 {logoPreview ? (
                   <img src={logoPreview} alt="logo" class="h-10 w-10 rounded-lg object-cover border border-zinc-200" />
@@ -192,8 +192,8 @@ export function SettingsPage({ path }) {
 function SettingsInput({ label, value, onChange, type = 'text' }) {
   return (
     <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
-      <label class="text-sm font-medium text-zinc-800">{label}</label>
-      <input type={type} value={value} onInput={onChange} class="w-64 px-3.5 py-2 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all" />
+      <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>{label}</label>
+      <input type={type} value={value} onInput={onChange} class={`w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'}`} />
     </div>
   );
 }
@@ -201,8 +201,8 @@ function SettingsInput({ label, value, onChange, type = 'text' }) {
 function SettingsTextarea({ label, value, onChange }) {
   return (
     <div class="flex items-start justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
-      <label class="text-sm font-medium text-zinc-800 pt-1">{label}</label>
-      <textarea value={value} onInput={onChange} rows={2} class="w-64 px-3.5 py-2 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all resize-none" />
+      <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'} pt-1`}>{label}</label>
+      <textarea value={value} onInput={onChange} rows={2} class={`w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'} resize-none`} />
     </div>
   );
 }

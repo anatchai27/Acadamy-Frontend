@@ -1,6 +1,7 @@
 import { useState, useRef, forwardRef } from 'preact/compat';
 import DatePicker from 'react-datepicker';
 import { th } from 'date-fns/locale/th';
+import { useDesignTheme } from '../../../hooks/useDesignTheme';
 
 const formatDisplay = (date) => {
   if (!date) return '';
@@ -17,10 +18,10 @@ const formatDateTimeDisplay = (date) => {
   });
 };
 
-const CustomInput = forwardRef(({ value, onClick, placeholder, className, label, error, showTime }, ref) => (
+const CustomInput = forwardRef(({ value, onClick, placeholder, className, label, error, showTime, isNeo }, ref) => (
   <div class="flex flex-col gap-1.5">
     {label && (
-      <label class="text-sm font-medium text-slate-700">{label}</label>
+      <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-slate-700'}`}>{label}</label>
     )}
     <div class="relative">
       <input
@@ -30,7 +31,7 @@ const CustomInput = forwardRef(({ value, onClick, placeholder, className, label,
         onClick={onClick}
         readOnly
         placeholder={placeholder || (showTime ? 'เลือกวันที่และเวลา' : 'เลือกวันที่')}
-        class={`w-full px-4 py-2.5 bg-white border rounded-xl text-sm cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-800 placeholder-slate-400 ${error ? 'border-red-400' : 'border-slate-200'} ${className}`}
+        class={`w-full px-4 py-2.5 bg-white text-sm cursor-pointer transition-all focus:outline-none text-slate-800 placeholder-slate-400 ${isNeo ? 'neo-input' : 'border rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'} ${error ? 'border-red-400' : isNeo ? '' : 'border-slate-200'} ${className}`}
       />
       <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -56,6 +57,8 @@ export function DatePickerInput({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const handleChange = (date) => {
     onChange(date);
@@ -92,6 +95,7 @@ export function DatePickerInput({
           label={label}
           error={error}
           showTime={showTime}
+          isNeo={isNeo}
         />
       }
       popperClassName="datepicker-popper"

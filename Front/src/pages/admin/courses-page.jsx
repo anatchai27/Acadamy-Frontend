@@ -186,13 +186,13 @@ export function CoursesPage({ path }) {
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-zinc-800">
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
                   รูปแบบคอร์สเรียน *
                 </label>
                 <select
                   value={form.courseType}
                   onChange={updateField('courseType')}
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                 >
                   <option value="group">1. คอร์สกลุ่ม (Fixed Group)</option>
                   <option value="private">2. คอร์สเดี่ยว (Flexible Private)</option>
@@ -278,13 +278,13 @@ export function CoursesPage({ path }) {
               )}
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-zinc-800">
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
                   ครูผู้สอน
                 </label>
                 <select
                   value={form.teacherId}
                   onChange={updateField('teacherId')}
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                 >
                   <option value="">เลือกครูผู้สอน</option>
                   {teachers.map((t) => (

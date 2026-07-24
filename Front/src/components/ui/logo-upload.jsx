@@ -1,4 +1,5 @@
 import { useState, useRef } from 'preact/hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 function CameraIcon() {
   return (
@@ -24,6 +25,8 @@ export function LogoUpload({ value, onChange, error }) {
   const [preview, setPreview] = useState(value || null);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const validateFile = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -83,7 +86,7 @@ export function LogoUpload({ value, onChange, error }) {
 
   return (
     <div class="flex flex-col gap-1.5">
-      <label class="text-sm text-zinc-800 font-medium">โลโก้สถาบัน</label>
+      <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>โลโก้สถาบัน</label>
       <div
         class={`relative w-40 h-40 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-colors ${
           error

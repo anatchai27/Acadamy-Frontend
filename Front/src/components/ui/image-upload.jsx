@@ -1,5 +1,6 @@
 import { useState, useRef } from 'preact/hooks';
 import { uploadService } from '../../services';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 1 * 1024 * 1024;
@@ -57,6 +58,8 @@ export function ImageUpload({
   const [localPreview, setLocalPreview] = useState(null);
   const [localError, setLocalError] = useState(null);
   const inputRef = useRef(null);
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const displayPreview = localPreview || preview;
 
@@ -125,7 +128,7 @@ export function ImageUpload({
   return (
     <div class={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label class="text-sm font-medium text-zinc-800">{label}</label>
+        <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>{label}</label>
       )}
       <div
         class={`relative w-36 h-36 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-colors ${

@@ -32,14 +32,14 @@ export function AcademicsPage({ path }) {
         <p class="text-sm text-slate-500 mt-1">จัดการการบ้านและการประเมินทักษะ</p>
       </div>
 
-      <div class="inline-flex rounded-xl bg-slate-100 p-1 mb-6">
+      <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-slate-100 p-1 mb-6'}`}>
         <button
           type="button"
           onClick={() => setTab('homework')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            tab === 'homework'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
+          class={`px-5 py-2 text-sm font-medium transition-all ${
+            isNeo
+              ? (tab === 'homework' ? 'neo-tab-active' : 'neo-tab-inactive')
+              : `rounded-lg ${tab === 'homework' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
           }`}
         >
           การบ้าน
@@ -47,10 +47,10 @@ export function AcademicsPage({ path }) {
         <button
           type="button"
           onClick={() => setTab('skills')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            tab === 'skills'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
+          class={`px-5 py-2 text-sm font-medium transition-all ${
+            isNeo
+              ? (tab === 'skills' ? 'neo-tab-active' : 'neo-tab-inactive')
+              : `rounded-lg ${tab === 'skills' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
           }`}
         >
           ประเมินทักษะ
@@ -59,11 +59,11 @@ export function AcademicsPage({ path }) {
 
       {courses.length > 0 && (
         <div class="mb-6 max-w-xs">
-          <label class="text-sm font-medium text-slate-700 mb-1.5 block">เลือกคอร์สเรียน</label>
+          <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>เลือกคอร์สเรียน</label>
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900"
+            class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 ${isNeo ? 'neo-select' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -212,13 +212,13 @@ function HomeworkTab({ courseId }) {
                 />
               </div>
               <div class="md:col-span-2">
-                <label class="text-sm font-medium text-slate-700 mb-1.5 block">รายละเอียด</label>
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>รายละเอียด</label>
                 <textarea
                   value={form.description}
                   onInput={updateField('description')}
                   placeholder="คำอธิบายการบ้าน"
                   rows={3}
-                  class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 placeholder-slate-400 resize-none transition-colors"
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 placeholder-slate-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
                 />
               </div>
               <DatePickerInput
@@ -235,7 +235,7 @@ function HomeworkTab({ courseId }) {
                 onInput={updateField('fileUrl')}
               />
             </BentoGrid>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100">
+            <div class={`flex gap-3 mt-4 pt-4 border-t ${isNeo ? 'border-black' : 'border-slate-100'}`}>
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 สั่งการบ้าน
               </Button>
@@ -263,7 +263,7 @@ function HomeworkTab({ courseId }) {
           <button
             type="button"
             onClick={() => toggleSubmissions(hw.id)}
-            class="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
+            class={`w-full p-5 text-left flex items-center justify-between gap-4 transition-colors ${isNeo ? 'neo-accordion-header' : 'hover:bg-slate-50'}`}
           >
             <div class="flex-1 min-w-0">
               <h4 class="text-sm font-semibold text-slate-900">{hw.title}</h4>
@@ -280,7 +280,7 @@ function HomeworkTab({ courseId }) {
           </button>
 
           {expandedHw === hw.id && (
-            <div class="border-t border-slate-100 p-5">
+            <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
               <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
             </div>
           )}
@@ -446,10 +446,10 @@ function SkillScoresTab({ courseId }) {
       <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} overflow-x-auto shadow-sm`}>
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-slate-50">
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">นักเรียน</th>
+            <tr class={`${isNeo ? 'bg-black text-white' : 'bg-slate-50'}`}>
+              <th class={`text-left px-4 py-3 text-xs font-semibold uppercase ${isNeo ? 'text-white' : 'text-slate-500'}`}>นักเรียน</th>
               {topics.map((t) => (
-                <th key={t.id} class="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase min-w-[100px]">
+                <th key={t.id} class={`text-center px-3 py-3 text-xs font-semibold uppercase min-w-[100px] ${isNeo ? 'text-white' : 'text-slate-500'}`}>
                   {t.name}
                 </th>
               ))}

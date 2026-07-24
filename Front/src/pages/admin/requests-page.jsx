@@ -106,7 +106,7 @@ export function RequestsPage({ path }) {
       </div>
 
       {/* Status Filter */}
-      <div class="inline-flex rounded-xl border border-zinc-200 overflow-hidden mb-6">
+      <div class={`inline-flex overflow-hidden mb-6 ${isNeo ? 'neo-tab-group' : 'rounded-xl border border-zinc-200'}`}>
         {[
           { value: 'pending', label: 'รอตรวจสอบ' },
           { value: 'approved', label: 'อนุมัติแล้ว' },
@@ -118,8 +118,8 @@ export function RequestsPage({ path }) {
             onClick={() => setFilter(opt.value)}
             class={`px-4 py-2 text-sm font-medium transition-colors ${
               filter === opt.value
-                ? 'bg-oasis-primary text-white'
-                : 'bg-white text-zinc-600 hover:bg-zinc-50'
+                ? isNeo ? 'neo-tab-active' : 'bg-oasis-primary text-white'
+                : isNeo ? 'neo-tab-inactive' : 'bg-white text-zinc-600 hover:bg-zinc-50'
             }`}
           >
             {opt.label}

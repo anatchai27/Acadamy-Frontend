@@ -281,13 +281,13 @@ export function TeachersPage({ path }) {
                 }}
               />
               <div class="md:col-span-2">
-                <label class="text-sm font-medium text-zinc-800 mb-1.5 block">ประวัติ / ข้อมูลเพิ่มเติม</label>
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>ประวัติ / ข้อมูลเพิ่มเติม</label>
                 <textarea
                   value={form.bio}
                   onInput={updateField('bio')}
                   placeholder="ประสบการณ์สอน หรือข้อมูลเพิ่มเติม"
                   rows={3}
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800 placeholder:text-zinc-400 resize-none transition-colors"
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 placeholder:text-zinc-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                 />
               </div>
             </div>
