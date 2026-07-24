@@ -13,17 +13,25 @@ public record CourseItem(
     int Id,
     string Name,
     string? Subject,
+    string? CourseType,
     int TotalSessions,
     decimal Price,
-    string? TeacherName
+    string? TeacherName,
+    int? ExpiresInDays,
+    bool? RequireComputer,
+    int? CreditCost
 );
 
 public record CreateCourseRequest(
     string Name,
     string Subject,
-    int TotalSessions,
+    string CourseType,
+    int? TotalSessions,
     decimal Price,
-    int? TeacherId
+    int? TeacherId,
+    int? ExpiresInDays,
+    bool? RequireComputer,
+    int? CreditCost
 );
 
 public record CreateCourseResponse(
@@ -35,15 +43,20 @@ public record CreateCourseResponse(
 public record CreateCourseData(
     int CourseId,
     string Name,
+    string CourseType,
     DateTime CreatedAt
 );
 
 public record UpdateCourseRequest(
     string? Name,
     string? Subject,
+    string? CourseType,
     int? TotalSessions,
     decimal? Price,
-    int? TeacherId
+    int? TeacherId,
+    int? ExpiresInDays,
+    bool? RequireComputer,
+    int? CreditCost
 );
 
 public record CreateSessionRequest(

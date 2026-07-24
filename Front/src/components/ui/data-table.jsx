@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
-/**
- * DataTable
- * ตารางข้อมูลขอบคมกริบ รองรับ pagination, actions, empty state, responsive
- *
- * Props:
- *   columns: [{ key, label, class?, align?, render?(value,row) }]
- *   data: array of row objects
- *   keyField: unique key field name (default 'id')
- *   actions: [{ label, onClick(row), variant? }]  — ปุ่มท้ายแถว
- *   pageSize: number (default 10, 0 = no pagination)
- *   emptyMessage: string
- *   loading: boolean
- */
 export function DataTable({
   columns = [],
   data = [],
@@ -22,7 +10,10 @@ export function DataTable({
   emptyMessage = 'ไม่พบข้อมูล',
   loading = false,
   class: className = '',
+  neo,
 }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = neo !== undefined ? neo : designTheme === 'neobrutalism';
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -39,20 +30,20 @@ export function DataTable({
 
   return (
     <div class={`w-full ${className}`}>
-      <div class="overflow-x-auto rounded-xl border border-zinc-200/80">
+      <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-zinc-50 border-b border-zinc-200/80">
+            <tr class={`${isNeo ? 'bg-black text-white' : 'bg-zinc-50 text-zinc-700'} border-b ${isNeo ? 'border-black' : 'border-zinc-200/80'}`}>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  class={`px-4 py-3 font-semibold text-zinc-700 ${alignClass(col.align)} ${col.class || ''}`}
+                  class={`px-4 py-3 font-semibold ${alignClass(col.align)} ${col.class || ''}`}
                 >
                   {col.label}
                 </th>
               ))}
               {actions.length > 0 && (
-                <th class="px-4 py-3 text-right font-semibold text-zinc-700">
+                <th class={`px-4 py-3 text-right font-semibold`}>
                   จัดการ
                 </th>
               )}
@@ -75,7 +66,7 @@ export function DataTable({
               pagedData.map((row) => (
                 <tr
                   key={row[keyField]}
-                  class="border-b border-zinc-100 hover:bg-zinc-50 transition-colors"
+                  class={`border-b ${isNeo ? 'border-black' : 'border-zinc-100'} hover:bg-zinc-50 transition-colors`}
                 >
                   {columns.map((col) => (
                     <td
@@ -93,10 +84,10 @@ export function DataTable({
                             key={action.label}
                             type="button"
                             onClick={() => action.onClick(row)}
-                            class={`px-3 py-1.5 text-xs font-medium rounded-xl transition-colors ${
+                            class={`px-3 py-1.5 text-xs font-medium transition-colors ${
                               action.variant === 'primary'
-                                ? 'bg-oasis-primary hover:bg-oasis-primary-dark text-white'
-                                : 'border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                                ? isNeo ? 'neo-btn bg-oasis-primary text-white' : 'bg-oasis-primary hover:bg-oasis-primary-dark text-white rounded-xl'
+                                : isNeo ? 'neo-btn bg-white text-zinc-700' : 'border border-zinc-200 text-zinc-700 hover:bg-zinc-50 rounded-xl'
                             }`}
                           >
                             {action.label}
@@ -113,8 +104,8 @@ export function DataTable({
       </div>
 
       {pageSize > 0 && data.length > pageSize && (
-        <div class="flex items-center justify-between mt-4 text-sm">
-          <span class="text-zinc-500">
+        <div class={`flex items-center justify-between mt-4 text-sm ${isNeo ? 'text-black' : 'text-zinc-500'}`}>
+          <span class="">
             แสดง {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, data.length)} จาก {data.length} รายการ
           </span>
           <div class="flex items-center gap-1">
@@ -122,7 +113,7 @@ export function DataTable({
               type="button"
               disabled={currentPage === 1}
               onClick={() => setPage(currentPage - 1)}
-              class="px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
+              class={`px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${isNeo ? 'neo-btn bg-white text-black' : 'rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-50'}`}
             >
               ก่อนหน้า
             </button>
@@ -133,7 +124,7 @@ export function DataTable({
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setPage(currentPage + 1)}
-              class="px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
+              class={`px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${isNeo ? 'neo-btn bg-white text-black' : 'rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-50'}`}
             >
               ถัดไป
             </button>

@@ -3,6 +3,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
 import { financeService, courseService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const paymentColumns = [
   {
@@ -44,6 +45,8 @@ export function FinancePage({ path }) {
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState(null);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
     courseService.getCourses({ signal: getSignal() })
@@ -153,7 +156,7 @@ export function FinancePage({ path }) {
       {mode === 'form' ? (
         <div class="max-w-2xl">
           <form onSubmit={handleSubmitPayment}>
-            <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 space-y-5 shadow-sm">
+            <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} space-y-5 shadow-sm`}>
               <SolidInput
                 label="Enrollment ID"
                 placeholder="รหัสการลงทะเบียน"
@@ -236,7 +239,7 @@ export function FinancePage({ path }) {
       ) : (
         /* Payment History */
         <div>
-          <div class="flex flex-wrap items-end gap-3 mb-6 bg-zinc-50 rounded-2xl border border-zinc-100 p-4">
+          <div class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} flex flex-wrap items-end gap-3 mb-6`}>
             <DatePickerInput
               label="ตั้งแต่วันที่"
               value={startDate ? new Date(startDate) : null}

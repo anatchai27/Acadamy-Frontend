@@ -27,9 +27,28 @@ public class AttendanceService(
         if (isDuplicate)
             throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
 
+        var session = await _repository.GetSessionByIdAsync(request.SessionId, ct);
+        var courseType = session?.Course.CourseType;
+
+        var billingMethod = courseType switch
+        {
+            "subscription" => "subscription",
+            "credit" => "credit",
+            "video" => "free",
+            _ => "sessions"
+        };
+
+        var billingDesc = courseType switch
+        {
+            "subscription" => "ตรวจสอบวันหมดอายุ",
+            "credit" => "หักเครดิต",
+            "video" => "ไม่เสียค่าใช้จ่าย",
+            _ => "หักจำนวนคาบเรียน"
+        };
+
         await _repository.ScanCheckinWithTransactionAsync(student.Id, request.SessionId, ct);
 
-        var sessionsRemaining = 0;
+        var remaining = 0;
         _ = Task.Run(async () =>
         {
             try
@@ -49,7 +68,7 @@ public class AttendanceService(
         });
 
         return new ScanAttendanceResponse("success", "เช็คชื่อเข้าเรียนสำเร็จ",
-            new ScanAttendanceData(student.Id, student.FullName, "present", DateTime.UtcNow, sessionsRemaining));
+            new ScanAttendanceData(student.Id, student.FullName, "present", DateTime.UtcNow, remaining, billingMethod, billingDesc));
     }
 
     public async Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default)

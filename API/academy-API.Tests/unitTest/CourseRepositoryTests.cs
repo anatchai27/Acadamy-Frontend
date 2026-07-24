@@ -78,7 +78,7 @@ public class CourseRepositoryTests
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
-        var result = await repo.UpdateAsync(1, new DTOs.UpdateCourseRequest("New", null, null, null, null));
+        var result = await repo.UpdateAsync(1, new DTOs.UpdateCourseRequest(Name: "New", Subject: null, CourseType: null, TotalSessions: null, Price: null, TeacherId: null, ExpiresInDays: null, RequireComputer: null, CreditCost: null));
 
         Assert.NotNull(result);
         Assert.Equal("New", result!.Name);

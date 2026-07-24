@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast } from '../../components/ui';
+import { SolidInput, Button, showToast, BentoGrid } from '../../components/ui';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 
@@ -12,6 +13,8 @@ export function StudentsPage({ path }) {
   const [search, setSearch] = useState('');
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchStudents = async (page = 1, query = '') => {
     setLoading(true);
@@ -94,7 +97,7 @@ export function StudentsPage({ path }) {
             {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีนักเรียนในสถาบัน'}
           </p>
           {!search && (
-            <Button variant="primary" size="md" onClick={() => route('/admin/students/add')}>
+<Button variant="primary" size="md" onClick={() => route('/admin/students/add')}>
               + เพิ่มนักเรียนคนแรก
             </Button>
           )}
@@ -104,11 +107,15 @@ export function StudentsPage({ path }) {
       {/* Student Cards Grid */}
       {!loading && students.length > 0 && (
         <>
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+          <BentoGrid>
             {students.map((student) => (
               <div
                 key={student.id}
-                class="group bg-white rounded-xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+                class={`group cursor-pointer ${
+                  isNeo
+                    ? 'neo-card bg-white p-0 overflow-hidden'
+                    : 'bg-white rounded-xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden'
+                }`}
                 onClick={() => route(`/admin/students/${student.id}`)}
               >
                 {/* Card Top — Avatar + Identity */}
@@ -184,7 +191,7 @@ export function StudentsPage({ path }) {
                 </div>
               </div>
             ))}
-          </div>
+          </BentoGrid>
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (

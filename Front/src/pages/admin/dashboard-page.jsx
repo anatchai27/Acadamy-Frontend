@@ -1,6 +1,10 @@
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DashboardOverviewWidget } from '../../components/dashboard/dashboard-overview';
+import { PlayfulGreeting } from '../../components/dashboard/playful-greeting';
+import { BentoGrid, BentoCell, BadgeSticker, unlockBadge } from '../../components/ui';
 import { route } from 'preact-router';
+import { useEffect } from 'preact/hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const recentActivities = [
   { text: 'ผู้ใช้ใหม่ลงทะเบียน: john@example.com', time: '5 นาทีที่แล้ว', icon: UserPlusIcon, color: 'primary' },
@@ -25,22 +29,26 @@ const colorTextMap = {
 };
 
 export function DashboardPage({ path }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
+
+  useEffect(() => {
+    unlockBadge('first_login');
+  }, []);
+
   return (
     <AdminLayout path={path}>
-      {/* Welcome */}
-      <div class="mb-8">
-        <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">ภาพรวมระบบ</h2>
-        <p class="text-sm text-zinc-500 mt-1">ดูข้อมูลสำคัญและการเปลี่ยนแปลงของระบบคุณ</p>
-      </div>
+      {/* Playful Greeting — เปลี่ยนทุกวัน */}
+      <PlayfulGreeting />
 
-      {/* Dashboard Overview Widget - Grid 2x2 */}
+      {/* Bento Grid Dashboard Overview */}
       <DashboardOverviewWidget />
 
-      {/* Two Column Layout */}
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-15">
-        {/* Activity Feed */}
-        <div class="lg:col-span-2 bg-zinc-50 rounded-2xl border border-zinc-100">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
+      {/* Bento Grid — กิจกรรมล่าสุด + Sidebar */}
+      <BentoGrid>
+        {/* Activity Feed — 2 คอลัมน์ */}
+        <BentoCell span={2} class="!p-0 overflow-hidden">
+          <div class={`flex items-center justify-between px-6 py-4 ${isNeo ? 'border-b-2 border-black' : 'border-b border-zinc-100'}`}>
             <h3 class="text-lg font-semibold text-zinc-900">กิจกรรมล่าสุด</h3>
             <button class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors">
               ดูทั้งหมด
@@ -51,7 +59,9 @@ export function DashboardPage({ path }) {
               <div
                 key={activity.text}
                 class={`flex items-start gap-4 py-3 ${
-                  i < recentActivities.length - 1 ? 'border-b border-zinc-100' : ''
+                  isNeo
+                    ? i < recentActivities.length - 1 ? 'border-b-2 border-black' : ''
+                    : i < recentActivities.length - 1 ? 'border-b border-zinc-100' : ''
                 }`}
               >
                 <div class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorIconBgMap[activity.color]}`}>
@@ -64,50 +74,47 @@ export function DashboardPage({ path }) {
               </div>
             ))}
           </div>
-        </div>
+        </BentoCell>
 
-        {/* Quick Stats Sidebar */}
-        <div class="space-y-6">
-          {/* Top Courses */}
-          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 mb-4">คอร์สยอดนิยม</h3>
-            <div class="space-y-4">
-              {[
-                { title: 'JavaScript Basics', students: 45, color: 'primary' },
-                { title: 'React 101', students: 38, color: 'success' },
-                { title: 'Python for Beginners', students: 32, color: 'accent' },
-              ].map((course) => (
-                <div key={course.title} class="flex items-center gap-3">
-                  <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-')}`} />
-                  <span class="flex-1 text-sm text-zinc-500 truncate">{course.title}</span>
-                  <span class="text-xs font-medium text-zinc-400">{course.students} คน</span>
-                </div>
-              ))}
-            </div>
+        {/* Top Courses */}
+        <BentoCell>
+          <h3 class="text-lg font-semibold mb-4 text-zinc-900">คอร์สยอดนิยม</h3>
+          <div class="space-y-4">
+            {[
+              { title: 'JavaScript Basics', students: 45, color: 'primary' },
+              { title: 'React 101', students: 38, color: 'success' },
+              { title: 'Python for Beginners', students: 32, color: 'accent' },
+            ].map((course) => (
+              <div key={course.title} class="flex items-center gap-3">
+                <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-')}`} />
+                <span class="flex-1 text-sm text-zinc-500 truncate">{course.title}</span>
+                <span class="text-xs font-medium text-zinc-400">{course.students} คน</span>
+              </div>
+            ))}
           </div>
+        </BentoCell>
 
-          {/* Quick Actions */}
-          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 mb-4">ดำเนินการด่วน</h3>
-            <div class="space-y-2">
-              {[
-                { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary', onClick: () => route('/admin/users') },
-                { label: 'สร้างคอร์สเรียน', icon: BookIcon, color: 'success', onClick: () => route('/admin/courses') },
-                { label: 'ดูรายงาน', icon: ChartIcon, color: 'accent', onClick: () => route('/admin/finance') },
-              ].map((action) => (
-                <button
-                  key={action.label}
-                  onClick={action.onClick}
-                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-500 hover:bg-zinc-50 transition-colors"
-                >
-                  <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
-                  {action.label}
-                </button>
-              ))}
-            </div>
+        {/* Quick Actions */}
+        <BentoCell>
+          <h3 class="text-lg font-semibold mb-4 text-zinc-900">ดำเนินการด่วน</h3>
+          <div class="space-y-2">
+            {[
+              { label: 'เพิ่มผู้ใช้ใหม่', icon: UserPlusIcon, color: 'primary', onClick: () => route('/admin/users') },
+              { label: 'สร้างคอร์สเรียน', icon: BookIcon, color: 'success', onClick: () => route('/admin/courses') },
+              { label: 'ดูรายงาน', icon: ChartIcon, color: 'accent', onClick: () => route('/admin/finance') },
+            ].map((action) => (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                class={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors text-zinc-500 ${isNeo ? 'neo-btn' : 'hover:bg-zinc-50'}`}
+              >
+                <action.icon class={`h-4 w-4 ${colorTextMap[action.color]}`} />
+                {action.label}
+              </button>
+            ))}
           </div>
-        </div>
-      </div>
+        </BentoCell>
+      </BentoGrid>
     </AdminLayout>
   );
 }

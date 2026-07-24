@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { ScannerCamera, StatusBadge, showToast } from '../../components/ui';
+import { ScannerCamera, StatusBadge, showToast, BentoGrid } from '../../components/ui';
 import { attendanceService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 export function AttendancePage({ path }) {
   const [mode, setMode] = useState('scan');
@@ -11,6 +12,8 @@ export function AttendancePage({ path }) {
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState('');
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
     attendanceService.getDailyAttendance({}, { signal: getSignal() })
@@ -28,28 +31,12 @@ export function AttendancePage({ path }) {
   }, []);
 
   const handleScan = async (qrData) => {
-    const existing = recentScans.find((s) => s.qrData === qrData);
-    if (existing) {
-      showToast('นักเรียนนี้เช็คชื่อไปแล้ว', 'error');
-      return;
-    }
-
-    if (!sessionId) {
-      showToast('ไม่พบข้อมูลคลาสเรียน กรุณาลองใหม่', 'error');
-      return;
-    }
-
+    const name = qrData;
+    const status = 'present';
+    setRecentScans((prev) => [...prev, { qrData, name, status, time: new Date().toLocaleTimeString('th-TH') }]);
     try {
-      const res = await attendanceService.scanAttendance({ qrToken: qrData, sessionId: Number(sessionId) });
-      const scanResult = res.data?.data || {};
-      const entry = {
-        qrData,
-        name: scanResult.studentName || `นักเรียน #${qrData}`,
-        time: new Date().toLocaleTimeString('th-TH'),
-        status: scanResult.status || 'present',
-      };
-      setRecentScans((prev) => [entry, ...prev]);
-      showToast(`เช็คชื่อ ${entry.name} สำเร็จ`, 'success');
+      await attendanceService.submitScanAttendance({ qrData });
+      showToast('เช็คชื่อ ' + name + ' สำเร็จ', 'success');
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'สแกนไม่สำเร็จ กรุณาลองใหม่';
       showToast(msg, 'error');
@@ -60,24 +47,24 @@ export function AttendancePage({ path }) {
     showToast('ไม่สามารถเปิดกล้องได้ กรุณาพิมพ์รหัสแทน', 'warning');
   };
 
-  const handleManualStatus = async (studentId, status) => {
+  const handleManualStatus = async (studentId, newStatus) => {
     if (!sessionId) {
       showToast('ไม่พบข้อมูลคลาสเรียน', 'error');
       return;
     }
 
     setStudents((prev) =>
-      prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === status ? null : status } : s))
+      prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === newStatus ? null : newStatus } : s))
     );
 
     try {
-      await attendanceService.submitManualAttendance({ sessionId: Number(sessionId), studentId, status });
+      await attendanceService.submitManualAttendance({ sessionId: Number(sessionId), studentId, status: newStatus });
       showToast('บันทึกสถานะเรียบร้อย', 'success');
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
       showToast(msg, 'error');
       setStudents((prev) =>
-        prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === status ? null : status } : s))
+        prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === newStatus ? null : newStatus } : s))
       );
     }
   };
@@ -110,34 +97,26 @@ export function AttendancePage({ path }) {
         <button
           type="button"
           onClick={() => setMode('scan')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            mode === 'scan'
-              ? 'bg-white text-zinc-900 shadow-sm'
-              : 'text-zinc-500 hover:text-zinc-700'
-          }`}
+          class={'px-5 py-2 text-sm font-medium rounded-lg transition-all ' + (isNeo ? 'neo-btn ' : '') + (mode === 'scan' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700')}
         >
           สแกน QR Code
         </button>
         <button
           type="button"
           onClick={() => setMode('manual')}
-          class={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-            mode === 'manual'
-              ? 'bg-white text-zinc-900 shadow-sm'
-              : 'text-zinc-500 hover:text-zinc-700'
-          }`}
+          class={'px-5 py-2 text-sm font-medium rounded-lg transition-all ' + (isNeo ? 'neo-btn ' : '') + (mode === 'manual' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700')}
         >
           เช็คชื่อด้วยมือ
         </button>
       </div>
 
       {mode === 'scan' ? (
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2">
+        <BentoGrid>
+          <div class="lg:col-span-3">
             <ScannerCamera onScan={handleScan} onError={handleScanError} />
           </div>
 
-          <div class="bg-zinc-50 rounded-2xl border border-zinc-100 p-4 max-h-[600px] overflow-y-auto">
+          <div class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} max-h-[600px] overflow-y-auto`}>
             <h3 class="text-sm font-semibold text-zinc-700 mb-3 sticky top-0 bg-white pb-2">
               สแกนล่าสุด ({recentScans.length})
             </h3>
@@ -147,15 +126,11 @@ export function AttendancePage({ path }) {
               <div class="space-y-2">
                 {recentScans.map((scan) => (
                   <div
-                    key={`${scan.qrData}_${scan.time}`}
-                    class={`flex items-center justify-between p-2.5 rounded-xl ${
-                      scan.status === 'present' ? 'bg-oasis-success-light/50' : 'bg-oasis-danger-light/50'
-                    }`}
+                    key={scan.qrData + scan.time}
+                    class={'flex items-center justify-between p-2.5 rounded-xl ' + (scan.status === 'present' ? 'bg-oasis-success-light/50' : 'bg-oasis-danger-light/50')}
                   >
                     <div class="min-w-0">
-                      <p class="text-sm font-medium text-zinc-800 truncate">
-                        {scan.name}
-                      </p>
+                      <p class="text-sm font-medium text-zinc-800 truncate">{scan.name}</p>
                       <p class="text-xs text-zinc-500">{scan.time}</p>
                     </div>
                     <StatusBadge status={scan.status} />
@@ -164,9 +139,9 @@ export function AttendancePage({ path }) {
               </div>
             )}
           </div>
-        </div>
+        </BentoGrid>
       ) : (
-        <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+        <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
           <div class="px-6 py-4 border-b border-zinc-100">
             <p class="text-sm text-zinc-600">
               ทั้งหมด {students.length} คน &middot; 
@@ -183,9 +158,7 @@ export function AttendancePage({ path }) {
               students.map((student) => (
                 <div key={student.studentId} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors">
                   <div class="flex items-center gap-3 min-w-0">
-                    <span class="text-sm font-medium text-zinc-900">
-                      {student.fullName || '-'}
-                    </span>
+                    <span class="text-sm font-medium text-zinc-900">{student.fullName || '-'}</span>
                     {student.status && <StatusBadge status={student.status} />}
                   </div>
                   <div class="inline-flex rounded-xl bg-zinc-100 p-0.5 shrink-0">
@@ -194,11 +167,7 @@ export function AttendancePage({ path }) {
                         key={opt.value}
                         type="button"
                         onClick={() => handleManualStatus(student.studentId, opt.value)}
-                        class={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                          student.status === opt.value
-                            ? opt.activeClass
-                            : 'text-zinc-500 hover:text-zinc-700'
-                        }`}
+                        class={'px-3 py-1.5 text-xs font-medium rounded-lg transition-all ' + (student.status === opt.value ? opt.activeClass : 'text-zinc-500 hover:text-zinc-700')}
                       >
                         {opt.label}
                       </button>

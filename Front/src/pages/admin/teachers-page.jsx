@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast, showConfirm, ImageUpload } from '../../components/ui';
+import { SolidInput, Button, showToast, showConfirm, ImageUpload, BentoGrid } from '../../components/ui';
 import { teacherService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const formatCurrency = (n) =>
   n ? `฿${Number(n).toLocaleString()}` : '-';
@@ -27,6 +28,8 @@ export function TeachersPage({ path }) {
   const [viewing, setViewing] = useState(null);
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchTeachers = async (query = '') => {
     setLoading(true);
@@ -187,7 +190,7 @@ export function TeachersPage({ path }) {
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden">
+            <div class={`${isNeo ? 'neo-card bg-white overflow-hidden' : 'bg-white rounded-2xl border border-zinc-200/80 overflow-hidden'}`}>
               <div class="px-6 py-4 border-b border-zinc-100">
                 <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
               </div>
@@ -207,7 +210,7 @@ export function TeachersPage({ path }) {
             </div>
           </div>
           <div class="space-y-4">
-            <Button variant="primary" size="md" class="w-full" onClick={() => { openEdit(viewing); setViewing(null); }}>
+            <Button variant="primary" size="md" onClick={() => { openEdit(viewing); setViewing(null); }}>
               แก้ไขข้อมูล
             </Button>
             <Button variant="outline" size="md" class="w-full !border-oasis-danger/30 !text-oasis-danger hover:!bg-oasis-danger/5" onClick={() => handleDelete(viewing)}>
@@ -241,7 +244,7 @@ export function TeachersPage({ path }) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+        <div class={`${isNeo ? 'neo-card bg-white p-6 mb-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6'}`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขข้อมูลครูผู้สอน' : 'เพิ่มครูผู้สอนใหม่'}
           </h3>
@@ -317,7 +320,7 @@ export function TeachersPage({ path }) {
             {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีครูผู้สอนในสถาบัน'}
           </p>
           {!search && (
-            <Button variant="primary" size="md" onClick={openAdd}>
+<Button variant="primary" size="md" onClick={openAdd}>
               + เพิ่มครูผู้สอนคนแรก
             </Button>
           )}
@@ -326,11 +329,11 @@ export function TeachersPage({ path }) {
 
       {/* Teacher Cards Grid */}
       {!loading && teachers.length > 0 && (
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <BentoGrid>
           {teachers.map((teacher) => (
             <div
               key={teacher.id}
-              class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden group"
+              class={`${isNeo ? 'neo-card bg-white p-0 overflow-hidden' : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden'} group`}
             >
               <div class="p-5 cursor-pointer" onClick={() => handleView(teacher)}>
                 <div class="flex items-start gap-4">
@@ -386,7 +389,7 @@ export function TeachersPage({ path }) {
               </div>
             </div>
           ))}
-        </div>
+        </BentoGrid>
       )}
     </AdminLayout>
   );

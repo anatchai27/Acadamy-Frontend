@@ -40,9 +40,13 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
                 c.Id,
                 c.Name,
                 c.Subject,
+                c.CourseType,
                 c.TotalSessions,
                 c.Price,
-                c.Teacher != null ? c.Teacher.FullName : null
+                c.Teacher != null ? c.Teacher.FullName : null,
+                c.ExpiresInDays,
+                c.RequireComputer,
+                c.CreditCost
             ))
             .ToListAsync(ct);
     }
@@ -71,9 +75,13 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
 
         if (request.Name is not null) course.Name = request.Name.Trim();
         if (request.Subject is not null) course.Subject = request.Subject.Trim();
+        if (request.CourseType is not null) course.CourseType = request.CourseType;
         if (request.TotalSessions.HasValue) course.TotalSessions = request.TotalSessions.Value;
         if (request.Price.HasValue) course.Price = request.Price.Value;
         if (request.TeacherId is not null) course.TeacherId = request.TeacherId;
+        if (request.ExpiresInDays is not null) course.ExpiresInDays = request.ExpiresInDays;
+        if (request.RequireComputer is not null) course.RequireComputer = request.RequireComputer;
+        if (request.CreditCost is not null) course.CreditCost = request.CreditCost;
 
         await _context.SaveChangesAsync(ct);
         return course;

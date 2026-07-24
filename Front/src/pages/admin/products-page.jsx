@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { showToast, showConfirm } from '../../components/ui';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { api } from '../../services/api';
 
 export function ProductsPage({ path }) {
@@ -12,6 +13,8 @@ export function ProductsPage({ path }) {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', price: '', description: '' });
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -96,7 +99,7 @@ export function ProductsPage({ path }) {
       </div>
 
       {showForm && (
-        <div class="bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6 mb-6 max-w-lg">
+        <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl shadow-sm border border-zinc-200/80 p-6'} mb-6 max-w-lg`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่'}
           </h3>
@@ -114,7 +117,7 @@ export function ProductsPage({ path }) {
               <textarea value={form.description} onInput={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} class="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all resize-none" />
             </div>
             <div class="flex gap-3 pt-2">
-              <button type="submit" disabled={submitting} class="px-4 py-2 text-sm font-semibold text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl disabled:opacity-50 transition-all shadow-sm">
+              <button type="submit" disabled={submitting} class={`px-4 py-2 text-sm font-semibold text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl disabled:opacity-50 transition-all shadow-sm ${isNeo ? 'neo-btn' : ''}`}>
                 {submitting ? 'กำลังบันทึก...' : editingId ? 'บันทึก' : 'เพิ่ม'}
               </button>
               <button type="button" onClick={() => setShowForm(false)} class="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-800 rounded-xl hover:bg-zinc-50 transition-colors">
@@ -125,7 +128,7 @@ export function ProductsPage({ path }) {
         </div>
       )}
 
-      <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+      <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>

@@ -21,7 +21,7 @@ public class CourseServiceTests
             .ReturnsAsync((Course c, CancellationToken _) => { c.Id = 10; c.CreatedAt = DateTime.UtcNow; return c; });
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.CreateAsync(new CreateCourseRequest("Math 101", "Math", 10, 5000, 2), 1);
+        var result = await sut.CreateAsync(new CreateCourseRequest(Name: "Math 101", Subject: "Math", CourseType: "group", TotalSessions: 10, Price: 5000, TeacherId: 2, ExpiresInDays: null, RequireComputer: null, CreditCost: null), 1);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(10, result.Data.CourseId);
@@ -34,7 +34,7 @@ public class CourseServiceTests
     {
         var sut = new CourseService(CreateMockRepo().Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.CreateAsync(new CreateCourseRequest("", "Math", 10, 5000, 2), 1));
+            () => sut.CreateAsync(new CreateCourseRequest(Name: "", Subject: "Math", CourseType: "group", TotalSessions: 10, Price: 5000, TeacherId: 2, ExpiresInDays: null, RequireComputer: null, CreditCost: null), 1));
         Assert.Equal("NAME_REQUIRED", ex.ErrorCode);
     }
 
@@ -44,7 +44,7 @@ public class CourseServiceTests
     {
         var sut = new CourseService(CreateMockRepo().Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.CreateAsync(new CreateCourseRequest("   ", "Math", 10, 5000, 2), 1));
+            () => sut.CreateAsync(new CreateCourseRequest(Name: "   ", Subject: "Math", CourseType: "group", TotalSessions: 10, Price: 5000, TeacherId: 2, ExpiresInDays: null, RequireComputer: null, CreditCost: null), 1));
         Assert.Equal("NAME_REQUIRED", ex.ErrorCode);
     }
 
@@ -85,7 +85,7 @@ public class CourseServiceTests
             .ReturnsAsync(new Course { Id = 10, Name = "Updated Name" });
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.UpdateAsync(10, new UpdateCourseRequest("Updated Name", null, null, null, null));
+        var result = await sut.UpdateAsync(10, new UpdateCourseRequest(Name: "Updated Name", Subject: null, CourseType: null, TotalSessions: null, Price: null, TeacherId: null, ExpiresInDays: null, RequireComputer: null, CreditCost: null));
 
         Assert.Equal("success", result.Status);
         Assert.Equal("อัปเดตคอร์สเรียนสำเร็จ", result.Message);
@@ -101,7 +101,7 @@ public class CourseServiceTests
 
         var sut = new CourseService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.UpdateAsync(999, new UpdateCourseRequest(null, null, null, null, null)));
+            () => sut.UpdateAsync(999, new UpdateCourseRequest(Name: null, Subject: null, CourseType: null, TotalSessions: null, Price: null, TeacherId: null, ExpiresInDays: null, RequireComputer: null, CreditCost: null)));
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
@@ -115,7 +115,7 @@ public class CourseServiceTests
 
         var sut = new CourseService(repoMock.Object);
         var ex = await Assert.ThrowsAsync<CourseValidationException>(
-            () => sut.UpdateAsync(10, new UpdateCourseRequest(null, null, null, null, null)));
+            () => sut.UpdateAsync(10, new UpdateCourseRequest(Name: null, Subject: null, CourseType: null, TotalSessions: null, Price: null, TeacherId: null, ExpiresInDays: null, RequireComputer: null, CreditCost: null)));
         Assert.Equal("FORBIDDEN", ex.ErrorCode);
     }
 

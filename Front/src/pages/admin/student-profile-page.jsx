@@ -5,6 +5,8 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, showToast } from '../../components/ui';
 import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { BentoGrid } from '../../components/ui/bento-grid';
 
 const relationshipLabels = {
   'แม่': 'มารดา',
@@ -33,6 +35,8 @@ export function StudentProfilePage({ path, id }) {
   const [qrToken, setQrToken] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
     if (!id) return;
@@ -153,11 +157,11 @@ export function StudentProfilePage({ path, id }) {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <BentoGrid class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column — Student Details */}
         <div class="lg:col-span-2 space-y-6">
           {/* Personal Info Card */}
-          <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden">
+          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
             <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
             </div>
@@ -178,7 +182,7 @@ export function StudentProfilePage({ path, id }) {
           </div>
 
           {/* Parents Card */}
-          <div class="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden">
+          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
             <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ผู้ปกครอง</h3>
               {student.parents && student.parents.length > 0 && (
@@ -227,11 +231,11 @@ export function StudentProfilePage({ path, id }) {
 
         {/* Right Column — QR Code */}
         <div class="space-y-6">
-          <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 text-center">
+          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6 text-center`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-1">บัตร QR Code</h3>
             <p class="text-xs text-zinc-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
 
-            <div class="w-48 h-48 mx-auto bg-white rounded-xl flex items-center justify-center mb-4 p-2 border border-zinc-200">
+            <div class={"w-48 h-48 mx-auto mb-4 p-2 flex items-center justify-center " + (isNeo ? 'neo-card' : 'bg-white rounded-xl border border-zinc-200')}>
               {qrToken ? (
                 <div class="flex flex-col items-center gap-2">
                   <QRCode
@@ -260,14 +264,13 @@ export function StudentProfilePage({ path, id }) {
               onClick={handleGenerateQR}
               loading={qrLoading}
               disabled={qrLoading}
-              class="w-full"
             >
               {qrToken ? 'สร้าง QR ใหม่' : 'สร้าง QR Code'}
             </Button>
           </div>
 
           {/* Quick Info Card */}
-          <div class="bg-white rounded-2xl border border-zinc-200/80 p-6">
+          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลระบบ</h3>
             <dl class="space-y-3 text-sm">
               <InfoFieldSmall label="รหัสนักเรียน" value={student.id} mono />
@@ -275,7 +278,7 @@ export function StudentProfilePage({ path, id }) {
             </dl>
           </div>
         </div>
-      </div>
+      </BentoGrid>
     </AdminLayout>
   );
 }

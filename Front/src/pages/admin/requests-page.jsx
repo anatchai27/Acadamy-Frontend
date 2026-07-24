@@ -3,6 +3,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, showToast, showConfirm } from '../../components/ui';
 import { leaveRequestService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const STATUS_MAP = {
   pending: { label: 'รอตรวจสอบ', color: 'bg-oasis-warning/5 text-oasis-warning' },
@@ -21,6 +22,8 @@ export function RequestsPage({ path }) {
   const [filter, setFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState(null);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -151,7 +154,7 @@ export function RequestsPage({ path }) {
           {requests.map((req) => (
             <div
               key={req.id}
-              class="bg-white rounded-2xl border border-zinc-200 p-5"
+              class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200 p-5'}`}
             >
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div class="flex-1 min-w-0">
@@ -178,7 +181,7 @@ export function RequestsPage({ path }) {
                       type="button"
                       onClick={() => handleReject(req.id)}
                       disabled={actionLoading === req.id}
-                      class="px-4 py-2 text-sm font-medium text-oasis-danger border border-oasis-danger/20 rounded-xl hover:bg-oasis-danger/5 disabled:opacity-50 transition-colors"
+                      class={`px-4 py-2 text-sm font-medium text-oasis-danger border border-oasis-danger/20 rounded-xl hover:bg-oasis-danger/5 disabled:opacity-50 transition-colors ${isNeo ? 'neo-btn' : ''}`}
                     >
                       ปฏิเสธ
                     </button>

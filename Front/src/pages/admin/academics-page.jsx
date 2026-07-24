@@ -3,12 +3,16 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { BentoGrid } from '../../components/ui/bento-grid';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 export function AcademicsPage({ path }) {
   const [tab, setTab] = useState('homework');
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
     courseService.getCourses({}, { signal: getSignal() })
@@ -80,6 +84,8 @@ export function AcademicsPage({ path }) {
 /* ─── HOMEWORK TAB ─── */
 
 function HomeworkTab({ courseId }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   const [homeworks, setHomeworks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -192,10 +198,10 @@ function HomeworkTab({ courseId }) {
       </div>
 
       {showForm && (
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-6 shadow-sm">
+        <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-slate-200 p-6'} mb-6 shadow-sm`}>
           <h4 class="text-base font-semibold text-slate-900 mb-4">สั่งการบ้านใหม่</h4>
           <form onSubmit={handleSubmitHomework}>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <BentoGrid>
               <div class="md:col-span-2">
                 <SolidInput
                   label="ชื่อการบ้าน *"
@@ -228,7 +234,7 @@ function HomeworkTab({ courseId }) {
                 value={form.fileUrl}
                 onInput={updateField('fileUrl')}
               />
-            </div>
+            </BentoGrid>
             <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 สั่งการบ้าน
@@ -253,7 +259,7 @@ function HomeworkTab({ courseId }) {
       )}
 
       {homeworks.map((hw) => (
-        <div key={hw.id} class="bg-white rounded-2xl border border-slate-200 mb-3 overflow-hidden shadow-sm">
+        <div key={hw.id} class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} mb-3 overflow-hidden shadow-sm`}>
           <button
             type="button"
             onClick={() => toggleSubmissions(hw.id)}
@@ -352,6 +358,8 @@ function SkillScoresTab({ courseId }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scoreValues, setScoreValues] = useState({});
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchTopicsAndStudents = async () => {
     if (!courseId) return;
@@ -435,7 +443,7 @@ function SkillScoresTab({ courseId }) {
         </Button>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
+      <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} overflow-x-auto shadow-sm`}>
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-slate-50">

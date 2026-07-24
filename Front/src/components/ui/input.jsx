@@ -1,6 +1,9 @@
 import { useState } from 'preact/hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
-export function Input({ type = 'text', label, placeholder, id, class: className = '', error = '', inputRef, ...rest }) {
+export function Input({ type = 'text', label, placeholder, id, class: className = '', error = '', inputRef, neo, ...rest }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = neo !== undefined ? neo : designTheme === 'neobrutalism';
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
   const inputType = isPassword && showPassword ? 'text' : type;
@@ -18,7 +21,7 @@ export function Input({ type = 'text', label, placeholder, id, class: className 
           type={inputType}
           id={id}
           placeholder={placeholder}
-          class={`w-full px-4 py-3 bg-white border rounded-xl text-sm transition-all focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800 placeholder:text-zinc-400 ${error ? 'border-red-400' : 'border-zinc-200'} ${isPassword ? 'pr-12' : ''} ${className}`}
+          class={`w-full px-4 py-3 bg-white text-sm transition-all focus:outline-none text-zinc-800 placeholder:text-zinc-400 ${isNeo ? 'neo-input' : 'border rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'} ${error ? 'border-red-400' : isNeo ? '' : 'border-zinc-200'} ${isPassword ? 'pr-12' : ''} ${className}`}
           {...rest}
         />
         {isPassword && (

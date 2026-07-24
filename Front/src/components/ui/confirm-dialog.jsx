@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 let dialogListeners = [];
 
@@ -24,6 +25,8 @@ export function useConfirmDialog() {
 }
 
 export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resolver }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resol
     <div class={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <div class="absolute inset-0 bg-black/50 backdrop-blur-lg" onClick={() => handleResolve(false)} />
 
-      <div class={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden transition-all duration-200 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+      <div class={`relative ${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl shadow-xl'} max-w-md w-full mx-4 overflow-hidden transition-all duration-200 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
         <div class="p-6">
           <h3 class="text-lg font-semibold text-zinc-900 mb-2">{title}</h3>
           <p class="text-sm text-zinc-500 leading-relaxed">{message}</p>
@@ -62,14 +65,14 @@ export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resol
         <div class="flex items-center justify-end gap-3 px-6 pb-6">
           <button
             type="button"
-            class="px-5 py-2.5 text-sm font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+            class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-white text-zinc-700' : 'text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl'}`}
             onClick={() => handleResolve(false)}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            class="px-5 py-2.5 text-sm font-medium text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl transition-colors shadow-sm"
+            class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-oasis-primary text-white' : 'text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl shadow-sm'}`}
             onClick={() => handleResolve(true)}
           >
             {yesLabel}

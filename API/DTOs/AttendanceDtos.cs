@@ -16,7 +16,9 @@ public record ScanAttendanceData(
     string StudentName,
     string Status,
     DateTime CheckinAt,
-    int SessionsRemaining
+    int? SessionsRemaining,
+    string? BillingMethod,
+    string? BillingDescription
 );
 
 public record AttendanceErrorResponse(

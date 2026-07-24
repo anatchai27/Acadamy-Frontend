@@ -3,6 +3,8 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { showToast, showConfirm } from '../../components/ui';
 import { userService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { BentoGrid } from '../../components/ui/bento-grid';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const roleConfig = {
   admin: { label: 'ผู้ดูแล', bg: 'bg-oasis-primary/5', text: 'text-oasis-primary', dot: 'bg-oasis-primary' },
@@ -37,6 +39,8 @@ export function UsersPage({ path }) {
   const [search, setSearch] = useState('');
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchUsers = async (query = '') => {
     setLoading(true);
@@ -112,9 +116,9 @@ export function UsersPage({ path }) {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 md:mb-8">
+      <BentoGrid class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 md:mb-8">
         {statCards.map((stat) => (
-          <div key={stat.key} class="group relative overflow-hidden bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-zinc-200/80 hover:shadow-md transition-shadow duration-300">
+          <div key={stat.key} class={`group relative overflow-hidden ${isNeo ? 'neo-card bg-white p-4 md:p-5' : 'bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-zinc-200/80 hover:shadow-md'} transition-shadow duration-300`}>
             <div class="flex items-start justify-between">
               <div class="space-y-1.5">
                 <p class="text-xs font-medium text-zinc-400 tracking-wide uppercase">{stat.label}</p>
@@ -129,9 +133,9 @@ export function UsersPage({ path }) {
             <div class={`absolute -bottom-3 -right-3 h-16 w-16 rounded-full bg-gradient-to-br ${stat.accent} opacity-[0.06]`} />
           </div>
         ))}
-      </div>
+      </BentoGrid>
 
-      <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+      <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
         <div class="flex items-center justify-between px-5 md:px-6 py-3.5 border-b border-zinc-100">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold text-zinc-900">รายชื่อผู้ใช้ทั้งหมด</span>

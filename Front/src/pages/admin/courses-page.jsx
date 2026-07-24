@@ -2,18 +2,32 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
+import { BentoGrid, BentoCell } from '../../components/ui/bento-grid';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService } from '../../services';
 import { useAbortController } from '../../hooks';
 
-const formatCurrency = (n) =>
+const courseTypeLabels = {
+    group: 'กลุ่ม',
+    private: 'เดี่ยว',
+    subscription: 'บุฟเฟต์',
+    video: 'วิดีโอ',
+    credit: 'เครดิต',
+  };
+
+  const formatCurrency = (n) =>
   n != null ? `฿${Number(n).toLocaleString()}` : '-';
 
 const emptyForm = {
   name: '',
   subject: '',
+  courseType: 'group',
   totalSessions: '20',
   price: '',
   teacherId: '',
+  expiresInDays: '',
+  requireComputer: false,
+  creditCost: '',
 };
 
 export function CoursesPage({ path }) {
@@ -27,6 +41,8 @@ export function CoursesPage({ path }) {
   const [submitting, setSubmitting] = useState(false);
   const getSignal = useAbortController();
   const debounceRef = useRef(null);
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchCourses = async (query = '') => {
     setLoading(true);
@@ -74,9 +90,13 @@ export function CoursesPage({ path }) {
     setForm({
       name: course.name || '',
       subject: course.subject || '',
+      courseType: course.courseType || 'group',
       totalSessions: String(course.totalSessions || '20'),
       price: course.price != null ? String(course.price) : '',
       teacherId: course.teacherId != null ? String(course.teacherId) : '',
+      expiresInDays: course.expiresInDays != null ? String(course.expiresInDays) : '',
+      requireComputer: course.requireComputer ?? false,
+      creditCost: course.creditCost != null ? String(course.creditCost) : '',
     });
     setShowForm(true);
   };
@@ -103,9 +123,13 @@ export function CoursesPage({ path }) {
       const payload = {
         name: form.name.trim(),
         subject: form.subject.trim(),
-        totalSessions: Number(form.totalSessions) || 20,
+        courseType: form.courseType,
+        totalSessions: form.courseType === 'group' || form.courseType === 'private' ? (Number(form.totalSessions) || 20) : 0,
         price: form.price ? Number(form.price) : 0,
         teacherId: form.teacherId ? Number(form.teacherId) : undefined,
+        expiresInDays: form.courseType === 'subscription' ? (Number(form.expiresInDays) || 30) : undefined,
+        requireComputer: form.courseType === 'private' ? form.requireComputer : undefined,
+        creditCost: form.courseType === 'credit' ? (Number(form.creditCost) || 1) : undefined,
       };
 
       if (editingId) {
@@ -155,12 +179,28 @@ export function CoursesPage({ path }) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+        <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} mb-6`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">
             {editingId ? 'แก้ไขคอร์สเรียน' : 'เพิ่มคอร์สเรียนใหม่'}
           </h3>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-sm font-medium text-zinc-800">
+                  รูปแบบคอร์สเรียน *
+                </label>
+                <select
+                  value={form.courseType}
+                  onChange={updateField('courseType')}
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10 text-zinc-800"
+                >
+                  <option value="group">1. คอร์สกลุ่ม (Fixed Group)</option>
+                  <option value="private">2. คอร์สเดี่ยว (Flexible Private)</option>
+                  <option value="subscription">3. คอร์สบุฟเฟต์ / เหมาเดือน (Subscription)</option>
+                  <option value="video">4. คอร์สวิดีโอ (Video On-Demand)</option>
+                  <option value="credit">5. แพ็กเกจเครดิตกลาง (Credit Wallet)</option>
+                </select>
+              </div>
               <SolidInput
                 label="ชื่อคอร์ส *"
                 placeholder="เช่น คณิตศาสตร์ ม.1 เทอม 1"
@@ -175,14 +215,43 @@ export function CoursesPage({ path }) {
                 value={form.subject}
                 onInput={updateField('subject')}
               />
-              <SolidInput
-                label="จำนวนคาบทั้งหมด"
-                type="number"
-                placeholder="20"
-                min="1"
-                value={form.totalSessions}
-                onInput={updateField('totalSessions')}
-              />
+
+              {/* Group / Private */}
+              {(form.courseType === 'group' || form.courseType === 'private') && (
+                <SolidInput
+                  label="จำนวนคาบทั้งหมด"
+                  type="number"
+                  placeholder="20"
+                  min="1"
+                  value={form.totalSessions}
+                  onInput={updateField('totalSessions')}
+                />
+              )}
+
+              {/* Subscription */}
+              {form.courseType === 'subscription' && (
+                <SolidInput
+                  label="จำนวนวันที่ใช้งานได้"
+                  type="number"
+                  placeholder="30"
+                  min="1"
+                  value={form.expiresInDays}
+                  onInput={updateField('expiresInDays')}
+                />
+              )}
+
+              {/* Credit */}
+              {form.courseType === 'credit' && (
+                <SolidInput
+                  label="เครดิตที่ใช้ต่อครั้ง"
+                  type="number"
+                  placeholder="1"
+                  min="1"
+                  value={form.creditCost}
+                  onInput={updateField('creditCost')}
+                />
+              )}
+
               <SolidInput
                 label="ราคา (บาท)"
                 type="number"
@@ -192,6 +261,22 @@ export function CoursesPage({ path }) {
                 value={form.price}
                 onInput={updateField('price')}
               />
+
+              {/* Private: require computer toggle */}
+              {form.courseType === 'private' && (
+                <div class="flex items-center gap-3">
+                  <label class="text-sm font-medium text-zinc-800">
+                    ต้องใช้คอมพิวเตอร์
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={form.requireComputer}
+                    onChange={(e) => setForm((prev) => ({ ...prev, requireComputer: e.target.checked }))}
+                    class="h-5 w-5 rounded border-zinc-300 text-oasis-primary focus:ring-oasis-primary/30"
+                  />
+                </div>
+              )}
+
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-zinc-800">
                   ครูผู้สอน
@@ -258,20 +343,29 @@ export function CoursesPage({ path }) {
 
       {/* Courses Grid */}
       {!loading && courses.length > 0 && (
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <BentoGrid>
           {courses.map((course) => (
             <div
               key={course.id}
-              class="bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden"
+              class={`${
+                isNeo
+                  ? 'neo-card bg-white p-0 overflow-hidden'
+                  : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden'
+              }`}
             >
               <div class="p-5">
                 <div class="flex items-start justify-between gap-2 mb-3">
                   <h3 class="text-base font-semibold text-zinc-900 truncate">
                     {course.name || '-'}
                   </h3>
-                  <span class="shrink-0 inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
-                    {course.subject || '-'}
-                  </span>
+                  <div class="shrink-0 flex items-center gap-1.5">
+                    <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                      {courseTypeLabels[course.courseType] || course.courseType || 'กลุ่ม'}
+                    </span>
+                    <span class="inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
+                      {course.subject || '-'}
+                    </span>
+                  </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500">
@@ -281,10 +375,22 @@ export function CoursesPage({ path }) {
                       {course.teacherName}
                     </span>
                   )}
-                  {course.totalSessions != null && (
+                  {(course.courseType === 'group' || course.courseType === 'private' || !course.courseType) && course.totalSessions != null && (
                     <span class="inline-flex items-center gap-1">
                       <ClockIcon class="h-3 w-3" />
                       {course.totalSessions} คาบ
+                    </span>
+                  )}
+                  {course.courseType === 'subscription' && course.expiresInDays != null && (
+                    <span class="inline-flex items-center gap-1">
+                      <ClockIcon class="h-3 w-3" />
+                      {course.expiresInDays} วัน
+                    </span>
+                  )}
+                  {course.courseType === 'credit' && course.creditCost != null && (
+                    <span class="inline-flex items-center gap-1">
+                      <ClockIcon class="h-3 w-3" />
+                      {course.creditCost} เครดิต/ครั้ง
                     </span>
                   )}
                   {course.price != null && (
@@ -316,7 +422,7 @@ export function CoursesPage({ path }) {
               </div>
             </div>
           ))}
-        </div>
+        </BentoGrid>
       )}
     </AdminLayout>
   );

@@ -1,6 +1,7 @@
 using academy_API.Data;
 using academy_API.DTOs;
 using academy_API.Models;
+using academy_API.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
@@ -129,15 +130,73 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                 StudentId = studentId,
                 SessionId = sessionId,
                 Status = "present",
-                CheckinAt = DateTime.UtcNow
+                CheckinAt = DateTime.UtcNow,
+                InstituteId = await _context.Sessions
+                    .Where(s => s.Id == sessionId)
+                    .Select(s => s.InstituteId)
+                    .FirstAsync(ct)
             };
             _context.Attendances.Add(attendance);
 
-            var activeEnrollments = await _context.Enrollments
-                .Where(e => e.StudentId == studentId && e.SessionsRemaining > 0)
-                .ToListAsync(ct);
-            foreach (var enrollment in activeEnrollments)
-                enrollment.SessionsRemaining--;
+            var session = await _context.Sessions
+                .Include(s => s.Course)
+                .FirstAsync(s => s.Id == sessionId, ct);
+
+            switch (session.Course.CourseType)
+            {
+                case "group":
+                case "private":
+                case null:
+                {
+                    var activeEnrollments = await _context.Enrollments
+                        .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
+                        .ToListAsync(ct);
+                    foreach (var enrollment in activeEnrollments)
+                        enrollment.SessionsRemaining--;
+                    break;
+                }
+                case "subscription":
+                {
+                    var active = await _context.Enrollments
+                        .AnyAsync(e => e.StudentId == studentId && e.CourseId == session.CourseId
+                            && e.ExpiresAt > DateTime.UtcNow, ct);
+                    if (!active)
+                        throw new AttendanceValidationException("SUBSCRIPTION_EXPIRED",
+                            "คอร์สบุฟเฟต์หมดอายุแล้ว");
+                    break;
+                }
+                case "credit":
+                {
+                    var course = session.Course;
+                    if (course.CreditCost is null or <= 0)
+                        throw new AttendanceValidationException("CREDIT_COST_INVALID",
+                            "คอร์สเครดิตไม่ได้กำหนดค่า Credit Cost");
+
+                    var wallet = await _context.StudentWallets
+                        .FromSqlRaw("SELECT * FROM student_wallets WHERE student_id = {0} AND institute_id = {1} FOR UPDATE", studentId, course.InstituteId)
+                        .FirstOrDefaultAsync(ct);
+
+                    if (wallet is null || wallet.Balance < course.CreditCost.Value)
+                        throw new AttendanceValidationException("INSUFFICIENT_CREDITS",
+                            "เครดิตในกระเป๋าไม่เพียงพอ");
+
+                    wallet.Balance -= course.CreditCost.Value;
+                    wallet.UpdatedAt = DateTime.UtcNow;
+
+                    _context.WalletTransactions.Add(new WalletTransaction
+                    {
+                        InstituteId = course.InstituteId,
+                        WalletId = wallet.Id,
+                        Amount = -course.CreditCost.Value,
+                        Reason = $"ใช้เครดิตเข้าเรียน: {course.Name}",
+                        SessionId = sessionId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    break;
+                }
+                case "video":
+                    break;
+            }
 
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -156,17 +215,75 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                 StudentId = studentId,
                 SessionId = sessionId,
                 Status = status,
-                CheckinAt = status == "present" || status == "late" ? DateTime.UtcNow : null
+                CheckinAt = status == "present" || status == "late" ? DateTime.UtcNow : null,
+                InstituteId = await _context.Sessions
+                    .Where(s => s.Id == sessionId)
+                    .Select(s => s.InstituteId)
+                    .FirstAsync(ct)
             };
             _context.Attendances.Add(attendance);
 
             if (status == "present" || status == "late")
             {
-                var activeEnrollments = await _context.Enrollments
-                    .Where(e => e.StudentId == studentId && e.SessionsRemaining > 0)
-                    .ToListAsync(ct);
-                foreach (var enrollment in activeEnrollments)
-                    enrollment.SessionsRemaining--;
+                var session = await _context.Sessions
+                    .Include(s => s.Course)
+                    .FirstAsync(s => s.Id == sessionId, ct);
+
+                switch (session.Course.CourseType)
+                {
+                    case "group":
+                    case "private":
+                    case null:
+                    {
+                        var activeEnrollments = await _context.Enrollments
+                            .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
+                            .ToListAsync(ct);
+                        foreach (var enrollment in activeEnrollments)
+                            enrollment.SessionsRemaining--;
+                        break;
+                    }
+                    case "subscription":
+                    {
+                        var active = await _context.Enrollments
+                            .AnyAsync(e => e.StudentId == studentId && e.CourseId == session.CourseId
+                                && e.ExpiresAt > DateTime.UtcNow, ct);
+                        if (!active)
+                            throw new AttendanceValidationException("SUBSCRIPTION_EXPIRED",
+                                "คอร์สบุฟเฟต์หมดอายุแล้ว");
+                        break;
+                    }
+                    case "credit":
+                    {
+                        var course = session.Course;
+                        if (course.CreditCost is null or <= 0)
+                            throw new AttendanceValidationException("CREDIT_COST_INVALID",
+                                "คอร์สเครดิตไม่ได้กำหนดค่า Credit Cost");
+
+                        var wallet = await _context.StudentWallets
+                            .FromSqlRaw("SELECT * FROM student_wallets WHERE student_id = {0} AND institute_id = {1} FOR UPDATE", studentId, course.InstituteId)
+                            .FirstOrDefaultAsync(ct);
+
+                        if (wallet is null || wallet.Balance < course.CreditCost.Value)
+                            throw new AttendanceValidationException("INSUFFICIENT_CREDITS",
+                                "เครดิตในกระเป๋าไม่เพียงพอ");
+
+                        wallet.Balance -= course.CreditCost.Value;
+                        wallet.UpdatedAt = DateTime.UtcNow;
+
+                        _context.WalletTransactions.Add(new WalletTransaction
+                        {
+                            InstituteId = course.InstituteId,
+                            WalletId = wallet.Id,
+                            Amount = -course.CreditCost.Value,
+                            Reason = $"ใช้เครดิตเข้าเรียน: {course.Name}",
+                            SessionId = sessionId,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                        break;
+                    }
+                    case "video":
+                        break;
+                }
             }
 
             await _context.SaveChangesAsync(ct);

@@ -4,6 +4,8 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
 import { sessionService, courseService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { BentoGrid } from '../../components/ui/bento-grid';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const STATUS_MAP = {
   scheduled: { label: 'ตามตาราง', color: 'bg-oasis-primary/10 text-oasis-primary' },
@@ -25,6 +27,8 @@ export function SessionsPage({ path, courseId }) {
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
 
   const fetchCourse = async () => {
     try {
@@ -137,8 +141,9 @@ export function SessionsPage({ path, courseId }) {
       </div>
 
       {showForm && (
-        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
-          <h3 class="text-base font-semibold text-zinc-900 mb-4">เพิ่มคาบเรียนใหม่</h3>
+        <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} mb-6`}>
+          <div class="p-6">
+            <h3 class="text-base font-semibold text-zinc-900 mb-4">เพิ่มคาบเรียนใหม่</h3>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DatePickerInput
@@ -173,6 +178,7 @@ export function SessionsPage({ path, courseId }) {
             </div>
           </form>
         </div>
+      </div>
       )}
 
       {loading && (
@@ -194,11 +200,15 @@ export function SessionsPage({ path, courseId }) {
       )}
 
       {!loading && sessions.length > 0 && (
-        <div class="space-y-3">
+        <BentoGrid>
           {sessions.map((session) => (
             <div
               key={session.id}
-              class="bg-white rounded-2xl border border-zinc-200/80 p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              class={`${
+                isNeo
+                  ? 'neo-card bg-white p-0 overflow-hidden'
+                  : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden'
+              }`}
             >
               <div class="flex items-center gap-3 flex-1 min-w-0">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5">
@@ -229,7 +239,7 @@ export function SessionsPage({ path, courseId }) {
               </div>
             </div>
           ))}
-        </div>
+        </BentoGrid>
       )}
     </AdminLayout>
   );

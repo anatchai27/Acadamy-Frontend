@@ -1,4 +1,9 @@
-export function Checkbox({ id, checked, onChange, onBlur, label, required = false, error = '', name, inputRef }) {
+import { useDesignTheme } from '../../hooks/useDesignTheme';
+
+export function Checkbox({ id, checked, onChange, onBlur, label, required = false, error = '', name, inputRef, neo }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = neo !== undefined ? neo : designTheme === 'neobrutalism';
+
   return (
     <div class="flex flex-col gap-1">
       <label for={id} class="flex items-center gap-2 cursor-pointer">
@@ -11,9 +16,9 @@ export function Checkbox({ id, checked, onChange, onBlur, label, required = fals
           onBlur={onBlur}
           required={required}
           ref={inputRef}
-          class="w-4 h-4 rounded-md border-zinc-200 text-oasis-primary focus:ring-oasis-primary/30 focus:ring-2"
+          class={`w-4 h-4 ${isNeo ? 'border-2 border-black' : 'rounded-md border-zinc-200 text-oasis-primary focus:ring-oasis-primary/30 focus:ring-2'}`}
         />
-        {label && <span class="text-sm text-zinc-600">{label}</span>}
+        {label && <span class={`text-sm ${isNeo ? 'text-black' : 'text-zinc-600'}`}>{label}</span>}
       </label>
       {error && <span class="text-xs text-red-500">{error}</span>}
     </div>

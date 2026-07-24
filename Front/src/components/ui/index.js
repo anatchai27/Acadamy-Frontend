@@ -17,3 +17,5 @@ export { ScannerCamera } from './scanner-camera';
 export { LogoUpload } from './logo-upload';
 export { DatePickerInput } from './datepicker/datepicker-input';
 export { ImageUpload } from './image-upload';
+export { BentoGrid, BentoCell } from './bento-grid';
+export { BadgeSticker, unlockBadge, useBadges } from './badge-sticker';

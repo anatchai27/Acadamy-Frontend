@@ -4,6 +4,8 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, Checkbox, Textarea, showToast, ImageUpload } from '../../components/ui';
 import { studentService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { BentoGrid } from '../../components/ui/bento-grid';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const PARENT_RELATIONS = ['แม่', 'พ่อ', 'ผู้ปกครอง', 'อื่นๆ'];
 const emptyForm = {
@@ -13,6 +15,8 @@ const emptyForm = {
 export function StudentControll({ path, id }) {
   const isEdit = Boolean(id) && id !== 'add';
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const parentIdCounter = useRef(0);
@@ -194,7 +198,7 @@ export function StudentControll({ path, id }) {
       </div>
 
       <form onSubmit={handleSubmit} class="max-w-3xl">
-        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+        <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลส่วนตัวนักเรียน</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SolidInput
@@ -241,7 +245,7 @@ export function StudentControll({ path, id }) {
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+        <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-semibold text-zinc-900">ข้อมูลผู้ปกครอง</h3>
             <button
@@ -302,7 +306,7 @@ export function StudentControll({ path, id }) {
         </div>
 
         {!isEdit && (
-          <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6">
+<div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-4">การยินยอม PDPA</h3>
             <Checkbox
               id="consent"

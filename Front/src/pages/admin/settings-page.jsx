@@ -4,10 +4,13 @@ import { showToast, showConfirm } from '../../components/ui';
 import { instituteService } from '../../services/institute-service';
 import { useAppContext } from '../../store/AppContext';
 import { useAbortController } from '../../hooks';
+import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 export function SettingsPage({ path }) {
   const { state, dispatch } = useAppContext();
   const getSignal = useAbortController();
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,7 +123,7 @@ export function SettingsPage({ path }) {
       </div>
 
       <div class="space-y-6 max-w-3xl">
-        <div class="bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
+        <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
           <div class="flex items-center gap-4 px-6 py-5 border-b border-zinc-100">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oasis-primary/5 text-oasis-primary">
               <BuildingIcon class="h-5 w-5" />
@@ -154,7 +157,7 @@ export function SettingsPage({ path }) {
           </div>
         </div>
 
-        <div class="bg-zinc-50 rounded-2xl border border-oasis-danger/20 overflow-hidden">
+        <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-oasis-danger/20'} overflow-hidden`}>
           <div class="flex items-center gap-4 px-6 py-5 border-b border-oasis-danger/10">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oasis-danger/5 text-oasis-danger">
               <WarningIcon class="h-5 w-5" />
@@ -176,7 +179,7 @@ export function SettingsPage({ path }) {
         </div>
 
         <div class="flex items-center gap-3 pt-2">
-          <button onClick={handleSave} disabled={saving} class="inline-flex items-center gap-2 bg-oasis-primary hover:bg-oasis-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50">
+          <button onClick={handleSave} disabled={saving} class={`inline-flex items-center gap-2 bg-oasis-primary hover:bg-oasis-primary-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50 ${isNeo ? 'neo-btn' : ''}`}>
             <SaveIcon class="h-4 w-4" />
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </button>

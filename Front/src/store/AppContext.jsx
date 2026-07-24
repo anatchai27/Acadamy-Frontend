@@ -5,8 +5,17 @@ import { AppReducer } from './AppReducer';
 import { clearAuthStorage, getMe } from '../services/auth-service';
 import { setOnUnauthorized } from '../services/api';
 
+const savedTheme = (() => {
+  try {
+    return localStorage.getItem('th_design_theme') || 'bento';
+  } catch {
+    return 'bento';
+  }
+})();
+
 const initialState = {
   theme: 'dark',
+  designTheme: savedTheme,
   user: null,
   userProfile: null,
   isAuthenticated: false,
@@ -16,7 +25,11 @@ const initialState = {
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(AppReducer, initialState);
+  const [state, dispatch] = useReducer(AppReducer, { ...initialState });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.designTheme);
+  }, [state.designTheme]);
 
   const handleUnauthorized = useCallback(() => {
     clearAuthStorage();
