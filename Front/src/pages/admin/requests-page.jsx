@@ -4,6 +4,7 @@ import { Button, showToast, showConfirm } from '../../components/ui';
 import { leaveRequestService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
 
 const STATUS_MAP = {
   pending: { label: 'รอตรวจสอบ', color: 'bg-oasis-warning/5 text-oasis-warning' },
@@ -139,7 +140,7 @@ export function RequestsPage({ path }) {
       {!loading && requests.length === 0 && (
         <div class="text-center py-16">
           <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <ClipboardIcon class="h-10 w-10 text-zinc-300" />
+            <HiOutlineClipboardDocumentList class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-600 mb-1">ไม่มีคำร้องขอ</h3>
           <p class="text-sm text-zinc-400">
@@ -205,10 +206,3 @@ export function RequestsPage({ path }) {
   );
 }
 
-function ClipboardIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-    </svg>
-  );
-}

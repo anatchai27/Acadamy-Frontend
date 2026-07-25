@@ -1,4 +1,5 @@
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlineArrowUp, HiOutlineArrowDown } from 'react-icons/hi2';
 
 const cardConfig = {
   students: { iconContainer: 'bg-blue-50', iconColor: 'text-blue-600', valueDefault: 'text-slate-900' },
@@ -35,5 +36,5 @@ export function StatCard({ id, title, value, trendText, trendDirection, isAlertS
   );
 }
 
-function ArrowUpIcon({ class: className }) { return (<svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>); }
-function ArrowDownIcon({ class: className }) { return (<svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" /></svg>); }
+function ArrowUpIcon({ class: className }) { return <HiOutlineArrowUp class={className} />; }
+function ArrowDownIcon({ class: className }) { return <HiOutlineArrowDown class={className} />; }

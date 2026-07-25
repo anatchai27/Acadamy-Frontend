@@ -1,4 +1,5 @@
 import { useState, useRef, forwardRef } from 'preact/compat';
+import { HiOutlineCalendarDays } from 'react-icons/hi2';
 import DatePicker from 'react-datepicker';
 import { th } from 'date-fns/locale/th';
 import { useDesignTheme } from '../../../hooks/useDesignTheme';
@@ -34,9 +35,7 @@ const CustomInput = forwardRef(({ value, onClick, placeholder, className, label,
         class={`w-full px-4 py-2.5 bg-white text-sm cursor-pointer transition-all focus:outline-none text-slate-800 placeholder-slate-400 ${isNeo ? 'neo-input' : 'border rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'} ${error ? 'border-red-400' : isNeo ? '' : 'border-slate-200'} ${className}`}
       />
       <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+        <HiOutlineCalendarDays class="h-4 w-4" />
       </div>
     </div>
     {error && <span class="text-xs text-red-500">{error}</span>}

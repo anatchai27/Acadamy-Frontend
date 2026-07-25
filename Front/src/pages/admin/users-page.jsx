@@ -5,6 +5,7 @@ import { userService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlineUserGroup, HiOutlineAcademicCap, HiOutlineShieldCheck, HiOutlineMagnifyingGlass, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineBookOpen } from 'react-icons/hi2';
 
 const roleConfig = {
   admin: { label: 'ผู้ดูแล', bg: 'bg-oasis-primary/5', text: 'text-oasis-primary', dot: 'bg-oasis-primary' },
@@ -27,10 +28,10 @@ function getAvatarColor(i) {
 }
 
 const statCards = [
-  { label: 'ผู้ใช้ทั้งหมด', key: 'total', icon: UsersOutline, accent: 'from-oasis-primary to-oasis-primary-dark' },
-  { label: 'ผู้สอน', key: 'teacher', icon: TeacherOutline, accent: 'from-oasis-warning to-oasis-warning-dark' },
-  { label: 'ผู้เรียน', key: 'student', icon: StudentOutline, accent: 'from-oasis-success to-oasis-success-dark' },
-  { label: 'ผู้ดูแล', key: 'admin', icon: ShieldCheck, accent: 'from-cyan-500 to-cyan-600' },
+  { label: 'ผู้ใช้ทั้งหมด', key: 'total', icon: HiOutlineUsers, accent: 'from-oasis-primary to-oasis-primary-dark' },
+  { label: 'ผู้สอน', key: 'teacher', icon: HiOutlineBookOpen, accent: 'from-oasis-warning to-oasis-warning-dark' },
+  { label: 'ผู้เรียน', key: 'student', icon: HiOutlineAcademicCap, accent: 'from-oasis-success to-oasis-success-dark' },
+  { label: 'ผู้ดูแล', key: 'admin', icon: HiOutlineShieldCheck, accent: 'from-cyan-500 to-cyan-600' },
 ];
 
 export function UsersPage({ path }) {
@@ -92,7 +93,7 @@ export function UsersPage({ path }) {
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-oasis-primary to-oasis-primary-dark shadow-md shadow-oasis-primary/25">
-              <UsersIcon class="h-5 w-5 text-white" />
+              <HiOutlineUsers class="h-5 w-5 text-white" />
             </div>
             <div>
               <h2 class="text-xl md:text-2xl font-semibold text-zinc-900 tracking-tight">จัดการผู้ใช้</h2>
@@ -103,7 +104,7 @@ export function UsersPage({ path }) {
           </div>
           <div class="flex items-center gap-2.5">
             <div class="relative flex-1 sm:flex-none">
-              <SearchOutline class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
+              <HiOutlineMagnifyingGlass class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="ค้นหาชื่อหรืออีเมล..."
@@ -209,10 +210,10 @@ export function UsersPage({ path }) {
                       <td class="px-5 md:px-6 py-3.5 text-right">
                         <div class="flex items-center justify-end gap-1">
                           <button class="p-1.5 md:p-2 text-zinc-400 hover:text-oasis-primary rounded-xl hover:bg-oasis-primary/5 transition-all">
-                            <EditOutline class="h-4 w-4" />
+                            <HiOutlinePencil class="h-4 w-4" />
                           </button>
                           <button onClick={() => handleDelete(user)} class="p-1.5 md:p-2 text-zinc-400 hover:text-oasis-danger rounded-xl hover:bg-oasis-danger/5 transition-all">
-                            <TrashOutline class="h-4 w-4" />
+                            <HiOutlineTrash class="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -234,68 +235,3 @@ export function UsersPage({ path }) {
   );
 }
 
-/* ─── SVG Icons ─── */
-
-function UsersIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-    </svg>
-  );
-}
-
-function UsersOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-  );
-}
-
-function TeacherOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /><path stroke-linecap="round" stroke-linejoin="round" d="M10.25 10.25L9 8.5M13.75 10.25L15 8.5" />
-    </svg>
-  );
-}
-
-function StudentOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-    </svg>
-  );
-}
-
-function ShieldCheck({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  );
-}
-
-function SearchOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  );
-}
-
-function EditOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  );
-}
-
-function TrashOutline({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-  );
-}

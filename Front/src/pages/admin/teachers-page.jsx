@@ -4,6 +4,7 @@ import { SolidInput, Button, showToast, showConfirm, ImageUpload, BentoGrid } fr
 import { teacherService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlinePlus, HiOutlineMagnifyingGlass, HiOutlineEye, HiOutlinePencil, HiOutlineTrash, HiOutlineXMark, HiOutlineArrowLeft, HiOutlineArrowRight, HiOutlineCheck, HiOutlineExclamationCircle, HiOutlinePhone, HiOutlineEnvelope, HiOutlineUserGroup, HiOutlineAcademicCap, HiOutlineCalendarDays, HiOutlineTag, HiOutlineEllipsisVertical, HiOutlineChevronDown, HiOutlineChevronUp, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineAdjustmentsHorizontal, HiOutlineBars3, HiOutlineSquares2X2, HiOutlineListBullet, HiOutlineStar, HiOutlineSparkles, HiOutlineGlobeAlt, HiOutlineMapPin, HiOutlineLink, HiOutlinePaperClip, HiOutlinePaperAirplane, HiOutlineShieldCheck, HiOutlineExclamationTriangle, HiOutlineHandThumbUp, HiOutlineHandThumbDown, HiOutlineChartBar, HiOutlinePresentationChartBar, HiOutlineCalendar, HiOutlineArrowPath, HiOutlineRectangleGroup, HiOutlineHome, HiOutlineUser, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineQrCode, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineLightBulb, HiOutlineBanknotes, HiOutlineCube, HiOutlineUsers, HiOutlineClipboardDocumentCheck, HiOutlineClipboardDocumentList, HiOutlineCamera, HiOutlinePhoto, HiOutlineClock, HiOutlineMinus, HiOutlineArrowUp, HiOutlineArrowDown, HiOutlineHeart, HiOutlineInformationCircle } from 'react-icons/hi2';
 
 const formatCurrency = (n) =>
   n ? `฿${Number(n).toLocaleString()}` : '-';
@@ -161,7 +162,7 @@ export function TeachersPage({ path }) {
             onClick={() => setViewing(null)}
             class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-2"
           >
-            <ChevronLeftIcon class="h-4 w-4" />
+            <HiOutlineChevronLeft class="h-4 w-4" />
             กลับไปรายการครู
           </button>
           <div class="flex items-start gap-4">
@@ -231,7 +232,7 @@ export function TeachersPage({ path }) {
         </div>
         <Button variant="primary" size="md" onClick={openAdd}>
           <span class="flex items-center gap-1.5">
-            <PlusIcon class="h-4 w-4" />
+            <HiOutlinePlus class="h-4 w-4" />
             เพิ่มครูผู้สอน
           </span>
         </Button>
@@ -313,7 +314,7 @@ export function TeachersPage({ path }) {
       {!loading && teachers.length === 0 && (
         <div class="text-center py-16">
           <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <UserGroupIcon class="h-10 w-10 text-zinc-300" />
+            <HiOutlineUserGroup class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบข้อมูลครูผู้สอน</h3>
           <p class="text-sm text-zinc-400 mb-6">
@@ -374,7 +375,7 @@ export function TeachersPage({ path }) {
                   onClick={() => { openEdit(teacher); }}
                   class="flex-1 px-4 py-2.5 text-sm font-medium text-oasis-primary hover:bg-oasis-primary/5 transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <EditIcon class="h-4 w-4" />
+                  <HiOutlinePencil class="h-4 w-4" />
                   แก้ไข
                 </button>
                 <div class="w-px bg-zinc-100" />
@@ -383,7 +384,7 @@ export function TeachersPage({ path }) {
                   onClick={() => handleDelete(teacher)}
                   class="flex-1 px-4 py-2.5 text-sm font-medium text-oasis-danger hover:bg-oasis-danger/5 transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <TrashIcon class="h-4 w-4" />
+                  <HiOutlineTrash class="h-4 w-4" />
                   ลบ
                 </button>
               </div>
@@ -403,47 +404,5 @@ function InfoField({ label, value }) {
       <dt class="text-xs font-medium text-zinc-500 mb-0.5">{label}</dt>
       <dd class="text-sm text-zinc-900 font-medium">{value || '-'}</dd>
     </div>
-  );
-}
-
-/* ─── SVG Icons ─── */
-
-function ChevronLeftIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
-
-function PlusIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
-
-function EditIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  );
-}
-
-function TrashIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-  );
-}
-
-function UserGroupIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-    </svg>
   );
 }

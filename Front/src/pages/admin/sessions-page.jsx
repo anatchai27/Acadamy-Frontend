@@ -6,6 +6,7 @@ import { sessionService, courseService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlinePlus, HiOutlineChevronLeft, HiOutlineCalendar } from 'react-icons/hi2';
 
 const STATUS_MAP = {
   scheduled: { label: 'ตามตาราง', color: 'bg-oasis-primary/10 text-oasis-primary' },
@@ -119,7 +120,7 @@ export function SessionsPage({ path, courseId }) {
         onClick={() => route('/admin/courses')}
         class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-4"
       >
-        <ChevronLeftIcon class="h-4 w-4" />
+        <HiOutlineChevronLeft class="h-4 w-4" />
         กลับไปหน้าคอร์สเรียน
       </button>
 
@@ -134,7 +135,7 @@ export function SessionsPage({ path, courseId }) {
         </div>
         <Button variant="primary" size="md" onClick={openCreate}>
           <span class="flex items-center gap-1.5">
-            <PlusIcon class="h-4 w-4" />
+            <HiOutlinePlus class="h-4 w-4" />
             เพิ่มคาบเรียน
           </span>
         </Button>
@@ -191,7 +192,7 @@ export function SessionsPage({ path, courseId }) {
       {!loading && sessions.length === 0 && (
         <div class="text-center py-16">
           <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <CalendarIcon class="h-10 w-10 text-zinc-300" />
+            <HiOutlineCalendar class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ยังไม่มีคาบเรียน</h3>
           <p class="text-sm text-zinc-400 mb-6">เพิ่มคาบเรียนเพื่อเริ่มจัดการตารางสอน</p>
@@ -212,7 +213,7 @@ export function SessionsPage({ path, courseId }) {
             >
               <div class="flex items-center gap-3 flex-1 min-w-0">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5">
-                  <CalendarIcon class="h-5 w-5 text-oasis-primary" />
+                  <HiOutlineCalendar class="h-5 w-5 text-oasis-primary" />
                 </div>
                 <div class="min-w-0">
                   <p class="text-sm font-semibold text-zinc-900">
@@ -245,26 +246,3 @@ export function SessionsPage({ path, courseId }) {
   );
 }
 
-function PlusIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
-
-function ChevronLeftIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
-
-function CalendarIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  );
-}

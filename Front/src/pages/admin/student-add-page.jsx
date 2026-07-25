@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
+import { HiOutlineArrowLeft, HiOutlineXMark } from 'react-icons/hi2';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, Checkbox, Textarea, showToast, ImageUpload } from '../../components/ui';
 import { studentService, uploadService } from '../../services';
@@ -184,9 +185,7 @@ export function StudentControll({ path, id }) {
           onClick={() => route(isEdit ? `/admin/students/${id}` : '/admin/students')}
           class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-2"
         >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <HiOutlineArrowLeft class="h-4 w-4" />
           {isEdit ? 'กลับไปโปรไฟล์นักเรียน' : 'กลับไปหน้านักเรียน'}
         </button>
         <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
@@ -265,9 +264,7 @@ export function StudentControll({ path, id }) {
                     onClick={() => removeParent(parent._key)}
                     class="absolute top-2 right-2 text-zinc-400 hover:text-oasis-danger transition-colors"
                   >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <HiOutlineXMark class="h-4 w-4" />
                   </button>
                 )}
                 <p class="text-xs font-medium text-zinc-500 mb-3">

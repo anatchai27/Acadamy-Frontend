@@ -7,6 +7,7 @@ import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { BentoGrid } from '../../components/ui/bento-grid';
+import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
 
 const relationshipLabels = {
   'แม่': 'มารดา',
@@ -88,7 +89,7 @@ export function StudentProfilePage({ path, id }) {
       <AdminLayout path={path}>
         <div class="text-center py-20">
           <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <UserXIcon class="h-10 w-10 text-zinc-300" />
+            <HiOutlineUserMinus class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">{error}</h3>
           <Button variant="outline" size="md" onClick={handleBack}>กลับไปหน้านักเรียน</Button>
@@ -108,7 +109,7 @@ export function StudentProfilePage({ path, id }) {
           onClick={handleBack}
           class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1 mb-2"
         >
-          <ChevronLeftIcon class="h-4 w-4" />
+          <HiOutlineChevronLeft class="h-4 w-4" />
           กลับไปหน้านักเรียน
         </button>
 
@@ -128,7 +129,7 @@ export function StudentProfilePage({ path, id }) {
               <div class="flex items-center gap-2 mt-1">
                 {student.nickname && (
                   <span class="inline-flex items-center gap-1 text-sm text-zinc-500">
-                    <TagIcon class="h-3.5 w-3.5" />
+                    <HiOutlineTag class="h-3.5 w-3.5" />
                     {student.nickname}
                   </span>
                 )}
@@ -143,13 +144,13 @@ export function StudentProfilePage({ path, id }) {
           <div class="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleEdit}>
               <span class="flex items-center gap-1.5">
-                <EditIcon class="h-4 w-4" />
+                <HiOutlinePencil class="h-4 w-4" />
                 แก้ไข
               </span>
             </Button>
             <Button variant="primary" size="sm" onClick={handleGenerateQR} loading={qrLoading} disabled={qrLoading}>
               <span class="flex items-center gap-1.5">
-                <QrIcon class="h-4 w-4" />
+                <HiOutlineQrCode class="h-4 w-4" />
                 สร้าง QR
               </span>
             </Button>
@@ -207,13 +208,13 @@ export function StudentProfilePage({ path, id }) {
                         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-zinc-500">
                           {p.phone && (
                             <span class="inline-flex items-center gap-1">
-                              <PhoneIcon class="h-3 w-3" />
+                              <HiOutlinePhone class="h-3 w-3" />
                               {p.phone}
                             </span>
                           )}
                           {p.lineUserId && (
                             <span class="inline-flex items-center gap-1">
-                              <LineIcon class="h-3 w-3" />
+                              <HiOutlineChatBubbleLeftRight class="h-3 w-3" />
                               {p.lineUserId}
                             </span>
                           )}
@@ -252,7 +253,7 @@ export function StudentProfilePage({ path, id }) {
                 </div>
               ) : (
                 <div class="text-center">
-                  <QrLargeIcon class="h-16 w-16 mx-auto text-zinc-300 mb-2" />
+                  <HiOutlineQrCode class="h-16 w-16 mx-auto text-zinc-300 mb-2" />
                   <p class="text-xs text-zinc-400">ยังไม่มีการสร้าง QR</p>
                 </div>
               )}
@@ -305,69 +306,4 @@ function InfoFieldSmall({ label, value, mono }) {
   );
 }
 
-/* ─── SVG Icons ─── */
 
-function ChevronLeftIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
-
-function EditIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  );
-}
-
-function QrIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2m4 0h-2m4 0v-2m0 0h-2m2 0V9m0 4V5m0 2h-2M4 7h1m4 0h1m4 0h1M4 11h1m4 0h1m4 0h1M4 15h1m4 0h1m4 0h1M4 19h1m4 0h1m4 0h1" />
-    </svg>
-  );
-}
-
-function QrLargeIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2m4 0h-2m4 0v-2m0 0h-2m2 0V9m0 4V5m0 2h-2M4 7h1m4 0h1m4 0h1M4 11h1m4 0h1m4 0h1M4 15h1m4 0h1m4 0h1M4 19h1m4 0h1m4 0h1" />
-    </svg>
-  );
-}
-
-function TagIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-    </svg>
-  );
-}
-
-function PhoneIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-    </svg>
-  );
-}
-
-function LineIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
-  );
-}
-
-function UserXIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M19 4l-6 6m6 0l-6-6" />
-    </svg>
-  );
-}

@@ -222,3 +222,94 @@ height: 100vh;
 - ทุก bento cell ต้องมี `role="region"` + `aria-label`
 - Badge stickers ใช้ `role="status"` + `aria-live="polite"`
 - Theme toggle ใช้ `<button aria-label="เปลี่ยนธีม">`
+
+---
+
+## 8. Student & Parent Portal Design
+
+### 8.1 ปัญหาปัจจุบัน
+
+ระบบปัจจุบันรองรับเฉพาะ **Admin / Teacher / Staff** login เท่านั้น
+- นักเรียนถูกสร้างโดย admin → ไม่มี email/password
+- ข้อมูล parent (ชื่อ, เบอร์, line_id) เก็บใน DB แต่ไม่มีการใช้เพื่อ login หรือ notification
+
+### 8.2 Student Login Flow
+
+**แนวคิด:** นักเรียนไม่จำเป็นต้องมี account — ใช้ **Student Portal Token** แทน
+
+```
+Admin สร้างนักเรียน → ระบบ generate Student Portal Token
+     │
+     ├── แสดง QR Code บน Student Profile
+     ├── ส่ง SMS ไปยังเบอร์ผู้ปกครอง (พร้อมลิงก์ + token)
+     └── ส่ง LINE Message ไปยัง Line ID ผู้ปกครอง
+              │
+              ▼
+     ผู้ปกครองเปิดลิงก์ → หน้า Student Portal (ไม่ต้อง login)
+     แสดง: ตารางเรียน, การเข้าเรียน, คะแนน, ค่าเรียน
+```
+
+**API ที่ต้องเพิ่ม:**
+```
+GET  /api/student-portal/:token    → ข้อมูลนักเรียน (public, no auth)
+GET  /api/student-portal/:token/attendance
+GET  /api/student-portal/:token/grades
+GET  /api/student-portal/:token/payments
+POST /api/student-portal/:token/notify   → Request notification
+```
+
+### 8.3 Parent Login (Optional — Future)
+
+ถ้าต้องการให้ผู้ปกครองมี account จริง:
+
+```
+Register: ใช้เบอร์โทรศัพท์ → OTP → ผูกกับ studentId
+Login:    เบอร์โทรศัพท์ + OTP (ไม่ต้องใช้ password)
+           หรือ LINE Login (OpenID Connect)
+```
+
+**ข้อดี:** ลงชื่อเข้าใช้ครั้งเดียว ดูนักเรียนได้หลายคน
+**ข้อเสีย:** ต้องพัฒนา OTP system + LINE Login integration
+
+### 8.4 Notification Channels
+
+| Channel | ข้อมูลที่เก็บ | ใช้กับ | Priority |
+|---------|-------------|--------|----------|
+| **LINE** | `lineUserId` (จาก register + parent) | เช็คชื่อ, ผลการเรียน, แจ้งเตือนค่าเรียน | สูง |
+| **SMS** | `phone` (จาก parent) | กรณี LINE ไม่ตอบสนอง, ลิงก์ portal | กลาง |
+| **In-app** | — | หน้า Portal / Dashboard | ต่ำ |
+
+**LINE Integration Flow:**
+```
+1. Admin/Parent ผูก LINE ID → ระบบเก็บ lineUserId
+2. เมื่อเกิด event (เช็คชื่อ, ได้คะแนน, ถึงกำหนดชำระ)
+3. Backend ส่ง LINE Messaging API → Push Notification
+4. LINE Message มีลิงก์กลับไปยัง Student Portal
+```
+
+### 8.5 Student Portal UI (Frontend)
+
+**Path:** `/student-portal/:token`
+
+```
+┌────────────────────────────────┐
+│  สวัสดีคุณพ่อ/แม่ของ [ชื่อเด็ก]  │
+│  [Attendance] [Grades] [Pay]   │
+├────────────────────────────────┤
+│  📅 คาบเรียนล่าสุด              │
+│  วิชา: คณิตศาสตร์               │
+│  วันที่: 25 ก.ค. 69             │
+│  สถานะ: ✅ มาเรียน              │
+├────────────────────────────────┤
+│  📊 คะแนนล่าสุด                 │
+│  การบ้านที่ 1: 8/10            │
+│  การบ้านที่ 2: 9/10            │
+├────────────────────────────────┤
+│  💰 ค่าเรียน                    │
+│  ค้างชำระ: 2,500 บาท           │
+│  [ชำระเงิน]                     │
+└────────────────────────────────┘
+```
+
+**No authentication required** — token มีอายุและถูก generate โดย admin
+**Security:** token ควรมี expiration + rate limit + ใช้ HTTPS เท่านั้น

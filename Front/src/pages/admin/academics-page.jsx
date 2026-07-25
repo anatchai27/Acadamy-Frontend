@@ -5,6 +5,7 @@ import { courseService, homeworkService, skillScoreService, studentService } fro
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { HiOutlinePlus, HiOutlineChevronDown } from 'react-icons/hi2';
 
 export function AcademicsPage({ path }) {
   const [tab, setTab] = useState('homework');
@@ -191,7 +192,7 @@ function HomeworkTab({ courseId }) {
         <h3 class="text-lg font-semibold text-slate-900">รายการการบ้าน</h3>
         <Button variant="primary" size="sm" onClick={openCreate}>
           <span class="flex items-center gap-1.5">
-            <PlusIcon class="h-4 w-4" />
+            <HiOutlinePlus class="h-4 w-4" />
             สั่งการบ้านใหม่
           </span>
         </Button>
@@ -275,7 +276,7 @@ function HomeworkTab({ courseId }) {
             </div>
             <span class="text-xs text-slate-400 shrink-0 flex items-center gap-1">
               {hw.submissionCount != null && `${hw.submissionCount} คนส่ง`}
-              <ChevronDownIcon class={`h-4 w-4 transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
+              <HiOutlineChevronDown class={`h-4 w-4 transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
             </span>
           </button>
 
@@ -492,20 +493,3 @@ function SkillScoresTab({ courseId }) {
   );
 }
 
-/* ─── Shared Icons ─── */
-
-function PlusIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon({ class: className }) {
-  return (
-    <svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  );
-}

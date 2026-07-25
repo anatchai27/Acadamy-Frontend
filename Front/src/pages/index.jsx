@@ -1,4 +1,5 @@
 import { route } from 'preact-router';
+import { HiOutlineCheckCircle, HiOutlineShieldCheck, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
 import { Button, Card } from '../components/ui';
 
 export function IndexPage() {
@@ -40,9 +41,7 @@ export function IndexPage() {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Card>
             <div class="w-12 h-12 bg-sky-blue/10 rounded-xl flex items-center justify-center mb-5">
-              <svg class="w-6 h-6 text-sky-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+              <HiOutlineCheckCircle class="w-6 h-6 text-sky-blue" />
             </div>
             <h3 class="text-lg font-semibold text-white mb-2">Lightning Fast</h3>
             <p class="text-sm text-mist-blue/50 leading-relaxed">Built with Preact for minimal bundle size and blazing-fast page loads</p>
@@ -50,9 +49,7 @@ export function IndexPage() {
 
           <Card>
             <div class="w-12 h-12 bg-sky-blue/10 rounded-xl flex items-center justify-center mb-5">
-              <svg class="w-6 h-6 text-sky-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-              </svg>
+              <HiOutlineShieldCheck class="w-6 h-6 text-sky-blue" />
             </div>
             <h3 class="text-lg font-semibold text-white mb-2">Clean Design</h3>
             <p class="text-sm text-mist-blue/50 leading-relaxed">Minimal UI focused on usability with generous white space and clear hierarchy</p>
@@ -60,9 +57,7 @@ export function IndexPage() {
 
           <Card>
             <div class="w-12 h-12 bg-sky-blue/10 rounded-xl flex items-center justify-center mb-5">
-              <svg class="w-6 h-6 text-sky-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
+              <HiOutlineChatBubbleLeftRight class="w-6 h-6 text-sky-blue" />
             </div>
             <h3 class="text-lg font-semibold text-white mb-2">Highly Scalable</h3>
             <p class="text-sm text-mist-blue/50 leading-relaxed">Modular architecture that grows with your needs without unnecessary overhead</p>
