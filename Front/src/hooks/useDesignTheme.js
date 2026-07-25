@@ -3,11 +3,13 @@ import { useAppContext } from '../store/AppContext';
 
 export function useDesignTheme() {
   const { state, dispatch } = useAppContext();
-  const designTheme = state.designTheme || 'bento';
+  const designTheme = state.designTheme || 'neobrutalism';
 
   const setDesignTheme = useCallback((theme) => {
     if (theme === 'bento' || theme === 'neobrutalism') {
       dispatch({ type: 'SET_DESIGN_THEME', payload: theme });
+      console.log(`Design theme set to: ${theme}`);
+     
     }
   }, [dispatch]);
 

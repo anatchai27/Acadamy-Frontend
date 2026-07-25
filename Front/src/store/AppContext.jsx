@@ -4,10 +4,13 @@ import { route } from 'preact-router';
 import { AppReducer } from './AppReducer';
 import { clearAuthStorage, getMe } from '../services/auth-service';
 import { setOnUnauthorized } from '../services/api';
+import { isMobile } from 'react-device-detect';
 
 const savedTheme = (() => {
   try {
-    return localStorage.getItem('th_design_theme') || 'bento';
+    const stored = localStorage.getItem('th_design_theme');
+    if (stored) return stored;
+    return isMobile ? 'neobrutalism' : 'bento';
   } catch {
     return 'bento';
   }
