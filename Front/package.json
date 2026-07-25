@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
+  "appVersion":"1.0.0",
   "config": {
     "designMode": "neobrutalism"
   },

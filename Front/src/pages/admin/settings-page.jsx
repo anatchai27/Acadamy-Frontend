@@ -5,7 +5,8 @@ import { instituteService } from '../../services/institute-service';
 import { useAppContext } from '../../store/AppContext';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlineBuildingOffice2, HiOutlineExclamationTriangle, HiOutlineTrash, HiOutlineDocumentArrowDown, HiOutlineCheck } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice2, HiOutlineExclamationTriangle, HiOutlineTrash, HiOutlineDocumentArrowDown, HiOutlineCheck, HiOutlineQuestionMarkCircle, HiOutlineChevronDown, HiOutlineSparkles, HiOutlineCalendarDays } from 'react-icons/hi2';
+import pkg from '../../../package.json';
 
 export function SettingsPage({ path }) {
   const { state, dispatch } = useAppContext();
@@ -17,6 +18,15 @@ export function SettingsPage({ path }) {
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [changelog, setChangelog] = useState([]);
+  const [changelogOpen, setChangelogOpen] = useState(false);
+
+  useEffect(() => {
+    fetch('/changelog.json')
+      .then((res) => res.json())
+      .then((data) => setChangelog(data))
+      .catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({
     name: '',
@@ -185,12 +195,67 @@ export function SettingsPage({ path }) {
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </button>
         </div>
+
+        {/* Help & About */}
+        <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
+          <div class="flex items-center gap-4 px-6 py-5 border-b border-zinc-100">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oasis-primary/5 text-oasis-primary">
+              <HiOutlineQuestionMarkCircle class="h-5 w-5" />
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-zinc-900">ช่วยเหลือ</h3>
+              <p class="text-sm text-zinc-500">เวอร์ชันและการอัปเดต</p>
+            </div>
+          </div>
+          <div class="divide-y divide-zinc-100">
+            <div class="flex items-center justify-between px-6 py-4 gap-4">
+              <span class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>เวอร์ชัน</span>
+              <span class="text-sm text-zinc-500 font-mono">v{pkg.appVersion || pkg.version}</span>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => setChangelogOpen(!changelogOpen)}
+                class="w-full flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors text-left"
+              >
+                <span class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ประวัติการอัปเดต</span>
+                <HiOutlineChevronDown class={`h-4 w-4 text-zinc-400 transition-transform ${changelogOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {changelogOpen && (
+                <div class="px-6 pb-4 space-y-4">
+                  {changelog.map((release) => (
+                    <div key={release.version} class={`${isNeo ? 'border-l-2 border-black pl-4' : 'border-l-2 border-oasis-primary/30 pl-4'}`}>
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-mono font-semibold text-oasis-primary">v{release.version}</span>
+                        <span class="text-xs text-zinc-400 flex items-center gap-1">
+                          <HiOutlineCalendarDays class="h-3 w-3" />
+                          {release.date}
+                        </span>
+                      </div>
+                      <p class="text-sm font-medium text-zinc-800 mb-1">{release.title}</p>
+                      <ul class="space-y-0.5">
+                        {release.notes.map((note, i) => (
+                          <li key={i} class="text-xs text-zinc-500 flex items-start gap-1.5">
+                            <HiOutlineSparkles class="h-3 w-3 text-oasis-primary mt-0.5 shrink-0" />
+                            {note}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
 }
 
 function SettingsInput({ label, value, onChange, type = 'text' }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   return (
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1 sm:gap-4 hover:bg-zinc-50 transition-colors">
       <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>{label}</label>
@@ -200,6 +265,8 @@ function SettingsInput({ label, value, onChange, type = 'text' }) {
 }
 
 function SettingsTextarea({ label, value, onChange }) {
+  const { designTheme } = useDesignTheme();
+  const isNeo = designTheme === 'neobrutalism';
   return (
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between px-6 py-4 gap-1 sm:gap-4 hover:bg-zinc-50 transition-colors">
       <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'} pt-1`}>{label}</label>
