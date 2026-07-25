@@ -123,7 +123,7 @@ export function SessionsPage({ path, courseId }) {
         กลับไปหน้าคอร์สเรียน
       </button>
 
-      <div class="mb-8 flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
         <div>
           <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
             {course?.name || 'ตารางสอน'}

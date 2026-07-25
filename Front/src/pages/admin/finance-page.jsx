@@ -122,9 +122,9 @@ export function FinancePage({ path }) {
 
   return (
     <AdminLayout path={path}>
-      <div class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
         <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">การเงิน</h2>
-        <p class="text-sm text-zinc-500 mt-1">จัดการบันทึกรายรับและดูประวัติการเงิน</p>
+        <p class="text-sm text-zinc-500 mt-1 sm:mt-0">จัดการบันทึกรายรับและดูประวัติการเงิน</p>
       </div>
 
       {/* Mode Switcher */}

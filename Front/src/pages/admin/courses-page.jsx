@@ -160,7 +160,7 @@ export function CoursesPage({ path }) {
   return (
     <AdminLayout path={path}>
       {/* Header */}
-      <div class="mb-8 flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
         <div>
           <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">คอร์สเรียน</h2>
           <p class="text-sm text-zinc-500 mt-1">

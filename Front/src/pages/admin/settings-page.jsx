@@ -191,18 +191,18 @@ export function SettingsPage({ path }) {
 
 function SettingsInput({ label, value, onChange, type = 'text' }) {
   return (
-    <div class="flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1 sm:gap-4 hover:bg-zinc-50 transition-colors">
       <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>{label}</label>
-      <input type={type} value={value} onInput={onChange} class={`w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'}`} />
+      <input type={type} value={value} onInput={onChange} class={`w-full sm:w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'}`} />
     </div>
   );
 }
 
 function SettingsTextarea({ label, value, onChange }) {
   return (
-    <div class="flex items-start justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between px-6 py-4 gap-1 sm:gap-4 hover:bg-zinc-50 transition-colors">
       <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'} pt-1`}>{label}</label>
-      <textarea value={value} onInput={onChange} rows={2} class={`w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'} resize-none`} />
+      <textarea value={value} onInput={onChange} rows={2} class={`w-full sm:w-64 px-3.5 py-2 text-sm bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all'} resize-none`} />
     </div>
   );
 }

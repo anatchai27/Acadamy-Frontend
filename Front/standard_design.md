@@ -153,12 +153,67 @@ Front/src/
 
 ## 6. Responsive Behavior
 
+### 6.1 Viewport Units
+
+> **ห้ามใช้ `vh` ทุกกรณี — ให้ใช้ `dvh` (dynamic viewport height) เท่านั้น**
+>
+> `vh` ไม่นับ browser chrome (address bar, toolbar) บนมือถือ ทำให้เกิด layout shift และ content ถูกตัดท้าย
+> `dvh` ปรับตามพื้นที่ที่ user มองเห็นจริง รองรับแสดง/ซ่อน browser chrome ได้อย่างถูกต้อง
+
+```css
+/* ✅ ถูกต้อง */
+min-height: 100dvh;
+
+/* ❌ ห้ามใช้ */
+min-height: 100vh;
+height: 100vh;
+```
+
+ใน `index.css` มี `@utility` ครอบไว้แล้ว:
+```css
+@utility min-h-screen {
+  min-height: 100dvh;
+}
+@utility min-h-dvh {
+  min-height: 100dvh;
+}
+```
+
+ให้ใช้ `min-h-screen` หรือ `min-h-dvh` แทน `h-screen` หรือ `min-h-screen` (Tailwind default = 100vh) เสมอ
+
+### 6.2 Breakpoints
+
 | Breakpoint | Bento Columns | Neobrutalism |
 |------------|--------------|--------------|
 | `default` | 1 col | 1 col (stacked cards) |
 | `sm (640px)` | 2 cols | 2 cols |
 | `md (768px)` | 3 cols | 3 cols |
 | `lg (1024px)` | 4 cols (bento) | 4 cols (grid) |
+
+### 6.3 Mobile Bottom Navigation
+
+- ใช้ `overflow-x-auto` + `no-scrollbar` แทน `justify-around` — รองรับ 11 items โดยไม่เบียด
+- แต่ละ item: `min-w-[60px] shrink-0` — ป้องกัน label ถูกตัด
+- Content container: `pb-20 md:pb-0` — ป้องกัน bottom nav ทับ content
+- Safe area: `safe-area-bottom` class + `env(safe-area-inset-bottom)` สำหรับ iPhone notch
+
+### 6.4 Form Layouts บน Mobile
+
+- ห้ามใช้ `flex items-center justify-between` สำหรับ label + input โดยตรง
+- ใช้ `flex flex-col sm:flex-row sm:items-center sm:justify-between` แทน
+- Input width: `w-full sm:w-64` (ไม่ใช่ `w-64` ล้วน ที่พังบนจอ < 375px)
+- ใช้ `gap-1 sm:gap-4` เพื่อ spacing ที่เหมาะสม
+
+### 6.5 Tables
+
+- ทุก `<table>` ต้องมี `overflow-x-auto` ห่อไว้
+- Columns ที่ไม่จำเป็นบน mobile: `hidden sm:table-cell` / `hidden md:table-cell`
+- หลีกเลี่ยง `min-w-[100px]` บน column ที่มีหลาย column — ใช้ขนาดพอดีหรือ responsive
+
+### 6.6 Headers & Page Title
+
+- ใช้ pattern: `flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6`
+- ปุ่ม action ต้องอยู่ใต้ title (stack) บน mobile, อยู่ข้างขวาบน desktop
 
 ---
 

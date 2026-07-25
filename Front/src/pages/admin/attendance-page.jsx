@@ -142,7 +142,7 @@ export function AttendancePage({ path }) {
         </BentoGrid>
       ) : (
         <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
-          <div class="px-6 py-4 border-b border-zinc-100">
+          <div class="px-3 sm:px-6 py-4 border-b border-zinc-100">
             <p class="text-sm text-zinc-600">
               ทั้งหมด {students.length} คน &middot; 
               มา {students.filter((s) => s.status === 'present').length} &middot;
@@ -156,7 +156,7 @@ export function AttendancePage({ path }) {
               <p class="text-sm text-zinc-400 text-center py-8">ยังไม่มีข้อมูลการเข้าเรียนวันนี้</p>
             ) : (
               students.map((student) => (
-                <div key={student.studentId} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors">
+                <div key={student.studentId} class="flex items-center justify-between px-3 sm:px-6 py-3 hover:bg-zinc-50 transition-colors">
                   <div class="flex items-center gap-3 min-w-0">
                     <span class="text-sm font-medium text-zinc-900">{student.fullName || '-'}</span>
                     {student.status && <StatusBadge status={student.status} />}
