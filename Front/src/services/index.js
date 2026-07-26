@@ -43,6 +43,7 @@ export {
   getTeachers,
   getTeacherById,
   createTeacher,
+  patchTeacher,
 } from './teacher-service';
 export {
   courseService,

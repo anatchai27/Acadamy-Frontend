@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { showToast, showConfirm } from '../../components/ui';
+import { Button, showToast, showConfirm, SolidInput } from '../../components/ui';
 import { userService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlineUserGroup, HiOutlineAcademicCap, HiOutlineShieldCheck, HiOutlineMagnifyingGlass, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineBookOpen } from 'react-icons/hi2';
+import { HiOutlineUserGroup, HiOutlineAcademicCap, HiOutlineShieldCheck, HiOutlineMagnifyingGlass, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineBookOpen, HiOutlinePlus, HiOutlineXMark } from 'react-icons/hi2';
 
 const roleConfig = {
   admin: { label: 'ผู้ดูแล', bg: 'bg-oasis-primary/5', text: 'text-oasis-primary', dot: 'bg-oasis-primary' },
@@ -38,10 +38,15 @@ export function UsersPage({ path }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ email: '', password: '', role: 'admin' });
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+
+  const updateForm = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const fetchUsers = async (query = '') => {
     setLoading(true);
@@ -61,6 +66,26 @@ export function UsersPage({ path }) {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!form.email.trim() || !form.password.trim()) {
+      showToast('กรุณากรอกอีเมลและรหัสผ่าน', 'error');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await userService.createUser({ email: form.email, password: form.password, role: form.role });
+      showToast('เพิ่มผู้ใช้สำเร็จ', 'success');
+      setShowForm(false);
+      setForm({ email: '', password: '', role: 'admin' });
+      fetchUsers();
+    } catch (err) {
+      showToast(err?.data?.message || 'เพิ่มผู้ใช้ไม่สำเร็จ', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -113,6 +138,12 @@ export function UsersPage({ path }) {
                 class="w-full sm:w-56 lg:w-64 pl-10 pr-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-oasis-primary/20 focus:border-oasis-primary transition-all"
               />
             </div>
+            <Button variant="primary" size="md" onClick={() => setShowForm(true)}>
+              <span class="flex items-center gap-1.5">
+                <HiOutlinePlus class="h-4 w-4" />
+                เพิ่มผู้ดูแล
+              </span>
+            </Button>
           </div>
         </div>
       </div>
@@ -135,6 +166,28 @@ export function UsersPage({ path }) {
           </div>
         ))}
       </BentoGrid>
+
+      {showForm && (
+        <div class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-lg" onClick={() => setShowForm(false)} />
+          <div class={`relative w-full max-w-md mx-4 ${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl p-6 shadow-xl'}`}>
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-lg font-semibold text-zinc-900">เพิ่มผู้ดูแลระบบ</h3>
+              <button type="button" onClick={() => setShowForm(false)} class="p-1 text-zinc-400 hover:text-zinc-600 transition-colors">
+                <HiOutlineXMark class="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateUser} class="flex flex-col gap-4">
+              <SolidInput label="อีเมล" type="email" placeholder="อีเมลสำหรับเข้าสู่ระบบ" value={form.email} onInput={updateForm('email')} required />
+              <SolidInput label="รหัสผ่าน" type="password" placeholder="ตั้งรหัสผ่าน" value={form.password} onInput={updateForm('password')} required />
+              <div class="flex gap-3 mt-2">
+                <Button variant="secondary" size="md" type="button" onClick={() => setShowForm(false)}>ยกเลิก</Button>
+                <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>เพิ่มผู้ดูแล</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
         <div class="flex items-center justify-between px-5 md:px-6 py-3.5 border-b border-zinc-100">

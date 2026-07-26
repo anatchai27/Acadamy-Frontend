@@ -71,7 +71,7 @@ public static class AuthEndpoints
                 SameSite = SameSiteMode.Lax
             });
             return Results.Ok(new { status = "success", message = "ออกจากระบบสำเร็จ" });
-        }).RequireAuthorization();
+        });
 
         group.MapPost("/refresh-token", async (
             RefreshTokenRequest request,

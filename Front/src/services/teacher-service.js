@@ -12,8 +12,8 @@ export function createTeacher(payload) {
   return api.post('/teachers', payload);
 }
 
-export function updateTeacher(id, payload) {
-  return api.put(`/teachers/${id}`, payload);
+export function patchTeacher(id, payload) {
+  return api.patch(`/teachers/${id}`, payload);
 }
 
 export function deleteTeacher(id) {
@@ -24,6 +24,6 @@ export const teacherService = {
   getTeachers,
   getTeacherById,
   createTeacher,
-  updateTeacher,
+  patchTeacher,
   deleteTeacher,
 };

@@ -74,5 +74,6 @@ export const api = {
     return fetcher(endpoint, { ...options, method: 'POST', body: isFormData ? data : JSON.stringify(data) });
   },
   put: (endpoint, data, options = {}) => fetcher(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
+  patch: (endpoint, data, options = {}) => fetcher(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
   delete: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'DELETE' }),
 };

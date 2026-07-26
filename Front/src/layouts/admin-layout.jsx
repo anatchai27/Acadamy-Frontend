@@ -1,7 +1,7 @@
 import { route } from 'preact-router';
 import { useState, useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
-import { logout } from '../services/auth-service';
+import { logout, clearAuthStorage } from '../services/auth-service';
 import { showConfirm, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
@@ -101,9 +101,11 @@ export function AdminLayout({ children, path }) {
     });
     if (!confirmed) return;
 
-    await logout().catch(() => {});
+    clearAuthStorage();
     dispatch({ type: 'CLEAR_USER' });
     route('/login');
+
+    logout().catch(() => {});
   };
 
   const profile = state.userProfile;
@@ -188,7 +190,7 @@ export function AdminLayout({ children, path }) {
           </div>
           <button
             onClick={handleLogout}
-            class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isNeo ? 'border-2 border-black text-black hover:bg-red-500 hover:text-white hover:border-red-500' : 'text-slate-500 hover:text-red-600 hover:bg-red-50'}`}
+            class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isNeo ? 'border-2 border-black text-black hover:bg-red-500 hover:text-white hover:border-red-500' : 'text-zinc-600 hover:text-red-600 hover:bg-red-50'}`}
           >
             <LogoutIcon class="h-5 w-5 shrink-0" />
             ออกจากระบบ
@@ -223,7 +225,7 @@ export function AdminLayout({ children, path }) {
               </div>
               <button
                 onClick={handleLogout}
-                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-600 hover:bg-red-50 hover:text-red-600 transition-colors"
               >
                 <LogoutIcon class="h-4 w-4" />
                 ออกจากระบบ
@@ -282,7 +284,7 @@ export function AdminLayout({ children, path }) {
                 </div>
                 <button
                   onClick={handleLogout}
-                  class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-600 hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
                   <LogoutIcon class="h-4 w-4" />
                   ออกจากระบบ

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
-import { HiOutlineArrowLeft, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutlineUserGroup, HiOutlineSparkles } from 'react-icons/hi2';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, Checkbox, Textarea, showToast, ImageUpload } from '../../components/ui';
 import { studentService, uploadService } from '../../services';
@@ -28,6 +28,10 @@ export function StudentControll({ path, id }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [parentSearch, setParentSearch] = useState('');
+  const [parentSearchResults, setParentSearchResults] = useState([]);
+  const [parentSearching, setParentSearching] = useState(false);
+  const parentSearchTimer = useRef(null);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -74,6 +78,46 @@ export function StudentControll({ path, id }) {
 
   const removeParent = (key) => {
     setParents((prev) => prev.filter((p) => p._key !== key));
+  };
+
+  const handleParentSearch = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setParentSearch(value);
+    clearTimeout(parentSearchTimer.current);
+    if (value.length < 8) { setParentSearchResults([]); return; }
+    parentSearchTimer.current = setTimeout(async () => {
+      setParentSearching(true);
+      try {
+        const res = await studentService.getStudents({ search: value, limit: 50 });
+        const payload = res.data?.data || res.data || {};
+        const students = payload.students || [];
+        const matched = [];
+        const seen = new Set();
+        for (const s of students) {
+          if (!s.parents) continue;
+          for (const p of s.parents) {
+            const phone = p.phone?.replace(/\D/g, '');
+            if (phone && phone.includes(value) && !seen.has(phone)) {
+              seen.add(phone);
+              matched.push({ phone: p.phone, fullName: p.fullName, relationship: p.relationship, studentName: s.fullName });
+            }
+          }
+        }
+        setParentSearchResults(matched);
+      } catch { setParentSearchResults([]); }
+      finally { setParentSearching(false); }
+    }, 400);
+  };
+
+  const applyParentData = (data) => {
+    setParents((prev) => {
+      const exists = prev.some((p) => p.phone.replace(/\D/g, '') === data.phone.replace(/\D/g, ''));
+      if (exists) return prev;
+      return prev.map((p, i) => i === 0 ? { ...p, fullName: data.fullName || p.fullName, phone: data.phone, relationship: data.relationship || p.relationship } : p);
+    });
+    setParentSearch('');
+    setParentSearchResults([]);
+    showToast('นำข้อมูลผู้ปกครองมาใช้แล้ว', 'success');
   };
 
   const handleSubmit = async (e) => {
@@ -254,6 +298,50 @@ export function StudentControll({ path, id }) {
             >
               + เพิ่มผู้ปกครอง
             </button>
+          </div>
+
+          {/* Parent Search */}
+          <div class="mb-4 p-3 bg-oasis-primary/5 rounded-xl border border-oasis-primary/10">
+            <div class="flex items-center gap-2 mb-1.5">
+              <HiOutlineMagnifyingGlass class="h-4 w-4 text-oasis-primary shrink-0" />
+              <span class="text-xs font-medium text-oasis-primary">ค้นหาผู้ปกครองที่มีอยู่แล้ว</span>
+            </div>
+            <div class="relative">
+              <input
+                type="tel"
+                placeholder="ค้นหาจากเบอร์โทรศัพท์ผู้ปกครอง"
+                value={parentSearch}
+                onInput={handleParentSearch}
+                class={`w-full px-3 py-2 text-sm bg-white focus:outline-none text-zinc-800 placeholder:text-zinc-400 ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+              />
+              {parentSearching && (
+                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div class="h-4 w-4 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+                </div>
+              )}
+            </div>
+            {parentSearchResults.length > 0 && (
+              <div class="mt-2 space-y-1">
+                {parentSearchResults.map((result, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => applyParentData(result)}
+                    class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-white rounded-lg border border-zinc-200 hover:border-oasis-primary hover:bg-oasis-primary/5 transition-colors"
+                  >
+                    <HiOutlineUserGroup class="h-4 w-4 text-oasis-primary shrink-0" />
+                    <div class="flex-1 min-w-0">
+                      <span class="font-medium text-zinc-800">{result.fullName}</span>
+                      <span class="text-zinc-400 mx-1">·</span>
+                      <span class="text-zinc-500">{result.phone}</span>
+                      <span class="text-zinc-400 mx-1">·</span>
+                      <span class="text-zinc-400 text-xs">นักเรียน: {result.studentName}</span>
+                    </div>
+                    <HiOutlineSparkles class="h-3.5 w-3.5 text-oasis-primary shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div class="space-y-6">
             {parents.map((parent) => (

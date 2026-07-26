@@ -21,7 +21,7 @@ export function IndexPage() {
         <div class="max-w-3xl mx-auto mb-20">
           <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
             Learn Smarter,<br />
-            <span class="bg-gradient-to-r from-sky-blue to-mist-blue bg-clip-text text-transparent">
+            <span class="text-sky-blue">
               Grow Faster
             </span>
           </h1>

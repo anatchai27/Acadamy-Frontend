@@ -2,9 +2,9 @@ import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlineArrowUp, HiOutlineArrowDown } from 'react-icons/hi2';
 
 const cardConfig = {
-  students: { iconContainer: 'bg-blue-50', iconColor: 'text-blue-600', valueDefault: 'text-slate-900' },
-  attendance: { iconContainer: 'bg-emerald-50', iconColor: 'text-emerald-600', valueDefault: 'text-slate-900' },
-  requests: { iconContainer: 'bg-amber-50', iconColor: 'text-amber-600', alertBorder: 'ring-2 ring-amber-500/30', valueDefault: 'text-slate-900', valueAlert: 'text-amber-600' },
+  students: { iconContainer: 'bg-blue-50', iconColor: 'text-blue-600', valueDefault: 'text-blue-700' },
+  attendance: { iconContainer: 'bg-emerald-50', iconColor: 'text-emerald-600', valueDefault: 'text-emerald-700' },
+  requests: { iconContainer: 'bg-amber-50', iconColor: 'text-amber-600', alertBorder: 'ring-2 ring-amber-500/30', valueDefault: 'text-amber-700', valueAlert: 'text-amber-600' },
   revenue: { iconContainer: 'bg-slate-100', iconColor: 'text-slate-700', valueDefault: 'text-slate-900' },
 };
 

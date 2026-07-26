@@ -114,10 +114,10 @@ export function ScannerCamera({ onScan, onError, active = true }) {
         {cameraReady && (
           <>
             <div class="absolute inset-8 pointer-events-none">
-              <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-oasis-primary rounded-tl-2xl" />
-              <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-oasis-primary rounded-tr-2xl" />
-              <div class="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-oasis-primary rounded-bl-2xl" />
-              <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-oasis-primary rounded-br-2xl" />
+              <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-oasis-primary" />
+              <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-oasis-primary" />
+              <div class="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-oasis-primary" />
+              <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-oasis-primary" />
             </div>
             <div class="absolute inset-x-8 top-8 bottom-8 overflow-hidden pointer-events-none">
               <div class="w-full h-0.5 bg-blue-500/80 shadow-[0_0_8px_2px_rgba(59,130,246,0.4)] animate-pulse" />
