@@ -26,9 +26,15 @@ jobs:
           cd API
           dotnet publish -c Release -o ../publish/api --self-contained false
 
-      - name: Build Frontend
+      - name: Build Frontend (Admin App)
         run: |
           cd Front
+          npm install
+          npm run build
+
+      - name: Build Frontend (LINE LIFF)
+        run: |
+          cd LineLiff
           npm install
           npm run build
 
@@ -39,10 +45,10 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            sudo mkdir -p /var/www/my-app
-            sudo find /var/www/my-app -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+            sudo mkdir -p /var/www/my-app/liff
+            sudo find /var/www/my-app -mindepth 1 -maxdepth 1 ! -name liff -exec rm -rf {} +
 
-      - name: Deploy Frontend assets to VPS
+      - name: Deploy Admin Frontend assets to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -50,6 +56,16 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "Front/dist/*"
           target: "/var/www/my-app"
+          strip_components: 2
+
+      - name: Deploy LINE LIFF assets to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "LineLiff/dist/*"
+          target: "/var/www/my-app/liff"
           strip_components: 2
 
       - name: Prepare Backend target on VPS
