@@ -55,8 +55,13 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
             foreach (var parent in parents)
             {
                 parent.StudentId = student.Id;
+                parent.InstituteId = student.InstituteId;
                 _context.Parents.Add(parent);
             }
+
+            pdpa.ReferenceId = student.Id;
+            if (string.IsNullOrWhiteSpace(pdpa.ConsentDocumentVersion))
+                pdpa.ConsentDocumentVersion = pdpa.ConsentVersion;
 
             _context.PdpaConsents.Add(pdpa);
 

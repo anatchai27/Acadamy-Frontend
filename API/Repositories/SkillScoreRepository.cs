@@ -31,8 +31,18 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
 
     public async Task BatchUpsertAsync(int studentId, List<SkillScoreItem> scores, int updatedBy, CancellationToken ct = default)
     {
+        var topicIds = scores.Select(s => s.TopicId).Distinct().ToList();
+        var topics = await _context.SkillTopics
+            .Include(t => t.Course)
+            .Where(t => topicIds.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id, ct);
+
         foreach (var item in scores)
         {
+            var instituteId = topics.TryGetValue(item.TopicId, out var topic)
+                ? topic.Course.InstituteId
+                : 0;
+
             var existing = await _context.SkillScores
                 .FirstOrDefaultAsync(s => s.StudentId == studentId && s.TopicId == item.TopicId, ct);
 
@@ -49,10 +59,12 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
                 {
                     StudentId = studentId,
                     TopicId = item.TopicId,
+                    InstituteId = instituteId,
                     Score = item.Score,
                     Note = item.Note?.Trim(),
                     UpdatedBy = updatedBy,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow
                 });
             }
         }
@@ -70,7 +82,7 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
                 s.Id,
                 s.TopicId,
                 s.Topic.Name,
-                s.Score,
+                s.Score ?? 0,
                 s.Note,
                 s.UpdatedAt
             ))

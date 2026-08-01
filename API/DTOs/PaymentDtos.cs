@@ -14,7 +14,7 @@ public record CreatePaymentResponse(
 );
 
 public record CreatePaymentData(
-    int PaymentId,
+    long PaymentId,
     string InvoiceNo,
     string? ReceiptPdfUrl
 );
@@ -31,7 +31,7 @@ public record PaymentHistoryData(
 );
 
 public record PaymentHistoryItem(
-    int Id,
+    long Id,
     string InvoiceNo,
     string? StudentName,
     string? CourseName,

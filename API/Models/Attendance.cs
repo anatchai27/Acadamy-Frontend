@@ -2,7 +2,7 @@ namespace academy_API.Models;
 
 public class Attendance : IMultiTenantEntity
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public int SessionId { get; set; }
     public int StudentId { get; set; }
     public int InstituteId { get; set; }

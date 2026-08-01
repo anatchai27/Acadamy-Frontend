@@ -32,6 +32,13 @@ public class TutoringDbContext(
     public DbSet<Product> Products => Set<Product>();
     public DbSet<StudentWallet> StudentWallets => Set<StudentWallet>();
     public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<PublicWebsiteContent> PublicWebsiteContents => Set<PublicWebsiteContent>();
+    public DbSet<TeacherPayrollPeriod> TeacherPayrollPeriods => Set<TeacherPayrollPeriod>();
+    public DbSet<Badge> Badges => Set<Badge>();
+    public DbSet<StudentBadge> StudentBadges => Set<StudentBadge>();
+    public DbSet<StreakCounter> StreakCounters => Set<StreakCounter>();
+    public DbSet<RoomBooking> RoomBookings => Set<RoomBooking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,10 +109,16 @@ public class TutoringDbContext(
             entity.Property(s => s.Nickname).HasMaxLength(100).HasColumnName("nickname");
             entity.Property(s => s.Grade).HasMaxLength(50).HasColumnName("grade");
             entity.Property(s => s.School).HasMaxLength(255).HasColumnName("school");
-            entity.Property(s => s.QrToken).HasMaxLength(255).HasColumnName("qr_token");
+            entity.Property(s => s.QrToken).HasMaxLength(512).HasColumnName("qr_token");
             entity.Property(s => s.PhotoUrl).HasMaxLength(255).HasColumnName("photo_url");
             entity.Property(s => s.MedicalInfo).HasColumnType("text").HasColumnName("medical_info");
             entity.Property(s => s.CreatedAt).HasColumnName("created_at");
+            entity.Property(s => s.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(s => s.CreatedBy).HasColumnName("created_by");
+            entity.Property(s => s.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(s => s.Status).HasMaxLength(50).HasColumnName("status");
+            entity.Property(s => s.QrTokenExpiresAt).HasColumnName("qr_token_expires_at");
+            entity.Property(s => s.QrTokenVersion).HasColumnName("qr_token_version");
         });
 
         modelBuilder.Entity<Teacher>(entity =>
@@ -160,6 +173,9 @@ public class TutoringDbContext(
             entity.Property(e => e.IsAccepted).HasColumnName("is_accepted");
             entity.Property(e => e.AcceptedAt).HasColumnName("accepted_at");
             entity.Property(e => e.IpAddress).HasMaxLength(45).HasColumnName("ip_address");
+            entity.Property(e => e.ReferenceType).HasMaxLength(50).HasColumnName("reference_type");
+            entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
+            entity.Property(e => e.ConsentDocumentVersion).HasMaxLength(50).HasColumnName("consent_document_version");
         });
 
         modelBuilder.Entity<Parent>(entity =>
@@ -168,6 +184,7 @@ public class TutoringDbContext(
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired(false);
             entity.Property(e => e.StudentId).HasColumnName("student_id");
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.User)
                   .WithMany()
@@ -180,13 +197,21 @@ public class TutoringDbContext(
                   .HasForeignKey(e => e.StudentId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.StudentId);
+            entity.HasIndex(e => e.InstituteId);
 
             entity.Property(e => e.FullName).HasMaxLength(255).HasColumnName("full_name");
-            entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone");
+            entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone").IsRequired();
             entity.Property(e => e.LineUserId).HasMaxLength(255).HasColumnName("line_user_id");
             entity.Property(e => e.Relationship).HasMaxLength(100).HasColumnName("relationship");
+            entity.Property(e => e.IsPrimary).HasColumnName("is_primary");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -228,6 +253,10 @@ public class TutoringDbContext(
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.SubstituteTeacherId);
             entity.HasIndex(e => e.InstituteId);
+
+            entity.HasIndex(e => new { e.InstituteId, e.RoomId, e.ScheduledAt, e.DurationMin })
+                  .IsUnique()
+                  .HasDatabaseName("uq_sessions_room_overlap");
         });
 
         modelBuilder.Entity<Attendance>(entity =>
@@ -346,6 +375,15 @@ public class TutoringDbContext(
             entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
             entity.Property(e => e.GatewayRefId).HasMaxLength(255).HasColumnName("gateway_ref_id");
             entity.Property(e => e.NetAmount).HasColumnName("net_amount").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.QrPayload).HasColumnType("text").HasColumnName("qr_payload");
+            entity.Property(e => e.QrExpiresAt).HasColumnName("qr_expires_at");
+            entity.Property(e => e.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(e => e.VerifiedBy).HasColumnName("verified_by");
+            entity.Property(e => e.VerificationProvider).HasMaxLength(50).HasColumnName("verification_provider");
+            entity.Property(e => e.VerificationPayload).HasColumnType("json").HasColumnName("verification_payload");
+            entity.Property(e => e.SlipAmount).HasColumnName("slip_amount").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.SlipTransRef).HasMaxLength(255).HasColumnName("slip_trans_ref");
+            entity.Property(e => e.SlipVerifiedAt).HasColumnName("slip_verified_at");
 
             entity.HasOne(e => e.Enrollment)
                   .WithMany()
@@ -367,18 +405,34 @@ public class TutoringDbContext(
             entity.ToTable("notifications");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.User)
                   .WithMany()
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.Property(e => e.Channel).HasMaxLength(20).HasColumnName("channel");
             entity.Property(e => e.Message).HasColumnName("message");
             entity.Property(e => e.SentAt).HasColumnName("sent_at");
             entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.Payload).HasColumnType("json").HasColumnName("payload");
+            entity.Property(e => e.RecipientId).HasMaxLength(255).HasColumnName("recipient_id");
+            entity.Property(e => e.RetryCount).HasColumnName("retry_count");
+            entity.Property(e => e.MaxRetries).HasColumnName("max_retries");
+            entity.Property(e => e.ScheduledAt).HasColumnName("scheduled_at");
+            entity.Property(e => e.ProcessedAt).HasColumnName("processed_at");
+            entity.Property(e => e.ErrorMessage).HasColumnType("text").HasColumnName("error_message");
+            entity.Property(e => e.NotificationType).HasMaxLength(50).HasColumnName("notification_type");
 
             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => new { e.Status, e.ScheduledAt });
         });
 
         modelBuilder.Entity<LeaveRequest>(entity =>
@@ -387,7 +441,7 @@ public class TutoringDbContext(
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.SessionId).HasColumnName("session_id");
-                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Student)
                   .WithMany()
@@ -402,7 +456,7 @@ public class TutoringDbContext(
             entity.Property(e => e.Reason).HasColumnName("reason");
             entity.Property(e => e.Type).HasMaxLength(20).HasColumnName("type");
             entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
-            entity.Property(e => e.RequestedAt).HasColumnName("requested_at");
+            entity.Property(e => e.RequestedAt).HasColumnName("requested_at").IsRequired(false);
             entity.Property(e => e.ApprovedBy).HasColumnName("approved_by").IsRequired(false);
 
             entity.HasOne(e => e.ApprovedByUser)
@@ -415,6 +469,9 @@ public class TutoringDbContext(
                   .WithMany()
                   .HasForeignKey(e => e.InstituteId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.SessionId);
@@ -483,6 +540,7 @@ public class TutoringDbContext(
             entity.Property(e => e.FileUrl).HasMaxLength(1000).HasColumnName("file_url");
             entity.Property(e => e.Score).HasColumnName("score").HasColumnType("decimal(5,2)");
             entity.Property(e => e.Feedback).HasColumnName("feedback");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
             entity.HasIndex(e => e.HomeworkId);
             entity.HasIndex(e => e.StudentId);
@@ -513,6 +571,7 @@ public class TutoringDbContext(
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.TopicId).HasColumnName("topic_id");
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
 
             entity.HasOne(e => e.Student)
                   .WithMany()
@@ -523,6 +582,11 @@ public class TutoringDbContext(
                   .WithMany()
                   .HasForeignKey(e => e.TopicId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.Score).HasColumnName("score").HasColumnType("decimal(5,2)");
             entity.Property(e => e.Note).HasColumnName("note");
@@ -535,10 +599,12 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.TopicId);
             entity.HasIndex(e => e.UpdatedBy);
+            entity.HasIndex(e => e.InstituteId);
         });
 
         modelBuilder.Entity<MakeupSlot>(entity =>
@@ -582,6 +648,7 @@ public class TutoringDbContext(
             entity.Property(e => e.GrantedAt).HasColumnName("granted_at");
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
             entity.Property(e => e.UsedSessionId).HasColumnName("used_session_id").IsRequired(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
             entity.HasOne(e => e.UsedSession)
                   .WithMany()
@@ -622,6 +689,8 @@ public class TutoringDbContext(
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.Balance).HasColumnName("balance");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.Version).HasColumnName("version").IsConcurrencyToken();
 
             entity.HasOne(e => e.Institute)
                   .WithMany()
@@ -635,6 +704,8 @@ public class TutoringDbContext(
 
             entity.HasIndex(e => e.InstituteId);
             entity.HasIndex(e => e.StudentId).IsUnique();
+
+            entity.ToTable(t => t.HasCheckConstraint("chk_student_wallets_balance", "balance >= 0"));
         });
 
         modelBuilder.Entity<WalletTransaction>(entity =>
@@ -644,9 +715,12 @@ public class TutoringDbContext(
             entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.WalletId).HasColumnName("wallet_id");
             entity.Property(e => e.Amount).HasColumnName("amount");
-            entity.Property(e => e.Reason).HasMaxLength(255).HasColumnName("reason");
-            entity.Property(e => e.SessionId).HasColumnName("session_id").IsRequired(false);
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired(false);
+            entity.Property(e => e.TransactionType).HasMaxLength(20).HasColumnName("transaction_type");
+            entity.Property(e => e.RunningBalance).HasColumnName("running_balance");
+            entity.Property(e => e.ReferenceType).HasMaxLength(50).HasColumnName("reference_type");
+            entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
+            entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description");
+            entity.Property(e => e.IsReversed).HasColumnName("is_reversed");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
             entity.HasOne(e => e.Institute)
@@ -659,6 +733,201 @@ public class TutoringDbContext(
                   .HasForeignKey(e => e.WalletId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => e.WalletId);
+            entity.HasIndex(e => new { e.ReferenceType, e.ReferenceId });
+        });
+
+        modelBuilder.Entity<Lead>(entity =>
+        {
+            entity.ToTable("leads");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.FullName).HasMaxLength(255).HasColumnName("full_name");
+            entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone");
+            entity.Property(e => e.Email).HasMaxLength(255).HasColumnName("email");
+            entity.Property(e => e.Grade).HasMaxLength(50).HasColumnName("grade");
+            entity.Property(e => e.InterestedSubjects).HasMaxLength(500).HasColumnName("interested_subjects");
+            entity.Property(e => e.Source).HasMaxLength(50).HasColumnName("source");
+            entity.Property(e => e.Status).HasMaxLength(50).HasColumnName("status");
+            entity.Property(e => e.AssignedTo).HasColumnName("assigned_to").IsRequired(false);
+            entity.Property(e => e.Notes).HasColumnType("text").HasColumnName("notes");
+            entity.Property(e => e.TrialSessionId).HasColumnName("trial_session_id").IsRequired(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.AssignedToUser)
+                  .WithMany()
+                  .HasForeignKey(e => e.AssignedTo)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.TrialSession)
+                  .WithMany()
+                  .HasForeignKey(e => e.TrialSessionId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => e.AssignedTo);
+            entity.HasIndex(e => e.TrialSessionId);
+        });
+
+        modelBuilder.Entity<PublicWebsiteContent>(entity =>
+        {
+            entity.ToTable("public_website_contents");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.SectionKey).HasMaxLength(100).HasColumnName("section_key");
+            entity.Property(e => e.ContentType).HasMaxLength(50).HasColumnName("content_type");
+            entity.Property(e => e.ContentValue).HasColumnType("text").HasColumnName("content_value");
+            entity.Property(e => e.Metadata).HasColumnType("json").HasColumnName("metadata");
+            entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => new { e.InstituteId, e.SectionKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<TeacherPayrollPeriod>(entity =>
+        {
+            entity.ToTable("teacher_payroll_periods");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
+            entity.Property(e => e.PeriodStart).HasColumnName("period_start");
+            entity.Property(e => e.PeriodEnd).HasColumnName("period_end");
+            entity.Property(e => e.TotalHours).HasColumnName("total_hours").HasColumnType("decimal(8,2)");
+            entity.Property(e => e.HourlyRate).HasColumnName("hourly_rate").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.TotalAmount).HasColumnName("total_amount").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.Status).HasMaxLength(50).HasColumnName("status");
+            entity.Property(e => e.PaidAt).HasColumnName("paid_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Teacher)
+                  .WithMany()
+                  .HasForeignKey(e => e.TeacherId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => e.TeacherId);
+            entity.HasIndex(e => new { e.InstituteId, e.TeacherId, e.PeriodStart, e.PeriodEnd }).IsUnique();
+        });
+
+        modelBuilder.Entity<Badge>(entity =>
+        {
+            entity.ToTable("badges");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.BadgeKey).HasMaxLength(100).HasColumnName("badge_key");
+            entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
+            entity.Property(e => e.Description).HasColumnType("text").HasColumnName("description");
+            entity.Property(e => e.IconUrl).HasMaxLength(1000).HasColumnName("icon_url");
+            entity.Property(e => e.CriteriaType).HasMaxLength(50).HasColumnName("criteria_type");
+            entity.Property(e => e.CriteriaValue).HasColumnName("criteria_value");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => new { e.InstituteId, e.BadgeKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<StudentBadge>(entity =>
+        {
+            entity.ToTable("student_badges");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.StudentId).HasColumnName("student_id");
+            entity.Property(e => e.BadgeId).HasColumnName("badge_id");
+            entity.Property(e => e.AwardedAt).HasColumnName("awarded_at");
+            entity.Property(e => e.AwardedBySessionId).HasColumnName("awarded_by_session_id").IsRequired(false);
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Student)
+                  .WithMany()
+                  .HasForeignKey(e => e.StudentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Badge)
+                  .WithMany()
+                  .HasForeignKey(e => e.BadgeId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => e.StudentId);
+            entity.HasIndex(e => e.BadgeId);
+            entity.HasIndex(e => new { e.InstituteId, e.StudentId, e.BadgeId }).IsUnique();
+        });
+
+        modelBuilder.Entity<StreakCounter>(entity =>
+        {
+            entity.ToTable("streak_counters");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.StudentId).HasColumnName("student_id");
+            entity.Property(e => e.StreakType).HasMaxLength(50).HasColumnName("streak_type");
+            entity.Property(e => e.CurrentCount).HasColumnName("current_count");
+            entity.Property(e => e.LongestCount).HasColumnName("longest_count");
+            entity.Property(e => e.LastAwardedAt).HasColumnName("last_awarded_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Student)
+                  .WithMany()
+                  .HasForeignKey(e => e.StudentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.InstituteId);
+            entity.HasIndex(e => e.StudentId);
+            entity.HasIndex(e => new { e.InstituteId, e.StudentId, e.StreakType }).IsUnique();
+        });
+
+        modelBuilder.Entity<RoomBooking>(entity =>
+        {
+            entity.ToTable("room_bookings");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.RoomId).HasMaxLength(50).HasColumnName("room_id");
+            entity.Property(e => e.SessionId).HasColumnName("session_id").IsRequired(false);
+            entity.Property(e => e.BookedStartAt).HasColumnName("booked_start_at");
+            entity.Property(e => e.BookedEndAt).HasColumnName("booked_end_at");
+            entity.Property(e => e.Purpose).HasMaxLength(255).HasColumnName("purpose");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasOne(e => e.Session)
                   .WithMany()
                   .HasForeignKey(e => e.SessionId)
@@ -666,14 +935,14 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => e.InstituteId);
-            entity.HasIndex(e => e.WalletId);
             entity.HasIndex(e => e.SessionId);
+            entity.HasIndex(e => new { e.InstituteId, e.RoomId, e.BookedStartAt, e.BookedEndAt });
         });
 
         ApplyTenantFilters(modelBuilder);
     }
 
-private void ApplyTenantFilters(ModelBuilder modelBuilder)
+    private void ApplyTenantFilters(ModelBuilder modelBuilder)
     {
         if (_currentInstituteId == 0) return;
 
@@ -683,6 +952,7 @@ private void ApplyTenantFilters(ModelBuilder modelBuilder)
         modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Homework>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<HomeworkSubmission>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<SkillScore>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Enrollment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<MakeupCredit>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
@@ -692,6 +962,15 @@ private void ApplyTenantFilters(ModelBuilder modelBuilder)
         modelBuilder.Entity<User>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<StudentWallet>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<WalletTransaction>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Notification>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Parent>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Lead>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<PublicWebsiteContent>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<TeacherPayrollPeriod>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Badge>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<StudentBadge>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<StreakCounter>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<RoomBooking>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
     }
 
 }

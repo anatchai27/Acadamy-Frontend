@@ -62,12 +62,17 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
         if (student is null)
             throw new StudentValidationException("NOT_FOUND", "ไม่พบข้อมูลนักเรียน");
 
+        student.QrTokenVersion += 1;
+        student.QrTokenExpiresAt = DateTime.UtcNow.AddSeconds(60);
+        await _studentRepository.UpdateAsync(student.Id, new UpdateStudentRequest(null, null), CancellationToken.None);
+
         return new QrTokenResponse(
             "success",
             new QrTokenData(
                 student.Id,
                 student.QrToken!,
-                DateTime.UtcNow.AddSeconds(60),
+                student.QrTokenExpiresAt.Value,
+                student.QrTokenVersion,
                 60
             )
         );
@@ -82,7 +87,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
         ValidateRequest(request);
 
         var student = BuildStudent(request, instituteId);
-        var parents = BuildParents(request);
+        var parents = BuildParents(request, instituteId);
         var pdpa = BuildPdpaConsent(request, ipAddress);
 
         var created = await _studentRepository.CreateWithTransactionAsync(student, parents, pdpa, ct);
@@ -93,7 +98,8 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             new CreateStudentData(
                 created.Id,
                 created.QrToken ?? string.Empty,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                created.QrTokenVersion
             )
         );
     }
@@ -110,30 +116,39 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             PhotoUrl = request.Student.PhotoUrl?.Trim(),
             MedicalInfo = request.Student.MedicalInfo?.Trim(),
             QrToken = Guid.NewGuid().ToString("N"),
+            QrTokenVersion = 1,
             CreatedAt = DateTime.UtcNow
         };
     }
 
-    private static List<Parent> BuildParents(CreateStudentRequest request)
+    private static List<Parent> BuildParents(CreateStudentRequest request, int instituteId)
     {
-        return request.Parents.Select(p => new Parent
+        return request.Parents.Select((p, index) => new Parent
         {
+            InstituteId = instituteId,
             FullName = p.FullName.Trim(),
-            Phone = p.Phone?.Trim(),
-            Relationship = p.Relationship?.Trim()
+            Phone = p.Phone?.Trim() ?? string.Empty,
+            Relationship = p.Relationship?.Trim(),
+            IsPrimary = p.IsPrimary || index == 0,
+            IsActive = p.IsActive
         }).ToList();
     }
 
     private static PdpaConsent BuildPdpaConsent(CreateStudentRequest request, string? ipAddress)
     {
+        var consentVersion = string.IsNullOrWhiteSpace(request.Pdpa.ConsentVersion)
+            ? "1.0"
+            : request.Pdpa.ConsentVersion;
+
         return new PdpaConsent
         {
-            ConsentVersion = string.IsNullOrWhiteSpace(request.Pdpa.ConsentVersion)
-                ? "1.0"
-                : request.Pdpa.ConsentVersion,
+            ConsentVersion = consentVersion,
+            ConsentDocumentVersion = consentVersion,
             IsAccepted = request.Pdpa.IsAccepted,
             IpAddress = ipAddress,
-            AcceptedAt = DateTime.UtcNow
+            AcceptedAt = DateTime.UtcNow,
+            ReferenceType = "student",
+            ReferenceId = 0
         };
     }
 
@@ -190,7 +205,9 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
                     p.FullName,
                     p.Phone,
                     p.Relationship,
-                    p.LineUserId
+                    p.LineUserId,
+                    p.IsPrimary,
+                    p.IsActive
                 ))
                 .ToList()
         )
@@ -206,7 +223,9 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
         s.QrToken,
         s.PhotoUrl,
         s.MedicalInfo,
-        s.CreatedAt
+        s.CreatedAt,
+        s.QrTokenExpiresAt,
+        s.QrTokenVersion
     );
 }
 

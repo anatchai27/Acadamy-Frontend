@@ -188,8 +188,12 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                         InstituteId = course.InstituteId,
                         WalletId = wallet.Id,
                         Amount = -course.CreditCost.Value,
-                        Reason = $"ใช้เครดิตเข้าเรียน: {course.Name}",
-                        SessionId = sessionId,
+                        TransactionType = "debit",
+                        RunningBalance = wallet.Balance,
+                        ReferenceType = "session",
+                        ReferenceId = sessionId,
+                        Description = $"ใช้เครดิตเข้าเรียน: {course.Name}",
+                        IsReversed = false,
                         CreatedAt = DateTime.UtcNow
                     });
                     break;
@@ -275,8 +279,12 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                             InstituteId = course.InstituteId,
                             WalletId = wallet.Id,
                             Amount = -course.CreditCost.Value,
-                            Reason = $"ใช้เครดิตเข้าเรียน: {course.Name}",
-                            SessionId = sessionId,
+                            TransactionType = "debit",
+                            RunningBalance = wallet.Balance,
+                            ReferenceType = "session",
+                            ReferenceId = sessionId,
+                            Description = $"ใช้เครดิตเข้าเรียน: {course.Name}",
+                            IsReversed = false,
                             CreatedAt = DateTime.UtcNow
                         });
                         break;

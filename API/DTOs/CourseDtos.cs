@@ -106,7 +106,7 @@ public record LeaveRequestData(
 );
 
 public record LeaveRequestItem(
-    int Id,
+    long Id,
     int StudentId,
     string StudentName,
     int SessionId,
@@ -114,7 +114,7 @@ public record LeaveRequestItem(
     string? Reason,
     string Type,
     string Status,
-    DateTime RequestedAt
+    DateTime? RequestedAt
 );
 
 public record LeaveRequestPagination(
@@ -162,7 +162,7 @@ public record HomeworkItem(
 );
 
 public record HomeworkSubmissionItem(
-    int Id,
+    long Id,
     int StudentId,
     string StudentName,
     DateTime? SubmittedAt,
@@ -218,7 +218,7 @@ public record SkillScoreListData(
 );
 
 public record SkillScoreDetailItem(
-    int Id,
+    long Id,
     int TopicId,
     string TopicName,
     decimal Score,

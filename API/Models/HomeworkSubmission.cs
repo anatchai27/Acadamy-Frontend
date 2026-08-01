@@ -2,7 +2,7 @@ namespace academy_API.Models;
 
 public class HomeworkSubmission : IMultiTenantEntity
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public int HomeworkId { get; set; }
     public int StudentId { get; set; }
     public int InstituteId { get; set; }
@@ -10,6 +10,7 @@ public class HomeworkSubmission : IMultiTenantEntity
     public string? FileUrl { get; set; }
     public decimal? Score { get; set; }
     public string? Feedback { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public Homework Homework { get; set; } = null!;
     public Student Student { get; set; } = null!;

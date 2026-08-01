@@ -18,7 +18,9 @@ public record StudentInfo(
 public record ParentInfo(
     string FullName,
     string? Phone,
-    string? Relationship
+    string? Relationship,
+    bool IsPrimary = false,
+    bool IsActive = true
 );
 
 public record PdpaInfo(
@@ -35,7 +37,8 @@ public record CreateStudentResponse(
 public record CreateStudentData(
     int StudentId,
     string QrToken,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int QrTokenVersion
 );
 
 public record StudentResponse(
@@ -48,7 +51,9 @@ public record StudentResponse(
     string? QrToken,
     string? PhotoUrl,
     string? MedicalInfo,
-    DateTime CreatedAt
+    DateTime? CreatedAt,
+    DateTime? QrTokenExpiresAt,
+    int QrTokenVersion
 );
 
 public record StudentErrorResponse(
@@ -97,7 +102,7 @@ public record StudentProfileData(
     string? School,
     string? MedicalInfo,
     string? PhotoUrl,
-    DateTime CreatedAt,
+    DateTime? CreatedAt,
     List<ParentProfileInfo> Parents
 );
 
@@ -106,7 +111,9 @@ public record ParentProfileInfo(
     string FullName,
     string? Phone,
     string? Relationship,
-    string? LineUserId
+    string? LineUserId,
+    bool IsPrimary,
+    bool IsActive
 );
 
 public record UpdateStudentRequest(
@@ -145,5 +152,6 @@ public record QrTokenData(
     int StudentId,
     string QrToken,
     DateTime ExpiresAt,
+    int QrTokenVersion,
     int RefreshIntervalSec
 );

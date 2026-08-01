@@ -40,7 +40,7 @@ public record ManualAttendanceResponse(
 );
 
 public record ManualAttendanceData(
-    int AttendanceId,
+    long AttendanceId,
     string StatusRecorded
 );
 

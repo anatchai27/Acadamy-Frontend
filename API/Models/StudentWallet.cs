@@ -6,7 +6,9 @@ public class StudentWallet : IMultiTenantEntity
     public int InstituteId { get; set; }
     public int StudentId { get; set; }
     public int Balance { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int Version { get; set; }
 
     public Institute Institute { get; set; } = null!;
     public Student Student { get; set; } = null!;
