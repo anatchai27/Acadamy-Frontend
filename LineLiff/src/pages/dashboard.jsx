@@ -5,26 +5,17 @@ import { getParentDashboard } from '../services/parent-service';
 import { ChildSwitcher } from '../components/child-switcher';
 import { LiffLayout } from '../components/liff-layout';
 
-export function DashboardPage() {
+export const DashboardPage = () => {
   const { state, dispatch } = useLiffContext();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!state.parentToken) {
-      route('/liff/login', true);
-      return;
-    }
-    getParentDashboard()
+    !state.parentToken ? route('/liff/login', true) : getParentDashboard()
       .then(res => {
         const d = res.data?.data || res.data;
         setData(d);
-        if (d?.children) {
-          dispatch({ type: 'SET_CHILDREN', payload: d.children });
-          if (!state.activeChildId && d.children.length > 0) {
-            dispatch({ type: 'SET_ACTIVE_CHILD', payload: d.children[0].id });
-          }
-        }
+        d?.children ? (dispatch({ type: 'SET_CHILDREN', payload: d.children }), !state.activeChildId && d.children.length > 0 ? dispatch({ type: 'SET_ACTIVE_CHILD', payload: d.children[0].id }) : null) : null;
       })
       .catch(() => route('/liff/login', true))
       .finally(() => setLoading(false));
@@ -32,17 +23,13 @@ export function DashboardPage() {
 
   const activeChild = state.children.find(c => c.id === state.activeChildId);
 
-  if (loading) {
-    return (
-      <LiffLayout>
-        <div class="flex justify-center py-20">
-          <div class="h-8 w-8 rounded-full border-3 border-blue-500/30 border-t-blue-500 animate-spin" />
-        </div>
-      </LiffLayout>
-    );
-  }
-
-  return (
+  return loading ? (
+    <LiffLayout>
+      <div class="flex justify-center py-20">
+        <div class="h-8 w-8 rounded-full border-3 border-blue-500/30 border-t-blue-500 animate-spin" />
+      </div>
+    </LiffLayout>
+  ) : (
     <LiffLayout>
       <div class="space-y-6">
         <div class="text-center">
@@ -66,7 +53,7 @@ export function DashboardPage() {
 
             <div class="grid grid-cols-2 gap-3">
               <StatCard label="เช็คชื่อวันนี้" value={data?.todayAttendance || '-'} color="blue" />
-              <StatCard label="การบ้านคงค้าง" value={data?.pendingHomework ?? '-'} color="orange" />
+              <StatCard label="การบ้านคงค้าง" value={data?.pendingHomework || '-'} color="orange" />
               <StatCard label="ยอดค้างชำระ" value={data?.outstandingBalance ? `฿${data.outstandingBalance.toLocaleString()}` : '-'} color="red" />
               <StatCard label="ทักษะล่าสุด" value={data?.latestSkillScore || '-'} color="green" />
             </div>
@@ -98,9 +85,9 @@ export function DashboardPage() {
       </div>
     </LiffLayout>
   );
-}
+};
 
-function StatCard({ label, value, color }) {
+const StatCard = ({ label, value, color }) => {
   const colors = {
     blue: 'bg-blue-50 text-blue-700',
     orange: 'bg-orange-50 text-orange-700',
@@ -113,9 +100,9 @@ function StatCard({ label, value, color }) {
       <p class="text-xl font-bold mt-1">{value}</p>
     </div>
   );
-}
+};
 
-function QuickAction({ icon, label, onClick }) {
+const QuickAction = ({ icon, label, onClick }) => {
   return (
     <button
       onClick={onClick}
@@ -125,4 +112,4 @@ function QuickAction({ icon, label, onClick }) {
       <span class="text-sm font-medium">{label}</span>
     </button>
   );
-}
+};

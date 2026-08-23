@@ -1,59 +1,73 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-
 let dialogListeners = [];
-
-export function showConfirm({ title, message, yesLabel = 'ยืนยัน', cancelLabel = 'ยกเลิก' }) {
+export const showConfirm = ({
+  title,
+  message,
+  yesLabel = 'ยืนยัน',
+  cancelLabel = 'ยกเลิก'
+}) => {
   const id = Date.now();
   let resolver;
-  const promise = new Promise((resolve) => { resolver = resolve; });
-
-  dialogListeners.forEach((listener) => listener({ id, title, message, yesLabel, cancelLabel, resolver }));
+  const promise = new Promise(resolve => {
+    resolver = resolve;
+  });
+  dialogListeners.map(listener => listener({
+    id,
+    title,
+    message,
+    yesLabel,
+    cancelLabel,
+    resolver
+  }));
   return promise;
-}
-
-export function useConfirmDialog() {
+};
+export const useConfirmDialog = () => {
   const [dialog, setDialog] = useState(null);
-
   useEffect(() => {
-    const listener = (event) => { setDialog(event); };
+    const listener = event => {
+      setDialog(event);
+    };
     dialogListeners.push(listener);
-    return () => { dialogListeners = dialogListeners.filter((l) => l !== listener); };
+    return () => {
+      dialogListeners = dialogListeners.filter(l => l !== listener);
+    };
   }, []);
-
   return dialog;
-}
-
-export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resolver }) {
-  const { designTheme } = useDesignTheme();
+};
+export const ConfirmDialog = ({
+  id,
+  title,
+  message,
+  yesLabel,
+  cancelLabel,
+  resolver
+}) => {
+  const {
+    designTheme
+  } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
   const [visible, setVisible] = useState(false);
-
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
-
   useEffect(() => {
-    if (visible) {
+    visible ? (() => {
       document.body.style.overflow = 'hidden';
-    }
+    })() : () => {};
     return () => {
       document.body.style.overflow = '';
     };
   }, [visible]);
-
-  const handleResolve = (value) => {
+  const handleResolve = value => {
     setVisible(false);
     setTimeout(() => resolveAndClose(value), 200);
   };
-
-  const resolveAndClose = (value) => {
+  const resolveAndClose = value => {
     resolver(value);
-    dialogListeners.forEach((listener) => listener(null));
+    dialogListeners.map(listener => listener(null));
   };
-
-  return (
-    <div class={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+  return <div class={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div class={`absolute inset-0 bg-black/50 backdrop-blur-lg transition-all duration-200 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => handleResolve(false)} />
 
       <div class={`relative ${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl shadow-xl'} max-w-md w-full mx-4 overflow-hidden transition-all duration-200 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
@@ -63,22 +77,13 @@ export function ConfirmDialog({ id, title, message, yesLabel, cancelLabel, resol
         </div>
 
         <div class="flex items-center justify-end gap-3 px-6 pb-6">
-          <button
-            type="button"
-            class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-white text-zinc-700' : 'text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl'}`}
-            onClick={() => handleResolve(false)}
-          >
+          <button type="button" class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-white text-zinc-700' : 'text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl'}`} onClick={() => handleResolve(false)}>
             {cancelLabel}
           </button>
-          <button
-            type="button"
-            class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-oasis-primary text-white' : 'text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl shadow-sm'}`}
-            onClick={() => handleResolve(true)}
-          >
+          <button type="button" class={`px-5 py-2.5 text-sm font-medium transition-colors ${isNeo ? 'neo-btn bg-oasis-primary text-white' : 'text-white bg-oasis-primary hover:bg-oasis-primary-dark rounded-xl shadow-sm'}`} onClick={() => handleResolve(true)}>
             {yesLabel}
           </button>
         </div>
       </div>
-    </div>
-  );
-}
+    </div>;
+};

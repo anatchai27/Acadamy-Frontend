@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export function uploadPaymentSlip(file, paymentId, options = {}) {
+export const uploadPaymentSlip = (file, paymentId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post('/uploads/payment-slip', formData, {
@@ -9,7 +9,7 @@ export function uploadPaymentSlip(file, paymentId, options = {}) {
   });
 }
 
-export function uploadHomeworkFile(file, homeworkId, options = {}) {
+export const uploadHomeworkFile = (file, homeworkId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post('/uploads/homework', formData, {
@@ -18,7 +18,7 @@ export function uploadHomeworkFile(file, homeworkId, options = {}) {
   });
 }
 
-export function uploadHomeworkSubmission(file, submissionId, options = {}) {
+export const uploadHomeworkSubmission = (file, submissionId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post('/uploads/homework-submission', formData, {
@@ -27,7 +27,7 @@ export function uploadHomeworkSubmission(file, submissionId, options = {}) {
   });
 }
 
-export function uploadStudentPhoto(file, studentId, options = {}) {
+export const uploadStudentPhoto = (file, studentId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post('/uploads/student-photo', formData, {
@@ -36,7 +36,7 @@ export function uploadStudentPhoto(file, studentId, options = {}) {
   });
 }
 
-export function uploadTeacherPhoto(file, teacherId, options = {}) {
+export const uploadTeacherPhoto = (file, teacherId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   return api.post('/uploads/teacher-photo', formData, {

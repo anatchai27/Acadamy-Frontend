@@ -1,22 +1,22 @@
 import { api } from './api';
 
-export function getTeachers(params = {}, options = {}) {
+export const getTeachers = (params = {}, options = {}) => {
   return api.get('/teachers', { params, ...options });
 }
 
-export function getTeacherById(id) {
+export const getTeacherById = id => {
   return api.get(`/teachers/${id}`);
 }
 
-export function createTeacher(payload) {
+export const createTeacher = payload => {
   return api.post('/teachers', payload);
 }
 
-export function patchTeacher(id, payload) {
+export const patchTeacher = (id, payload) => {
   return api.patch(`/teachers/${id}`, payload);
 }
 
-export function deleteTeacher(id) {
+export const deleteTeacher = id => {
   return api.delete(`/teachers/${id}`);
 }
 

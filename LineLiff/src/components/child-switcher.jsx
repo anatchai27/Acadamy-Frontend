@@ -1,11 +1,9 @@
 import { useLiffContext } from '../store/LiffContext';
 
-export function ChildSwitcher() {
+export const ChildSwitcher = () => {
   const { state, dispatch } = useLiffContext();
 
-  if (state.children.length <= 1) return null;
-
-  return (
+  return state.children.length <= 1 ? null : (
     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
       {state.children.map(child => {
         const active = child.id === state.activeChildId;
@@ -25,4 +23,4 @@ export function ChildSwitcher() {
       })}
     </div>
   );
-}
+};

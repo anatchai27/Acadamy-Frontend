@@ -1,18 +1,18 @@
 import { api } from './api';
 
-export function getCourses(params = {}, options = {}) {
+export const getCourses = (params = {}, options = {}) => {
   return api.get('/courses', { params, ...options });
 }
 
-export function getCourseById(id) {
+export const getCourseById = id => {
   return api.get(`/courses/${id}`);
 }
 
-export function createCourse(payload) {
+export const createCourse = payload => {
   return api.post('/courses', payload);
 }
 
-export function updateCourse(id, payload) {
+export const updateCourse = (id, payload) => {
   return api.put(`/courses/${id}`, payload);
 }
 

@@ -3,23 +3,22 @@ const TOKEN_KEY = 'auth_token';
 
 let onUnauthorized = null;
 
-export function setOnUnauthorized(handler) {
+export const setOnUnauthorized = handler => {
   onUnauthorized = handler;
-}
+};
 
-function buildQuery(params) {
-  if (!params || Object.keys(params).length === 0) return '';
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      search.append(key, value);
-    }
-  });
-  const qs = search.toString();
-  return qs ? `?${qs}` : '';
-}
+const buildQuery = params => {
+  return !params || Object.keys(params).length === 0 ? '' : (() => {
+    const search = new URLSearchParams();
+    Object.entries(params).map(([key, value]) => {
+      (value !== undefined && value !== null && value !== '') ? search.append(key, value) : null;
+    });
+    const qs = search.toString();
+    return qs ? `?${qs}` : '';
+  })();
+};
 
-async function fetcher(endpoint, options = {}) {
+const fetcher = async (endpoint, options = {}) => {
   const { params, signal, ...fetchOptions } = options;
   const headers = { ...fetchOptions.headers };
 
@@ -31,15 +30,11 @@ async function fetcher(endpoint, options = {}) {
     }
   })();
 
-  if (storedToken && !headers.Authorization) {
-    headers.Authorization = `Bearer ${storedToken}`;
-  }
+  storedToken && !headers.Authorization ? (headers.Authorization = `Bearer ${storedToken}`) : null;
 
   const hasBody = fetchOptions.body !== undefined;
   const isFormData = hasBody && fetchOptions.body instanceof FormData;
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
+  !isFormData ? (headers['Content-Type'] = 'application/json') : null;
 
   const url = `${API_BASE}${endpoint}${buildQuery(params)}`;
   const response = await fetch(url, {
@@ -53,19 +48,15 @@ async function fetcher(endpoint, options = {}) {
     ? await response.json().catch(() => null)
     : null;
 
-  if (!response.ok) {
-    if (response.status === 401 && onUnauthorized) {
-      onUnauthorized();
-    }
+  return response.ok ? { data, status: response.status } : (() => {
+    response.status === 401 && onUnauthorized ? onUnauthorized() : null;
     const msg = data?.message || data?.error || `API Error: ${response.status}`;
     const error = new Error(msg);
     error.status = response.status;
     error.data = data;
     throw error;
-  }
-
-  return { data, status: response.status };
-}
+  })();
+};
 
 export const api = {
   get: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'GET' }),

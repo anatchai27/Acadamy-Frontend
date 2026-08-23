@@ -1,29 +1,18 @@
 import { route } from 'preact-router';
 import { useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
-
-export function requireAuth(Component) {
-  return function AuthenticatedComponent(props) {
-    const { state } = useAppContext();
-
+export const requireAuth = Component => {
+  return props => {
+    const {
+      state
+    } = useAppContext();
     useEffect(() => {
-      if (!state.isAuthenticated && !state.isAuthLoading) {
+      return !state.isAuthenticated && !state.isAuthLoading ? (() => {
         route('/login', true);
-      }
+      })() : undefined;
     }, [state.isAuthenticated, state.isAuthLoading]);
-
-    if (state.isAuthLoading) {
-      return (
-        <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
-          <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
-        </div>
-      );
-    }
-
-    if (!state.isAuthenticated) {
-      return null;
-    }
-
-    return <Component {...props} />;
+    return state.isAuthLoading ? <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
+        <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+      </div> : !state.isAuthenticated ? null : <Component {...props} />;
   };
-}
+};

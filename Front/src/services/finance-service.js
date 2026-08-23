@@ -1,10 +1,10 @@
 import { api } from './api';
 
-export function createPayment(payload) {
+export const createPayment = payload => {
   return api.post('/payments', payload);
 }
 
-export function getPayments(params = {}, options = {}) {
+export const getPayments = (params = {}, options = {}) => {
   return api.get('/payments', { params, ...options });
 }
 

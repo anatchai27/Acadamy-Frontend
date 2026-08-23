@@ -4,7 +4,7 @@ import { useLiffContext } from '../store/LiffContext';
 import { getParentProfile, updateParentProfile } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 
-export function ProfilePage() {
+export const ProfilePage = () => {
   const { state, dispatch, reset } = useLiffContext();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,8 +13,7 @@ export function ProfilePage() {
   const [form, setForm] = useState({});
 
   useEffect(() => {
-    if (!state.parentToken) { route('/liff/login', true); return; }
-    getParentProfile()
+    !state.parentToken ? route('/liff/login', true) : getParentProfile()
       .then(res => {
         const p = res.data?.data || res.data;
         setProfile(p);
@@ -26,16 +25,18 @@ export function ProfilePage() {
 
   const handleSave = async () => {
     setSaving(true);
-    try {
-      const res = await updateParentProfile(form);
-      const updated = res.data?.data || res.data;
-      setProfile(updated);
-      setEditMode(false);
-    } catch (err) {
-      alert(err.message || 'ไม่สามารถบันทึกได้');
-    } finally {
-      setSaving(false);
-    }
+    (async () => {
+      try {
+        const res = await updateParentProfile(form);
+        const updated = res.data?.data || res.data;
+        setProfile(updated);
+        setEditMode(false);
+      } catch (err) {
+        alert(err.message || 'ไม่สามารถบันทึกได้');
+      } finally {
+        setSaving(false);
+      }
+    })();
   };
 
   const handleLogout = () => {
@@ -47,17 +48,13 @@ export function ProfilePage() {
     route('/liff/login', true);
   };
 
-  if (loading) {
-    return (
-      <LiffLayout>
-        <div class="flex justify-center py-20">
-          <div class="h-8 w-8 rounded-full border-3 border-blue-500/30 border-t-blue-500 animate-spin" />
-        </div>
-      </LiffLayout>
-    );
-  }
-
-  return (
+  return loading ? (
+    <LiffLayout>
+      <div class="flex justify-center py-20">
+        <div class="h-8 w-8 rounded-full border-3 border-blue-500/30 border-t-blue-500 animate-spin" />
+      </div>
+    </LiffLayout>
+  ) : (
     <LiffLayout showBack>
       <div class="space-y-6">
         <div class="text-center">
@@ -131,18 +128,18 @@ export function ProfilePage() {
       </div>
     </LiffLayout>
   );
-}
+};
 
-function ProfileRow({ label, value }) {
+const ProfileRow = ({ label, value }) => {
   return (
     <div class="flex justify-between items-center">
       <span class="text-sm text-gray-500">{label}</span>
       <span class="text-sm font-medium">{value}</span>
     </div>
   );
-}
+};
 
-function InputField({ label, value, onChange, type = 'text' }) {
+const InputField = ({ label, value, onChange, type = 'text' }) => {
   return (
     <div>
       <label class="text-xs text-gray-500 mb-1 block">{label}</label>
@@ -154,4 +151,4 @@ function InputField({ label, value, onChange, type = 'text' }) {
       />
     </div>
   );
-}
+};

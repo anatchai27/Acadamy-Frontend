@@ -37,7 +37,8 @@ builder.Services.AddCors(options =>
             "http://localhost:3000",
             "http://localhost",
             "http://165.101.65.84",
-            "https://165.101.65.84"
+            "https://165.101.65.84",
+            "https://7381-49-237-99-128.ngrok-free.app"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -186,6 +187,7 @@ app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
 app.MapFileUploadEndpoints();
+app.MapParentEndpoints();
 
 // Database connection test endpoint
 app.MapGet("/api/v1/test-connection", (IDbConnectionValidator validator) =>

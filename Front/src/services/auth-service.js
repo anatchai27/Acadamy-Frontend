@@ -3,33 +3,33 @@ import { api } from './api';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
-export async function login({ email, password }) {
+export const login = async ({ email, password }) => {
   return api.post('/auth/login', { email, password });
-}
+};
 
-export async function getMe() {
+export const getMe = async () => {
   return api.get('/auth/me');
-}
+};
 
-export async function logout() {
+export const logout = async () => {
   return api.post('/auth/logout');
-}
+};
 
-export async function registerInstitute(payload) {
+export const registerInstitute = async payload => {
   return api.post('/auth/register-institute', payload);
-}
+};
 
-export async function refreshToken(token) {
+export const refreshToken = async token => {
   return api.post('/auth/refresh-token', { token });
-}
+};
 
-export async function forgotPassword(email) {
+export const forgotPassword = async email => {
   return api.post('/users/forget-password', { email });
-}
+};
 
-export async function resetPassword({ email, token, newPassword }) {
+export const resetPassword = async ({ email, token, newPassword }) => {
   return api.post('/users/reset-password', { email, token, newPassword });
-}
+};
 
 export const authService = {
   login,
@@ -41,41 +41,33 @@ export const authService = {
   resetPassword,
 };
 
-export function getStoredUser() {
+export const getStoredUser = () => {
   try {
     const raw = window.localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
-}
+};
 
-export function getStoredToken() {
+export const getStoredToken = () => {
   try {
     return window.localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
-}
+};
 
-export function setAuthStorage(token, user) {
+export const setAuthStorage = (token, user) => {
   try {
-    if (token) {
-      window.localStorage.setItem(TOKEN_KEY, token);
-    }
-    if (user) {
-      window.localStorage.setItem(USER_KEY, JSON.stringify(user));
-    }
-  } catch {
-    // Ignore storage errors (private mode/quota); request auth may still work via cookies.
-  }
-}
+    token ? window.localStorage.setItem(TOKEN_KEY, token) : null;
+    user ? window.localStorage.setItem(USER_KEY, JSON.stringify(user)) : null;
+  } catch {}
+};
 
-export function clearAuthStorage() {
+export const clearAuthStorage = () => {
   try {
     window.localStorage.removeItem(TOKEN_KEY);
     window.localStorage.removeItem(USER_KEY);
-  } catch {
-    // No-op
-  }
-}
+  } catch {}
+};

@@ -1,22 +1,22 @@
 import { api } from './api';
 
-export function getStudents(params = {}, options = {}) {
+export const getStudents = (params = {}, options = {}) => {
   return api.get('/students', { params, ...options });
 }
 
-export function getStudentById(id, options = {}) {
+export const getStudentById = (id, options = {}) => {
   return api.get(`/students/${id}`, options);
 }
 
-export function createStudent(payload) {
+export const createStudent = payload => {
   return api.post('/students', payload);
 }
 
-export function updateStudent(id, payload) {
+export const updateStudent = (id, payload) => {
   return api.put(`/students/${id}`, payload);
 }
 
-export function getStudentQR(id) {
+export const getStudentQR = id => {
   return api.get(`/students/${id}/qr`);
 }
 

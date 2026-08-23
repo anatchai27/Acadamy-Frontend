@@ -7,14 +7,10 @@ import { AttendancePage } from './pages/attendance';
 import { PaymentsPage } from './pages/payments';
 import { ProfilePage } from './pages/profile';
 
-export function App() {
+export const App = () => {
   const { state } = useLiffContext();
 
-  if (state.loading) {
-    return <SplashPage />;
-  }
-
-  return (
+  return state.loading ? <SplashPage /> : (
     <div class="min-h-screen bg-gray-50 text-gray-900">
       <Router>
         <LoginPage path="/liff" />
@@ -26,4 +22,4 @@ export function App() {
       </Router>
     </div>
   );
-}
+};

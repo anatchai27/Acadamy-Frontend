@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export function enrollStudent(payload) {
+export const enrollStudent = payload => {
   return api.post('/enrollments', payload);
 }
 

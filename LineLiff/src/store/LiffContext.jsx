@@ -15,62 +15,47 @@ const initialState = {
   loading: true,
 };
 
-function reducer(state, action) {
-  switch (action.type) {
-    case 'LIFF_INIT_SUCCESS':
-      return { ...state, liffInitialized: true, liffError: null, loading: false };
-    case 'LIFF_INIT_ERROR':
-      return { ...state, liffError: action.payload, loading: false };
-    case 'SET_LIFF_PROFILE':
-      return { ...state, liffProfile: action.payload };
-    case 'SET_PARENT_TOKEN':
-      return { ...state, parentToken: action.payload };
-    case 'SET_PARENT_USER':
-      return { ...state, parentUser: action.payload };
-    case 'SET_CHILDREN':
-      return { ...state, children: action.payload };
-    case 'SET_ACTIVE_CHILD':
-      return { ...state, activeChildId: action.payload };
-    case 'SET_DASHBOARD':
-      return { ...state, dashboard: action.payload };
-    case 'SET_LOADING':
-      return { ...state, loading: action.payload };
-    case 'RESET':
-      return { ...initialState, loading: false };
-    default:
-      return state;
-  }
-}
+const reducer = (state, action) => {
+  return ({
+    LIFF_INIT_SUCCESS: { ...state, liffInitialized: true, liffError: null, loading: false },
+    LIFF_INIT_ERROR: { ...state, liffError: action.payload, loading: false },
+    SET_LIFF_PROFILE: { ...state, liffProfile: action.payload },
+    SET_PARENT_TOKEN: { ...state, parentToken: action.payload },
+    SET_PARENT_USER: { ...state, parentUser: action.payload },
+    SET_CHILDREN: { ...state, children: action.payload },
+    SET_ACTIVE_CHILD: { ...state, activeChildId: action.payload },
+    SET_DASHBOARD: { ...state, dashboard: action.payload },
+    SET_LOADING: { ...state, loading: action.payload },
+    RESET: { ...initialState, loading: false },
+  })[action.type] || state;
+};
 
-export function LiffProvider({ children }) {
+export const LiffProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const reset = useCallback(() => {
     dispatch({ type: 'RESET' });
-    try { window.localStorage.removeItem('parent_token'); } catch {}
+    (() => {
+      try {
+        window.localStorage.removeItem('parent_token');
+      } catch {}
+    })();
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    async function init() {
+    (async () => {
       try {
         const { initLiff } = await import('../services/liff');
         const liff = await initLiff();
-        if (cancelled) return;
-        dispatch({ type: 'LIFF_INIT_SUCCESS' });
-
-        if (liff.isLoggedIn()) {
+        cancelled ? null : (dispatch({ type: 'LIFF_INIT_SUCCESS' }), liff.isLoggedIn() ? (async () => {
           const profile = await liff.getProfile();
-          if (cancelled) return;
-          dispatch({ type: 'SET_LIFF_PROFILE', payload: profile });
-        }
+          cancelled ? null : dispatch({ type: 'SET_LIFF_PROFILE', payload: profile });
+        })() : null);
       } catch (err) {
-        if (!cancelled) {
-          dispatch({ type: 'LIFF_INIT_ERROR', payload: err.message });
-        }
+        !cancelled ? dispatch({ type: 'LIFF_INIT_ERROR', payload: err.message }) : null;
       }
-    }
-    init();
+    })();
     return () => { cancelled = true; };
   }, []);
 
@@ -79,10 +64,9 @@ export function LiffProvider({ children }) {
       {children}
     </LiffContext.Provider>
   );
-}
+};
 
-export function useLiffContext() {
+export const useLiffContext = () => {
   const ctx = useContext(LiffContext);
-  if (!ctx) throw new Error('useLiffContext must be used within LiffProvider');
-  return ctx;
-}
+  return ctx ? ctx : (() => { throw new Error('useLiffContext must be used within LiffProvider'); })();
+};

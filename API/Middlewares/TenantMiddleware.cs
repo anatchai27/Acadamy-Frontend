@@ -17,7 +17,7 @@ public class TenantMiddleware(RequestDelegate next, IConfiguration configuration
     {
         var path = context.Request.Path.Value;
 
-        if (path != null && (path.StartsWith("/api/auth") || path.StartsWith("/api/public") || path.StartsWith("/api/health") || path.StartsWith("/api/v1")))
+        if (path != null && (path.StartsWith("/api/auth") || path.StartsWith("/api/public") || path.StartsWith("/api/health") || path.StartsWith("/api/v1") || path.StartsWith("/api/parents/bind-line") || path.StartsWith("/api/line/webhook")))
         {
             await _next(context);
             return;

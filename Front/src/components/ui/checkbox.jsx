@@ -1,26 +1,25 @@
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-
-export function Checkbox({ id, checked, onChange, onBlur, label, required = false, error = '', name, inputRef, neo }) {
-  const { designTheme } = useDesignTheme();
+export const Checkbox = ({
+  id,
+  checked,
+  onChange,
+  onBlur,
+  label,
+  required = false,
+  error = '',
+  name,
+  inputRef,
+  neo
+}) => {
+  const {
+    designTheme
+  } = useDesignTheme();
   const isNeo = neo !== undefined ? neo : designTheme === 'neobrutalism';
-
-  return (
-    <div class="flex flex-col gap-1">
+  return <div class="flex flex-col gap-1">
       <label for={id} class="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          id={id}
-          name={name}
-          checked={checked}
-          onChange={onChange}
-          onBlur={onBlur}
-          required={required}
-          ref={inputRef}
-          class={`w-4 h-4 ${isNeo ? 'border-2 border-black' : 'rounded-md border-zinc-200 text-oasis-primary focus:ring-oasis-primary/30 focus:ring-2'}`}
-        />
-        {label && <span class={`text-sm ${isNeo ? 'text-black' : 'text-zinc-600'}`}>{label}</span>}
+        <input type="checkbox" id={id} name={name} checked={checked} onChange={onChange} onBlur={onBlur} required={required} ref={inputRef} class={`w-4 h-4 ${isNeo ? 'border-2 border-black' : 'rounded-md border-zinc-200 text-oasis-primary focus:ring-oasis-primary/30 focus:ring-2'}`} />
+        {label ? <span class={`text-sm ${isNeo ? 'text-black' : 'text-zinc-600'}`}>{label}</span> : null}
       </label>
-      {error && <span class="text-xs text-red-500">{error}</span>}
-    </div>
-  );
-}
+      {error ? <span class="text-xs text-red-500">{error}</span> : null}
+    </div>;
+};

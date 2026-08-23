@@ -1,18 +1,18 @@
 import { api } from './api';
 
-export function getHomeworks(courseId, params = {}, options = {}) {
+export const getHomeworks = (courseId, params = {}, options = {}) => {
   return api.get(`/homeworks/course/${courseId}`, { params, ...options });
 }
 
-export function createHomework(payload) {
+export const createHomework = payload => {
   return api.post('/homeworks', payload);
 }
 
-export function getSubmissions(homeworkId, params = {}, options = {}) {
+export const getSubmissions = (homeworkId, params = {}, options = {}) => {
   return api.get(`/homeworks/${homeworkId}/submissions`, { params, ...options });
 }
 
-export function gradeSubmission(submissionId, payload) {
+export const gradeSubmission = (submissionId, payload) => {
   return api.put(`/homeworks/submissions/${submissionId}/grade`, payload);
 }
 

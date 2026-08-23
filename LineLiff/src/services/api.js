@@ -1,18 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-function buildQuery(params) {
-  if (!params) return '';
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      search.append(key, value);
-    }
-  });
-  const qs = search.toString();
-  return qs ? `?${qs}` : '';
-}
+const buildQuery = params => {
+  return !params ? '' : (() => {
+    const search = new URLSearchParams();
+    Object.entries(params).map(([key, value]) => {
+      (value !== undefined && value !== null && value !== '') ? search.append(key, value) : null;
+    });
+    const qs = search.toString();
+    return qs ? `?${qs}` : '';
+  })();
+};
 
-async function fetcher(endpoint, options = {}) {
+const fetcher = async (endpoint, options = {}) => {
   const { params, signal, ...fetchOptions } = options;
   const headers = { ...fetchOptions.headers };
 
@@ -24,15 +23,11 @@ async function fetcher(endpoint, options = {}) {
     }
   })();
 
-  if (token && !headers.Authorization) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  token && !headers.Authorization ? (headers.Authorization = `Bearer ${token}`) : null;
 
   const hasBody = fetchOptions.body !== undefined;
   const isFormData = hasBody && fetchOptions.body instanceof FormData;
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
+  !isFormData ? (headers['Content-Type'] = 'application/json') : null;
 
   const url = `${API_BASE}${endpoint}${buildQuery(params)}`;
   const response = await fetch(url, { ...fetchOptions, headers, signal });
@@ -41,16 +36,14 @@ async function fetcher(endpoint, options = {}) {
     ? await response.json().catch(() => null)
     : null;
 
-  if (!response.ok) {
+  return response.ok ? { data, status: response.status } : (() => {
     const msg = data?.message || data?.error || `API Error: ${response.status}`;
     const error = new Error(msg);
     error.status = response.status;
     error.data = data;
     throw error;
-  }
-
-  return { data, status: response.status };
-}
+  })();
+};
 
 export const api = {
   get: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'GET' }),

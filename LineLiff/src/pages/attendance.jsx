@@ -4,14 +4,13 @@ import { useLiffContext } from '../store/LiffContext';
 import { getChildAttendance } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 
-export function AttendancePage({ childId }) {
+export const AttendancePage = ({ childId }) => {
   const { state } = useLiffContext();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!state.parentToken) { route('/liff/login', true); return; }
-    getChildAttendance(childId || state.activeChildId)
+    !state.parentToken ? route('/liff/login', true) : getChildAttendance(childId || state.activeChildId)
       .then(res => setRecords(res.data?.data || res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -58,4 +57,4 @@ export function AttendancePage({ childId }) {
       </div>
     </LiffLayout>
   );
-}
+};

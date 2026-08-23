@@ -4,14 +4,13 @@ import { useLiffContext } from '../store/LiffContext';
 import { getChildPayments } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 
-export function PaymentsPage({ childId }) {
+export const PaymentsPage = ({ childId }) => {
   const { state } = useLiffContext();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!state.parentToken) { route('/liff/login', true); return; }
-    getChildPayments(childId || state.activeChildId)
+    !state.parentToken ? route('/liff/login', true) : getChildPayments(childId || state.activeChildId)
       .then(res => setPayments(res.data?.data || res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -63,4 +62,4 @@ export function PaymentsPage({ childId }) {
       </div>
     </LiffLayout>
   );
-}
+};

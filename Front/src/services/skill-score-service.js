@@ -1,14 +1,14 @@
 import { api } from './api';
 
-export function getSkillTopics(courseId, params = {}, options = {}) {
+export const getSkillTopics = (courseId, params = {}, options = {}) => {
   return api.get('/skill-scores/topics', { params: { ...params, courseId }, ...options });
 }
 
-export function getSkillScores(studentId, params = {}, options = {}) {
+export const getSkillScores = (studentId, params = {}, options = {}) => {
   return api.get(`/skill-scores/student/${studentId}`, { params, ...options });
 }
 
-export function batchUpdateSkillScores(payload) {
+export const batchUpdateSkillScores = payload => {
   return api.post('/skill-scores/batch-update', payload);
 }
 

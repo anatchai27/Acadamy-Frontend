@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
-  "appVersion":"1.0.0",
+  "appVersion": "1.0.0",
   "config": {
     "designMode": "neobrutalism"
   },
@@ -31,6 +31,11 @@
     "react-qr-code": "^2.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/generator": "^8.0.0",
+    "@babel/parser": "^8.0.4",
+    "@babel/traverse": "^8.0.4",
+    "@babel/types": "^8.0.4",
     "@preact/preset-vite": "^2.10.5",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",

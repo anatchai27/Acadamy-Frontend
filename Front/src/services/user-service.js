@@ -1,32 +1,32 @@
 import { api } from './api';
 
-export async function createStaff(payload) {
+export const createStaff = async payload => {
   return api.post('/users', payload);
-}
+};
 
-export async function registerUser(payload) {
+export const registerUser = async payload => {
   return api.post('/users/register', payload);
-}
+};
 
-export async function createUser(payload) {
+export const createUser = async payload => {
   return registerUser(payload);
-}
+};
 
-export async function getUsers(params = {}, options = {}) {
+export const getUsers = async (params = {}, options = {}) => {
   return api.get('/users', { params, ...options });
-}
+};
 
-export async function getUserById(id) {
+export const getUserById = async id => {
   return api.get(`/users/${id}`);
-}
+};
 
-export async function updateUserRole(id, role) {
+export const updateUserRole = async (id, role) => {
   return api.put(`/users/${id}/role`, { role });
-}
+};
 
-export async function deleteUser(id) {
+export const deleteUser = async id => {
   return api.delete(`/users/${id}`);
-}
+};
 
 export const userService = {
   createStaff,

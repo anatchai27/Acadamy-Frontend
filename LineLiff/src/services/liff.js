@@ -1,37 +1,31 @@
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || '';
+const FORCE_LOGOUT = import.meta.env.VITE_FORCE_LOGOUT === 'true';
 
 let liff = null;
 
-export async function initLiff() {
-  if (liff) return liff;
-  const mod = await import('@line/liff');
-  liff = mod.default;
-  await liff.init({ liffId: LIFF_ID });
-  return liff;
-}
+export const initLiff = async () => {
+  return liff || (async () => {
+    const mod = await import('@line/liff');
+    liff = mod.default;
+    await liff.init({ liffId: LIFF_ID });
+    return liff;
+  })();
+};
 
-export function getLiff() {
-  return liff;
-}
+export const getLiff = () => liff;
 
-export async function getLiffProfile() {
-  if (!liff) throw new Error('LIFF not initialized');
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return null;
-  }
-  return liff.getProfile();
-}
+export const getLiffProfile = async () => {
+  return liff ? (FORCE_LOGOUT ? liff.logout() : null, !liff.isLoggedIn() ? (liff.login(), null) : liff.getProfile()) : (() => { throw new Error('LIFF not initialized'); })();
+};
 
-export async function getLiffAccessToken() {
-  if (!liff) throw new Error('LIFF not initialized');
-  return liff.getAccessToken();
-}
+export const getLiffAccessToken = async () => {
+  return liff ? liff.getAccessToken() : (() => { throw new Error('LIFF not initialized'); })();
+};
 
-export function logoutLiff() {
-  if (liff) liff.logout();
-}
+export const logoutLiff = () => {
+  liff ? liff.logout() : null;
+};
 
-export function closeLiff() {
-  if (liff) liff.closeWindow();
-}
+export const closeLiff = () => {
+  liff ? liff.closeWindow() : null;
+};

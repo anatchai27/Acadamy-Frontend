@@ -1,37 +1,37 @@
 import { api } from './api';
 
-export async function bindLineUserId(lineUserId, accessToken) {
+export const bindLineUserId = (lineUserId, accessToken) => {
   return api.post('/parents/bind-line', { lineUserId, accessToken });
 }
 
-export async function getParentDashboard() {
+export const getParentDashboard = () => {
   return api.get('/parents/me/dashboard');
 }
 
-export async function getChildAttendance(childId, params = {}) {
+export const getChildAttendance = (childId, params = {}) => {
   return api.get(`/parents/children/${childId}/attendance`, { params });
 }
 
-export async function getChildPayments(childId, params = {}) {
+export const getChildPayments = (childId, params = {}) => {
   return api.get(`/parents/children/${childId}/payments`, { params });
 }
 
-export async function getChildScores(childId) {
+export const getChildScores = childId => {
   return api.get(`/parents/children/${childId}/scores`);
 }
 
-export async function getChildHomework(childId) {
+export const getChildHomework = childId => {
   return api.get(`/parents/children/${childId}/homework`);
 }
 
-export async function submitLeaveRequest(childId, payload) {
+export const submitLeaveRequest = (childId, payload) => {
   return api.post(`/parents/children/${childId}/leave-requests`, payload);
 }
 
-export async function getParentProfile() {
+export const getParentProfile = () => {
   return api.get('/parents/me/profile');
 }
 
-export async function updateParentProfile(payload) {
+export const updateParentProfile = payload => {
   return api.patch('/parents/me/profile', payload);
 }

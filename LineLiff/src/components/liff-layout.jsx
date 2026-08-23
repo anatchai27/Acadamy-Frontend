@@ -1,6 +1,6 @@
 import { route } from 'preact-router';
 
-export function LiffLayout({ children, showBack }) {
+export const LiffLayout = ({ children, showBack }) => {
   return (
     <div class="max-w-lg mx-auto min-h-screen bg-gray-50">
       {showBack && (
@@ -23,4 +23,4 @@ export function LiffLayout({ children, showBack }) {
       </main>
     </div>
   );
-}
+};
