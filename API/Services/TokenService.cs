@@ -124,6 +124,15 @@ public class TokenService(IConfiguration configuration) : ITokenService
 
     public bool VerifyPassword(string password, string passwordHash)
     {
+        if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(passwordHash))
+            return false;
+        if (!passwordHash.StartsWith("$2a$", StringComparison.Ordinal) &&
+            !passwordHash.StartsWith("$2b$", StringComparison.Ordinal) &&
+            !passwordHash.StartsWith("$2y$", StringComparison.Ordinal))
+        {
+            // Hash is not a valid bcrypt hash — treat as mismatch instead of crashing.
+            return false;
+        }
         return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 

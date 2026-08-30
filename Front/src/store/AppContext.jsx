@@ -34,10 +34,10 @@ export function AppProvider({ children }) {
     document.documentElement.setAttribute('data-theme', state.designTheme);
   }, [state.designTheme]);
 
-  const handleUnauthorized = useCallback(() => {
+  const handleUnauthorized = useCallback((reason = 'unauthorized') => {
     clearAuthStorage();
     dispatch({ type: 'CLEAR_USER' });
-    route('/login');
+    route(reason === 'session-expired' ? '/login?reason=session-expired' : '/login');
   }, []);
 
   useEffect(() => {

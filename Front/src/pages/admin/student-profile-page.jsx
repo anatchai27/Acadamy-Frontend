@@ -16,7 +16,7 @@ const relationshipLabels = {
   'อื่นๆ': 'อื่นๆ',
 };
 
-function formatDate(iso) {
+const formatDate = (iso = '') => {
   if (!iso) return '-';
   try {
     return new Date(iso).toLocaleDateString('th-TH', {
@@ -27,9 +27,9 @@ function formatDate(iso) {
   } catch {
     return iso;
   }
-}
+};
 
-export function StudentProfilePage({ path, id }) {
+export const StudentProfilePage = ({ path, id }) => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,7 +43,7 @@ export function StudentProfilePage({ path, id }) {
     if (!id) return;
     setLoading(true);
     studentService.getStudentById(id, { signal: getSignal() })
-      .then((res) => setStudent(res.data?.data || res.data))
+      .then(({ data }) => setStudent(data?.data || data))
       .catch((err) => {
         if (err?.status === 404) {
           setError('ไม่พบข้อมูลนักเรียน');
@@ -58,9 +58,9 @@ export function StudentProfilePage({ path, id }) {
     if (!id) return;
     setQrLoading(true);
     try {
-      const res = await studentService.getStudentQR(id);
-      const data = res.data?.data || res.data || {};
-      setQrToken(data);
+      const { data } = await studentService.getStudentQR(id);
+      const tokenData = data?.data || data || {};
+      setQrToken(tokenData);
       showToast('สร้าง QR Token สำเร็จ', 'success');
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'ไม่สามารถสร้าง QR ได้';
@@ -71,7 +71,7 @@ export function StudentProfilePage({ path, id }) {
   };
 
   const handleBack = () => route('/admin/students');
-  const handleEdit = () => route(`/admin/students/${id}`);
+  const handleEdit = () => route(`/admin/students/${id}/edit`);
 
   if (loading) {
     return (
@@ -100,6 +100,18 @@ export function StudentProfilePage({ path, id }) {
 
   if (!student) return null;
 
+  const {
+    id: studentId,
+    photoUrl,
+    fullName,
+    nickname,
+    grade,
+    school,
+    createdAt,
+    medicalInfo,
+    parents = [],
+  } = student;
+
   return (
     <AdminLayout path={path}>
       {/* Breadcrumb + Header */}
@@ -116,26 +128,26 @@ export function StudentProfilePage({ path, id }) {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-4">
             <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-semibold overflow-hidden">
-              {student.photoUrl ? (
-                <img src={student.photoUrl} alt={student.fullName} class="w-full h-full object-cover" />
+              {photoUrl ? (
+                <img src={photoUrl} alt={fullName} class="w-full h-full object-cover" />
               ) : (
-                student.nickname?.[0] || student.fullName?.[0] || '?'
+                nickname?.[0] || fullName?.[0] || '?'
               )}
             </div>
             <div>
               <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
-                {student.fullName || '-'}
+                {fullName || '-'}
               </h2>
               <div class="flex items-center gap-2 mt-1">
-                {student.nickname && (
+                {nickname && (
                   <span class="inline-flex items-center gap-1 text-sm text-zinc-500">
                     <HiOutlineTag class="h-3.5 w-3.5" />
-                    {student.nickname}
+                    {nickname}
                   </span>
                 )}
-                {student.grade && (
+                {grade && (
                   <span class="inline-flex items-center rounded-md bg-oasis-primary/5 px-2.5 py-0.5 text-xs font-medium text-oasis-primary">
-                    {student.grade}
+                    {grade}
                   </span>
                 )}
               </div>
@@ -168,15 +180,15 @@ export function StudentProfilePage({ path, id }) {
             </div>
             <div class="p-6">
               <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                <InfoField label="ชื่อเล่น" value={student.nickname} />
-                <InfoField label="ระดับชั้น" value={student.grade} />
-                <InfoField label="โรงเรียน" value={student.school} />
-                <InfoField label="วันที่สร้างข้อมูล" value={formatDate(student.createdAt)} />
+                <InfoField label="ชื่อเล่น" value={nickname} />
+                <InfoField label="ระดับชั้น" value={grade} />
+                <InfoField label="โรงเรียน" value={school} />
+                <InfoField label="วันที่สร้างข้อมูล" value={formatDate(createdAt)} />
               </dl>
-              {student.medicalInfo && (
+              {medicalInfo && (
                 <div class="mt-5 pt-5 border-t border-zinc-100">
                   <dt class="text-xs font-medium text-zinc-500 mb-1">ข้อมูลทางการแพทย์</dt>
-                  <dd class="text-sm text-zinc-900">{student.medicalInfo}</dd>
+                  <dd class="text-sm text-zinc-900">{medicalInfo}</dd>
                 </div>
               )}
             </div>
@@ -186,14 +198,14 @@ export function StudentProfilePage({ path, id }) {
           <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
             <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ผู้ปกครอง</h3>
-              {student.parents && student.parents.length > 0 && (
-                <span class="text-xs text-zinc-400">{student.parents.length} คน</span>
+              {parents.length > 0 && (
+                <span class="text-xs text-zinc-400">{parents.length} คน</span>
               )}
             </div>
             <div class="p-6">
-              {student.parents && student.parents.length > 0 ? (
+              {parents.length > 0 ? (
                 <div class="space-y-4">
-                  {student.parents.map((p, i) => (
+                  {parents.map((p, i) => (
                     <div key={p.id || i} class="flex items-start gap-4 p-4 rounded-xl bg-zinc-50">
                       <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-sm font-semibold">
                         {p.fullName?.[0] || '?'}
@@ -232,11 +244,11 @@ export function StudentProfilePage({ path, id }) {
 
         {/* Right Column — QR Code */}
         <div class="space-y-6">
-          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6 text-center`}>
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6 text-center`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-1">บัตร QR Code</h3>
             <p class="text-xs text-zinc-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
 
-            <div class={"w-48 h-48 mx-auto mb-4 p-2 flex items-center justify-center " + (isNeo ? 'neo-card' : 'bg-white rounded-xl border border-zinc-200')}>
+            <div class={`w-48 h-48 mx-auto mb-4 p-2 flex items-center justify-center ${isNeo ? 'neo-card bg-white' : 'bg-white rounded-xl border border-zinc-200'}`}>
               {qrToken ? (
                 <div class="flex flex-col items-center gap-2">
                   <QRCode
@@ -271,39 +283,39 @@ export function StudentProfilePage({ path, id }) {
           </div>
 
           {/* Quick Info Card */}
-          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6`}>
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลระบบ</h3>
             <dl class="space-y-3 text-sm">
-              <InfoFieldSmall label="รหัสนักเรียน" value={student.id} mono />
-              <InfoFieldSmall label="สร้างเมื่อ" value={formatDate(student.createdAt)} />
+              <InfoFieldSmall label="รหัสนักเรียน" value={studentId} mono />
+              <InfoFieldSmall label="สร้างเมื่อ" value={formatDate(createdAt)} />
             </dl>
           </div>
         </div>
       </BentoGrid>
     </AdminLayout>
   );
-}
+};
 
 /* ─── Reusable Sub-Components ─── */
 
-function InfoField({ label, value }) {
+const InfoField = ({ label, value = '-' }) => {
   return (
     <div>
       <dt class="text-xs font-medium text-zinc-500 mb-0.5">{label}</dt>
-      <dd class="text-sm text-zinc-900 font-medium">{value || '-'}</dd>
+      <dd class="text-sm text-zinc-900 font-medium">{value}</dd>
     </div>
   );
-}
+};
 
-function InfoFieldSmall({ label, value, mono }) {
+const InfoFieldSmall = ({ label, value = '-', mono = false }) => {
   return (
     <div class="flex items-center justify-between">
       <dt class="text-xs text-zinc-500">{label}</dt>
       <dd class={`text-sm font-medium text-zinc-900 ${mono ? 'font-mono' : ''}`}>
-        {value || '-'}
+        {value}
       </dd>
     </div>
   );
-}
+};
 
 

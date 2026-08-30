@@ -1,6 +1,6 @@
 import { route } from 'preact-router';
 import { useForm } from 'react-hook-form';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Button, Input, Checkbox, AuthFormLayout, AuthPageShell } from '../../components/ui';
 import { showToast } from '../../components/ui';
 import { useAppContext } from '../../store/AppContext';
@@ -23,6 +23,16 @@ export const LoginPage = () => {
     }
   } = useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const reason = search.get('reason');
+    if (reason === 'session-expired') {
+      showToast('Session หมดเวลา กรุณาเข้าสู่ระบบใหม่อีกครั้ง', 'warning');
+      route('/login', true);
+    }
+  }, []);
+
   const emailReg = register('email', {
     required: 'กรุณากรอกอีเมลหรือเบอร์โทรศัพท์'
   });

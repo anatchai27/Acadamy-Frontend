@@ -49,11 +49,22 @@ const fetcher = async (endpoint, options = {}) => {
     : null;
 
   return response.ok ? { data, status: response.status } : (() => {
-    response.status === 401 && onUnauthorized ? onUnauthorized() : null;
-    const msg = data?.message || data?.error || `API Error: ${response.status}`;
+    const serverMessage = data?.message || data?.error || '';
+    const isTenantContextInvalid = response.status === 403
+      && /tenant validation failed|invalid or missing institute context/i.test(String(serverMessage));
+    const isUnauthorized = response.status === 401 || isTenantContextInvalid;
+
+    isUnauthorized && onUnauthorized
+      ? onUnauthorized(isTenantContextInvalid ? 'session-expired' : 'unauthorized')
+      : null;
+
+    const msg = isTenantContextInvalid
+      ? 'Session หมดเวลา กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+      : data?.message || data?.error || `API Error: ${response.status}`;
     const error = new Error(msg);
     error.status = response.status;
     error.data = data;
+    error.reason = isTenantContextInvalid ? 'session-expired' : undefined;
     throw error;
   })();
 };

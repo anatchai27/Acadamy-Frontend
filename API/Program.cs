@@ -38,7 +38,8 @@ builder.Services.AddCors(options =>
             "http://localhost",
             "http://165.101.65.84",
             "https://165.101.65.84",
-            "https://7381-49-237-99-128.ngrok-free.app"
+            "https://7381-49-237-99-128.ngrok-free.app",
+            "https://3c09-49-237-170-55.ngrok-free.app"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
