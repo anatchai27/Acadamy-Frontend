@@ -9,6 +9,17 @@ import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 const PARENT_RELATIONS = ['แม่', 'พ่อ', 'ผู้ปกครอง', 'อื่นๆ'];
+const normalizeRelationship = (relationship = '') => {
+  const relationshipMap = {
+    มารดา: 'แม่',
+    บิดา: 'พ่อ',
+  };
+  const normalizedRelationship = relationshipMap[relationship] || relationship;
+
+  return PARENT_RELATIONS.includes(normalizedRelationship)
+    ? normalizedRelationship
+    : 'ผู้ปกครอง';
+};
 const emptyForm = {
   fullName: '', nickname: '', grade: '', school: '', medicalInfo: '',
 };
@@ -22,7 +33,7 @@ export function StudentControll({ path, id }) {
   const [loading, setLoading] = useState(isEdit);
   const parentIdCounter = useRef(0);
   const [parents, setParents] = useState([
-    { _key: ++parentIdCounter.current, fullName: '', phone: '', relationship: 'แม่' },
+    { _key: ++parentIdCounter.current, fullName: '', phone: '', lineUserId: '', relationship: 'แม่' },
   ]);
   const [consent, setConsent] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
@@ -51,9 +62,10 @@ export function StudentControll({ path, id }) {
           parentIdCounter.current = s.parents.length;
           setParents(s.parents.map((p) => ({
             _key: ++parentIdCounter.current,
-            fullName: p.fullName || '',
-            phone: p.phone || '',
-            relationship: p.relationship || 'ผู้ปกครอง',
+             fullName: p.fullName || '',
+             phone: p.phone || '',
+             lineUserId: p.lineUserId || '',
+             relationship: normalizeRelationship(p.relationship),
           })));
         }
         setConsent(true);
@@ -73,7 +85,7 @@ export function StudentControll({ path, id }) {
   };
 
   const addParent = () => {
-    setParents((prev) => [...prev, { _key: ++parentIdCounter.current, fullName: '', phone: '', relationship: 'พ่อ' }]);
+    setParents((prev) => [...prev, { _key: ++parentIdCounter.current, fullName: '', phone: '', lineUserId: '', relationship: 'พ่อ' }]);
   };
 
   const removeParent = (key) => {
@@ -131,6 +143,11 @@ export function StudentControll({ path, id }) {
       showToast('กรุณาระบุเบอร์โทรศัพท์ผู้ปกครองให้ครบถ้วน (10 หลัก)', 'error');
       return;
     }
+    const invalidLineUserId = parents.find((p) => !p.lineUserId.trim());
+    if (invalidLineUserId) {
+      showToast('กรุณาระบุ LINE User ID ผู้ปกครองให้ครบถ้วน', 'error');
+      return;
+    }
     if (!isEdit && !consent) {
       showToast('กรุณายอมรับข้อตกลง PDPA', 'error');
       return;
@@ -153,8 +170,9 @@ export function StudentControll({ path, id }) {
             .map((p) => ({
               id: p.id || 0,
               fullName: p.fullName.trim(),
-              phone: p.phone.trim(),
-              relationship: p.relationship,
+               phone: p.phone.trim(),
+               lineUserId: p.lineUserId.trim(),
+               relationship: p.relationship,
             })),
         });
 
@@ -178,8 +196,9 @@ export function StudentControll({ path, id }) {
             .filter((p) => p.fullName.trim())
             .map((p) => ({
               fullName: p.fullName.trim(),
-              phone: p.phone.trim(),
-              relationship: p.relationship,
+               phone: p.phone.trim(),
+               lineUserId: p.lineUserId.trim(),
+               relationship: p.relationship,
             })),
           pdpa: {
             isAccepted: consent,
@@ -365,14 +384,26 @@ export function StudentControll({ path, id }) {
                     value={parent.fullName}
                     onInput={updateParent(parent._key, 'fullName')}
                   />
-                  <SolidInput
-                    label="เบอร์โทรศัพท์"
+                   <SolidInput
+                     label="เบอร์โทรศัพท์"
                     placeholder="08XXXXXXXX"
                     required
                     value={parent.phone}
-                    onInput={updateParent(parent._key, 'phone')}
-                  />
-                  <div class="flex flex-col gap-1.5">
+                     onInput={updateParent(parent._key, 'phone')}
+                   />
+                   <div class="md:col-span-3">
+                     <SolidInput
+                       label="LINE User ID"
+                       placeholder="เช่น U1234567890abcdef"
+                       required
+                       value={parent.lineUserId}
+                       onInput={updateParent(parent._key, 'lineUserId')}
+                     />
+                     <p class="mt-1.5 text-xs text-zinc-500">
+                       ใช้สำหรับเชื่อมต่อกับระบบ LINE เพื่อแสดงข้อมูลของบุตรหลานของท่าน
+                     </p>
+                   </div>
+                   <div class="flex flex-col gap-1.5">
                     <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ความสัมพันธ์</label>
                     <select
                       value={parent.relationship}

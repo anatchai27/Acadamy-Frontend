@@ -128,6 +128,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             InstituteId = instituteId,
             FullName = p.FullName.Trim(),
             Phone = p.Phone?.Trim() ?? string.Empty,
+            LineUserId = p.LineUserId?.Trim(),
             Relationship = p.Relationship?.Trim(),
             IsPrimary = p.IsPrimary || index == 0,
             IsActive = p.IsActive

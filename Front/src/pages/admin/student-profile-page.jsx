@@ -6,7 +6,6 @@ import { Button, showToast } from '../../components/ui';
 import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { BentoGrid } from '../../components/ui/bento-grid';
 import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
 
 const relationshipLabels = {
@@ -115,7 +114,7 @@ export const StudentProfilePage = ({ path, id }) => {
   return (
     <AdminLayout path={path}>
       {/* Breadcrumb + Header */}
-      <div class="mb-8">
+      <div class="mb-6 md:mb-8">
         <button
           type="button"
           onClick={handleBack}
@@ -125,7 +124,7 @@ export const StudentProfilePage = ({ path, id }) => {
           กลับไปหน้านักเรียน
         </button>
 
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-4">
             <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-2xl font-semibold overflow-hidden">
               {photoUrl ? (
@@ -153,7 +152,7 @@ export const StudentProfilePage = ({ path, id }) => {
               </div>
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
             <Button variant="outline" size="sm" onClick={handleEdit}>
               <span class="flex items-center gap-1.5">
                 <HiOutlinePencil class="h-4 w-4" />
@@ -170,16 +169,16 @@ export const StudentProfilePage = ({ path, id }) => {
         </div>
       </div>
 
-      <BentoGrid class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 xl:gap-6 items-start">
         {/* Left Column — Student Details */}
-        <div class="lg:col-span-2 space-y-6">
+        <div class="xl:col-span-2 min-w-0 space-y-5 xl:space-y-6">
           {/* Personal Info Card */}
-          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
-            <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
+            <div class="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
             </div>
-            <div class="p-6">
-              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+            <div class="p-5 sm:p-6">
+              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 sm:gap-y-5">
                 <InfoField label="ชื่อเล่น" value={nickname} />
                 <InfoField label="ระดับชั้น" value={grade} />
                 <InfoField label="โรงเรียน" value={school} />
@@ -195,18 +194,18 @@ export const StudentProfilePage = ({ path, id }) => {
           </div>
 
           {/* Parents Card */}
-          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
-            <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} overflow-hidden`}>
+            <div class="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h3 class="text-base font-semibold text-zinc-900">ผู้ปกครอง</h3>
               {parents.length > 0 && (
                 <span class="text-xs text-zinc-400">{parents.length} คน</span>
               )}
             </div>
-            <div class="p-6">
+            <div class="p-5 sm:p-6">
               {parents.length > 0 ? (
                 <div class="space-y-4">
                   {parents.map((p, i) => (
-                    <div key={p.id || i} class="flex items-start gap-4 p-4 rounded-xl bg-zinc-50">
+                    <div key={p.id || i} class="flex items-start gap-3 sm:gap-4 p-4 rounded-xl bg-zinc-50">
                       <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oasis-primary/5 text-oasis-primary text-sm font-semibold">
                         {p.fullName?.[0] || '?'}
                       </div>
@@ -225,7 +224,7 @@ export const StudentProfilePage = ({ path, id }) => {
                             </span>
                           )}
                           {p.lineUserId && (
-                            <span class="inline-flex items-center gap-1">
+                            <span class="inline-flex min-w-0 items-start gap-1 break-all">
                               <HiOutlineChatBubbleLeftRight class="h-3 w-3" />
                               {p.lineUserId}
                             </span>
@@ -243,22 +242,22 @@ export const StudentProfilePage = ({ path, id }) => {
         </div>
 
         {/* Right Column — QR Code */}
-        <div class="space-y-6">
-          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6 text-center`}>
+        <div class="min-w-0 space-y-5 xl:space-y-6">
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-5 sm:p-6 text-center`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-1">บัตร QR Code</h3>
             <p class="text-xs text-zinc-400 mb-4">ใช้สำหรับเช็คชื่อเข้าเรียน</p>
 
-            <div class={`w-48 h-48 mx-auto mb-4 p-2 flex items-center justify-center ${isNeo ? 'neo-card bg-white' : 'bg-white rounded-xl border border-zinc-200'}`}>
+            <div class="w-48 min-h-48 mx-auto mb-5 p-3 flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-zinc-200">
               {qrToken ? (
                 <div class="flex flex-col items-center gap-2">
                   <QRCode
                     value={qrToken.qrToken || String(qrToken)}
-                    size={160}
+                     size={144}
                     bgColor="transparent"
                     fgColor="#1e293b"
                   />
                   {qrToken.expiresAt && (
-                    <p class="text-xs text-zinc-400 mt-2">
+                    <p class="text-xs text-zinc-400 text-center">
                       หมดอายุ {formatDate(qrToken.expiresAt)}
                     </p>
                   )}
@@ -283,7 +282,7 @@ export const StudentProfilePage = ({ path, id }) => {
           </div>
 
           {/* Quick Info Card */}
-          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-6`}>
+          <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} p-5 sm:p-6`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลระบบ</h3>
             <dl class="space-y-3 text-sm">
               <InfoFieldSmall label="รหัสนักเรียน" value={studentId} mono />
@@ -291,7 +290,7 @@ export const StudentProfilePage = ({ path, id }) => {
             </dl>
           </div>
         </div>
-      </BentoGrid>
+      </div>
     </AdminLayout>
   );
 };
@@ -311,7 +310,7 @@ const InfoFieldSmall = ({ label, value = '-', mono = false }) => {
   return (
     <div class="flex items-center justify-between">
       <dt class="text-xs text-zinc-500">{label}</dt>
-      <dd class={`text-sm font-medium text-zinc-900 ${mono ? 'font-mono' : ''}`}>
+      <dd class={`max-w-[62%] break-all text-right text-sm font-medium text-zinc-900 ${mono ? 'font-mono' : ''}`}>
         {value}
       </dd>
     </div>

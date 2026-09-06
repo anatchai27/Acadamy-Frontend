@@ -34,11 +34,11 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:5173",
-            "http://localhost:3000",
+            "http://localhost:5174",
             "http://localhost",
             "http://165.101.65.84",
             "https://165.101.65.84",
-            "https://7381-49-237-99-128.ngrok-free.app",
+            "https://242c-27-55-78-210.ngrok-free.app",
             "https://3c09-49-237-170-55.ngrok-free.app"
         )
         .AllowAnyHeader()

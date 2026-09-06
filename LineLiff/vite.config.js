@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [preact(), tailwindcss()],
   base: '/liff/',
   server: {
-    allowedHosts: ['7381-49-237-99-128.ngrok-free.app'],
+    port: 5173,
+    allowedHosts: [
+      '242c-27-55-78-210.ngrok-free.app',
+    ],
     host: '0.0.0.0',
   },
   resolve: {

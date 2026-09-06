@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:ngrok": "powershell.exe -ExecutionPolicy Bypass -File ./run-dev-ngrok.ps1",
     "build": "vite build",
     "preview": "vite preview"
   },

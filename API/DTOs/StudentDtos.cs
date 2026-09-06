@@ -20,7 +20,8 @@ public record ParentInfo(
     string? Phone,
     string? Relationship,
     bool IsPrimary = false,
-    bool IsActive = true
+    bool IsActive = true,
+    string? LineUserId = null
 );
 
 public record PdpaInfo(

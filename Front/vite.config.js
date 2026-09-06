@@ -6,6 +6,10 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [preact(), tailwindcss()],
+  server: {
+    port: 5174,
+    host: '0.0.0.0',
+  },
   resolve: {
     alias: {
       react: 'preact/compat',
