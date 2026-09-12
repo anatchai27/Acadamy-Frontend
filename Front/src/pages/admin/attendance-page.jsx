@@ -11,6 +11,10 @@ export function AttendancePage({ path }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState('');
+  const [pickupStudent, setPickupStudent] = useState(null);
+  const [pickupOptions, setPickupOptions] = useState([]);
+  const [pickupLoading, setPickupLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
@@ -66,6 +70,46 @@ export function AttendancePage({ path }) {
       setStudents((prev) =>
         prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === newStatus ? null : newStatus } : s))
       );
+    }
+  };
+
+  const openPickupPanel = async (student) => {
+    if (!student.attendanceId || !student.checkinAt) {
+      showToast('นักเรียนยังไม่มีเวลาเช็คเข้าเรียน', 'warning');
+      return;
+    }
+
+    setPickupStudent(student);
+    setPickupOptions([]);
+    setPickupLoading(true);
+    try {
+      const response = await attendanceService.getPickupAuthorizations(student.studentId);
+      const data = response.data?.data || response.data || [];
+      setPickupOptions(Array.isArray(data) ? data.filter(option => option.isActive !== false) : []);
+    } catch (err) {
+      showToast(err?.data?.message || err?.data?.error || 'โหลดรายชื่อผู้รับเด็กไม่สำเร็จ', 'error');
+    } finally {
+      setPickupLoading(false);
+    }
+  };
+
+  const handleCheckout = async (authorization) => {
+    if (!pickupStudent) return;
+    setCheckoutLoading(true);
+    try {
+      const response = await attendanceService.checkoutAttendance(pickupStudent.attendanceId, {
+        pickupAuthorizationId: authorization.id,
+      });
+      const checkout = response.data?.data || response.data || {};
+      setStudents(prev => prev.map(student => student.attendanceId === pickupStudent.attendanceId
+        ? { ...student, checkoutAt: checkout.checkoutAt, pickedUpBy: checkout.pickedUpBy || authorization.fullName, pickupAuthorizationId: checkout.pickupAuthorizationId || authorization.id }
+        : student));
+      showToast(`บันทึกผู้รับเด็ก: ${authorization.fullName}`, 'success');
+      setPickupStudent(null);
+    } catch (err) {
+      showToast(err?.data?.message || err?.data?.error || 'บันทึกการรับเด็กไม่สำเร็จ', 'error');
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -141,6 +185,7 @@ export function AttendancePage({ path }) {
           </div>
         </BentoGrid>
       ) : (
+        <>
         <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-zinc-100'} overflow-hidden`}>
           <div class="px-3 sm:px-6 py-4 border-b border-zinc-100">
             <p class="text-sm text-zinc-600">
@@ -161,7 +206,22 @@ export function AttendancePage({ path }) {
                     <span class="text-sm font-medium text-zinc-900">{student.fullName || '-'}</span>
                     {student.status && <StatusBadge status={student.status} />}
                   </div>
-                  <div class="inline-flex rounded-xl bg-zinc-100 p-0.5 shrink-0">
+                  <div class="flex items-center gap-2 shrink-0">
+                    {student.checkoutAt ? (
+                      <span class="rounded-lg bg-oasis-success-light px-2.5 py-1.5 text-xs font-semibold text-oasis-success">
+                        รับแล้ว: {student.pickedUpBy || '-'}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openPickupPanel(student)}
+                        disabled={!student.checkinAt}
+                        class="rounded-lg border border-oasis-primary/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-oasis-primary transition hover:bg-oasis-primary-light disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        รับเด็กกลับ
+                      </button>
+                    )}
+                    <div class="inline-flex rounded-xl bg-zinc-100 p-0.5">
                     {statusOptions.map((opt) => (
                       <button
                         key={opt.value}
@@ -172,12 +232,48 @@ export function AttendancePage({ path }) {
                         {opt.label}
                       </button>
                     ))}
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
+        {pickupStudent && (
+          <div class={`${isNeo ? 'neo-card' : 'rounded-2xl border border-oasis-primary/20'} mt-4 bg-white p-5 shadow-sm`}>
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-zinc-500">บันทึกการรับกลับ</p>
+                <h3 class="mt-1 text-lg font-semibold text-zinc-900">{pickupStudent.fullName}</h3>
+                <p class="mt-1 text-xs text-zinc-500">เช็คเข้า {new Date(pickupStudent.checkinAt).toLocaleTimeString('th-TH')}</p>
+              </div>
+              <button type="button" onClick={() => setPickupStudent(null)} class="text-sm text-zinc-500 hover:text-zinc-900">ปิด</button>
+            </div>
+            {pickupLoading ? (
+              <p class="py-6 text-center text-sm text-zinc-500">กำลังโหลดรายชื่อผู้มีสิทธิ์รับเด็ก...</p>
+            ) : pickupOptions.length === 0 ? (
+              <div class="mt-4 rounded-xl bg-oasis-warning-light p-4 text-sm text-zinc-700">
+                ยังไม่มีรายชื่อผู้มีสิทธิ์รับเด็กที่ active กรุณาเพิ่มในโปรไฟล์นักเรียนก่อน
+              </div>
+            ) : (
+              <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                {pickupOptions.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    disabled={checkoutLoading}
+                    onClick={() => handleCheckout(option)}
+                    class="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-left transition hover:border-oasis-primary hover:bg-oasis-primary-light disabled:opacity-50"
+                  >
+                    <span><span class="block text-sm font-semibold text-zinc-900">{option.fullName}</span><span class="mt-0.5 block text-xs text-zinc-500">{option.relationship || 'ผู้รับที่ได้รับอนุญาต'} {option.phone ? `· ${option.phone}` : ''}</span></span>
+                    <span class="text-xs font-semibold text-oasis-primary">{checkoutLoading ? 'กำลังบันทึก' : 'เลือก'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        </>
       )}
     </AdminLayout>
   );

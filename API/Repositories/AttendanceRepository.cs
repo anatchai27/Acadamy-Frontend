@@ -110,6 +110,7 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
         return await query
             .OrderBy(a => a.Student.FullName)
             .Select(a => new DailyAttendanceRow(
+                a.Id,
                 a.Student.Id,
                 a.Student.FullName,
                 a.Student.Nickname,

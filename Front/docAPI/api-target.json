@@ -1859,7 +1859,7 @@
         "x-implementation-status": "implemented",
         "x-roles": ["admin", "teacher", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
-        "parameters": [{ "name": "attendanceId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "parameters": [{ "name": "attendanceId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutAttendanceRequest" } } } },
         "responses": { "200": { "description": "Attendance checkout recorded" }, "409": { "$ref": "#/components/responses/Conflict" } }
       }

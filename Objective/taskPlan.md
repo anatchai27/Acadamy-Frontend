@@ -57,9 +57,9 @@
 
 ### 5. Admin Attendance/Pickup
 
-- [ ] เพิ่ม UI checkout พร้อมเลือก authorized pickup
-- [ ] แสดงเฉพาะ authorization ที่ active และเป็นของ student คนปัจจุบัน
-- [ ] แสดง audit detail ว่าใคร checkout เมื่อใดและใครเป็นผู้รับ
+- [x] เพิ่ม UI checkout พร้อมเลือก authorized pickup
+- [x] แสดงเฉพาะ authorization ที่ active และเป็นของ student คนปัจจุบัน
+- [/] แสดง audit detail ว่าใคร checkout เมื่อใดและใครเป็นผู้รับ (หน้าแสดงเวลาจาก server และผู้รับแล้ว; audit log ถาวรยังรอ notification/audit workflow)
 
 ### 6. ปรับ test infrastructure ที่ล้มอยู่เดิม
 

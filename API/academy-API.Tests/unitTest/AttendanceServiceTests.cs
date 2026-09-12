@@ -148,7 +148,7 @@ public class AttendanceServiceTests
         repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Session { Id = 12, Course = new Course { Name = "คณิต ม.1" }, ScheduledAt = new DateTime(2026, 6, 14, 13, 0, 0, DateTimeKind.Utc) });
         repoMock.Setup(r => r.GetDailyAttendanceAsync(12, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new DailyAttendanceRow(105, "สมชาย", "ชาย", "present", DateTime.UtcNow, null, null)]);
+            .ReturnsAsync([new DailyAttendanceRow(1, 105, "สมชาย", "ชาย", "present", DateTime.UtcNow, null, null)]);
 
         var sut = CreateSut(repoMock);
         var result = await sut.GetDailyAsync(12, "2026-06-14");

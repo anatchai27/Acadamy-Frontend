@@ -74,6 +74,7 @@ public record DailySessionInfo(
 );
 
 public record DailyAttendanceRow(
+    long AttendanceId,
     int StudentId,
     string FullName,
     string? Nickname,
