@@ -87,13 +87,13 @@
 
 **งาน:**
 
-- [ ] เพิ่ม AAA test เมื่อ `ExpiresAt <= UtcNow` ต้องจองไม่ได้
-- [ ] ยืนยันว่า repository create booking ไม่ถูกเรียก
+- [x] เพิ่ม AAA test เมื่อ `ExpiresAt <= UtcNow` ต้องจองไม่ได้
+- [x] ยืนยันว่า repository create booking ไม่ถูกเรียก
 
 **ผ่านเมื่อ:**
 
-- [ ] focused refactored slice tests ผ่าน
-- [ ] checklist ข้อนี้เปลี่ยนเป็น `[x]`
+- [x] focused refactored slice tests ผ่าน
+- [x] checklist ข้อนี้เปลี่ยนเป็น `[x]`
 
 ## รอบถัดไป: P1 schema-gated work
 

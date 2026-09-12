@@ -55,6 +55,33 @@ public class MakeupServiceTests
     }
 
     [Fact]
+    public async Task CreateBooking_ExpiredCredit_ThrowsUnavailableAndDoesNotCreateBooking()
+    {
+        // Arrange
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.GetSlotAsync(10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OpenSlot());
+        repository.Setup(x => x.GetCreditAsync(20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MakeupCredit
+            {
+                Id = 20,
+                StudentId = 1,
+                Status = "available",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(-1)
+            });
+        var sut = new MakeupService(repository.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CreateBookingAsync(new CreateMakeupBookingRequest(10, 1, 20), 99, CancellationToken.None));
+
+        // Assert
+        Assert.Equal("CREDIT_UNAVAILABLE", exception.Code);
+        repository.Verify(x => x.CreateBookingAsync(
+            It.IsAny<MakeupSlot>(), It.IsAny<MakeupCredit>(), It.IsAny<MakeupBooking>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateBooking_ValidCreditAndSlot_CreatesReservedBooking()
     {
         // Arrange
