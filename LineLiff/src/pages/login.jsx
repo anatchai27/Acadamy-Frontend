@@ -7,6 +7,39 @@ export const LoginPage = () => {
   const { state, dispatch } = useLiffContext();
   const [error, setError] = useState(null);
   const [binding, setBinding] = useState(false);
+  const [needsPhone, setNeedsPhone] = useState(false);
+  const [phone, setPhone] = useState('');
+
+  const bindParent = async (phoneNumber = '') => {
+    setBinding(true);
+    setError(null);
+
+    try {
+      const { getLiffAccessToken } = await import('../services/liff');
+      const accessToken = await getLiffAccessToken();
+      const res = await bindLineUserId(state.liffProfile.userId, accessToken, phoneNumber);
+      const token = res.data?.token || res.data?.accessToken;
+      token ? ((() => {
+        try {
+          window.localStorage.setItem('parent_token', token);
+        } catch {}
+      })(), dispatch({ type: 'SET_PARENT_TOKEN', payload: token })) : null;
+      const user = res.data?.user || res.data;
+      dispatch({ type: 'SET_PARENT_USER', payload: user });
+      const children = res.data?.children || user?.children || [];
+      dispatch({ type: 'SET_CHILDREN', payload: children });
+      children.length > 0 ? dispatch({ type: 'SET_ACTIVE_CHILD', payload: children[0].id }) : null;
+      route('/liff/dashboard', true);
+    } catch (err) {
+      if (err.status === 404 && !phoneNumber) {
+        setNeedsPhone(true);
+        return;
+      }
+      setError(err.data?.error || err.message || 'ไม่สามารถเชื่อมต่อกับ LINE ได้');
+    } finally {
+      setBinding(false);
+    }
+  };
 
   useEffect(() => {
     !state.liffInitialized ? null : (
@@ -16,29 +49,19 @@ export const LoginPage = () => {
         profile ? dispatch({ type: 'SET_LIFF_PROFILE', payload: profile }) : null;
       })() :
       state.parentUser ? route('/liff/dashboard', true) :
-      binding ? null : (setBinding(true), (async () => {
-        try {
-          const { getLiffAccessToken } = await import('../services/liff');
-          const accessToken = await getLiffAccessToken();
-          const res = await bindLineUserId(state.liffProfile.userId, accessToken);
-          const token = res.data?.token || res.data?.accessToken;
-          token ? ((() => {
-            try {
-              window.localStorage.setItem('parent_token', token);
-            } catch {}
-          })(), dispatch({ type: 'SET_PARENT_TOKEN', payload: token })) : null;
-          const user = res.data?.user || res.data;
-          dispatch({ type: 'SET_PARENT_USER', payload: user });
-          const children = res.data?.children || user?.children || [];
-          dispatch({ type: 'SET_CHILDREN', payload: children });
-          children.length > 0 ? dispatch({ type: 'SET_ACTIVE_CHILD', payload: children[0].id }) : null;
-          route('/liff/dashboard', true);
-        } catch (err) {
-          setError(err.message || 'ไม่สามารถเชื่อมต่อกับ LINE ได้');
-        }
-      })())
+      needsPhone || binding ? null : bindParent()
     );
-  }, [state.liffInitialized, state.liffProfile, state.parentUser]);
+  }, [state.liffInitialized, state.liffProfile, state.parentUser, needsPhone]);
+
+  const handlePhoneSubmit = event => {
+    event.preventDefault();
+    const normalizedPhone = phone.replace(/\D/g, '');
+    if (!/^\d{10}$/.test(normalizedPhone)) {
+      setError('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก');
+      return;
+    }
+    bindParent(normalizedPhone);
+  };
 
   return (
     <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-700 text-white p-6">
@@ -46,7 +69,27 @@ export const LoginPage = () => {
         <div class="text-5xl mb-4">📚</div>
         <h1 class="text-2xl font-bold mb-2">TiwHub</h1>
         <p class="text-blue-100 mb-8">ระบบจัดการเรียนการสอน</p>
-        {error ? (
+        {needsPhone ? (
+          <form onSubmit={handlePhoneSubmit} class="w-full max-w-xs text-left">
+            <div class="bg-white/10 rounded-xl p-4 mb-4">
+              <p class="text-sm mb-3">ไม่พบข้อมูลผู้ปกครอง กรุณากรอกเบอร์โทรศัพท์เพื่อเชื่อมต่อข้อมูล</p>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="กรอกเบอร์โทรศัพท์ 10 หลัก"
+                value={phone}
+                onInput={event => setPhone(event.currentTarget.value.replace(/\D/g, '').slice(0, 10))}
+                class="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none"
+                disabled={binding}
+              />
+              {error && <p class="text-sm text-red-200 mt-2">{error}</p>}
+              <button type="submit" class="w-full mt-3 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-blue-700 disabled:opacity-50" disabled={binding}>
+                {binding ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อข้อมูล'}
+              </button>
+            </div>
+          </form>
+        ) : error ? (
           <div class="bg-red-500/20 rounded-xl p-4 mb-4">
             <p class="text-sm">{error}</p>
           </div>

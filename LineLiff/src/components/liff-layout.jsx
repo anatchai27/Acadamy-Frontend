@@ -2,9 +2,9 @@ import { route } from 'preact-router';
 
 export const LiffLayout = ({ children, showBack }) => {
   return (
-    <div class="max-w-lg mx-auto min-h-screen bg-gray-50">
+    <div class="mx-auto min-h-screen max-w-lg bg-sage-50 text-ink-900">
       {showBack && (
-        <header class="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <header class="sticky top-0 z-10 border-b border-white/70 bg-white/75 backdrop-blur-lg">
           <div class="flex items-center h-12 px-4">
             <button
               onClick={() => window.history.length > 1 ? window.history.back() : route('/liff/dashboard')}

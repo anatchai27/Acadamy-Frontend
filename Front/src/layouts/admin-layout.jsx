@@ -5,6 +5,7 @@ import { logout, clearAuthStorage } from '../services/auth-service';
 import { showConfirm, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
+import { HiOutlineCube, HiOutlineSparkles } from 'react-icons/hi2';
 import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, BellIcon } from '../components/ui/icons';
 const menuGroups = [{
   label: 'ข้อมูลหลัก',
@@ -251,7 +252,7 @@ export const AdminLayout = ({
         <div class="flex items-center gap-4">
           {/* Theme Toggle */}
           <button onClick={toggleDesignTheme} class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors flex items-center gap-1.5" aria-label="เปลี่ยนธีม">
-            {designTheme === 'bento' ? <><span class="text-sm">🔲</span> Bento</> : <><span class="text-sm">■</span> Neo</>}
+            {designTheme === 'bento' ? <><HiOutlineCube class="h-4 w-4" /> Bento</> : <><HiOutlineSparkles class="h-4 w-4" /> Neo</>}
           </button>
           <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
             <BellIcon class="h-5 w-5" />

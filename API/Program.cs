@@ -28,19 +28,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // Configure CORS
+var corsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost",
-            "http://165.101.65.84",
-            "https://165.101.65.84",
-            "https://242c-27-55-78-210.ngrok-free.app",
-            "https://3c09-49-237-170-55.ngrok-free.app"
-        )
+        policy.WithOrigins(corsOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();

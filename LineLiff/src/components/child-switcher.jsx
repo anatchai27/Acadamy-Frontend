@@ -13,8 +13,8 @@ export const ChildSwitcher = () => {
             onClick={() => dispatch({ type: 'SET_ACTIVE_CHILD', payload: child.id })}
             class={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               active
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200'
+                ? 'bg-sage-600 text-white shadow-soft'
+                : 'border border-white/80 bg-white/75 text-ink-700 shadow-sm'
             }`}
           >
             {child.fullName || child.name}

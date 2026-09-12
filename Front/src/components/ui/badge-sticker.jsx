@@ -1,28 +1,29 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
+import { HiOutlineBookOpen, HiOutlineClipboardDocumentCheck, HiOutlineMap, HiOutlineShieldCheck, HiOutlineTrophy } from 'react-icons/hi2';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 const BADGE_DATA = {
   first_login: {
-    emoji: '🏅',
+    icon: HiOutlineTrophy,
     label: 'First Login',
     desc: 'เข้าสู่ระบบครั้งแรก'
   },
   approve_10: {
-    emoji: '🐶',
+    icon: HiOutlineShieldCheck,
     label: 'Approval Master',
     desc: 'อนุมัติครบ 10 รายการ'
   },
   attendance_50: {
-    emoji: '📋',
+    icon: HiOutlineClipboardDocumentCheck,
     label: 'Attendance Pro',
     desc: 'เช็คชื่อครบ 50 คน'
   },
   create_course: {
-    emoji: '📚',
+    icon: HiOutlineBookOpen,
     label: 'Course Creator',
     desc: 'สร้างคอร์สแรก'
   },
   all_pages: {
-    emoji: '🗺️',
+    icon: HiOutlineMap,
     label: 'Explorer',
     desc: 'เปิดครบทุกหน้า'
   }
@@ -81,7 +82,9 @@ export const BadgeSticker = () => {
   return !justUnlocked || !allBadges[justUnlocked] ? null : (() => {
     const badge = allBadges[justUnlocked];
     return <div role="status" aria-live="polite" class={'fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 ' + (isNeo ? 'bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_#000]' : 'bg-white rounded-2xl border border-zinc-200/80 shadow-lg') + ' animate-sticker-pop'}>
-      <span class="text-2xl">{badge.emoji}</span>
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-oasis-primary/10 text-oasis-primary">
+        <badge.icon class="h-5 w-5" />
+      </span>
       <div>
         <p class="text-sm font-bold text-black">{badge.label}</p>
         <p class="text-xs text-zinc-600">{badge.desc}</p>

@@ -1,10 +1,10 @@
 # Academy API Specification
 
 > **Base URL:** `https://your-domain.com/api`
-> **Version:** 2.2
-> **Updated:** 2026-07-03
+> **Version:** 2.3
+> **Updated:** 2026-09-12
 > **Architecture:** Multi-Tenant (Institute-scoped), Database-First (no EF migrations)
-> **Test Coverage:** 163 unit tests (xUnit + Moq + EF Core InMemory)
+> **Tests:** See `API/academy-API.Tests` for the current xUnit test suite.
 
 ---
 
@@ -68,61 +68,7 @@ All dates use **ISO 8601 UTC**. When sending date query parameters, use `YYYY-MM
 
 ### 1.5 Rate Limiting
 
-Rate limiting is enforced via HTTP headers. Clients must respect the limits below to avoid `429 Too Many Requests` responses.
-
-#### Default Tier
-
-| Scope | Limit | Window | Burst |
-|-------|-------|--------|-------|
-| Per IP | 120 requests | 60 seconds | +20% |
-| Per authenticated user | 300 requests | 60 seconds | — |
-
-#### Endpoint-Specific Limits
-
-| Endpoint Group | Limit | Window | Rationale |
-|---------------|-------|--------|-----------|
-| `POST /auth/login` | 5 | 60 seconds per IP | Brute-force protection |
-| `POST /auth/register-institute` | 3 | 60 seconds per IP | Spam prevention |
-| `POST /users/register` | 5 | 60 seconds per IP | Spam account prevention |
-| `POST /users/forget-password` | 3 | 60 seconds per IP | Anti-enumeration/abuse |
-| `POST /users/reset-password` | 3 | 60 seconds per IP | Token brute-force protection |
-| `POST /attendance/scan` | 60 | 60 seconds per IP | High-throughput QR scanning |
-| `GET /attendance/daily` | 30 | 60 seconds | Dashboard polling |
-| `GET /payments` | 30 | 60 seconds | Report generation |
-
-#### Response Headers (every response)
-
-| Header | Example | Description |
-|--------|---------|-------------|
-| `X-RateLimit-Limit` | `120` | Max requests per window |
-| `X-RateLimit-Remaining` | `87` | Remaining requests in current window |
-| `X-RateLimit-Reset` | `1687275300` | Unix timestamp when the window resets |
-| `Retry-After` | `15` | Seconds until next retry (only on `429`) |
-
-#### Rate Limit Exceeded Response
-
-```http
-HTTP/1.1 429 Too Many Requests
-X-RateLimit-Limit: 120
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1687275300
-Retry-After: 15
-Content-Type: application/json
-
-{
-  "status": "error",
-  "error_code": "RATE_LIMIT_EXCEEDED",
-  "message": "Too many requests. Please retry after 15 seconds."
-}
-```
-
-#### Best Practices for Clients
-
-1. **Respect `Retry-After`** — Do not retry before the specified delay; use exponential backoff with jitter.
-2. **Monitor `X-RateLimit-Remaining`** — Preemptively throttle requests when the count drops below 20% of the limit.
-3. **Cache responses** — Use `ETag` and `If-None-Match` headers where supported to reduce request volume.
-4. **Batch where possible** — Prefer bulk endpoints over N individual calls.
-5. **On `429`** — Pause all requests to that endpoint until `Retry-After` elapses. Retry up to 3 times with exponential backoff (`delay × 2ⁿ + jitter`), then surface an error to the user.
+No application-level rate-limiting middleware is currently registered in `API/Program.cs`. The API does not currently guarantee `429 Too Many Requests` responses or `X-RateLimit-*` headers. Add infrastructure and update this section when rate limiting is implemented.
 
 ---
 
@@ -1725,11 +1671,99 @@ Create a new skill topic for a course.
 
 ---
 
-## 13. Products (Legacy)
+## 13. Parents / LINE LIFF  🔒 Protected parent endpoints
 
-> Products are **not** institute-scoped. These endpoints are public and use an in-memory repository.
+Parent binding is used by the LINE LIFF app. The initial bind endpoint is public because the LINE access token is verified against LINE's token verification endpoint. All other parent endpoints require the parent JWT returned by the bind operation.
 
-### GET `/products` ⃝ Public
+### POST `/parents/bind-line` ⃝ Public
+
+Bind the current LINE account to a parent record. The API first searches by verified `lineUserId`. If no record is found and `phone` is supplied, it searches by the normalized parent phone number and then stores the verified LINE user ID on that parent record.
+
+**Request Body**
+```json
+{
+  "lineUserId": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "accessToken": "LINE access token",
+  "phone": "0812345678"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `lineUserId` | `string` | Yes | LINE user ID from LIFF profile |
+| `accessToken` | `string` | Yes | LINE access token used for verification |
+| `phone` | `string?` | No | Parent phone used as fallback mapping key; digits, spaces and hyphens are accepted |
+
+**Response** `200 OK`
+```json
+{
+  "status": "success",
+  "token": "eyJhbGciOi...",
+  "user": {
+    "id": 12,
+    "fullName": "นางสมศรี รักเรียน",
+    "phone": "0812345678",
+    "email": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@line.parent"
+  },
+  "children": [
+    {
+      "id": 1,
+      "fullName": "ด.ช. สมชาย รักเรียน",
+      "grade": "ม.1",
+      "instituteId": 5
+    }
+  ]
+}
+```
+
+**Errors**
+
+| Condition | Status | Body |
+|-----------|--------|------|
+| Missing `lineUserId` or `accessToken` | 400 | `{ "error": "lineUserId and accessToken are required." }` |
+| Invalid LINE token | 401 | Empty body |
+| Parent not found by LINE ID or phone | 404 | `{ "error": "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }` |
+
+### GET `/parents/me/dashboard` 🔒
+
+Return the parent dashboard summary and linked children.
+
+**Response data fields:** `todayAttendance`, `pendingHomework`, `outstandingBalance`, `latestSkillScore`, and `children`.
+
+### GET `/parents/me/profile` 🔒
+
+Return the authenticated parent's profile and linked children.
+
+### PATCH `/parents/me/profile` 🔒
+
+Update the parent's profile.
+
+```json
+{
+  "fullName": "นางสมศรี รักเรียน",
+  "phone": "0812345678",
+  "email": "parent@example.com"
+}
+```
+
+### Child endpoints 🔒
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/parents/children/{childId}/attendance` | Attendance records for a linked child |
+| `GET` | `/parents/children/{childId}/payments` | Payment records for a linked child |
+| `GET` | `/parents/children/{childId}/scores` | Skill scores for a linked child |
+| `GET` | `/parents/children/{childId}/homework` | Homework for a linked child |
+| `GET` | `/parents/children/{childId}/leave-requests` | Leave requests for a linked child |
+| `POST` | `/parents/children/{childId}/leave-requests` | Create a leave request for a linked child |
+
+---
+
+## 14. Products
+
+> These endpoints require authentication. Product access is handled by the product service; confirm institute-scoping rules before exposing them to another tenant.
+
+### GET `/products` 🔒
 
 List all products.
 
@@ -1743,7 +1777,7 @@ List all products.
 
 ---
 
-### GET `/products/{id}` ⃝ Public
+### GET `/products/{id}` 🔒
 
 Get a product by ID.
 
@@ -1757,7 +1791,7 @@ Get a product by ID.
 
 ---
 
-### POST `/products` ⃝ Public
+### POST `/products` 🔒
 
 Create a product.
 
@@ -1773,7 +1807,7 @@ Create a product.
 
 ---
 
-### PUT `/products/{id}` ⃝ Public
+### PUT `/products/{id}` 🔒
 
 Update a product.
 
@@ -1795,7 +1829,7 @@ Update a product.
 
 ---
 
-### DELETE `/products/{id}` ⃝ Public
+### DELETE `/products/{id}` 🔒
 
 Delete a product.
 
@@ -1809,7 +1843,7 @@ Delete a product.
 
 ---
 
-## 14. System  ⃝ Public
+## 15. System  ⃝ Public
 
 ### GET `/health`
 
@@ -1851,13 +1885,13 @@ Database connectivity test.
 
 ---
 
-## 15. CORS
+## 16. CORS
 
-All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader`, `AllowAnyMethod`).
+Allowed origins are configured in `API/appsettings.json` under `Cors:AllowedOrigins`. The API allows any header and method, and allows credentials. Add the current ngrok origin to this array before starting the API when developing the LIFF app.
 
 ---
 
-## 16. Data Models (Reference)
+## 17. Data Models (Reference)
 
 ### UserRole Enum
 | Value |
@@ -1905,7 +1939,7 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 
 ---
 
-## 17. Complete Route Table
+## 18. Complete Route Table
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
@@ -1919,6 +1953,8 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 | `POST` | `/users/register` | ⃝ | Register (creates institute + teacher for admin role in transaction) |
 | `POST` | `/users/forget-password` | ⃝ | Request password reset (always returns 200) |
 | `POST` | `/users/reset-password` | ⃝ | Reset password with token |
+| `GET` | `/institutes/me` | 🔒 | Get current institute settings |
+| `PUT` | `/institutes/me` | 🔒 | Update current institute settings |
 | `GET` | `/students` | 🔒 | List students (paginated, searchable, institute-scoped) |
 | `GET` | `/students/{id}` | 🔒 | Student profile with parents |
 | `POST` | `/students` | 🔒 | Create student + parents + PDPA in atomic transaction |
@@ -1950,10 +1986,26 @@ All origins, headers, and methods are allowed (`AllowAnyOrigin`, `AllowAnyHeader
 | `POST` | `/skill-scores/batch-update` | 🔒 | Batch upsert skill scores (insert or update in loop) |
 | `GET` | `/skill-scores/topics` | 🔒 | List skill topics by courseId |
 | `POST` | `/skill-scores/topics` | 🔒 | Create skill topic for course |
-| `GET` | `/products` | ⃝ | List products (in-memory, not institute-scoped) |
-| `GET` | `/products/{id}` | ⃝ | Get product |
-| `POST` | `/products` | ⃝ | Create product |
-| `PUT` | `/products/{id}` | ⃝ | Update product |
-| `DELETE` | `/products/{id}` | ⃝ | Delete product |
+| `POST` | `/parents/bind-line` | ⃝ | Bind LINE account by LINE ID or fallback phone mapping |
+| `GET` | `/parents/me/dashboard` | 🔒 | Parent dashboard summary and linked children |
+| `GET` | `/parents/me/profile` | 🔒 | Parent profile and linked children |
+| `PATCH` | `/parents/me/profile` | 🔒 | Update parent profile |
+| `GET` | `/parents/children/{childId}/attendance` | 🔒 | Linked child's attendance |
+| `GET` | `/parents/children/{childId}/payments` | 🔒 | Linked child's payments |
+| `GET` | `/parents/children/{childId}/scores` | 🔒 | Linked child's skill scores |
+| `GET` | `/parents/children/{childId}/homework` | 🔒 | Linked child's homework |
+| `GET` | `/parents/children/{childId}/leave-requests` | 🔒 | Linked child's leave requests |
+| `POST` | `/parents/children/{childId}/leave-requests` | 🔒 | Create linked child's leave request |
+| `GET` | `/products` | 🔒 | List products |
+| `GET` | `/products/{id}` | 🔒 | Get product |
+| `POST` | `/products` | 🔒 | Create product |
+| `PUT` | `/products/{id}` | 🔒 | Update product |
+| `DELETE` | `/products/{id}` | 🔒 | Delete product |
+| `POST` | `/uploads/logo` | 🔒 | Upload institute logo (image, max 2MB) |
+| `POST` | `/uploads/payment-slip` | 🔒 | Upload payment slip image (max 5MB) |
+| `POST` | `/uploads/homework` | 🔒 | Upload homework file (max 10MB) |
+| `POST` | `/uploads/homework-submission` | 🔒 | Upload homework submission (max 10MB) |
+| `POST` | `/uploads/student-photo` | 🔒 | Upload student photo (image, max 5MB) |
+| `POST` | `/uploads/teacher-photo` | 🔒 | Upload teacher photo (image, max 5MB) |
 | `GET` | `/health` | ⃝ | Health check (TiDB connectivity) |
 | `GET` | `/v1/test-connection` | ⃝ | Database connection test |

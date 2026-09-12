@@ -72,10 +72,20 @@ public static class ParentEndpoints
         if (string.IsNullOrWhiteSpace(verifiedUserId))
             return Results.Unauthorized();
 
-        // 2. Locate the parent record by LINE user id.
+        // 2. Locate the parent record by LINE user id, then fall back to phone mapping.
         var parent = await db.Parents
             .Include(p => p.Student)
             .FirstOrDefaultAsync(p => p.LineUserId == verifiedUserId, ct);
+
+        if (parent is null && !string.IsNullOrWhiteSpace(request.Phone))
+        {
+            var phone = new string(request.Phone.Where(char.IsDigit).ToArray());
+            parent = await db.Parents
+                .Include(p => p.Student)
+                .FirstOrDefaultAsync(
+                    p => p.Phone.Replace("-", "").Replace(" ", "") == phone,
+                    ct);
+        }
 
         if (parent is null)
             return Results.Json(new { error = "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }, statusCode: 404);
@@ -530,7 +540,7 @@ public static class ParentEndpoints
     }
 }
 
-public record BindLineRequest(string? LineUserId, string? AccessToken);
+public record BindLineRequest(string? LineUserId, string? AccessToken, string? Phone);
 public record UpdateParentProfileRequest(string? FullName, string? Phone, string? Email);
 public record CreateLeaveRequestRequest(string? SessionId, string? Type, string? Reason);
 public record ChildSummary(int Id, string FullName, string Grade, int InstituteId);

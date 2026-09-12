@@ -1,1 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Sarabun", ui-sans-serif, system-ui, sans-serif;
+
+  --color-sage-50: #f3f8f4;
+  --color-sage-100: #e2efe5;
+  --color-sage-200: #c5dfcc;
+  --color-sage-500: #5d9b73;
+  --color-sage-600: #477f5b;
+  --color-sage-700: #356746;
+
+  --color-indigo-50: #f3f5ff;
+  --color-indigo-100: #e6eaff;
+  --color-indigo-500: #6875d8;
+  --color-indigo-600: #5663c4;
+  --color-indigo-700: #444e9d;
+
+  --color-gold-50: #fffaf0;
+  --color-gold-100: #fff1c7;
+  --color-gold-500: #d7a83e;
+  --color-gold-600: #b98b25;
+
+  --color-ink-500: #7c8b82;
+  --color-ink-700: #4b5b52;
+  --color-ink-900: #26332d;
+
+  --shadow-soft: 0 12px 36px rgba(50, 76, 61, 0.08);
+  --shadow-float: 0 18px 50px rgba(50, 76, 61, 0.14);
+  --radius-card: 1.75rem;
+}
+
+body {
+  background: #f3f8f4;
+  color: #26332d;
+  font-family: "Sarabun", ui-sans-serif, system-ui, sans-serif;
+}

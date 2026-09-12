@@ -7,9 +7,8 @@ export default defineConfig({
   base: '/liff/',
   server: {
     port: 5173,
-    allowedHosts: [
-      '242c-27-55-78-210.ngrok-free.app',
-    ],
+    // ngrok assigns a different public hostname when a tunnel starts.
+    allowedHosts: true,
     host: '0.0.0.0',
   },
   resolve: {
