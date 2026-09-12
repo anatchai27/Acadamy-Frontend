@@ -8,10 +8,11 @@ namespace academy_API.Repositories;
 public interface ILeaveRequestRepository
 {
     Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(string? status, int page, int limit, CancellationToken ct = default);
-    Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken ct = default);
-    Task ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
+    Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct = default);
+    Task<Session?> GetSessionForStudentAsync(int studentId, int sessionId, CancellationToken ct = default);
+    Task<LeaveRequest?> CreateAsync(LeaveRequest request, CancellationToken ct = default);
+    Task<(LeaveRequest Request, MakeupCredit? Credit)> ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
     Task RejectAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
-    Task InsertMakeupCreditAsync(int studentId, int courseId, CancellationToken ct = default);
 }
 
 public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRepository
@@ -51,7 +52,7 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
         return (items, totalCount);
     }
 
-    public async Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct = default)
     {
         return await _context.LeaveRequests
             .Include(l => l.Student)
@@ -60,7 +61,21 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
             .FirstOrDefaultAsync(l => l.Id == id, ct);
     }
 
-    public async Task ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default)
+    public Task<Session?> GetSessionForStudentAsync(int studentId, int sessionId, CancellationToken ct = default) =>
+        _context.Sessions
+            .Include(s => s.Course)
+            .Where(s => s.Id == sessionId && _context.Enrollments.Any(e =>
+                e.StudentId == studentId && e.CourseId == s.CourseId))
+            .FirstOrDefaultAsync(ct);
+
+    public async Task<LeaveRequest?> CreateAsync(LeaveRequest request, CancellationToken ct = default)
+    {
+        _context.LeaveRequests.Add(request);
+        await _context.SaveChangesAsync(ct);
+        return request;
+    }
+
+    public async Task<(LeaveRequest Request, MakeupCredit? Credit)> ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default)
     {
         var strategy = _context.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -74,14 +89,46 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
             {
                 StudentId = request.StudentId,
                 CourseId = request.Session.CourseId,
+                InstituteId = request.InstituteId,
                 GrantedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMonths(3)
+                ExpiresAt = DateTime.UtcNow.AddMonths(3).Date,
+                CreatedAt = DateTime.UtcNow,
+                Status = "available"
             };
-
             _context.MakeupCredits.Add(makeup);
+
             await _context.SaveChangesAsync(ct);
+            if (makeup is not null)
+            {
+                _context.MakeupCreditTransactions.Add(new MakeupCreditTransaction
+                {
+                    InstituteId = request.InstituteId,
+                    CreditId = makeup.Id,
+                    StudentId = request.StudentId,
+                    TransactionType = "grant",
+                    Amount = 1,
+                    ReferenceType = "leave_request",
+                    ReferenceId = request.Id,
+                    Note = "Credit granted after leave approval",
+                    CreatedBy = approvedByUserId,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync(ct);
+            }
             await transaction.CommitAsync(ct);
+            return (request, makeup);
         });
+
+        // ExecutionStrategy's callback result is not available on all EF providers; re-read state.
+        var latest = await _context.LeaveRequests
+            .Include(l => l.Student)
+            .Include(l => l.Session)
+            .FirstAsync(l => l.Id == request.Id, ct);
+        var credit = await _context.MakeupCredits
+            .Where(c => c.StudentId == request.StudentId && c.CourseId == request.Session.CourseId && c.GrantedAt >= request.CreatedAt)
+            .OrderByDescending(c => c.Id)
+            .FirstOrDefaultAsync(ct);
+        return (latest, credit);
     }
 
     public async Task RejectAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default)
@@ -91,16 +138,4 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
         await _context.SaveChangesAsync(ct);
     }
 
-    public async Task InsertMakeupCreditAsync(int studentId, int courseId, CancellationToken ct = default)
-    {
-        var makeup = new MakeupCredit
-        {
-            StudentId = studentId,
-            CourseId = courseId,
-            GrantedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMonths(3)
-        };
-        _context.MakeupCredits.Add(makeup);
-        await _context.SaveChangesAsync(ct);
-    }
 }

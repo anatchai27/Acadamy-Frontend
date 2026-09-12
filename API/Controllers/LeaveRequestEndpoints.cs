@@ -24,8 +24,8 @@ public static class LeaveRequestEndpoints
             return Results.Ok(result);
         });
 
-        group.MapPost("/{id:int}/approve", async (
-            int id,
+        group.MapPost("/{id:long}/approve", async (
+            long id,
             ILeaveRequestService service,
             HttpContext httpContext,
             CancellationToken ct) =>
@@ -36,17 +36,20 @@ public static class LeaveRequestEndpoints
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                     return Results.Unauthorized();
 
-                await service.ApproveAsync(id, userId, ct);
-                return Results.Ok(new { Status = "success", Message = "อนุมัติคำร้องขอสำเร็จ" });
+                return Results.Ok(await service.ApproveAsync(id, userId, ct));
             }
+            catch (LeaveRequestValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
+            { return Results.NotFound(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
+            catch (LeaveRequestValidationException ex) when (ex.ErrorCode == "INVALID_STATUS")
+            { return Results.Conflict(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
             catch (LeaveRequestValidationException ex)
             {
                 return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });
             }
         });
 
-        group.MapPost("/{id:int}/reject", async (
-            int id,
+        group.MapPost("/{id:long}/reject", async (
+            long id,
             ILeaveRequestService service,
             HttpContext httpContext,
             CancellationToken ct) =>
@@ -57,9 +60,12 @@ public static class LeaveRequestEndpoints
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                     return Results.Unauthorized();
 
-                await service.RejectAsync(id, userId, ct);
-                return Results.Ok(new { Status = "success", Message = "ปฏิเสธคำร้องขอสำเร็จ" });
+                return Results.Ok(await service.RejectAsync(id, userId, ct));
             }
+            catch (LeaveRequestValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
+            { return Results.NotFound(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
+            catch (LeaveRequestValidationException ex) when (ex.ErrorCode == "INVALID_STATUS")
+            { return Results.Conflict(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
             catch (LeaveRequestValidationException ex)
             {
                 return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });

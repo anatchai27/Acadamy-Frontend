@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using academy_API.Data;
+using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Services;
 using academy_API.Services.Contracts;
@@ -428,38 +429,22 @@ public static class ParentEndpoints
         CreateLeaveRequestRequest request,
         HttpContext httpContext,
         TutoringDbContext db,
+        ILeaveRequestService service,
         CancellationToken ct)
     {
         var parent = await ResolveParentUser(httpContext, db, ct);
         if (parent is null) return Results.Unauthorized();
         if (!await IsParentOfStudent(db, parent, childId, ct)) return Results.Forbid();
 
-        if (string.IsNullOrWhiteSpace(request.SessionId) || !int.TryParse(request.SessionId, out var sessionId))
-            return Results.BadRequest(new { error = "sessionId is required." });
-
-        var sessionExists = await db.Sessions
-            .Where(s => s.Id == sessionId)
-            .AnyAsync(s => db.Enrollments.Any(e => e.StudentId == childId && e.CourseId == s.CourseId), ct);
-
-        if (!sessionExists)
-            return Results.BadRequest(new { error = "ไม่พบ session ของนักเรียนคนนี้" });
-
-        var leave = new LeaveRequest
+        try
         {
-            StudentId = childId,
-            SessionId = sessionId,
-            InstituteId = parent.InstituteId,
-            Type = string.IsNullOrWhiteSpace(request.Type) ? "leave" : request.Type!,
-            Reason = request.Reason ?? "",
-            Status = "pending",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        db.LeaveRequests.Add(leave);
-        await db.SaveChangesAsync(ct);
-
-        return Results.Ok(new { status = "success", data = new { id = leave.Id, status = leave.Status } });
+            var result = await service.CreateAsync(childId, parent.InstituteId, request, ct);
+            return Results.Ok(new { status = "success", data = result });
+        }
+        catch (LeaveRequestValidationException ex)
+        {
+            return Results.BadRequest(new { error = ex.Message, code = ex.ErrorCode });
+        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
@@ -542,7 +527,6 @@ public static class ParentEndpoints
 
 public record BindLineRequest(string? LineUserId, string? AccessToken, string? Phone);
 public record UpdateParentProfileRequest(string? FullName, string? Phone, string? Email);
-public record CreateLeaveRequestRequest(string? SessionId, string? Type, string? Reason);
 public record ChildSummary(int Id, string FullName, string Grade, int InstituteId);
 public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string Status, DateTime CheckinAt, DateTime CheckoutAt);
 public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl);

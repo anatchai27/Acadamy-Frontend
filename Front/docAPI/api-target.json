@@ -72,13 +72,14 @@
               "schema": {
                 "$ref": "#/components/schemas/ScanAttendanceRequest"
               }
-                      {
-                        "name": "teacher_id",
-                        "in": "query",
-                        "schema": {
-                          "type": "integer",
-                          "format": "int32"
-                        }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
         }
       }
     },
@@ -768,6 +769,7 @@
           "LeaveRequests"
         ],
         "operationId": "ApproveLeaveRequest",
+        "x-implementation-status": "partial",
         "x-roles": ["admin", "teacher", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
@@ -777,7 +779,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int64"
             }
           }
         ],
@@ -796,6 +798,7 @@
           "LeaveRequests"
         ],
         "operationId": "RejectLeaveRequest",
+        "x-implementation-status": "partial",
         "x-roles": ["admin", "teacher", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
@@ -805,7 +808,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int64"
             }
           }
         ],
@@ -1003,6 +1006,7 @@
           "Parents"
         ],
         "operationId": "CreateChildLeaveRequest",
+        "x-implementation-status": "partial",
         "x-roles": ["parent", "admin", "teacher", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
@@ -1029,7 +1033,7 @@
         "responses": {
           "200": {
             "description": "Leave request created",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeaveRequest" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateLeaveResponse" } } }
           },
           "409": { "$ref": "#/components/responses/Conflict" }
         }
@@ -2171,6 +2175,27 @@
           }
         },
         "additionalProperties": false
+      },
+      "CreateLeaveResponse": {
+        "type": "object",
+        "required": ["status", "data"],
+        "properties": {
+          "status": { "type": "string", "enum": ["success"] },
+          "data": { "$ref": "#/components/schemas/LeaveRequestCreated" }
+        }
+      },
+      "LeaveRequestCreated": {
+        "type": "object",
+        "required": ["id", "studentId", "sessionId", "type", "status", "requestedAt"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "sessionId": { "type": "integer", "format": "int32" },
+          "type": { "type": "string", "enum": ["advance", "urgent", "absence"] },
+          "status": { "type": "string", "enum": ["pending"] },
+          "reason": { "type": "string", "nullable": true },
+          "requestedAt": { "type": "string", "format": "date-time" }
+        }
       },
       "CreatePaymentRequest": {
         "type": "object",
