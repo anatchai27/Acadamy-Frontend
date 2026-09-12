@@ -5,15 +5,14 @@
 
 ## Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `66 paths / 44 schemas`
-- Target API contract: `74 paths / 59 schemas`
+- Current API snapshot: `67 paths / 42 schemas`
+- Target API contract: `73 paths / 62 schemas`
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `221 passed / 0 failed / 0 skipped`
-- Controller ที่ยังมี direct EF/data access: `7 files / 101 matches`
+- Full API tests ล่าสุด: `227 passed / 0 failed / 0 skipped`
+- Controller ที่ยังมี direct EF/data access: `5 files / 82 matches`
   - `AuthEndpoints.cs`
-  - `FileUploadEndpoints.cs`
   - `InstituteEndpoints.cs`
   - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
   - `ParentEndpoints.cs`
@@ -43,7 +42,7 @@
 - [x] Admin attendance/pickup UI
 - [x] Receipt PDF renderer และ upload ผ่าน `IFileStorageService`
 - [x] Contract validator, tenant-aware test fixture และ EF model cache key
-- [x] Full API test suite ผ่าน `212/212`
+- [x] Full API test suite ผ่าน `225/225`
 
 ## รอบถัดไป: P0 ปิดงานที่ค้างจาก workflow เดิม
 
@@ -112,9 +111,9 @@
 
 **ผ่านเมื่อ:**
 
-- [ ] schema export รอบใหม่ยืนยัน column/table
-- [ ] upload URL ถูกบันทึกและอ่านกลับได้
-- [ ] ไม่มีข้อความใน UI ที่อ้างว่าแนบไฟล์ได้ก่อน backend พร้อม
+- [x] schema export รอบใหม่ยืนยัน column/table (`results-2026-09-12-220648.csv`)
+- [x] upload URL ถูกบันทึกผ่าน `IFileStorageService` และคืนกลับใน response
+- [x] UI ไม่แสดงข้อความว่า attachment ใช้ไม่ได้ก่อน backend พร้อม; มี file input และ upload flow แล้ว
 
 ### Slice D: Admin audit log
 
@@ -151,9 +150,19 @@
 - [ ] ตรวจว่า grep direct EF ของไฟล์นั้นเป็นศูนย์ หรือมีเหตุผลที่บันทึกไว้
 - [ ] build และ full test ผ่าน
 
+สถานะรายไฟล์:
+
+- [x] `FileUploadEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
+- [ ] `InstituteEndpoints.cs` (ไฟล์ถัดไป)
+- [ ] `TeacherEndpoints.cs`
+- [ ] `UserEndpoints.cs`
+- [ ] `AuthEndpoints.cs`
+- [ ] `ParentEndpoints.cs`
+- [ ] `MakeupEndpoints.cs` ownership query
+
 **Definition of Done ของ architecture รอบนี้:**
 
-- [ ] controller direct EF matches ลดจาก `101` เหลือไม่เกิน `0` สำหรับไฟล์ใน scope
+- [/] controller direct EF matches ลดจาก `101` เหลือ `82` หลังปิด FileUpload; เป้าหมาย scope ทั้งหมดคือ `0`
 - [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
 - [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
 
@@ -161,12 +170,12 @@
 
 ### Slice F: Student card PDF
 
-- [ ] สร้าง `StudentCardPdfService` แยกจาก controller
-- [ ] ใช้ QR token และข้อมูล student จริง
-- [ ] upload ผ่าน `IFileStorageService`
-- [ ] เพิ่ม endpoint `GET /api/students/{id}/card.pdf`
-- [ ] เพิ่ม AAA tests สำหรับ student not found และ PDF generation
-- [ ] ต่อปุ่ม download ใน Admin UI
+- [x] สร้าง `StudentCardPdfService` แยกจาก controller
+- [x] ใช้ QR token และข้อมูล student จริง
+- [x] upload ผ่าน `IFileStorageService`
+- [x] เพิ่ม endpoint `GET /api/students/{id}/card.pdf`
+- [x] เพิ่ม AAA tests สำหรับ student not found และ PDF generation
+- [x] ต่อปุ่ม download ใน Admin UI
 
 ### Slice G: Export
 

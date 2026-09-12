@@ -31,6 +31,9 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
             .FirstOrDefaultAsync(s => s.Id == id, ct);
     }
 
+    public Task<Student?> GetStudentCardAsync(int id, CancellationToken ct = default) =>
+        _context.Students.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id, ct);
+
     public async Task<Student> CreateAsync(Student student, CancellationToken ct = default)
     {
         _context.Students.Add(student);

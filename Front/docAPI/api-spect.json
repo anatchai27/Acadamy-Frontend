@@ -1857,6 +1857,29 @@
         }
       }
     },
+    "/api/students/{id}/card.pdf": {
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/students/{studentId}/pickup-authorizations": {
       "get": {
         "tags": [

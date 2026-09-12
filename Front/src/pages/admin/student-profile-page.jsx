@@ -34,6 +34,7 @@ export const StudentProfilePage = ({ path, id }) => {
   const [error, setError] = useState('');
   const [qrToken, setQrToken] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [cardLoading, setCardLoading] = useState(false);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
@@ -71,6 +72,21 @@ export const StudentProfilePage = ({ path, id }) => {
 
   const handleBack = () => route('/admin/students');
   const handleEdit = () => route(`/admin/students/${id}/edit`);
+  const handleDownloadCard = async () => {
+    if (!id) return;
+    setCardLoading(true);
+    try {
+      const { data } = await studentService.getStudentCardPdf(id);
+      const cardUrl = data?.data?.cardPdfUrl || data?.cardPdfUrl;
+      if (!cardUrl) throw new Error('ไม่พบลิงก์บัตรนักเรียน');
+      window.open(cardUrl, '_blank', 'noopener,noreferrer');
+      showToast('สร้างบัตรนักเรียน PDF สำเร็จ', 'success');
+    } catch (err) {
+      showToast(err?.data?.message || err?.data?.error || err.message || 'สร้างบัตรนักเรียนไม่สำเร็จ', 'error');
+    } finally {
+      setCardLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -164,6 +180,9 @@ export const StudentProfilePage = ({ path, id }) => {
                 <HiOutlineQrCode class="h-4 w-4" />
                 สร้าง QR
               </span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadCard} loading={cardLoading} disabled={cardLoading}>
+              <span class="flex items-center gap-1.5">ดาวน์โหลดบัตร PDF</span>
             </Button>
           </div>
         </div>

@@ -125,6 +125,22 @@ public static class StudentEndpoints
             }
         });
 
+        group.MapGet("/{id:int}/card.pdf", async (
+            int id,
+            IStudentCardService service,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var url = await service.GenerateAsync(id, ct);
+                return Results.Ok(new { status = "success", data = new { cardPdfUrl = url } });
+            }
+            catch (StudentValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
+            { return Results.NotFound(new StudentErrorResponse("error", ex.ErrorCode, ex.Message)); }
+            catch (StudentValidationException ex)
+            { return Results.BadRequest(new StudentErrorResponse("error", ex.ErrorCode, ex.Message)); }
+        });
+
         group.MapGet("/{studentId:int}/pickup-authorizations", async (int studentId, IStudentPickupService service, CancellationToken ct) =>
             await Execute(() => service.ListAsync(studentId, ct), Results.Ok));
 

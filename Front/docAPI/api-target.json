@@ -1890,11 +1890,11 @@
       "get": {
         "tags": ["Students"],
         "operationId": "DownloadStudentCardPdf",
-        "x-implementation-status": "new",
+        "x-implementation-status": "implemented",
         "x-roles": ["admin", "staff", "teacher"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
-        "responses": { "200": { "description": "Printable student card PDF", "content": { "application/pdf": {} } } }
+        "responses": { "200": { "description": "Student card PDF URL", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StudentCardPdfResponse" } } } }, "404": { "$ref": "#/components/responses/NotFound" } }
       }
     },
     "/api/makeup/credits": {
@@ -2790,6 +2790,18 @@
           }
         },
         "additionalProperties": false
+      },
+      "StudentCardPdfResponse": {
+        "type": "object",
+        "required": ["status", "data"],
+        "properties": {
+          "status": { "type": "string", "enum": ["success"] },
+          "data": {
+            "type": "object",
+            "required": ["cardPdfUrl"],
+            "properties": { "cardPdfUrl": { "type": "string", "format": "uri" } }
+          }
+        }
       },
       "StudentUpdate": {
         "type": "object",

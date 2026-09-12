@@ -20,10 +20,15 @@ export const getStudentQR = id => {
   return api.get(`/students/${id}/qr`);
 }
 
+export const getStudentCardPdf = id => {
+  return api.get(`/students/${id}/card.pdf`);
+}
+
 export const studentService = {
   getStudents,
   getStudentById,
   createStudent,
   updateStudent,
   getStudentQR,
+  getStudentCardPdf,
 };
