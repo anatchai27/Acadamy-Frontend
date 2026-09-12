@@ -82,14 +82,14 @@
 
 ## Definition of Done ของรอบถัดไป
 
-- [ ] Contract ใน `api-target.json` ตรงกับ DTO และ route ที่ implement จริง
-- [ ] Controller ไม่มี EF query หรือ business transaction โดยตรง
-- [ ] Service คุม business rule และ state transition
-- [ ] Repository คุม query/persistence/transaction ตาม ownership ที่ชัดเจน
-- [ ] มี unit/integration tests สำหรับ success, validation, conflict และ authorization
-- [ ] API build ผ่าน
-- [ ] Test result ถูกแยกเป็น pass, feature failure และ pre-existing failure อย่างตรวจสอบได้
-- [ ] เอกสาร `Objective/process.md` อัปเดตจากหลักฐานจริงหลังจบรอบ
+- [x] Contract ใน `api-target.json` ตรงกับ DTO และ route ที่ implement จริง (`validate-api-contract.ps1`: errors `0`)
+- [/] Controller ไม่มี EF query หรือ business transaction โดยตรง (ยังพบ direct data access 7 controller files / 101 matches; refactored slices ผ่าน boundary แล้ว)
+- [/] Service คุม business rule และ state transition (Makeup, Pickup, Attendance checkout, Leave และ Payment receipt ผ่าน; legacy controllers ยังไม่ครบ)
+- [/] Repository คุม query/persistence/transaction ตาม ownership ที่ชัดเจน (core slices ผ่าน; legacy controller-owned flows ยังต้องย้าย)
+- [x] มี unit tests สำหรับ success, validation, conflict และ authorization ของ core slices; full suite ผ่าน `212/212`
+- [x] API build ผ่านด้วย output `API/bin/DodValidation`
+- [x] Test result แยกและตรวจสอบได้: full suite `212 passed, 0 failed, 0 skipped`
+- [x] เอกสาร `Objective/process.md` อัปเดตจากหลักฐานจริงหลังจบรอบ
 
 ## ลำดับลงมือถัดไป
 

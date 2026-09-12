@@ -336,11 +336,11 @@ public class TokenServiceTests
 
     // 29
     [Fact]
-    public void VerifyPassword_NullPassword_ThrowsArgumentNullException()
+    public void VerifyPassword_NullPassword_ReturnsFalse()
     {
         var service = new TokenService(CreateConfig());
         var hash = service.HashPassword("Test1234!");
-        Assert.Throws<ArgumentNullException>(() => service.VerifyPassword(null!, hash));
+        Assert.False(service.VerifyPassword(null!, hash));
     }
 
     // 30

@@ -3,7 +3,7 @@
 > **วันที่ประเมิน:** 12 กันยายน 2026  
 > **เอกสารอ้างอิงหลัก:** `Objective/ProjectObj.md` (SRS Tutoring Management System)
 > **Schema evidence ล่าสุด:** `Objective/results-2026-09-12-164548.csv`
-> **ขอบเขตการตรวจสอบ:** ตรวจจากไฟล์ซอร์ส, model, endpoint และ schema ที่พบใน workspace ของ `API` (.NET 9), `Front` (Preact + Vite), และ `LineLiff` (Preact + LIFF SDK + Tailwind v4) แล้วเทียบกับ Acceptance Criteria (AC) ทั้ง 67 ข้อ
+> **ขอบเขตการตรวจสอบ:** ตรวจจากไฟล์ซอร์ส, model, endpoint และ schema ที่พบใน workspace ของ `API` (.NET 9), `Front` (Preact + Vite), และ `LineLiff` (Preact + LIFF SDK + Tailwind v4) แล้วเทียบกับ Acceptance Criteria (AC) ทั้ง 67 ข้อ รวมผล API contract validation, API build และ test suite ล่าสุด
 >
 > **ข้อจำกัดของรายงาน:** เอกสารนี้เป็น static code/schema assessment ไม่ใช่ผลทดสอบ production runtime, ไม่ใช่ผล load test หรือ security penetration test เว้นแต่จะระบุหลักฐานการทดสอบไว้โดยตรง
 
@@ -26,7 +26,14 @@
 
 - **ผลประเมินจากหลักฐานที่ตรวจ:** อยู่ในขั้น **Feature Integration & Stabilization**
 - **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อพื้นฐาน, ระบบชำระเงิน POS เบื้องต้น, การเชื่อมต่อ LINE LIFF และการรัน Dev Environment อัตโนมัติ (`Run-Dev.ps1`)
-- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ระบบขอลาและเรียนชดเชย (Leave & Make-up), ระบบสร้างใบเสร็จ PDF จริง, ระบบ Background Workers/Cron (แจ้งเตือน/ทวงงาน/เตือนโควต้า), และหน้า Public Website/CMS
+- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ระบบแนบหลักฐานลา, parent booking cancellation, audit log ถาวร, ระบบ Background Workers/Cron (แจ้งเตือน/ทวงงาน/เตือนโควต้า), และหน้า Public Website/CMS
+
+### หลักฐาน validation ล่าสุด
+
+- API contract validator: `86` current operations, `94` target operations, `Errors = 0`
+- API build: ผ่านด้วย output `API/bin/DodValidation`
+- Full API test suite: `212 passed, 0 failed, 0 skipped`
+- Controller ownership audit: ยังพบ direct EF/data access ใน 7 controller files รวม 101 matches; จึงยังไม่ถือว่า DoD ownership boundary ผ่านทั้งระบบ
 
 ---
 
@@ -180,18 +187,18 @@
 ---
 
 ### หมวดที่ 7: ระบบการเงิน (Payment & Billing)
-* **ความคืบหน้า:** `40%` (2 / 5 ผ่าน)
+* **ความคืบหน้า:** `50%` (2.5 / 5 ผ่าน)
 * **สถานะ:** 🔴 ต้องเร่งทำ
 
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (Admin Panel) หน้าจอ POS ให้พนักงานบันทึกการรับเงิน ระบุวิธีชำระ และอัปโหลดสลิป (`Front/src/pages/admin/finance-page.jsx`, `/api/payments`)
 - [ ] **AC 2:** (Backend) API ตรวจสอบสลิป (เรียกใช้ 3rd-party AI API) เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (ปัจจุบันอัปโหลดรูปภาพเก็บเข้า Storage เท่านั้น ยังไม่มี AI Verification)
-- [/] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินถูกต้องตามมาตรฐาน และส่งลิงก์เข้า LINE อัตโนมัติเมื่อกดรับเงิน (ปัจจุบันระบบคืนค่า URL เป็น String หลอก `INV-xxx.pdf` ยังไม่มีตัวเรนเดอร์ PDF จริง)
+- [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
 - [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (หน้า `finance-page.jsx` มีตารางประวัติและยอดรวม แต่ยังไม่มีกราฟรายวัน/เดือน/ปี และยังไม่มีปุ่ม Export)
 - [ ] **AC 5:** (Backend/Worker) ทดสอบระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ให้ทำงานได้อย่างถูกต้อง (ยังไม่มี Background Worker ตรวจสอบ)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. ติดตั้งไลบรารีทำ PDF ใน .NET (เช่น QuestPDF) เพื่อสร้างใบเสร็จรับเงินจริงพร้อมตราสถาบัน
+1. เพิ่มตราสถาบัน/รายละเอียดภาษีใน receipt PDF และทำ student card PDF ด้วย renderer/storage pattern เดียวกัน
 2. เพิ่มกราฟสรุปรายรับในหน้าการเงิน และเพิ่มปุ่ม Export CSV/Excel
 3. พัฒนา Background Worker ตรวจสอบโควต้าคงเหลือ `<= 3` เพื่อยิงเสนอคอร์สใหม่เข้า LINE
 
