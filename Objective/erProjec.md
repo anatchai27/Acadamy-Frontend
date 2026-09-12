@@ -1,6 +1,6 @@
 # ER Project: Schema ปัจจุบันเทียบกับ SRS
 
-> ตรวจจาก `process.md`, `ProjectObj.md`, CSV schema ล่าสุด `results-2026-09-12-164548.csv` และโมเดล/DbContext ที่พบใน `API`
+> ตรวจจาก `process.md`, `ProjectObj.md`, CSV schema ล่าสุด `results-2026-09-12-220648.csv` และโมเดล/DbContext ที่พบใน `API`
 >
 > **ขอบเขตสำคัญ:** เอกสารนี้แยกสิ่งที่ยืนยันได้จากไฟล์ที่ตรวจ (`Verified`) ออกจากโครงสร้างที่เสนอให้เพิ่ม (`Proposed`) ไม่ใช่ผลจากการต่อฐานข้อมูล runtime และไม่ยืนยันว่าข้อมูล production มีค่าเหมือน CSV ทุกแถว
 
@@ -48,6 +48,25 @@
 | `makeup_slots.status` | ไม่พบใน CSV ล่าสุด | Not verified; ต้องตัดสินใจจาก business rule ก่อนเพิ่ม |
 | `holidays` | ไม่พบใน CSV | Not verified |
 | `file_assets` | ไม่พบใน CSV | Not verified |
+
+### Verified schema: `leave_request_attachments`
+
+CSV ใหม่ยืนยันตารางนี้แล้ว ใช้เก็บใบรับรองแพทย์/ไฟล์ประกอบคำลาแบบหลายไฟล์ต่อคำขอ:
+
+| คอลัมน์ | หน้าที่ | สถานะ |
+|---|---|---|
+| `id` | primary key | Verified |
+| `institute_id` | tenant isolation | Verified |
+| `leave_request_id` | FK ไป `leave_requests.id` | Verified |
+| `storage_url` | URL สำหรับเปิดไฟล์ | Verified |
+| `object_key` | key สำหรับลบ/จัดการ object storage | Verified |
+| `original_file_name` | ชื่อไฟล์ที่ผู้ใช้ส่ง | Verified |
+| `content_type` | MIME type ที่ตรวจแล้ว | Verified |
+| `file_size_bytes` | ขนาดไฟล์ | Verified |
+| `uploaded_by` | user ที่ upload | Verified |
+| `created_at` | เวลาที่ upload | Verified |
+
+ไม่เพิ่ม `attachment_url` ใน `leave_requests` เพราะหนึ่งคำขออาจมีหลายไฟล์ และการแยก table ทำให้ ownership, tenant, delete และ metadata ตรวจสอบได้ชัดกว่า
 
 ## 3. ER ปัจจุบันและความสัมพันธ์ตาม SRS
 

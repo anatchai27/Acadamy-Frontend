@@ -9,6 +9,8 @@ public interface ILeaveRequestRepository
 {
     Task<(List<LeaveRequestItem> Items, int TotalCount)> SearchAsync(string? status, int page, int limit, CancellationToken ct = default);
     Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct = default);
+    Task<bool> CanAccessAsync(long leaveRequestId, int userId, bool isParent, CancellationToken ct = default);
+    Task<LeaveRequestAttachment> AddAttachmentAsync(LeaveRequestAttachment attachment, CancellationToken ct = default);
     Task<Session?> GetSessionForStudentAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task<LeaveRequest?> CreateAsync(LeaveRequest request, CancellationToken ct = default);
     Task<(LeaveRequest Request, MakeupCredit? Credit)> ApproveAsync(LeaveRequest request, int approvedByUserId, CancellationToken ct = default);
@@ -59,6 +61,22 @@ public class LeaveRequestRepository(TutoringDbContext context) : ILeaveRequestRe
             .Include(l => l.Session)
                 .ThenInclude(s => s.Course)
             .FirstOrDefaultAsync(l => l.Id == id, ct);
+    }
+
+    public Task<bool> CanAccessAsync(long leaveRequestId, int userId, bool isParent, CancellationToken ct = default)
+    {
+        var query = _context.LeaveRequests.AsQueryable();
+        return isParent
+            ? query.AnyAsync(l => l.Id == leaveRequestId && _context.Parents.Any(p =>
+                p.UserId == userId && p.StudentId == l.StudentId), ct)
+            : query.AnyAsync(l => l.Id == leaveRequestId, ct);
+    }
+
+    public async Task<LeaveRequestAttachment> AddAttachmentAsync(LeaveRequestAttachment attachment, CancellationToken ct = default)
+    {
+        _context.LeaveRequestAttachments.Add(attachment);
+        await _context.SaveChangesAsync(ct);
+        return attachment;
     }
 
     public Task<Session?> GetSessionForStudentAsync(int studentId, int sessionId, CancellationToken ct = default) =>

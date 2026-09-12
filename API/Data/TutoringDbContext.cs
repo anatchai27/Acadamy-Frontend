@@ -31,6 +31,7 @@ public class TutoringDbContext(
     public DbSet<Institute> Institutes => Set<Institute>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+      public DbSet<LeaveRequestAttachment> LeaveRequestAttachments => Set<LeaveRequestAttachment>();
     public DbSet<Homework> Homeworks => Set<Homework>();
     public DbSet<HomeworkSubmission> HomeworkSubmissions => Set<HomeworkSubmission>();
     public DbSet<SkillTopic> SkillTopics => Set<SkillTopic>();
@@ -810,6 +811,28 @@ public class TutoringDbContext(
                   entity.HasIndex(e => new { e.InstituteId, e.StudentId, e.IsActive }).HasDatabaseName("idx_pickup_student_active");
             });
 
+            modelBuilder.Entity<LeaveRequestAttachment>(entity =>
+            {
+                  entity.ToTable("leave_request_attachments");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.LeaveRequestId).HasColumnName("leave_request_id");
+                  entity.Property(e => e.StorageUrl).HasMaxLength(1000).HasColumnName("storage_url");
+                  entity.Property(e => e.ObjectKey).HasMaxLength(500).HasColumnName("object_key");
+                  entity.Property(e => e.OriginalFileName).HasMaxLength(255).HasColumnName("original_file_name");
+                  entity.Property(e => e.ContentType).HasMaxLength(100).HasColumnName("content_type");
+                  entity.Property(e => e.FileSizeBytes).HasColumnName("file_size_bytes");
+                  entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by").IsRequired(false);
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                  entity.HasOne(e => e.Institute).WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne(e => e.LeaveRequest).WithMany().HasForeignKey(e => e.LeaveRequestId).OnDelete(DeleteBehavior.Cascade);
+                  entity.HasOne(e => e.UploadedByUser).WithMany().HasForeignKey(e => e.UploadedBy).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+
+                  entity.HasIndex(e => new { e.InstituteId, e.LeaveRequestId }).HasDatabaseName("idx_leave_attachment_request");
+                  entity.HasIndex(e => new { e.InstituteId, e.CreatedAt }).HasDatabaseName("idx_leave_attachment_created");
+            });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.ToTable("products");
@@ -1093,6 +1116,7 @@ public class TutoringDbContext(
         modelBuilder.Entity<Attendance>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Payment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<LeaveRequestAttachment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Homework>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<HomeworkSubmission>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<SkillScore>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

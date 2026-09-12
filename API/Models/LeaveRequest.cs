@@ -18,4 +18,5 @@ public class LeaveRequest : IMultiTenantEntity
     public Session Session { get; set; } = null!;
     public User? ApprovedByUser { get; set; }
     public Institute Institute { get; set; } = null!;
+    public ICollection<LeaveRequestAttachment> Attachments { get; set; } = new List<LeaveRequestAttachment>();
 }

@@ -1,6 +1,6 @@
 # TiDB v8.5.3 Schema Verification และ SRS Reconciliation
 
-> เอกสารนี้ปรับตาม CSV ล่าสุด `Objective/results-2026-09-12-164548.csv` วันที่ 2026-09-12
+> เอกสารนี้ปรับตาม CSV ล่าสุด `Objective/results-2026-09-12-220648.csv` วันที่ 2026-09-12
 >
 > CSV ยืนยันโครงสร้างตารางและ constraint ที่ export ออกมาได้ แต่ไม่ยืนยันจำนวนข้อมูล, production runtime, API/UI flow หรือ transaction behavior ตาม SRS
 >
@@ -238,9 +238,65 @@ SRS ต้องการ audit สำหรับ login/logout และกา�
 
 DDL ของ TiDB ทำ implicit commit; การตรวจ runbook นี้จึงไม่ใช่ transaction ครอบคลุมทั้งเอกสาร
 
+### 8.1 Proposed: leave request attachments
+
+> สถานะ: **Verified in schema export** จาก `Objective/results-2026-09-12-220648.csv`; ยังต้องตรวจ runtime data/flow ก่อนสรุปว่า SRS ผ่าน
+
+SRS ต้องรองรับใบรับรองแพทย์/รูปประกอบคำลา จึงเสนอแยกเป็นหลายไฟล์ต่อคำขอ แทนการเพิ่ม `attachment_url` เดี่ยวใน `leave_requests`:
+
+```sql
+-- DDL อ้างอิงสำหรับ migration/reconciliation เท่านั้น ไม่ต้องรันซ้ำ
+CREATE TABLE leave_request_attachments (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    institute_id INT NOT NULL,
+    leave_request_id BIGINT NOT NULL,
+    storage_url VARCHAR(1000) NOT NULL,
+    object_key VARCHAR(500) NOT NULL,
+    original_file_name VARCHAR(255) NULL,
+    content_type VARCHAR(100) NOT NULL,
+    file_size_bytes BIGINT NOT NULL,
+    uploaded_by INT NULL,
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_leave_attachment_institute
+        FOREIGN KEY (institute_id) REFERENCES institutes(id),
+    CONSTRAINT fk_leave_attachment_request
+        FOREIGN KEY (leave_request_id) REFERENCES leave_requests(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_leave_attachment_user
+        FOREIGN KEY (uploaded_by) REFERENCES users(id)
+        ON DELETE SET NULL,
+    INDEX idx_leave_attachment_request (institute_id, leave_request_id),
+    INDEX idx_leave_attachment_created (institute_id, created_at)
+);
+```
+
+ก่อนรัน DDL ให้ตรวจซ้ำ:
+
+```sql
+SELECT TABLE_NAME
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'leave_request_attachments';
+
+SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, IS_NULLABLE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'leave_request_attachments'
+ORDER BY ORDINAL_POSITION;
+
+SELECT CONSTRAINT_NAME, CONSTRAINT_TYPE
+FROM information_schema.TABLE_CONSTRAINTS
+WHERE CONSTRAINT_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'leave_request_attachments';
+```
+
+CSV รอบใหม่ยืนยัน schema แล้ว จึงสามารถเพิ่ม `LeaveRequestAttachment` model, DbContext mapping, repository/service และ upload endpoint ตามลำดับ
+
 ## 9. สรุปสถานะตามหลักฐาน
 
 - **Schema:** ตารางหลักของ Leave & Make-up, Audit และ Pickup มีอยู่ตาม CSV ล่าสุด
 - **SRS:** ยังสรุปผ่านครบไม่ได้จาก CSV; ต้องยืนยัน service transaction, endpoint, UI, worker, notification และข้อมูล runtime
 - **Migration:** ไม่มี DDL สร้างตารางเดิมซ้ำในเอกสารฉบับนี้
+- **Leave attachment:** schema ยืนยันแล้วจาก CSV ใหม่; ยังต้องยืนยัน model/mapping/API/UI/validation/runtime flow
 - **ข้อมูลที่ต้องตรวจต่อ:** orphan, tenant mismatch, active booking ซ้ำ, capacity mismatch, leave-to-credit consistency และ audit events

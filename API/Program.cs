@@ -113,6 +113,7 @@ builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddScoped<ILeaveRequestAttachmentService, LeaveRequestAttachmentService>();
 builder.Services.AddScoped<IHomeworkRepository, HomeworkRepository>();
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
 builder.Services.AddScoped<ISkillScoreRepository, SkillScoreRepository>();

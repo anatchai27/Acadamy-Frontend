@@ -49,6 +49,8 @@ export const api = {
   get: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'GET' }),
   post: (endpoint, data, options = {}) =>
     fetcher(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }),
+  postForm: (endpoint, formData, options = {}) =>
+    fetcher(endpoint, { ...options, method: 'POST', body: formData }),
   put: (endpoint, data, options = {}) =>
     fetcher(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
   patch: (endpoint, data, options = {}) =>

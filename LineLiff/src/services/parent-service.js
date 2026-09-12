@@ -36,6 +36,12 @@ export const createChildLeaveRequest = (childId, payload) => {
   return api.post(`/parents/children/${childId}/leave-requests`, payload);
 }
 
+export const uploadLeaveAttachment = (leaveRequestId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.postForm(`/leave-requests/${leaveRequestId}/attachment`, formData);
+}
+
 export const getMakeupCredits = childId => {
   return api.get('/makeup/credits', { params: { student_id: childId } });
 }

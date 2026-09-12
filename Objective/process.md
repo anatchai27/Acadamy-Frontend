@@ -2,7 +2,7 @@
 
 > **วันที่ประเมิน:** 12 กันยายน 2026  
 > **เอกสารอ้างอิงหลัก:** `Objective/ProjectObj.md` (SRS Tutoring Management System)
-> **Schema evidence ล่าสุด:** `Objective/results-2026-09-12-164548.csv`
+> **Schema evidence ล่าสุด:** `Objective/results-2026-09-12-220648.csv`
 > **ขอบเขตการตรวจสอบ:** ตรวจจากไฟล์ซอร์ส, model, endpoint และ schema ที่พบใน workspace ของ `API` (.NET 9), `Front` (Preact + Vite), และ `LineLiff` (Preact + LIFF SDK + Tailwind v4) แล้วเทียบกับ Acceptance Criteria (AC) ทั้ง 67 ข้อ รวมผล API contract validation, API build และ test suite ล่าสุด
 >
 > **ข้อจำกัดของรายงาน:** เอกสารนี้เป็น static code/schema assessment ไม่ใช่ผลทดสอบ production runtime, ไม่ใช่ผล load test หรือ security penetration test เว้นแต่จะระบุหลักฐานการทดสอบไว้โดยตรง

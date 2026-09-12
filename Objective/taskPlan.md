@@ -1,100 +1,247 @@
-# แผนปฏิบัติงานปัจจุบัน (Task Plan)
+# Execution Plan ปัจจุบัน
 
-> วันที่ปรับแผน: 12 กันยายน 2026
-> หลักฐานอ้างอิง: `Front/docAPI/api-target.json`, API build output และ `Objective/process.md`
+> ปรับแผน: 12 กันยายน 2026
+> เป้าหมาย: ทำงานเป็นรอบเล็กที่ build/test/ตรวจหลักฐานได้จริง ไม่ติ๊กงานจากการมี schema หรือ route อย่างเดียว
 
-## สถานะที่ทำเสร็จแล้ว
+## Baseline ที่ยืนยันแล้ว
 
-- [x] แยก Current API baseline ออกจาก Target API contract
-- [x] สร้างและปิดช่องว่าง Target API สำหรับ attendance checkout, pickup authorization, makeup, no-show, payment, public lead, reports และ broadcast
-- [x] แยก Makeup เป็น `Controller -> Service -> Repository`
-- [x] แยก Student pickup authorization เป็น `Controller -> Service -> Repository`
-- [x] ย้าย attendance checkout business logic เข้า `AttendanceService` และ `AttendanceRepository`
-- [x] ย้าย request/response contracts ของ slice ใหม่ไปไว้ใน `API/DTOs`
-- [x] API build ผ่านด้วย output แยก `API/bin/RefactorValidation`
-- [x] ปรับ target spec ให้ใช้ `int64` กับ ID ที่ model จริงเป็น `long`
-- [x] ตรวจ diagnostics ของไฟล์ที่ refactor แล้วไม่พบ error
+- Current API snapshot: `64 paths / 42 schemas`
+- Target API contract: `72 paths / 57 schemas`
+- Latest schema export: `Objective/results-2026-09-12-220648.csv`
+- Contract validator: `Objective/validate-api-contract.ps1`
+- API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
+- Full API tests ล่าสุด: `212 passed / 0 failed / 0 skipped`
+- Controller ที่ยังมี direct EF/data access: `7 files / 101 matches`
+  - `AuthEndpoints.cs`
+  - `FileUploadEndpoints.cs`
+  - `InstituteEndpoints.cs`
+  - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
+  - `ParentEndpoints.cs`
+  - `TeacherEndpoints.cs`
+  - `UserEndpoints.cs`
 
-## P0: งานถัดไปที่ต้องทำก่อนขยาย feature
+## กติกาการทำงานทุก slice
 
-### 1. เขียน tests ให้ slice ที่เพิ่ง refactor
+1. อ่าน code path และ schema ก่อนแก้
+2. แก้ contract/DTO ก่อน implementation เมื่อ response หรือ input เปลี่ยน
+3. Controller รับ request และ map HTTP status เท่านั้น
+4. Service คุม business rule/state transition
+5. Repository คุม query/persistence/transaction
+6. เพิ่ม AAA tests อย่างน้อย success, validation และ conflict/authorization ตามความเสี่ยง
+7. รัน focused test ก่อน full suite
+8. รัน API build และ contract validator ก่อนปิด slice
+9. อัปเดต `process.md` จากหลักฐาน ไม่ใช้ความรู้สึก
 
-- [x] Makeup booking ใช้ credit ของ student คนเดียวกันเท่านั้น
-- [/] Credit หมดอายุหรือไม่ available ต้องจองไม่ได้ (มี test ฝั่ง unavailable; ยังขาดเคสหมดอายุโดยตรง)
-- [x] Slot เต็มต้องคืน `409` และห้ามเพิ่ม `booked_count`
-- [x] Cancel booking คืน credit และลด `booked_count` ใน transaction เดียวกัน
-- [x] Cancel slot คืน credit ให้ booking ที่ยัง reserved ทุกคน
-- [x] No-show เปลี่ยน booking เป็น `no_show` และ consume credit โดยไม่คืนกลับ
-- [x] Pickup authorization ที่ถูก revoke ใช้ checkout ไม่ได้
-- [x] Checkout ซ้ำไม่ได้ และ checkout ก่อน check-in ไม่ได้
+## สถานะที่เสร็จแล้ว
 
-### 2. ปิด Leave Request ให้ครบตาม Target API
+- [x] Current API แยกจาก Target API
+- [x] Makeup core แยก Controller -> Service -> Repository
+- [x] Pickup authorization แยก Controller -> Service -> Repository
+- [x] Attendance checkout ใช้ attendance ID จริงและเลือก authorized pickup ได้
+- [x] Leave core: create, rule-based type, approve/reject, makeup credit และ ledger reference
+- [x] Parent LIFF: leave status, session selection, makeup credit, slot list และ booking
+- [x] Admin attendance/pickup UI
+- [x] Receipt PDF renderer และ upload ผ่าน `IFileStorageService`
+- [x] Contract validator, tenant-aware test fixture และ EF model cache key
+- [x] Full API test suite ผ่าน `212/212`
 
-- [x] ปรับ `CreateLeaveRequestRequest` และ response ให้ตรง contract ใหม่
-- [x] ให้ backend คำนวณประเภทการลาเองจากเวลายื่นกับเวลาเริ่ม session
-- [/] เพิ่ม upload attachment และตรวจชนิด/ขนาดไฟล์ (ยังติด schema ไม่มี `attachment_url` หรือ attachment table)
-- [x] Approve leave ต้องสร้าง `makeup_credit` ใน transaction เดียวกัน
-- [x] ป้องกัน approve/reject ซ้ำด้วย state transition และ `409`
-- [x] ผูก reference ใน credit ledger กับ leave request
-- [x] เพิ่ม tests สำหรับ create/type rule, pending -> approved/rejected และการสร้าง credit ซ้ำ
+## รอบถัดไป: P0 ปิดงานที่ค้างจาก workflow เดิม
 
-### 3. ทำ Current API กับ Target API ให้ตรวจได้อัตโนมัติ
+### Slice A: Parent booking cancellation
 
-- [x] เพิ่ม script ตรวจ route/type ของ `api-target.json` เทียบกับ current Swagger snapshot (`Objective/validate-api-contract.ps1`)
-- [/] ใช้ `x-implementation-status=implemented|partial|new` ให้ครบทุก target operation (target ใหม่/partial มี metadata; current baseline ที่ยังไม่มี metadata ถูก infer เป็น `implemented`)
-- [ ] ห้ามติดสถานะ `implemented` หากยังไม่มี controller/service จริง
-- [x] ตรวจ `$ref`, operationId, security และ role ทุกครั้งก่อน merge (security/role ที่ขาดถูกแจ้งเป็น warning)
+**เป้าหมาย:** ผู้ปกครองเห็น booking ของลูกและยกเลิกได้อย่างปลอดภัย
 
-## P1: ปิด workflow ที่ผู้ใช้เห็นจริง
+**ไฟล์เป้าหมาย:**
 
-### 4. Parent LIFF Leave & Make-up
+- `API/Controllers/MakeupEndpoints.cs`
+- `API/Services/MakeupService.cs`
+- `API/Repositories/MakeupRepository.cs`
+- `API/DTOs/MakeupDtos.cs`
+- `LineLiff/src/services/parent-service.js`
+- `LineLiff/src/pages/leave-makeup.jsx`
+- `Front/docAPI/api-target.json`
 
-- [/] หน้าสร้าง leave request เลือก session และ reason ได้แล้ว; แนบหลักฐานยังรอ schema attachment
-- [x] หน้าแสดง leave status และ makeup credit ของลูก
-- [x] หน้าแสดง slot ที่ว่างและจองด้วย credit ของลูก
-- [/] หน้ายืนยัน booking ทำแล้ว; ยกเลิก booking รอ parent-scoped booking list/ownership contract
-- [x] แสดง error เมื่อ slot เต็ม, credit หมดอายุ หรือ booking ซ้ำ
+**งาน:**
 
-### 5. Admin Attendance/Pickup
+- [ ] เพิ่ม `GET /api/makeup/bookings?student_id=` หรือ parent-scoped endpoint
+- [ ] ตรวจ parent ownership ใน service/repository ไม่พึ่ง route guard อย่างเดียว
+- [ ] คืนเฉพาะ booking ของ student ที่ parent มีสิทธิ์ดู
+- [ ] ต่อรายการ booking ใน LIFF และปุ่ม cancel เฉพาะสถานะ `reserved`
+- [ ] เพิ่ม tests: own booking, booking ของคนอื่นต้อง forbidden, cancelled booking conflict
 
-- [x] เพิ่ม UI checkout พร้อมเลือก authorized pickup
-- [x] แสดงเฉพาะ authorization ที่ active และเป็นของ student คนปัจจุบัน
-- [/] แสดง audit detail ว่าใคร checkout เมื่อใดและใครเป็นผู้รับ (หน้าแสดงเวลาจาก server และผู้รับแล้ว; audit log ถาวรยังรอ notification/audit workflow)
+**ผ่านเมื่อ:**
 
-### 6. ปรับ test infrastructure ที่ล้มอยู่เดิม
+- [ ] LIFF แสดง booking จริงและยกเลิกได้
+- [ ] parent เดา ID ของเด็กอื่นแล้วไม่ได้ข้อมูล/แก้ข้อมูล
+- [ ] focused tests ผ่าน
+- [ ] LIFF build, API build และ validator ผ่าน
 
-- [x] แยก test failures ที่เกิดจาก EF global tenant filter/fixture setup
-- [x] แก้ test ที่ใช้ relational-only SQL บน InMemory ด้วย provider-agnostic LINQ ใน `UserService.LoginAsync`
-- [x] แก้ seed/tenant setup ของ Student, Course และ Payment repository tests ด้วย opt-in tenant fixture และ model cache key
-- [/] รัน full test suite ใหม่แล้ว: `210/211` ผ่าน เหลือ 1 pre-existing contract mismatch ใน `TokenService.VerifyPassword` test
+### Slice B: Makeup credit expired test
 
-## P2: งาน SRS หลัง core workflow เสถียร
+**เป้าหมาย:** ปิด test gap ที่เหลือของ core makeup
 
-- [x] สร้าง PDF receipt จริงด้วย `ReceiptPdfService` และ upload ผ่าน `IFileStorageService`
-- [ ] สร้าง student card PDF
-- [ ] เพิ่ม CSV/XLSX export นักเรียนและการเงิน
-- [ ] เพิ่ม payment slip verification
-- [ ] เพิ่ม revenue report และ teacher timesheet
-- [ ] เพิ่ม notification log และ background jobs
-- [ ] เพิ่ม quota-low notification เมื่อเหลือไม่เกิน 3 ครั้ง
-- [ ] เพิ่ม admin inactivity timeout 30 นาที
-- [ ] เพิ่ม CI build/test และ k6 load test สำหรับ attendance
+**ไฟล์เป้าหมาย:**
 
-## Definition of Done ของรอบถัดไป
+- `API/academy-API.Tests/unitTest/RefactoredSliceServiceTests.cs`
+- `Objective/taskPlan.md`
 
-- [x] Contract ใน `api-target.json` ตรงกับ DTO และ route ที่ implement จริง (`validate-api-contract.ps1`: errors `0`)
-- [/] Controller ไม่มี EF query หรือ business transaction โดยตรง (ยังพบ direct data access 7 controller files / 101 matches; refactored slices ผ่าน boundary แล้ว)
-- [/] Service คุม business rule และ state transition (Makeup, Pickup, Attendance checkout, Leave และ Payment receipt ผ่าน; legacy controllers ยังไม่ครบ)
-- [/] Repository คุม query/persistence/transaction ตาม ownership ที่ชัดเจน (core slices ผ่าน; legacy controller-owned flows ยังต้องย้าย)
-- [x] มี unit tests สำหรับ success, validation, conflict และ authorization ของ core slices; full suite ผ่าน `212/212`
-- [x] API build ผ่านด้วย output `API/bin/DodValidation`
-- [x] Test result แยกและตรวจสอบได้: full suite `212 passed, 0 failed, 0 skipped`
-- [x] เอกสาร `Objective/process.md` อัปเดตจากหลักฐานจริงหลังจบรอบ
+**งาน:**
 
-## ลำดับลงมือถัดไป
+- [ ] เพิ่ม AAA test เมื่อ `ExpiresAt <= UtcNow` ต้องจองไม่ได้
+- [ ] ยืนยันว่า repository create booking ไม่ถูกเรียก
 
-1. เขียน tests สำหรับ Makeup, Pickup และ Checkout
-2. Implement Leave Request service/repository/controller ให้ตรง target contract
-3. รัน tests เฉพาะ Leave & Make-up และแก้จนผ่าน
-4. เชื่อม Parent LIFF กับ leave/credit/slot/booking
-5. อัปเดต implementation status ใน target spec และ process report
+**ผ่านเมื่อ:**
+
+- [ ] focused refactored slice tests ผ่าน
+- [ ] checklist ข้อนี้เปลี่ยนเป็น `[x]`
+
+## รอบถัดไป: P1 schema-gated work
+
+### Slice C: Leave attachment
+
+**ต้องตัดสินใจก่อน:** schema ปัจจุบันยังไม่มี `leave_requests.attachment_url` และไม่มี attachment table
+
+**งานตามลำดับ:**
+
+- [x] ออกแบบ `leave_request_attachments` จาก SRS และเพิ่มใน `sql_script.md`/`erProjec.md` เป็น Proposed schema
+- [x] เพิ่ม model + DbContext mapping หลัง schema พร้อมเท่านั้น (schema verified from `results-2026-09-12-220648.csv`)
+- [x] เพิ่ม service validation: MIME type, size, ownership
+- [x] เพิ่ม upload endpoint และ response URL
+- [x] ต่อ LIFF file input
+- [x] เพิ่ม tests สำหรับ file type, size, ownership และ upload failure
+
+**ผ่านเมื่อ:**
+
+- [ ] schema export รอบใหม่ยืนยัน column/table
+- [ ] upload URL ถูกบันทึกและอ่านกลับได้
+- [ ] ไม่มีข้อความใน UI ที่อ้างว่าแนบไฟล์ได้ก่อน backend พร้อม
+
+### Slice D: Admin audit log
+
+**เป้าหมาย:** checkout ต้องตรวจย้อนหลังได้ว่าใครทำ เมื่อไร และรับเด็กโดยใคร
+
+**งาน:**
+
+- [ ] กำหนด `AuditLog` event contract สำหรับ checkout
+- [ ] เขียน audit ใน transaction เดียวกับ attendance checkout
+- [ ] เพิ่ม read endpoint/service สำหรับ audit detail ที่จำเป็น
+- [ ] แสดง server timestamp และ actor ใน Admin UI
+- [ ] เพิ่ม tests ว่า failed checkout ไม่สร้าง audit record
+
+## รอบถัดไป: Architecture boundary
+
+### Slice E: ย้าย legacy controller ทีละไฟล์
+
+ลำดับที่แนะนำ:
+
+1. `FileUploadEndpoints.cs`
+2. `InstituteEndpoints.cs`
+3. `TeacherEndpoints.cs`
+4. `UserEndpoints.cs`
+5. `AuthEndpoints.cs`
+6. `ParentEndpoints.cs`
+7. `MakeupEndpoints.cs` ownership query
+
+ต่อหนึ่งไฟล์ให้ทำครบ:
+
+- [ ] สร้าง DTO/interface service/repository ที่จำเป็น
+- [ ] ย้าย EF query ออกจาก controller
+- [ ] ย้าย transaction/state rule ออกจาก controller
+- [ ] เพิ่ม focused tests
+- [ ] ตรวจว่า grep direct EF ของไฟล์นั้นเป็นศูนย์ หรือมีเหตุผลที่บันทึกไว้
+- [ ] build และ full test ผ่าน
+
+**Definition of Done ของ architecture รอบนี้:**
+
+- [ ] controller direct EF matches ลดจาก `101` เหลือไม่เกิน `0` สำหรับไฟล์ใน scope
+- [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
+- [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
+
+## P2 หลัง boundary เสถียร
+
+### Slice F: Student card PDF
+
+- [ ] สร้าง `StudentCardPdfService` แยกจาก controller
+- [ ] ใช้ QR token และข้อมูล student จริง
+- [ ] upload ผ่าน `IFileStorageService`
+- [ ] เพิ่ม endpoint `GET /api/students/{id}/card.pdf`
+- [ ] เพิ่ม AAA tests สำหรับ student not found และ PDF generation
+- [ ] ต่อปุ่ม download ใน Admin UI
+
+### Slice G: Export
+
+- [ ] กำหนด CSV เป็น first delivery ก่อน XLSX
+- [ ] เพิ่ม service/repository query แบบ paged/streaming
+- [ ] เพิ่ม endpoint และ content type ที่ชัดเจน
+- [ ] เพิ่ม tests เรื่อง tenant isolation และ empty dataset
+- [ ] ค่อยเพิ่ม XLSX หลัง CSV ผ่านจริง
+
+### Slice H: Payment slip verification
+
+- [ ] กำหนด provider contract และผลลัพธ์ `verified/amount/reference/reason`
+- [ ] ห้ามเปลี่ยน payment เป็น verified หาก amount ไม่ตรง
+- [ ] เก็บ provider payload ตาม schema ที่มีอยู่
+- [ ] เพิ่ม mock provider tests และ conflict tests
+
+### Slice I: Background jobs
+
+แยก worker ตาม trigger ไม่ทำ worker ก้อนเดียว:
+
+- [ ] late attendance หลังเริ่มเรียน 20 นาที
+- [ ] homework reminder ก่อน due 24 ชั่วโมง
+- [ ] quota low เมื่อเหลือไม่เกิน 3
+- [ ] notification log ทุกการส่ง
+- [ ] idempotency กันส่งซ้ำ
+- [ ] tests สำหรับ retry และ duplicate execution
+
+### Slice J: Admin inactivity timeout / CI / load test
+
+- [ ] Admin inactivity timeout 30 นาทีใน frontend + token policy ที่สอดคล้อง
+- [ ] CI build API, Front และ LineLiff
+- [ ] CI รัน focused/full tests
+- [ ] k6 attendance load test พร้อม threshold ที่ระบุ
+
+## Definition of Done ของแผนนี้
+
+- [ ] ทุก slice มี issue/file scope ชัดเจน
+- [ ] ทุก slice มี focused tests และ command ที่รันซ้ำได้
+- [ ] `api-target.json` ตรงกับ DTO/route ของ implementation ที่ประกาศว่า implemented
+- [ ] `validate-api-contract.ps1` รายงาน `Errors = 0`
+- [ ] API build ผ่าน
+- [ ] Full API tests ผ่าน โดยรายงานจำนวน pass/fail/skip
+- [ ] Controller boundary audit มีตัวเลขก่อน/หลัง
+- [ ] `Objective/process.md` อัปเดตจากหลักฐานหลังจบรอบ
+
+## Commands หลัก
+
+```powershell
+# API build
+ dotnet build .\API\academy-API.csproj --no-restore -o .\API\bin\DodValidation
+
+# Full API tests
+ dotnet build .\API\academy-API.Tests\academy-API.Tests.csproj --no-restore -o .\API\bin\DodValidation
+ dotnet vstest .\API\bin\DodValidation\academy-API.Tests.dll
+
+# Front build
+ Push-Location .\Front; npm run build; Pop-Location
+
+# LIFF build
+ Push-Location .\LineLiff; npm run build; Pop-Location
+
+# Contract validation
+ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+ .\Objective\validate-api-contract.ps1
+
+# Controller ownership audit
+ $hits = Get-ChildItem '.\API\Controllers\*.cs' | ForEach-Object { Select-String -Path $_.FullName -Pattern 'TutoringDbContext|DbContext|SaveChanges|BeginTransaction|FirstOrDefaultAsync|ToListAsync|AnyAsync' }
+ $hits.Count
+```
+
+## ลำดับลงมือจริง
+
+1. Slice A: parent booking cancellation
+2. Slice B: expired credit test
+3. Slice C: schema decision + leave attachment
+4. Slice D: audit log checkout
+5. Slice E: legacy controller boundary ทีละไฟล์
+6. Slice F-J: P2 ที่เหลือตาม dependency

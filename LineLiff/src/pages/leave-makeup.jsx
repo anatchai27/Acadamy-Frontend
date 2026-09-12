@@ -10,6 +10,7 @@ import {
   getChildSessions,
   getMakeupCredits,
   getMakeupSlots,
+  uploadLeaveAttachment,
 } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 
@@ -75,6 +76,7 @@ const LeavePanel = ({ childId, refreshKey, onRefresh }) => {
   const [requests, setRequests] = useState([]);
   const [sessionId, setSessionId] = useState('');
   const [reason, setReason] = useState('');
+  const [attachment, setAttachment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -104,9 +106,12 @@ const LeavePanel = ({ childId, refreshKey, onRefresh }) => {
     }
     setSubmitting(true);
     try {
-      await createChildLeaveRequest(childId, { sessionId: Number(sessionId), reason: reason.trim() });
+      const response = await createChildLeaveRequest(childId, { sessionId: Number(sessionId), reason: reason.trim() });
+      const created = response.data?.data || response.data;
+      if (attachment && created?.id) await uploadLeaveAttachment(created.id, attachment);
       setReason('');
       setSessionId('');
+      setAttachment(null);
       setSuccess('ส่งคำขอลาแล้ว ระบบจะพิจารณาตามเวลาเรียนและแจ้งผลในรายการด้านล่าง');
       onRefresh();
     } catch (apiError) {
@@ -126,7 +131,7 @@ const LeavePanel = ({ childId, refreshKey, onRefresh }) => {
         <form class="mt-5 space-y-4" onSubmit={submit}>
           <label class="block"><span class="mb-1.5 block text-sm font-bold text-ink-700">คาบเรียน</span><select value={sessionId} onChange={event => setSessionId(event.currentTarget.value)} class="w-full rounded-2xl border border-sage-200 bg-sage-50 px-3 py-3 text-sm text-ink-900 outline-none focus:border-sage-600 focus:ring-2 focus:ring-sage-200" disabled={loading || submitting}><option value="">เลือกคาบเรียน</option>{sessions.map(session => <option key={session.id} value={session.id}>{session.courseName} · {formatDate(session.scheduledAt)}</option>)}</select></label>
           <label class="block"><span class="mb-1.5 block text-sm font-bold text-ink-700">เหตุผล</span><textarea value={reason} onInput={event => setReason(event.currentTarget.value)} rows="3" placeholder="เช่น ป่วย มีธุระครอบครัว" class="w-full resize-none rounded-2xl border border-sage-200 bg-sage-50 px-3 py-3 text-sm text-ink-900 outline-none placeholder:text-ink-500 focus:border-sage-600 focus:ring-2 focus:ring-sage-200" disabled={submitting} /></label>
-          <p class="rounded-xl bg-sage-50 px-3 py-2 text-xs leading-5 text-ink-500">ขณะนี้ยังไม่เปิดรับไฟล์แนบ เนื่องจากฐานข้อมูลยังไม่มีช่องเก็บหลักฐานการลา</p>
+          <label class="block"><span class="mb-1.5 block text-sm font-bold text-ink-700">หลักฐานการลา <span class="font-normal text-ink-500">(ถ้ามี, PDF/JPG/PNG/WEBP ไม่เกิน 5MB)</span></span><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={event => setAttachment(event.currentTarget.files?.[0] || null)} disabled={submitting} class="block w-full rounded-2xl border border-dashed border-sage-300 bg-sage-50 px-3 py-3 text-sm text-ink-700 file:mr-3 file:rounded-xl file:border-0 file:bg-sage-600 file:px-3 file:py-2 file:font-bold file:text-white" /></label>
           {error && <Alert tone="error">{error}</Alert>}
           {success && <Alert tone="success">{success}</Alert>}
           <button type="submit" disabled={submitting || loading || !sessions.length} class="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-sage-600 px-4 text-sm font-bold text-white transition hover:bg-sage-700 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? <HiOutlineArrowPath class="h-5 w-5 animate-spin" /> : <HiOutlineDocumentText class="h-5 w-5" />} {submitting ? 'กำลังส่งคำขอ...' : 'ส่งคำขอลา'}</button>
