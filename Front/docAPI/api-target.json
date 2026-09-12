@@ -1879,11 +1879,11 @@
       "get": {
         "tags": ["Students"],
         "operationId": "ExportStudents",
-        "x-implementation-status": "new",
+        "x-implementation-status": "implemented",
         "x-roles": ["admin", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
-        "parameters": [{ "name": "format", "in": "query", "required": true, "schema": { "type": "string", "enum": ["csv", "xlsx"] } }],
-        "responses": { "200": { "description": "Student export file", "content": { "text/csv": {}, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {} } } }
+        "parameters": [{ "name": "format", "in": "query", "required": true, "schema": { "type": "string", "enum": ["csv"] } }],
+        "responses": { "200": { "description": "Student CSV export file", "content": { "text/csv": {} } } }
       }
     },
     "/api/students/{id}/card.pdf": {

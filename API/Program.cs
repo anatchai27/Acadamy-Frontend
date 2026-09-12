@@ -94,6 +94,7 @@ builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IStudentExportService, StudentExportService>();
 builder.Services.AddScoped<IStudentCardPdfService, StudentCardPdfService>();
 builder.Services.AddScoped<IStudentCardService, StudentCardService>();
 builder.Services.AddScoped<IStudentPickupRepository, StudentPickupRepository>();

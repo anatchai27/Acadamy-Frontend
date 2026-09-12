@@ -1780,6 +1780,18 @@
         }
       }
     },
+    "/api/students/export": {
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/students/{id}": {
       "get": {
         "tags": [

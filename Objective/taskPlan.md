@@ -5,12 +5,12 @@
 
 ## Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `67 paths / 42 schemas`
+- Current API snapshot: `68 paths / 42 schemas`
 - Target API contract: `73 paths / 62 schemas`
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `227 passed / 0 failed / 0 skipped`
+- Full API tests ล่าสุด: `230 passed / 0 failed / 0 skipped`
 - Controller ที่ยังมี direct EF/data access: `5 files / 82 matches`
   - `AuthEndpoints.cs`
   - `InstituteEndpoints.cs`
@@ -179,10 +179,10 @@
 
 ### Slice G: Export
 
-- [ ] กำหนด CSV เป็น first delivery ก่อน XLSX
-- [ ] เพิ่ม service/repository query แบบ paged/streaming
-- [ ] เพิ่ม endpoint และ content type ที่ชัดเจน
-- [ ] เพิ่ม tests เรื่อง tenant isolation และ empty dataset
+- [x] กำหนด CSV เป็น first delivery ก่อน XLSX
+- [x] เพิ่ม service/repository query แบบ async streaming
+- [x] เพิ่ม endpoint `GET /api/students/export?format=csv` และ content type `text/csv`
+- [x] เพิ่ม tests เรื่อง tenant isolation และ empty dataset
 - [ ] ค่อยเพิ่ม XLSX หลัง CSV ผ่านจริง
 
 ### Slice H: Payment slip verification

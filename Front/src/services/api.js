@@ -78,4 +78,16 @@ export const api = {
   put: (endpoint, data, options = {}) => fetcher(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
   patch: (endpoint, data, options = {}) => fetcher(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
   delete: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'DELETE' }),
+  download: async (endpoint, options = {}) => {
+    const { params, signal } = options;
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    const response = await fetch(`${API_BASE}${endpoint}${buildQuery(params)}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal,
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return { blob: await response.blob(), filename: response.headers.get('content-disposition') || '' };
+  },
 };

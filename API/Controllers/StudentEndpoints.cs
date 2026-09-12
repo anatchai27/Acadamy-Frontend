@@ -26,6 +26,12 @@ public static class StudentEndpoints
             return Results.Ok(result);
         });
 
+        group.MapGet("/export", async (IStudentExportService service, CancellationToken ct) =>
+        {
+            var csv = await service.ExportCsvAsync(ct);
+            return Results.File(csv, "text/csv; charset=utf-8", $"students-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+        });
+
         group.MapGet("/{id:int}", async (
             int id,
             IStudentService service,

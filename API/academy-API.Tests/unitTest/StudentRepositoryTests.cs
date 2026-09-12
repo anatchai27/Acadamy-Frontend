@@ -86,4 +86,32 @@ public class StudentRepositoryTests
         Assert.Equal(1, total);
         Assert.Equal("0812345678", items[0].PrimaryParentPhone);
     }
+
+    [Fact]
+    public async Task StreamExportAsync_UsesTenantFilter()
+    {
+        // Arrange
+        var dbName = Guid.NewGuid().ToString();
+        await using (var seed = CreateInMemoryDbContext(dbName))
+        {
+            seed.Students.AddRange(
+                new Student { Id = 1, InstituteId = 1, FullName = "Tenant One" },
+                new Student { Id = 2, InstituteId = 2, FullName = "Tenant Two" });
+            await seed.SaveChangesAsync();
+        }
+
+        await using var context = new TutoringDbContext(
+            new DbContextOptionsBuilder<TutoringDbContext>().UseInMemoryDatabase(dbName).Options,
+            new MockTenantProvider { InstituteId = 1 });
+        var repository = new StudentRepository(context);
+
+        // Act
+        var rows = new List<StudentExportRow>();
+        await foreach (var row in repository.StreamExportAsync()) rows.Add(row);
+
+        // Assert
+        var student = Assert.Single(rows);
+        Assert.Equal(1, student.Id);
+        Assert.Equal("Tenant One", student.FullName);
+    }
 }

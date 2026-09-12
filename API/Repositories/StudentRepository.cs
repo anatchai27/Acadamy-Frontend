@@ -169,4 +169,20 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
 
         return (items, totalCount);
     }
+
+    public IAsyncEnumerable<StudentExportRow> StreamExportAsync(CancellationToken ct = default) =>
+        _context.Students
+            .AsNoTracking()
+            .OrderBy(s => s.Id)
+            .Select(s => new StudentExportRow(
+                s.Id,
+                s.FullName,
+                s.Nickname,
+                s.Grade,
+                s.School,
+                s.Parents.OrderBy(p => p.Id).Select(p => p.FullName).FirstOrDefault(),
+                s.Parents.OrderBy(p => p.Id).Select(p => p.Phone).FirstOrDefault(),
+                s.MedicalInfo,
+                s.PhotoUrl))
+            .AsAsyncEnumerable();
 }

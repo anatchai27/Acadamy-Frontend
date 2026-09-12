@@ -12,6 +12,7 @@ export function StudentsPage({ path }) {
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 0, totalItems: 0, hasNext: false });
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
@@ -50,6 +51,24 @@ export function StudentsPage({ path }) {
 
   const handlePageChange = (page) => {
     fetchStudents(page, search);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { blob } = await studentService.downloadStudentCsv();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `students-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      showToast('ส่งออก CSV สำเร็จ', 'success');
+    } catch (error) {
+      showToast(error.message || 'ส่งออก CSV ไม่สำเร็จ', 'error');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const columns = useMemo(() => ([
@@ -222,12 +241,12 @@ export function StudentsPage({ path }) {
               : 'ดูและจัดการข้อมูลนักเรียนทั้งหมด'}
           </p>
         </div>
-        <Button variant="primary" size="md" onClick={() => route('/admin/students/add')}>
-          <span class="flex items-center gap-1.5">
-            <HiOutlinePlus class="h-4 w-4" />
-            เพิ่มนักเรียน
-          </span>
-        </Button>
+        <div class="flex flex-wrap gap-2">
+          <Button variant="outline" size="md" onClick={handleExport} loading={exporting} disabled={exporting}>ส่งออก CSV</Button>
+          <Button variant="primary" size="md" onClick={() => route('/admin/students/add')}>
+            <span class="flex items-center gap-1.5"><HiOutlinePlus class="h-4 w-4" />เพิ่มนักเรียน</span>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

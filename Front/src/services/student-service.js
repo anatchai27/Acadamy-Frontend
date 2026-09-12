@@ -24,6 +24,8 @@ export const getStudentCardPdf = id => {
   return api.get(`/students/${id}/card.pdf`);
 }
 
+export const downloadStudentCsv = () => api.download('/students/export', { params: { format: 'csv' } });
+
 export const studentService = {
   getStudents,
   getStudentById,
@@ -31,4 +33,5 @@ export const studentService = {
   updateStudent,
   getStudentQR,
   getStudentCardPdf,
+  downloadStudentCsv,
 };
