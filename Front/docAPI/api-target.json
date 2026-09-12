@@ -1039,6 +1039,22 @@
         }
       }
     },
+    "/api/parents/children/{childId}/sessions": {
+      "get": {
+        "tags": ["Parents"],
+        "operationId": "GetChildSessions",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "childId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": {
+          "200": {
+            "description": "Sessions enrolled by the child",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ParentSessionsResponse" } } }
+          }
+        }
+      }
+    },
     "/api/payments": {
       "post": {
         "tags": [
@@ -2491,6 +2507,30 @@
           }
         },
         "additionalProperties": false
+      },
+      "ParentSessionsResponse": {
+        "type": "object",
+        "required": ["status", "data"],
+        "properties": {
+          "status": { "type": "string", "enum": ["success"] },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParentSession" }
+          }
+        }
+      },
+      "ParentSession": {
+        "type": "object",
+        "required": ["id", "courseId", "courseName", "scheduledAt", "durationMin", "status"],
+        "properties": {
+          "id": { "type": "integer", "format": "int32" },
+          "courseId": { "type": "integer", "format": "int32" },
+          "courseName": { "type": "string" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "durationMin": { "type": "integer", "format": "int32" },
+          "roomId": { "type": "string", "nullable": true },
+          "status": { "type": "string" }
+        }
       },
       "ParentUpdate": {
         "type": "object",

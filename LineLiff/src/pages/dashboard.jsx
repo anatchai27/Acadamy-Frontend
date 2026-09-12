@@ -182,6 +182,18 @@ export const DashboardPage = () => {
               </div>
             </section>
 
+            <button
+              type="button"
+              onClick={() => route(`/liff/leave-makeup/${activeChild.id}`)}
+              class="flex w-full items-center justify-between rounded-card border border-sage-200 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-sage-400"
+            >
+              <span>
+                <span class="block font-bold text-ink-900">ลาและเรียนชดเชย</span>
+                <span class="mt-1 block text-sm text-ink-500">แจ้งลา ดูเครดิต และจองที่นั่งเรียนชดเชย</span>
+              </span>
+              <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-sage-50 text-sage-700" aria-hidden="true">→</span>
+            </button>
+
             <div class="rounded-card border border-gold-100 bg-gold-50 p-4 shadow-soft">
               <div class="flex gap-3">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-lg shadow-sm">

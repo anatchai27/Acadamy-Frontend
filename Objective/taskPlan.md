@@ -49,11 +49,11 @@
 
 ### 4. Parent LIFF Leave & Make-up
 
-- [ ] หน้าสร้าง leave request เลือก session, reason และแนบหลักฐาน
-- [ ] หน้าแสดง leave status และ makeup credit ของลูก
-- [ ] หน้าแสดง slot ที่ว่างตาม credit/course ที่ใช้ได้
-- [ ] หน้ายืนยัน booking และยกเลิก booking
-- [ ] แสดง error เมื่อ slot เต็ม, credit หมดอายุ หรือ booking ซ้ำ
+- [/] หน้าสร้าง leave request เลือก session และ reason ได้แล้ว; แนบหลักฐานยังรอ schema attachment
+- [x] หน้าแสดง leave status และ makeup credit ของลูก
+- [x] หน้าแสดง slot ที่ว่างและจองด้วย credit ของลูก
+- [/] หน้ายืนยัน booking ทำแล้ว; ยกเลิก booking รอ parent-scoped booking list/ownership contract
+- [x] แสดง error เมื่อ slot เต็ม, credit หมดอายุ หรือ booking ซ้ำ
 
 ### 5. Admin Attendance/Pickup
 

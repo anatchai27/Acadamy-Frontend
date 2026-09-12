@@ -1231,6 +1231,29 @@
         }
       }
     },
+    "/api/parents/children/{childId}/sessions": {
+      "get": {
+        "tags": [
+          "Parents"
+        ],
+        "parameters": [
+          {
+            "name": "childId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/payments": {
       "post": {
         "tags": [

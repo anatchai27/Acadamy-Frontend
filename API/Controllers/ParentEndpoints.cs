@@ -48,6 +48,9 @@ public static class ParentEndpoints
         group.MapGet("/children/{childId:int}/leave-requests", GetChildLeaveRequests)
             .RequireAuthorization();
 
+        group.MapGet("/children/{childId:int}/sessions", GetChildSessions)
+            .RequireAuthorization();
+
         group.MapPost("/children/{childId:int}/leave-requests", CreateChildLeaveRequest)
             .RequireAuthorization();
 
@@ -447,6 +450,35 @@ public static class ParentEndpoints
         }
     }
 
+    private static async Task<IResult> GetChildSessions(
+        int childId,
+        HttpContext httpContext,
+        TutoringDbContext db,
+        CancellationToken ct)
+    {
+        var parent = await ResolveParentUser(httpContext, db, ct);
+        if (parent is null) return Results.Unauthorized();
+        if (!await IsParentOfStudent(db, parent, childId, ct)) return Results.Forbid();
+
+        var sessions = await db.Sessions
+            .AsNoTracking()
+            .Include(s => s.Course)
+            .Where(s => db.Enrollments.Any(e => e.StudentId == childId && e.CourseId == s.CourseId)
+                && s.ScheduledAt >= DateTime.UtcNow.AddDays(-7))
+            .OrderBy(s => s.ScheduledAt)
+            .Select(s => new ParentSessionItem(
+                s.Id,
+                s.CourseId,
+                s.Course.Name,
+                s.ScheduledAt,
+                s.DurationMin,
+                s.RoomId,
+                s.Status))
+            .ToListAsync(ct);
+
+        return Results.Ok(new { status = "success", data = sessions });
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
     private static async Task<Parent?> ResolveParentUser(HttpContext httpContext, TutoringDbContext db, CancellationToken ct)
     {
@@ -528,6 +560,7 @@ public static class ParentEndpoints
 public record BindLineRequest(string? LineUserId, string? AccessToken, string? Phone);
 public record UpdateParentProfileRequest(string? FullName, string? Phone, string? Email);
 public record ChildSummary(int Id, string FullName, string Grade, int InstituteId);
+public record ParentSessionItem(int Id, int CourseId, string CourseName, DateTime ScheduledAt, int DurationMin, string? RoomId, string Status);
 public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string Status, DateTime CheckinAt, DateTime CheckoutAt);
 public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl);
 public record SkillScoreItem(string CourseName, string TopicName, decimal Score, string Note);

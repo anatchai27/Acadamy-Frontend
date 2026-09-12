@@ -24,6 +24,34 @@ export const getChildHomework = childId => {
   return api.get(`/parents/children/${childId}/homework`);
 }
 
+export const getChildSessions = childId => {
+  return api.get(`/parents/children/${childId}/sessions`);
+}
+
+export const getChildLeaveRequests = childId => {
+  return api.get(`/parents/children/${childId}/leave-requests`);
+}
+
+export const createChildLeaveRequest = (childId, payload) => {
+  return api.post(`/parents/children/${childId}/leave-requests`, payload);
+}
+
+export const getMakeupCredits = childId => {
+  return api.get('/makeup/credits', { params: { student_id: childId } });
+}
+
+export const getMakeupSlots = params => {
+  return api.get('/makeup/slots', { params });
+}
+
+export const createMakeupBooking = payload => {
+  return api.post('/makeup/bookings', payload);
+}
+
+export const cancelMakeupBooking = bookingId => {
+  return api.delete(`/makeup/bookings/${bookingId}`);
+}
+
 export const submitLeaveRequest = (childId, payload) => {
   return api.post(`/parents/children/${childId}/leave-requests`, payload);
 }
