@@ -1,4 +1,5 @@
 using academy_API.DTOs;
+using System.Text.Json;
 using academy_API.Repositories;
 
 namespace academy_API.Services;
@@ -9,6 +10,7 @@ public interface IAttendanceService
     Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default);
     Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default);
     Task<CheckoutAttendanceResponse> CheckoutAsync(long attendanceId, CheckoutAttendanceRequest request, int? actorId, CancellationToken ct = default);
+    Task<AuditLogResponse?> GetCheckoutAuditAsync(long attendanceId, CancellationToken ct = default);
 }
 
 public class AttendanceService(
@@ -139,7 +141,23 @@ public class AttendanceService(
         attendance.CheckoutAt = DateTime.UtcNow;
         attendance.UpdatedAt = DateTime.UtcNow;
         attendance.UpdatedBy = actorId;
-        await _repository.SaveCheckoutAsync(attendance, ct);
+        var audit = new Models.AuditLog
+        {
+            InstituteId = attendance.InstituteId,
+            UserId = actorId,
+            Action = "checkout",
+            EntityType = "Attendance",
+            EntityId = attendance.Id.ToString(),
+            AfterJson = JsonSerializer.Serialize(new
+            {
+                attendance.CheckoutAt,
+                attendance.PickedUpBy,
+                attendance.PickupAuthorizationId,
+                attendance.UpdatedBy
+            }),
+            CreatedAt = attendance.UpdatedAt.Value
+        };
+        await _repository.SaveCheckoutAsync(attendance, audit, ct);
 
         return new CheckoutAttendanceResponse(
             attendance.Id,
@@ -149,7 +167,14 @@ public class AttendanceService(
             attendance.CheckinAt,
             attendance.CheckoutAt.Value,
             attendance.PickedUpBy,
-            attendance.PickupAuthorizationId);
+            attendance.PickupAuthorizationId,
+            new AuditLogResponse(audit.Id, audit.UserId, audit.Action, audit.EntityType, audit.EntityId, audit.AfterJson, audit.CreatedAt));
+    }
+
+    public async Task<AuditLogResponse?> GetCheckoutAuditAsync(long attendanceId, CancellationToken ct = default)
+    {
+        var audit = await _repository.GetCheckoutAuditAsync(attendanceId, ct);
+        return audit is null ? null : new AuditLogResponse(audit.Id, audit.UserId, audit.Action, audit.EntityType, audit.EntityId, audit.AfterJson, audit.CreatedAt);
     }
 }
 

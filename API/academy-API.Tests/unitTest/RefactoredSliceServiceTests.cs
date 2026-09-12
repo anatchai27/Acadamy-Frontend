@@ -303,7 +303,7 @@ public class AttendanceCheckoutServiceTests
 
         // Assert
         Assert.Equal("CHECKIN_REQUIRED", exception.ErrorCode);
-        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public class AttendanceCheckoutServiceTests
 
         // Assert
         Assert.Equal("ALREADY_CHECKED_OUT", exception.ErrorCode);
-        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -341,7 +341,7 @@ public class AttendanceCheckoutServiceTests
 
         // Assert
         Assert.Equal("INVALID_PICKUP_AUTHORIZATION", exception.ErrorCode);
-        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -359,7 +359,7 @@ public class AttendanceCheckoutServiceTests
 
         // Assert
         Assert.Equal("ALREADY_CHECKED_OUT", exception.ErrorCode);
-        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.SaveCheckoutAsync(It.IsAny<Attendance>(), It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -380,6 +380,7 @@ public class AttendanceCheckoutServiceTests
         Assert.Equal("แม่สมใจ", result.PickedUpBy);
         Assert.Equal(7, result.PickupAuthorizationId);
         Assert.NotEqual(default, result.CheckoutAt);
-        repository.Verify(x => x.SaveCheckoutAsync(attendance, It.IsAny<CancellationToken>()), Times.Once);
+        repository.Verify(x => x.SaveCheckoutAsync(attendance, It.Is<AuditLog>(audit =>
+            audit.Action == "checkout" && audit.EntityType == "Attendance" && audit.EntityId == "50" && audit.UserId == 99), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

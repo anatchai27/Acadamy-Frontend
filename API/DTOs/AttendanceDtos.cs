@@ -43,7 +43,8 @@ public record CheckoutAttendanceResponse(
     DateTime? CheckinAt,
     DateTime CheckoutAt,
     string PickedUpBy,
-    long? PickupAuthorizationId
+    long? PickupAuthorizationId,
+    AuditLogResponse? Audit = null
 );
 
 public record ManualAttendanceResponse(

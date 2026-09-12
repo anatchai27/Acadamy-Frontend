@@ -110,6 +110,15 @@ public static class AttendanceEndpoints
             }
         });
 
+        group.MapGet("/{attendanceId:long}/audit", async (
+            long attendanceId,
+            IAttendanceService service,
+            CancellationToken ct) =>
+        {
+            var audit = await service.GetCheckoutAuditAsync(attendanceId, ct);
+            return audit is null ? Results.NotFound() : Results.Ok(audit);
+        });
+
         return app;
     }
 

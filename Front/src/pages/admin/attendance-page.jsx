@@ -102,7 +102,7 @@ export function AttendancePage({ path }) {
       });
       const checkout = response.data?.data || response.data || {};
       setStudents(prev => prev.map(student => student.attendanceId === pickupStudent.attendanceId
-        ? { ...student, checkoutAt: checkout.checkoutAt, pickedUpBy: checkout.pickedUpBy || authorization.fullName, pickupAuthorizationId: checkout.pickupAuthorizationId || authorization.id }
+        ? { ...student, checkoutAt: checkout.checkoutAt, pickedUpBy: checkout.pickedUpBy || authorization.fullName, pickupAuthorizationId: checkout.pickupAuthorizationId || authorization.id, checkoutAudit: checkout.audit }
         : student));
       showToast(`บันทึกผู้รับเด็ก: ${authorization.fullName}`, 'success');
       setPickupStudent(null);
@@ -209,7 +209,8 @@ export function AttendancePage({ path }) {
                   <div class="flex items-center gap-2 shrink-0">
                     {student.checkoutAt ? (
                       <span class="rounded-lg bg-oasis-success-light px-2.5 py-1.5 text-xs font-semibold text-oasis-success">
-                        รับแล้ว: {student.pickedUpBy || '-'}
+                        รับแล้ว: {student.pickedUpBy || '-'} · {student.checkoutAudit?.createdAt ? new Date(student.checkoutAudit.createdAt).toLocaleTimeString('th-TH') : new Date(student.checkoutAt).toLocaleTimeString('th-TH')}
+                        {student.checkoutAudit?.userId ? ` · โดย #${student.checkoutAudit.userId}` : ''}
                       </span>
                     ) : (
                       <button

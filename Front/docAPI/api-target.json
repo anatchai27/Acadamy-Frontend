@@ -1861,7 +1861,18 @@
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [{ "name": "attendanceId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutAttendanceRequest" } } } },
-        "responses": { "200": { "description": "Attendance checkout recorded" }, "409": { "$ref": "#/components/responses/Conflict" } }
+        "responses": { "200": { "description": "Attendance checkout recorded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutAttendanceResponse" } } } }, "409": { "$ref": "#/components/responses/Conflict" } }
+      }
+    },
+    "/api/attendance/{attendanceId}/audit": {
+      "get": {
+        "tags": ["Attendance"],
+        "operationId": "GetAttendanceCheckoutAudit",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "attendanceId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "200": { "description": "Checkout audit event", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuditLogResponse" } } } }, "404": { "$ref": "#/components/responses/NotFound" } }
       }
     },
     "/api/students/export": {
@@ -3017,6 +3028,34 @@
           "pickupAuthorizationId": { "type": "integer", "format": "int32", "nullable": true }
         },
         "additionalProperties": false
+      },
+      "CheckoutAttendanceResponse": {
+        "type": "object",
+        "required": ["id", "sessionId", "studentId", "status", "checkoutAt", "pickedUpBy"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "sessionId": { "type": "integer", "format": "int32" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "status": { "type": "string" },
+          "checkinAt": { "type": "string", "format": "date-time", "nullable": true },
+          "checkoutAt": { "type": "string", "format": "date-time" },
+          "pickedUpBy": { "type": "string" },
+          "pickupAuthorizationId": { "type": "integer", "format": "int64", "nullable": true },
+          "audit": { "$ref": "#/components/schemas/AuditLogResponse", "nullable": true }
+        }
+      },
+      "AuditLogResponse": {
+        "type": "object",
+        "required": ["id", "action", "entityType", "createdAt"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "userId": { "type": "integer", "format": "int32", "nullable": true },
+          "action": { "type": "string" },
+          "entityType": { "type": "string" },
+          "entityId": { "type": "string", "nullable": true },
+          "afterJson": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
       },
       "MakeupCredit": {
         "type": "object",

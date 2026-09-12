@@ -5,12 +5,12 @@
 
 ## Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `65 paths / 43 schemas`
-- Target API contract: `73 paths / 58 schemas`
+- Current API snapshot: `66 paths / 44 schemas`
+- Target API contract: `74 paths / 59 schemas`
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `220 passed / 0 failed / 0 skipped`
+- Full API tests ล่าสุด: `221 passed / 0 failed / 0 skipped`
 - Controller ที่ยังมี direct EF/data access: `7 files / 101 matches`
   - `AuthEndpoints.cs`
   - `FileUploadEndpoints.cs`
@@ -122,11 +122,11 @@
 
 **งาน:**
 
-- [ ] กำหนด `AuditLog` event contract สำหรับ checkout
-- [ ] เขียน audit ใน transaction เดียวกับ attendance checkout
-- [ ] เพิ่ม read endpoint/service สำหรับ audit detail ที่จำเป็น
-- [ ] แสดง server timestamp และ actor ใน Admin UI
-- [ ] เพิ่ม tests ว่า failed checkout ไม่สร้าง audit record
+- [x] กำหนด `AuditLog` event contract สำหรับ checkout
+- [x] เขียน audit ใน transaction เดียวกับ attendance checkout
+- [x] เพิ่ม read endpoint/service สำหรับ audit detail ที่จำเป็น
+- [x] แสดง server timestamp และ actor ใน Admin UI
+- [x] เพิ่ม tests ว่า failed checkout ไม่สร้าง audit record
 
 ## รอบถัดไป: Architecture boundary
 
