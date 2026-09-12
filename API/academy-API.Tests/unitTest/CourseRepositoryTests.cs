@@ -8,12 +8,12 @@ namespace academy_API.Tests.unitTest;
 
 public class CourseRepositoryTests
 {
-    private static TutoringDbContext CreateInMemoryDbContext(string dbName)
+    private static TutoringDbContext CreateInMemoryDbContext(string dbName, int instituteId = 0)
     {
         var options = new DbContextOptionsBuilder<TutoringDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-        return new TutoringDbContext(options, new MockTenantProvider());
+        return new TutoringDbContext(options, new MockTenantProvider { InstituteId = instituteId });
     }
 
     // ──────────────────── CourseRepository ────────────────────
@@ -89,7 +89,7 @@ public class CourseRepositoryTests
     public async Task GetByIdAsync_CrossInstitute_ReturnsNull()
     {
         var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateInMemoryDbContext(dbName);
+        await using var context = CreateInMemoryDbContext(dbName, 1);
         context.Courses.Add(new Course { Id = 1, Name = "Math", Subject = "", TotalSessions = 10, Price = 5000, InstituteId = 2 });
         await context.SaveChangesAsync();
 

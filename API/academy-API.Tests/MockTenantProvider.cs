@@ -4,5 +4,7 @@ namespace academy_API.Tests;
 
 public class MockTenantProvider : ITenantProvider
 {
-    public int InstituteId { get; set; } = 1;
+    // Unit tests opt into tenant filtering explicitly when testing isolation.
+    // Zero mirrors the DbContext convention for an unscoped test fixture.
+    public int InstituteId { get; set; }
 }

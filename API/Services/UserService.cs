@@ -65,9 +65,12 @@ public class UserService(
                 {
                     UserId = user.Id,
                     ConsentVersion = string.IsNullOrWhiteSpace(request.PdpaConsentVersion) ? "1.0" : request.PdpaConsentVersion,
+                    ConsentDocumentVersion = string.IsNullOrWhiteSpace(request.PdpaConsentVersion) ? "1.0" : request.PdpaConsentVersion,
                     IsAccepted = true,
                     IpAddress = ipAddress,
-                    AcceptedAt = DateTime.UtcNow
+                    AcceptedAt = DateTime.UtcNow,
+                    ReferenceType = "user",
+                    ReferenceId = user.Id
                 });
 
                 await _context.SaveChangesAsync(ct);
@@ -115,37 +118,19 @@ public class UserService(
 
     public async Task<UserLoginResult?> LoginAsync(string email, string password, CancellationToken ct = default)
     {
-        var row = await _context.Database.SqlQueryRaw<LoginUserRow>(
-            """
-            SELECT id AS Id,
-                   email AS Email,
-                   role AS Role,
-                   password_hash AS PasswordHash,
-                   institute_id AS InstituteId
-            FROM users
-            WHERE email = {0}
-            LIMIT 1
-            """,
-            email)
-            .FirstOrDefaultAsync(ct);
-
-        if (row is null || !_tokenService.VerifyPassword(password, row.PasswordHash))
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        if (user is null || !_tokenService.VerifyPassword(password, user.PasswordHash))
         {
             return null;
         }
 
-        if (!Enum.TryParse<UserRole>(row.Role, true, out var parsedRole))
-        {
-            return null;
-        }
-
-        var instituteId = row.InstituteId;
+        var instituteId = (int?)user.InstituteId;
 
         // Backward compatibility for legacy records where users.institute_id is null.
         if (!instituteId.HasValue)
         {
             instituteId = await _context.Teachers
-                .Where(t => t.UserId == row.Id)
+                .Where(t => t.UserId == user.Id)
                 .Select(t => (int?)t.InstituteId)
                 .FirstOrDefaultAsync(ct);
         }
@@ -153,7 +138,7 @@ public class UserService(
         if (!instituteId.HasValue)
         {
             instituteId = await _context.Students
-                .Where(s => s.UserId == row.Id)
+                .Where(s => s.UserId == user.Id)
                 .Select(s => (int?)s.InstituteId)
                 .FirstOrDefaultAsync(ct);
         }
@@ -163,14 +148,7 @@ public class UserService(
             return null;
         }
 
-        var user = new User
-        {
-            Id = row.Id,
-            Email = row.Email,
-            Role = parsedRole,
-            PasswordHash = row.PasswordHash,
-            InstituteId = instituteId.Value
-        };
+        user.InstituteId = instituteId.Value;
 
         var token = _tokenService.GenerateToken(user);
 
@@ -182,8 +160,6 @@ public class UserService(
             InstituteId: user.InstituteId
         );
     }
-
-    private sealed record LoginUserRow(int Id, string Email, string Role, string PasswordHash, int? InstituteId);
 
     public async Task<bool> ForgetPasswordAsync(string email, string resetLink, CancellationToken ct = default)
     {

@@ -63,10 +63,10 @@
 
 ### 6. ปรับ test infrastructure ที่ล้มอยู่เดิม
 
-- [ ] แยก test failures ที่เกิดจาก EF global tenant filter/fixture setup
-- [ ] แก้ test ที่ใช้ relational-only SQL บน InMemory หรือเปลี่ยน fixture เป็น relational provider
-- [ ] แก้ seed/tenant setup ของ Student, Course และ Payment repository tests
-- [ ] รัน full test suite ใหม่หลังแยก baseline failures ออกจาก feature tests
+- [x] แยก test failures ที่เกิดจาก EF global tenant filter/fixture setup
+- [x] แก้ test ที่ใช้ relational-only SQL บน InMemory ด้วย provider-agnostic LINQ ใน `UserService.LoginAsync`
+- [x] แก้ seed/tenant setup ของ Student, Course และ Payment repository tests ด้วย opt-in tenant fixture และ model cache key
+- [/] รัน full test suite ใหม่แล้ว: `210/211` ผ่าน เหลือ 1 pre-existing contract mismatch ใน `TokenService.VerifyPassword` test
 
 ## P2: งาน SRS หลัง core workflow เสถียร
 

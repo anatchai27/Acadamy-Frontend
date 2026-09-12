@@ -1,6 +1,7 @@
 using academy_API.Models;
 using academy_API.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace academy_API.Data;
 
@@ -9,6 +10,13 @@ public class TutoringDbContext(
     ITenantProvider tenantProvider) : DbContext(options)
 {
     private readonly int _currentInstituteId = tenantProvider.InstituteId;
+
+      internal int TenantInstituteId => _currentInstituteId;
+
+      protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+      {
+            optionsBuilder.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
+      }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Student> Students => Set<Student>();
@@ -1113,4 +1121,10 @@ public class TutoringDbContext(
         modelBuilder.Entity<RoomBooking>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
     }
 
+}
+
+internal sealed class TenantModelCacheKeyFactory : IModelCacheKeyFactory
+{
+      public object Create(DbContext context, bool designTime) =>
+            (context.GetType(), context is TutoringDbContext tutoringContext ? tutoringContext.TenantInstituteId : 0, designTime);
 }
