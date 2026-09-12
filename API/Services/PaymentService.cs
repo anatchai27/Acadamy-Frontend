@@ -12,10 +12,14 @@ public interface IPaymentService
 
 public class PaymentService(
     Repositories.IPaymentRepository repository,
-    Contracts.ILineNotificationService lineService) : IPaymentService
+    Contracts.ILineNotificationService lineService,
+    IReceiptPdfService receiptPdfService,
+    Interface.IFileStorageService fileStorageService) : IPaymentService
 {
     private readonly Repositories.IPaymentRepository _repository = repository;
     private readonly Contracts.ILineNotificationService _lineService = lineService;
+    private readonly IReceiptPdfService _receiptPdfService = receiptPdfService;
+    private readonly Interface.IFileStorageService _fileStorageService = fileStorageService;
 
     public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
@@ -44,7 +48,19 @@ public class PaymentService(
 
         var created = await _repository.CreatePaymentWithTransactionAsync(payment, ct);
 
-        var receiptPdfUrl = $"https://storage.tiwhub.com/receipts/{invoiceNo}.pdf";
+        var receiptBytes = _receiptPdfService.Render(new ReceiptPdfData(
+            invoiceNo,
+            enrollment.Student.FullName,
+            enrollment.Course.Name,
+            created.Amount,
+            created.Method,
+            created.PaidAt));
+        await using var receiptStream = new MemoryStream(receiptBytes);
+        var receiptPdfUrl = await _fileStorageService.UploadAsync(
+            receiptStream,
+            $"receipts/{invoiceNo}.pdf",
+            "application/pdf",
+            ct);
 
         _ = Task.Run(async () =>
         {

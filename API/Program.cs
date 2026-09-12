@@ -108,6 +108,7 @@ builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();

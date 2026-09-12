@@ -70,7 +70,7 @@
 
 ## P2: งาน SRS หลัง core workflow เสถียร
 
-- [ ] สร้าง PDF receipt จริง
+- [x] สร้าง PDF receipt จริงด้วย `ReceiptPdfService` และ upload ผ่าน `IFileStorageService`
 - [ ] สร้าง student card PDF
 - [ ] เพิ่ม CSV/XLSX export นักเรียนและการเงิน
 - [ ] เพิ่ม payment slip verification

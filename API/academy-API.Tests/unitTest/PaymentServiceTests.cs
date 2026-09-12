@@ -9,11 +9,19 @@ public class PaymentServiceTests
 {
     private static Mock<Repositories.IPaymentRepository> CreateMockRepo() => new();
     private static Mock<Services.Contracts.ILineNotificationService> CreateMockLine() => new();
+    private static Mock<IReceiptPdfService> CreateMockReceipt() => new();
+    private static Mock<Services.Interface.IFileStorageService> CreateMockStorage() => new();
 
     private static PaymentService CreateSut(
         Mock<Repositories.IPaymentRepository>? repoMock = null,
-        Mock<Services.Contracts.ILineNotificationService>? lineMock = null) =>
-        new(repoMock?.Object ?? CreateMockRepo().Object, lineMock?.Object ?? CreateMockLine().Object);
+        Mock<Services.Contracts.ILineNotificationService>? lineMock = null,
+        Mock<IReceiptPdfService>? receiptMock = null,
+        Mock<Services.Interface.IFileStorageService>? storageMock = null) =>
+        new(
+            repoMock?.Object ?? CreateMockRepo().Object,
+            lineMock?.Object ?? CreateMockLine().Object,
+            receiptMock?.Object ?? CreateMockReceipt().Object,
+            storageMock?.Object ?? CreateMockStorage().Object);
 
     private static Payment MakePayment(int id, string invoiceNo, string studentName, string courseName, decimal amount, string method)
     {
@@ -33,6 +41,39 @@ public class PaymentServiceTests
                 Course = new Course { Name = courseName }
             }
         };
+    }
+
+    [Fact]
+    public async Task CreateAsync_PaymentCreated_RendersAndUploadsReceipt()
+    {
+        // Arrange
+        var repoMock = CreateMockRepo();
+        var lineMock = CreateMockLine();
+        var receiptMock = CreateMockReceipt();
+        var storageMock = CreateMockStorage();
+        var enrollment = new Enrollment
+        {
+            Id = 7,
+            StudentId = 9,
+            Student = new Student { Id = 9, FullName = "สมชาย" },
+            Course = new Course { Name = "คณิตศาสตร์" }
+        };
+        var created = MakePayment(12, "INV-202609-0001", "สมชาย", "คณิตศาสตร์", 1200m, "cash");
+        repoMock.Setup(x => x.GetEnrollmentWithStudentAsync(7, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        repoMock.Setup(x => x.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync(created.InvoiceNo);
+        repoMock.Setup(x => x.CreatePaymentWithTransactionAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>())).ReturnsAsync(created);
+        receiptMock.Setup(x => x.Render(It.IsAny<ReceiptPdfData>())).Returns([1, 2, 3]);
+        storageMock.Setup(x => x.UploadAsync(It.IsAny<Stream>(), "receipts/INV-202609-0001.pdf", "application/pdf", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example/receipts/INV-202609-0001.pdf");
+        var sut = CreateSut(repoMock, lineMock, receiptMock, storageMock);
+
+        // Act
+        var result = await sut.CreateAsync(new CreatePaymentRequest(7, 1200m, "cash", null));
+
+        // Assert
+        Assert.Equal("https://storage.example/receipts/INV-202609-0001.pdf", result.Data.ReceiptPdfUrl);
+        receiptMock.Verify(x => x.Render(It.Is<ReceiptPdfData>(data => data.InvoiceNo == created.InvoiceNo && data.Amount == 1200m)), Times.Once);
+        storageMock.Verify(x => x.UploadAsync(It.IsAny<Stream>(), "receipts/INV-202609-0001.pdf", "application/pdf", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ──────────────────── GetHistoryAsync ────────────────────
