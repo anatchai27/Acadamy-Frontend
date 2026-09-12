@@ -18,11 +18,28 @@ public interface IAttendanceRepository
     Task<List<Parent>> GetParentsWithLineAsync(int studentId, CancellationToken ct = default);
     Task ScanCheckinWithTransactionAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task ManualCheckinWithTransactionAsync(int studentId, int sessionId, string status, CancellationToken ct = default);
+    Task<Attendance?> GetForCheckoutAsync(long attendanceId, CancellationToken ct = default);
+    Task<StudentPickupAuthorization?> GetPickupAuthorizationAsync(long authorizationId, int studentId, CancellationToken ct = default);
+    Task SaveCheckoutAsync(Attendance attendance, CancellationToken ct = default);
 }
 
 public class AttendanceRepository(TutoringDbContext context) : IAttendanceRepository
 {
     private readonly TutoringDbContext _context = context;
+
+    public Task<Attendance?> GetForCheckoutAsync(long attendanceId, CancellationToken ct = default) =>
+        _context.Attendances.FirstOrDefaultAsync(a => a.Id == attendanceId, ct);
+
+    public Task<StudentPickupAuthorization?> GetPickupAuthorizationAsync(long authorizationId, int studentId, CancellationToken ct = default) =>
+        _context.StudentPickupAuthorizations.FirstOrDefaultAsync(a =>
+            a.Id == authorizationId && a.StudentId == studentId && a.IsActive && a.RevokedAt == null, ct);
+
+    public async Task SaveCheckoutAsync(Attendance attendance, CancellationToken ct = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+        await _context.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+    }
 
     public async Task<Student?> ValidateQrTokenAsync(string qrToken, CancellationToken ct = default)
     {

@@ -10,8 +10,13 @@ public class Attendance : IMultiTenantEntity
     public DateTime? CheckinAt { get; set; }
     public DateTime? CheckoutAt { get; set; }
     public string? PickedUpBy { get; set; }
+    public long? PickupAuthorizationId { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public int? UpdatedBy { get; set; }
 
     public Session Session { get; set; } = null!;
     public Student Student { get; set; } = null!;
     public Institute Institute { get; set; } = null!;
+    public StudentPickupAuthorization? PickupAuthorization { get; set; }
+    public User? UpdatedByUser { get; set; }
 }

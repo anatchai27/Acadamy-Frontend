@@ -2,7 +2,8 @@
   "openapi": "3.0.1",
   "info": {
     "title": "academy-API",
-    "version": "1.0"
+    "version": "2.0-target",
+    "description": "Target API contract derived from the SRS. Existing endpoints are retained from the current API baseline; endpoints marked with x-implementation-status=new are not implemented yet."
   },
   "paths": {
     "/api/v1/test-connection": {
@@ -71,14 +72,13 @@
               "schema": {
                 "$ref": "#/components/schemas/ScanAttendanceRequest"
               }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
+                      {
+                        "name": "teacher_id",
+                        "in": "query",
+                        "schema": {
+                          "type": "integer",
+                          "format": "int32"
+                        }
         }
       }
     },
@@ -767,6 +767,9 @@
         "tags": [
           "LeaveRequests"
         ],
+        "operationId": "ApproveLeaveRequest",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
           {
             "name": "id",
@@ -780,8 +783,10 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
-          }
+            "description": "Leave approved and make-up credit generated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeaveDecisionResponse" } } }
+          },
+          "409": { "$ref": "#/components/responses/Conflict" }
         }
       }
     },
@@ -790,6 +795,9 @@
         "tags": [
           "LeaveRequests"
         ],
+        "operationId": "RejectLeaveRequest",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
           {
             "name": "id",
@@ -803,8 +811,10 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
-          }
+            "description": "Leave rejected",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeaveDecisionResponse" } } }
+          },
+          "409": { "$ref": "#/components/responses/Conflict" }
         }
       }
     },
@@ -992,6 +1002,9 @@
         "tags": [
           "Parents"
         ],
+        "operationId": "CreateChildLeaveRequest",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [
           {
             "name": "childId",
@@ -1015,8 +1028,10 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
-          }
+            "description": "Leave request created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeaveRequest" } } }
+          },
+          "409": { "$ref": "#/components/responses/Conflict" }
         }
       }
     },
@@ -1816,6 +1831,235 @@
           }
         }
       }
+    },
+    "/api/attendance/{attendanceId}/checkout": {
+      "post": {
+        "tags": ["Attendance"],
+        "operationId": "CheckoutAttendance",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "attendanceId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutAttendanceRequest" } } } },
+        "responses": { "200": { "description": "Attendance checkout recorded" }, "409": { "$ref": "#/components/responses/Conflict" } }
+      }
+    },
+    "/api/students/export": {
+      "get": {
+        "tags": ["Students"],
+        "operationId": "ExportStudents",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "format", "in": "query", "required": true, "schema": { "type": "string", "enum": ["csv", "xlsx"] } }],
+        "responses": { "200": { "description": "Student export file", "content": { "text/csv": {}, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {} } } }
+      }
+    },
+    "/api/students/{id}/card.pdf": {
+      "get": {
+        "tags": ["Students"],
+        "operationId": "DownloadStudentCardPdf",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "staff", "teacher"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Printable student card PDF", "content": { "application/pdf": {} } } }
+      }
+    },
+    "/api/makeup/credits": {
+      "get": {
+        "tags": ["Makeup"],
+        "operationId": "ListMakeupCredits",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "student_id", "in": "query", "schema": { "type": "integer", "format": "int32" } }, { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["available", "reserved", "used", "expired"] } }],
+        "responses": { "200": { "description": "Make-up credits", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MakeupCredit" } } } } } }
+      }
+    },
+    "/api/makeup/slots": {
+      "get": {
+        "tags": ["Makeup"],
+        "operationId": "ListMakeupSlots",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } }, { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } }, { "name": "course_id", "in": "query", "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Available make-up slots", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MakeupSlot" } } } } } }
+      },
+      "post": {
+        "tags": ["Makeup"],
+        "operationId": "CreateMakeupSlot",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateMakeupSlotRequest" } } } },
+        "responses": { "201": { "description": "Make-up slot created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MakeupSlot" } } } } }
+      }
+    },
+    "/api/makeup/slots/{slotId}/cancel": {
+      "post": {
+        "tags": ["Makeup"],
+        "operationId": "CancelMakeupSlot",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "slotId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Slot cancelled and reserved credits restored" }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/api/makeup/bookings": {
+      "post": {
+        "tags": ["Makeup"],
+        "operationId": "CreateMakeupBooking",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateMakeupBookingRequest" } } } },
+        "responses": { "201": { "description": "Booking created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MakeupBooking" } } } }, "409": { "$ref": "#/components/responses/Conflict" } }
+      }
+    },
+    "/api/makeup/bookings/{bookingId}": {
+      "delete": {
+        "tags": ["Makeup"],
+        "operationId": "CancelMakeupBooking",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "bookingId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "204": { "description": "Booking cancelled" }, "409": { "$ref": "#/components/responses/Conflict" } }
+      }
+    },
+    "/api/payments/{paymentId}/verify-slip": {
+      "post": {
+        "tags": ["Payments"],
+        "operationId": "VerifyPaymentSlip",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "paymentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Slip verification result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaymentSlipVerification" } } } } }
+      }
+    },
+    "/api/payments/{paymentId}/receipt.pdf": {
+      "get": {
+        "tags": ["Payments"],
+        "operationId": "DownloadPaymentReceiptPdf",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "staff", "parent"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "paymentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Payment receipt PDF", "content": { "application/pdf": {} } } }
+      }
+    },
+    "/api/public/leads": {
+      "post": {
+        "tags": ["Public"],
+        "operationId": "CreatePublicLead",
+        "x-implementation-status": "new",
+        "x-roles": [],
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateLeadRequest" } } } },
+        "responses": { "201": { "description": "Trial-class lead created" } }
+      }
+    },
+    "/api/reports/revenue": {
+      "get": {
+        "tags": ["Reports"],
+        "operationId": "GetRevenueReport",
+        "x-implementation-status": "new",
+        "x-roles": ["admin"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } }, { "name": "to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } }, { "name": "group_by", "in": "query", "schema": { "type": "string", "enum": ["day", "month", "year"] } }],
+        "responses": { "200": { "description": "Revenue report", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/RevenueReportRow" } } } } } }
+      }
+    },
+    "/api/notifications/broadcast": {
+      "post": {
+        "tags": ["Notifications"],
+        "operationId": "BroadcastNotification",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BroadcastNotificationRequest" } } } },
+        "responses": { "202": { "description": "Broadcast queued" } }
+      }
+    },
+    "/api/students/{studentId}/pickup-authorizations": {
+      "get": {
+        "tags": ["Students"],
+        "operationId": "ListPickupAuthorizations",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "studentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Authorized pickup people", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PickupAuthorization" } } } } } }
+      },
+      "post": {
+        "tags": ["Students"],
+        "operationId": "CreatePickupAuthorization",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "studentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePickupAuthorizationRequest" } } } },
+        "responses": { "201": { "description": "Pickup authorization created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PickupAuthorization" } } } } }
+      }
+    },
+    "/api/students/{studentId}/pickup-authorizations/{authorizationId}": {
+      "patch": {
+        "tags": ["Students"],
+        "operationId": "UpdatePickupAuthorization",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "studentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }, { "name": "authorizationId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePickupAuthorizationRequest" } } } },
+        "responses": { "200": { "description": "Pickup authorization updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PickupAuthorization" } } } } }
+      },
+      "delete": {
+        "tags": ["Students"],
+        "operationId": "DeletePickupAuthorization",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "studentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }, { "name": "authorizationId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "204": { "description": "Pickup authorization deleted" } }
+      }
+    },
+    "/api/makeup/bookings/{bookingId}/no-show": {
+      "post": {
+        "tags": ["Makeup"],
+        "operationId": "MarkMakeupBookingNoShow",
+        "x-implementation-status": "implemented",
+        "x-roles": ["admin", "teacher", "staff", "system"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "bookingId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "200": { "description": "Booking marked no-show and credit consumed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MakeupBooking" } } } }, "409": { "$ref": "#/components/responses/Conflict" } }
+      }
+    },
+    "/api/leave-requests/{id}/attachment": {
+      "post": {
+        "tags": ["LeaveRequests"],
+        "operationId": "UploadLeaveRequestAttachment",
+        "x-implementation-status": "new",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Attachment uploaded" } }
+      }
     }
   },
   "components": {
@@ -1913,18 +2157,17 @@
       },
       "CreateLeaveRequestRequest": {
         "type": "object",
+        "required": [
+          "sessionId",
+          "reason"
+        ],
         "properties": {
           "sessionId": {
-            "type": "string",
-            "nullable": true
-          },
-          "type": {
-            "type": "string",
-            "nullable": true
+            "type": "integer",
+            "format": "int32"
           },
           "reason": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -2603,6 +2846,184 @@
         },
         "additionalProperties": false
       },
+      "LeaveRequest": {
+        "type": "object",
+        "required": ["id", "studentId", "sessionId", "reason", "status", "type"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "sessionId": { "type": "integer", "format": "int32" },
+          "reason": { "type": "string" },
+          "type": { "type": "string", "enum": ["advance", "urgent", "absence"] },
+          "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "attachmentUrl": { "type": "string", "format": "uri", "nullable": true },
+          "requestedAt": { "type": "string", "format": "date-time" },
+          "reviewedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "makeupCreditId": { "type": "integer", "format": "int32", "nullable": true }
+        }
+      },
+      "LeaveDecisionResponse": {
+        "type": "object",
+        "required": ["status", "leaveRequest"],
+        "properties": {
+          "status": { "type": "string", "enum": ["approved", "rejected"] },
+          "leaveRequest": { "$ref": "#/components/schemas/LeaveRequest" },
+          "makeupCredit": { "$ref": "#/components/schemas/MakeupCredit", "nullable": true }
+        }
+      },
+      "PickupAuthorization": {
+        "type": "object",
+        "required": ["id", "studentId", "fullName", "relationship", "isActive"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "relationship": { "type": "string" },
+          "idCardLast4": { "type": "string", "nullable": true },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "CreatePickupAuthorizationRequest": {
+        "type": "object",
+        "required": ["fullName", "relationship"],
+        "properties": {
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "relationship": { "type": "string" },
+          "idCardLast4": { "type": "string", "minLength": 4, "maxLength": 4, "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePickupAuthorizationRequest": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "relationship": { "type": "string", "nullable": true },
+          "idCardLast4": { "type": "string", "minLength": 4, "maxLength": 4, "nullable": true },
+          "isActive": { "type": "boolean", "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "AttendanceRecord": {
+        "type": "object",
+        "required": ["id", "sessionId", "studentId", "status"],
+        "properties": {
+          "id": { "type": "integer", "format": "int32" },
+          "sessionId": { "type": "integer", "format": "int32" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "status": { "type": "string" },
+          "checkinAt": { "type": "string", "format": "date-time", "nullable": true },
+          "checkoutAt": { "type": "string", "format": "date-time", "nullable": true },
+          "pickedUpBy": { "type": "string", "nullable": true },
+          "pickupAuthorizationId": { "type": "integer", "format": "int32", "nullable": true }
+        }
+      },
+      "CheckoutAttendanceRequest": {
+        "type": "object",
+        "required": ["pickedUpBy"],
+        "properties": {
+          "pickedUpBy": { "type": "string" },
+          "pickupAuthorizationId": { "type": "integer", "format": "int32", "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "MakeupCredit": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "sourceLeaveRequestId": { "type": "integer", "format": "int32", "nullable": true },
+          "status": { "type": "string", "enum": ["available", "reserved", "used", "expired"] },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MakeupSlot": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int32" },
+          "teacherId": { "type": "integer", "format": "int32" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "capacity": { "type": "integer", "format": "int32" },
+          "bookedCount": { "type": "integer", "format": "int32" },
+          "roomId": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["open", "cancelled", "completed"] },
+          "courseMatching": { "type": "string", "enum": ["credit_validated_only"] }
+        }
+      },
+      "CreateMakeupSlotRequest": {
+        "type": "object",
+        "required": ["teacherId", "scheduledAt", "capacity"],
+        "properties": {
+          "teacherId": { "type": "integer", "format": "int32" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "capacity": { "type": "integer", "format": "int32", "minimum": 1 },
+          "roomId": { "type": "string", "maxLength": 50, "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "MakeupBooking": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "slotId": { "type": "integer", "format": "int32" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "creditId": { "type": "integer", "format": "int64" },
+          "status": { "type": "string", "enum": ["reserved", "cancelled", "attended", "no_show"] }
+        }
+      },
+      "CreateMakeupBookingRequest": {
+        "type": "object",
+        "required": ["slotId", "studentId", "creditId"],
+        "properties": {
+          "slotId": { "type": "integer", "format": "int32" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "creditId": { "type": "integer", "format": "int64" }
+        },
+        "additionalProperties": false
+      },
+      "PaymentSlipVerification": {
+        "type": "object",
+        "required": ["verified"],
+        "properties": {
+          "verified": { "type": "boolean" },
+          "amount": { "type": "number", "format": "double", "nullable": true },
+          "reference": { "type": "string", "nullable": true },
+          "reason": { "type": "string", "nullable": true }
+        }
+      },
+      "CreateLeadRequest": {
+        "type": "object",
+        "required": ["contactName", "phone"],
+        "properties": {
+          "contactName": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email", "nullable": true },
+          "studentName": { "type": "string", "nullable": true },
+          "courseInterest": { "type": "string", "nullable": true },
+          "message": { "type": "string", "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "RevenueReportRow": {
+        "type": "object",
+        "properties": {
+          "period": { "type": "string" },
+          "grossAmount": { "type": "number", "format": "double" },
+          "paymentCount": { "type": "integer", "format": "int32" }
+        }
+      },
+      "BroadcastNotificationRequest": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "courseId": { "type": "integer", "format": "int32", "nullable": true },
+          "message": { "type": "string", "maxLength": 2000 },
+          "channel": { "type": "string", "enum": ["line"] }
+        },
+        "additionalProperties": false
+      },
       "UserRole": {
         "enum": [
           0,
@@ -2613,6 +3034,35 @@
         ],
         "type": "integer",
         "format": "int32"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "auth_token"
+      }
+    },
+    "responses": {
+      "Conflict": {
+        "description": "The requested operation conflicts with the current resource state."
+      },
+      "NotFound": {
+        "description": "The requested resource was not found."
+      },
+      "Unauthorized": {
+        "description": "Authentication is required."
+      },
+      "Forbidden": {
+        "description": "The authenticated user is not allowed to perform this operation."
+      },
+      "ValidationError": {
+        "description": "The request payload or parameters are invalid."
       }
     }
   }

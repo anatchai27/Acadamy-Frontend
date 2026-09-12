@@ -125,6 +125,31 @@ public static class StudentEndpoints
             }
         });
 
+        group.MapGet("/{studentId:int}/pickup-authorizations", async (int studentId, IStudentPickupService service, CancellationToken ct) =>
+            await Execute(() => service.ListAsync(studentId, ct), Results.Ok));
+
+        group.MapPost("/{studentId:int}/pickup-authorizations", async (int studentId, CreatePickupAuthorizationRequest request, IStudentPickupService service, HttpContext context, CancellationToken ct) =>
+            await Execute(() => service.CreateAsync(studentId, request, GetActorId(context), ct), result => Results.Created($"/api/students/{studentId}/pickup-authorizations/{result.Id}", result)));
+
+        group.MapPatch("/{studentId:int}/pickup-authorizations/{authorizationId:long}", async (int studentId, long authorizationId, UpdatePickupAuthorizationRequest request, IStudentPickupService service, CancellationToken ct) =>
+            await Execute(() => service.UpdateAsync(studentId, authorizationId, request, ct), Results.Ok));
+
+        group.MapDelete("/{studentId:int}/pickup-authorizations/{authorizationId:long}", async (int studentId, long authorizationId, IStudentPickupService service, CancellationToken ct) =>
+            await Execute(async () => { await service.DeleteAsync(studentId, authorizationId, ct); return Results.NoContent(); }, result => result));
+
         return app;
+    }
+
+    private static int? GetActorId(HttpContext context)
+    {
+        var value = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(value, out var id) ? id : null;
+    }
+
+    private static async Task<IResult> Execute<T>(Func<Task<T>> action, Func<T, IResult> success)
+    {
+        try { return success(await action()); }
+        catch (StudentPickupValidationException ex) when (ex.Code == "NOT_FOUND") { return Results.NotFound(new { error = ex.Message }); }
+        catch (StudentPickupValidationException ex) { return Results.BadRequest(new { error = ex.Message, code = ex.Code }); }
     }
 }

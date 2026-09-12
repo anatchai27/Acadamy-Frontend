@@ -94,6 +94,8 @@ builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IStudentPickupRepository, StudentPickupRepository>();
+builder.Services.AddScoped<IStudentPickupService, StudentPickupService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<IDbConnectionValidator, DbConnectionValidator>();
@@ -114,6 +116,8 @@ builder.Services.AddScoped<IHomeworkRepository, HomeworkRepository>();
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
 builder.Services.AddScoped<ISkillScoreRepository, SkillScoreRepository>();
 builder.Services.AddScoped<ISkillScoreService, SkillScoreService>();
+builder.Services.AddScoped<IMakeupRepository, MakeupRepository>();
+builder.Services.AddScoped<IMakeupService, MakeupService>();
 
 builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService>(client =>
 {
@@ -175,6 +179,7 @@ app.MapTeacherEndpoints();
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapAttendanceEndpoints();
+app.MapMakeupEndpoints();
 app.MapCourseEndpoints();
 app.MapSessionEndpoints();
 app.MapEnrollmentEndpoints();

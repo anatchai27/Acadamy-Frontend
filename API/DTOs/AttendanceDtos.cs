@@ -33,6 +33,19 @@ public record ManualAttendanceRequest(
     string Status
 );
 
+public record CheckoutAttendanceRequest(string? PickedUpBy, long? PickupAuthorizationId);
+
+public record CheckoutAttendanceResponse(
+    long Id,
+    int SessionId,
+    int StudentId,
+    string Status,
+    DateTime? CheckinAt,
+    DateTime CheckoutAt,
+    string PickedUpBy,
+    long? PickupAuthorizationId
+);
+
 public record ManualAttendanceResponse(
     string Status,
     string Message,

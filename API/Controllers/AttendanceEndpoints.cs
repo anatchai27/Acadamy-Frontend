@@ -85,6 +85,37 @@ public static class AttendanceEndpoints
             }
         });
 
+        group.MapPost("/{attendanceId:long}/checkout", async (
+            long attendanceId,
+            CheckoutAttendanceRequest request,
+            IAttendanceService service,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                return Results.Ok(await service.CheckoutAsync(attendanceId, request, GetActorId(httpContext), ct));
+            }
+            catch (AttendanceValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
+            {
+                return Results.NotFound(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
+            }
+            catch (AttendanceValidationException ex) when (ex.ErrorCode is "CHECKIN_REQUIRED" or "ALREADY_CHECKED_OUT" or "INVALID_PICKUP_AUTHORIZATION")
+            {
+                return Results.Conflict(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
+            }
+            catch (AttendanceValidationException ex)
+            {
+                return Results.BadRequest(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
+            }
+        });
+
         return app;
+    }
+
+    private static int? GetActorId(HttpContext context)
+    {
+        var value = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(value, out var id) ? id : null;
     }
 }

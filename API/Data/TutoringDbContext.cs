@@ -29,6 +29,10 @@ public class TutoringDbContext(
     public DbSet<SkillScore> SkillScores => Set<SkillScore>();
     public DbSet<MakeupSlot> MakeupSlots => Set<MakeupSlot>();
     public DbSet<MakeupCredit> MakeupCredits => Set<MakeupCredit>();
+      public DbSet<MakeupBooking> MakeupBookings => Set<MakeupBooking>();
+      public DbSet<MakeupCreditTransaction> MakeupCreditTransactions => Set<MakeupCreditTransaction>();
+      public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+      public DbSet<StudentPickupAuthorization> StudentPickupAuthorizations => Set<StudentPickupAuthorization>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<StudentWallet> StudentWallets => Set<StudentWallet>();
     public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
@@ -281,8 +285,26 @@ public class TutoringDbContext(
             entity.Property(e => e.CheckinAt).HasColumnName("checkin_at");
             entity.Property(e => e.CheckoutAt).HasColumnName("checkout_at");
             entity.Property(e => e.PickedUpBy).HasMaxLength(255).HasColumnName("picked_up_by");
+            entity.Property(e => e.PickupAuthorizationId).HasColumnName("pickup_authorization_id").IsRequired(false);
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired(false);
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by").IsRequired(false);
+
+            entity.HasOne(e => e.PickupAuthorization)
+                  .WithMany()
+                  .HasForeignKey(e => e.PickupAuthorizationId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                  .WithMany()
+                  .HasForeignKey(e => e.UpdatedBy)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.StudentId, e.SessionId });
+            entity.HasIndex(e => new { e.SessionId, e.StudentId })
+                  .IsUnique()
+                  .HasDatabaseName("uq_attendance_session_student");
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.SessionId);
             entity.HasIndex(e => e.InstituteId);
@@ -611,19 +633,25 @@ public class TutoringDbContext(
         {
             entity.ToTable("makeup_slots");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.TeacherId).HasColumnName("teacher_id").IsRequired(false);
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
+
+            entity.HasOne(e => e.Institute)
+                  .WithMany()
+                  .HasForeignKey(e => e.InstituteId)
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Teacher)
                   .WithMany()
                   .HasForeignKey(e => e.TeacherId)
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.ScheduledAt).HasColumnName("scheduled_at");
             entity.Property(e => e.Capacity).HasColumnName("capacity");
             entity.Property(e => e.BookedCount).HasColumnName("booked_count");
             entity.Property(e => e.RoomId).HasMaxLength(50).HasColumnName("room_id");
 
+                  entity.HasIndex(e => e.InstituteId);
             entity.HasIndex(e => e.TeacherId);
         });
 
@@ -649,6 +677,9 @@ public class TutoringDbContext(
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
             entity.Property(e => e.UsedSessionId).HasColumnName("used_session_id").IsRequired(false);
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.UsedAt).HasColumnName("used_at").IsRequired(false);
+            entity.Property(e => e.ExpiredAt).HasColumnName("expired_at").IsRequired(false);
 
             entity.HasOne(e => e.UsedSession)
                   .WithMany()
@@ -666,6 +697,110 @@ public class TutoringDbContext(
             entity.HasIndex(e => e.UsedSessionId);
             entity.HasIndex(e => e.InstituteId);
         });
+
+            modelBuilder.Entity<MakeupBooking>(entity =>
+            {
+                  entity.ToTable("makeup_bookings");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.SlotId).HasColumnName("slot_id");
+                  entity.Property(e => e.StudentId).HasColumnName("student_id");
+                  entity.Property(e => e.CreditId).HasColumnName("credit_id");
+                  entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+                  entity.Property(e => e.ActiveMarker).HasColumnName("active_marker").IsRequired(false);
+                  entity.Property(e => e.BookedAt).HasColumnName("booked_at");
+                  entity.Property(e => e.CancelledAt).HasColumnName("cancelled_at").IsRequired(false);
+                  entity.Property(e => e.CancelReason).HasMaxLength(255).HasColumnName("cancel_reason");
+                  entity.Property(e => e.CheckedInAt).HasColumnName("checked_in_at").IsRequired(false);
+                  entity.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired(false);
+                  entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+                  entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<MakeupSlot>().WithMany().HasForeignKey(e => e.SlotId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<Student>().WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<MakeupCredit>().WithMany().HasForeignKey(e => e.CreditId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<User>().WithMany().HasForeignKey(e => e.CreatedBy).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+
+                  entity.HasIndex(e => new { e.SlotId, e.StudentId, e.ActiveMarker })
+                          .IsUnique().HasDatabaseName("uq_makeup_booking_slot_student");
+                  entity.HasIndex(e => new { e.CreditId, e.ActiveMarker })
+                          .IsUnique().HasDatabaseName("uq_makeup_booking_credit");
+                  entity.HasIndex(e => new { e.InstituteId, e.SlotId, e.Status }).HasDatabaseName("idx_makeup_booking_tenant_slot");
+                  entity.HasIndex(e => new { e.StudentId, e.Status }).HasDatabaseName("idx_makeup_booking_student_status");
+            });
+
+            modelBuilder.Entity<MakeupCreditTransaction>(entity =>
+            {
+                  entity.ToTable("makeup_credit_transactions");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.CreditId).HasColumnName("credit_id");
+                  entity.Property(e => e.StudentId).HasColumnName("student_id");
+                  entity.Property(e => e.TransactionType).HasMaxLength(30).HasColumnName("transaction_type");
+                  entity.Property(e => e.Amount).HasColumnName("amount");
+                  entity.Property(e => e.ReferenceType).HasMaxLength(50).HasColumnName("reference_type");
+                  entity.Property(e => e.ReferenceId).HasColumnName("reference_id").IsRequired(false);
+                  entity.Property(e => e.Note).HasMaxLength(500).HasColumnName("note");
+                  entity.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired(false);
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                  entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<MakeupCredit>().WithMany().HasForeignKey(e => e.CreditId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<Student>().WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<User>().WithMany().HasForeignKey(e => e.CreatedBy).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+
+                  entity.HasIndex(e => new { e.CreditId, e.CreatedAt }).HasDatabaseName("idx_credit_transaction_credit");
+                  entity.HasIndex(e => new { e.InstituteId, e.StudentId, e.CreatedAt }).HasDatabaseName("idx_credit_transaction_student");
+                  entity.HasIndex(e => new { e.ReferenceType, e.ReferenceId }).HasDatabaseName("idx_credit_transaction_reference");
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                  entity.ToTable("audit_logs");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired(false);
+                  entity.Property(e => e.Action).HasMaxLength(50).HasColumnName("action");
+                  entity.Property(e => e.EntityType).HasMaxLength(100).HasColumnName("entity_type");
+                  entity.Property(e => e.EntityId).HasMaxLength(100).HasColumnName("entity_id");
+                  entity.Property(e => e.BeforeJson).HasColumnType("json").HasColumnName("before_json");
+                  entity.Property(e => e.AfterJson).HasColumnType("json").HasColumnName("after_json");
+                  entity.Property(e => e.IpAddress).HasMaxLength(45).HasColumnName("ip_address");
+                  entity.Property(e => e.UserAgent).HasMaxLength(500).HasColumnName("user_agent");
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                  entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<User>().WithMany().HasForeignKey(e => e.UserId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+
+                  entity.HasIndex(e => new { e.InstituteId, e.CreatedAt }).HasDatabaseName("idx_audit_tenant_time");
+                  entity.HasIndex(e => new { e.EntityType, e.EntityId }).HasDatabaseName("idx_audit_entity");
+                  entity.HasIndex(e => new { e.UserId, e.CreatedAt }).HasDatabaseName("idx_audit_user_time");
+            });
+
+            modelBuilder.Entity<StudentPickupAuthorization>(entity =>
+            {
+                  entity.ToTable("student_pickup_authorizations");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.StudentId).HasColumnName("student_id");
+                  entity.Property(e => e.FullName).HasMaxLength(255).HasColumnName("full_name");
+                  entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone");
+                  entity.Property(e => e.Relationship).HasMaxLength(100).HasColumnName("relationship");
+                  entity.Property(e => e.IdCardLast4).HasMaxLength(4).HasColumnName("id_card_last4");
+                  entity.Property(e => e.PhotoUrl).HasMaxLength(1000).HasColumnName("photo_url");
+                  entity.Property(e => e.IsActive).HasColumnName("is_active");
+                  entity.Property(e => e.ValidFrom).HasColumnName("valid_from").IsRequired(false);
+                  entity.Property(e => e.ValidUntil).HasColumnName("valid_until").IsRequired(false);
+                  entity.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired(false);
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                  entity.Property(e => e.RevokedAt).HasColumnName("revoked_at").IsRequired(false);
+
+                  entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<Student>().WithMany().HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne<User>().WithMany().HasForeignKey(e => e.CreatedBy).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+
+                  entity.HasIndex(e => new { e.InstituteId, e.StudentId, e.IsActive }).HasDatabaseName("idx_pickup_student_active");
+            });
 
         modelBuilder.Entity<Product>(entity =>
         {
@@ -954,7 +1089,12 @@ public class TutoringDbContext(
         modelBuilder.Entity<HomeworkSubmission>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<SkillScore>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Enrollment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<MakeupSlot>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<MakeupCredit>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<MakeupBooking>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<MakeupCreditTransaction>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<StudentPickupAuthorization>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Teacher>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Course>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

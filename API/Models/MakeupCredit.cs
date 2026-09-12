@@ -10,6 +10,9 @@ public class MakeupCredit : IMultiTenantEntity
     public DateTime ExpiresAt { get; set; }
     public int? UsedSessionId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string Status { get; set; } = null!;
+    public DateTime? UsedAt { get; set; }
+    public DateTime? ExpiredAt { get; set; }
 
     public Student Student { get; set; } = null!;
     public Course Course { get; set; } = null!;

@@ -8,6 +8,7 @@ public interface IAttendanceService
     Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default);
     Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default);
     Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default);
+    Task<CheckoutAttendanceResponse> CheckoutAsync(long attendanceId, CheckoutAttendanceRequest request, int? actorId, CancellationToken ct = default);
 }
 
 public class AttendanceService(
@@ -105,6 +106,50 @@ public class AttendanceService(
         var rows = await _repository.GetDailyAttendanceAsync(sessionId, parsedDate, ct);
 
         return new DailyAttendanceResponse("success", new DailyAttendanceData(sessionInfo, rows));
+    }
+
+    public async Task<CheckoutAttendanceResponse> CheckoutAsync(long attendanceId, CheckoutAttendanceRequest request, int? actorId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.PickedUpBy) && !request.PickupAuthorizationId.HasValue)
+            throw new AttendanceValidationException("PICKUP_REQUIRED", "pickedUpBy or pickupAuthorizationId is required.");
+
+        var attendance = await _repository.GetForCheckoutAsync(attendanceId, ct);
+        if (attendance is null)
+            throw new AttendanceValidationException("NOT_FOUND", "Attendance record not found.");
+        if (!attendance.CheckinAt.HasValue)
+            throw new AttendanceValidationException("CHECKIN_REQUIRED", "Student must check in before checkout.");
+        if (attendance.CheckoutAt.HasValue)
+            throw new AttendanceValidationException("ALREADY_CHECKED_OUT", "Attendance has already been checked out.");
+
+        string pickedUpBy;
+        if (request.PickupAuthorizationId.HasValue)
+        {
+            var authorization = await _repository.GetPickupAuthorizationAsync(request.PickupAuthorizationId.Value, attendance.StudentId, ct);
+            if (authorization is null)
+                throw new AttendanceValidationException("INVALID_PICKUP_AUTHORIZATION", "Pickup authorization is invalid or inactive.");
+            pickedUpBy = authorization.FullName;
+        }
+        else
+        {
+            pickedUpBy = request.PickedUpBy!.Trim();
+        }
+
+        attendance.PickedUpBy = pickedUpBy;
+        attendance.PickupAuthorizationId = request.PickupAuthorizationId;
+        attendance.CheckoutAt = DateTime.UtcNow;
+        attendance.UpdatedAt = DateTime.UtcNow;
+        attendance.UpdatedBy = actorId;
+        await _repository.SaveCheckoutAsync(attendance, ct);
+
+        return new CheckoutAttendanceResponse(
+            attendance.Id,
+            attendance.SessionId,
+            attendance.StudentId,
+            attendance.Status,
+            attendance.CheckinAt,
+            attendance.CheckoutAt.Value,
+            attendance.PickedUpBy,
+            attendance.PickupAuthorizationId);
     }
 }
 
