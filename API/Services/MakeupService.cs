@@ -6,12 +6,14 @@ namespace academy_API.Services;
 
 public interface IMakeupService
 {
-    Task<IReadOnlyList<MakeupCreditResponse>> ListCreditsAsync(int? studentId, string? status, CancellationToken ct);
+    Task<IReadOnlyList<MakeupCreditResponse>> ListCreditsAsync(int? studentId, int? userId, bool isParent, string? status, CancellationToken ct);
     Task<IReadOnlyList<MakeupSlotResponse>> ListSlotsAsync(DateTime? from, DateTime? to, int? teacherId, CancellationToken ct);
+    Task<IReadOnlyList<MakeupBookingListItem>> ListBookingsAsync(int studentId, int? userId, bool isParent, CancellationToken ct);
     Task<MakeupSlotResponse> CreateSlotAsync(CreateMakeupSlotRequest request, CancellationToken ct);
     Task<MakeupBookingResponse> CreateBookingAsync(CreateMakeupBookingRequest request, int? actorId, CancellationToken ct);
+    Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, CancellationToken ct);
     Task CancelSlotAsync(int slotId, int? actorId, CancellationToken ct);
-    Task CancelBookingAsync(long bookingId, int? actorId, CancellationToken ct);
+    Task CancelBookingAsync(long bookingId, int? actorId, int? userId, bool isParent, CancellationToken ct);
     Task<MakeupBookingResponse> MarkNoShowAsync(long bookingId, int? actorId, CancellationToken ct);
 }
 
@@ -19,15 +21,26 @@ public sealed class MakeupService(IMakeupRepository repository) : IMakeupService
 {
     private readonly IMakeupRepository _repository = repository;
 
-    public async Task<IReadOnlyList<MakeupCreditResponse>> ListCreditsAsync(int? studentId, string? status, CancellationToken ct) =>
-        (await _repository.ListCreditsAsync(studentId, status, ct))
-        .Select(x => new MakeupCreditResponse(x.Id, x.StudentId, x.CourseId, x.Status, x.ExpiresAt))
-        .ToList();
+    public async Task<IReadOnlyList<MakeupCreditResponse>> ListCreditsAsync(int? studentId, int? userId, bool isParent, string? status, CancellationToken ct)
+    {
+        if (isParent && (!studentId.HasValue || !userId.HasValue || !await _repository.ParentOwnsStudentAsync(userId.Value, studentId.Value, ct)))
+            throw new MakeupValidationException("FORBIDDEN", "You cannot access this student's credits.");
+        return (await _repository.ListCreditsAsync(studentId, status, ct))
+            .Select(x => new MakeupCreditResponse(x.Id, x.StudentId, x.CourseId, x.Status, x.ExpiresAt))
+            .ToList();
+    }
 
     public async Task<IReadOnlyList<MakeupSlotResponse>> ListSlotsAsync(DateTime? from, DateTime? to, int? teacherId, CancellationToken ct) =>
         (await _repository.ListSlotsAsync(from, to, teacherId, ct))
         .Select(ToSlotResponse)
         .ToList();
+
+    public async Task<IReadOnlyList<MakeupBookingListItem>> ListBookingsAsync(int studentId, int? userId, bool isParent, CancellationToken ct)
+    {
+        if (isParent && (!userId.HasValue || !await _repository.ParentOwnsStudentAsync(userId.Value, studentId, ct)))
+            throw new MakeupValidationException("FORBIDDEN", "You cannot access this student's bookings.");
+        return await _repository.ListBookingsAsync(studentId, ct);
+    }
 
     public async Task<MakeupSlotResponse> CreateSlotAsync(CreateMakeupSlotRequest request, CancellationToken ct)
     {
@@ -72,6 +85,13 @@ public sealed class MakeupService(IMakeupRepository repository) : IMakeupService
         return ToBookingResponse(booking);
     }
 
+    public async Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, CancellationToken ct)
+    {
+        if (isParent && (!userId.HasValue || !await _repository.ParentOwnsStudentAsync(userId.Value, request.StudentId, ct)))
+            throw new MakeupValidationException("FORBIDDEN", "You cannot create a booking for this student.");
+        return await CreateBookingAsync(request, userId, ct);
+    }
+
     public async Task CancelSlotAsync(int slotId, int? actorId, CancellationToken ct)
     {
         var slot = await _repository.GetSlotAsync(slotId, ct);
@@ -79,8 +99,10 @@ public sealed class MakeupService(IMakeupRepository repository) : IMakeupService
         await _repository.CancelSlotAsync(slotId, actorId, ct);
     }
 
-    public async Task CancelBookingAsync(long bookingId, int? actorId, CancellationToken ct)
+    public async Task CancelBookingAsync(long bookingId, int? actorId, int? userId, bool isParent, CancellationToken ct)
     {
+        if (isParent && (!userId.HasValue || !await _repository.ParentOwnsBookingAsync(userId.Value, bookingId, ct)))
+            throw new MakeupValidationException("FORBIDDEN", "You cannot cancel this booking.");
         var booking = await _repository.GetBookingAsync(bookingId, ct);
         if (booking is null) throw new MakeupValidationException("NOT_FOUND", "Make-up booking not found.");
         if (booking.Status != "reserved") throw new MakeupValidationException("INVALID_STATE", "Only reserved bookings can be cancelled.");

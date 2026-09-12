@@ -5,12 +5,12 @@
 
 ## Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `64 paths / 42 schemas`
-- Target API contract: `72 paths / 57 schemas`
+- Current API snapshot: `65 paths / 43 schemas`
+- Target API contract: `73 paths / 58 schemas`
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `212 passed / 0 failed / 0 skipped`
+- Full API tests ล่าสุด: `220 passed / 0 failed / 0 skipped`
 - Controller ที่ยังมี direct EF/data access: `7 files / 101 matches`
   - `AuthEndpoints.cs`
   - `FileUploadEndpoints.cs`
@@ -63,18 +63,18 @@
 
 **งาน:**
 
-- [ ] เพิ่ม `GET /api/makeup/bookings?student_id=` หรือ parent-scoped endpoint
-- [ ] ตรวจ parent ownership ใน service/repository ไม่พึ่ง route guard อย่างเดียว
-- [ ] คืนเฉพาะ booking ของ student ที่ parent มีสิทธิ์ดู
-- [ ] ต่อรายการ booking ใน LIFF และปุ่ม cancel เฉพาะสถานะ `reserved`
-- [ ] เพิ่ม tests: own booking, booking ของคนอื่นต้อง forbidden, cancelled booking conflict
+- [x] เพิ่ม `GET /api/makeup/bookings?student_id=` หรือ parent-scoped endpoint
+- [x] ตรวจ parent ownership ใน service/repository ไม่พึ่ง route guard อย่างเดียว
+- [x] คืนเฉพาะ booking ของ student ที่ parent มีสิทธิ์ดู
+- [x] ต่อรายการ booking ใน LIFF และปุ่ม cancel เฉพาะสถานะ `reserved`
+- [x] เพิ่ม tests: own booking, booking ของคนอื่นต้อง forbidden, cancelled booking conflict
 
 **ผ่านเมื่อ:**
 
-- [ ] LIFF แสดง booking จริงและยกเลิกได้
-- [ ] parent เดา ID ของเด็กอื่นแล้วไม่ได้ข้อมูล/แก้ข้อมูล
-- [ ] focused tests ผ่าน
-- [ ] LIFF build, API build และ validator ผ่าน
+- [x] LIFF แสดง booking จริงและยกเลิกได้
+- [x] parent เดา ID ของเด็กอื่นแล้วไม่ได้ข้อมูล/แก้ข้อมูล
+- [x] focused tests ผ่าน
+- [x] LIFF build, API build และ validator ผ่าน
 
 ### Slice B: Makeup credit expired test
 

@@ -1,4 +1,5 @@
 using academy_API.Data;
+using academy_API.DTOs;
 using academy_API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,9 @@ public interface IMakeupRepository
     Task<MakeupSlot?> GetSlotAsync(int slotId, CancellationToken ct);
     Task<MakeupCredit?> GetCreditAsync(long creditId, CancellationToken ct);
     Task<MakeupBooking?> GetBookingAsync(long bookingId, CancellationToken ct);
+    Task<List<MakeupBookingListItem>> ListBookingsAsync(int studentId, CancellationToken ct);
+    Task<bool> ParentOwnsStudentAsync(int userId, int studentId, CancellationToken ct);
+    Task<bool> ParentOwnsBookingAsync(int userId, long bookingId, CancellationToken ct);
     Task<int?> GetTeacherInstituteIdAsync(int teacherId, CancellationToken ct);
     Task<MakeupSlot> CreateSlotAsync(MakeupSlot slot, CancellationToken ct);
     Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct);
@@ -47,6 +51,32 @@ public sealed class MakeupRepository(TutoringDbContext db) : IMakeupRepository
 
     public Task<MakeupBooking?> GetBookingAsync(long bookingId, CancellationToken ct) =>
         db.MakeupBookings.FirstOrDefaultAsync(x => x.Id == bookingId, ct);
+
+    public Task<List<MakeupBookingListItem>> ListBookingsAsync(int studentId, CancellationToken ct) =>
+        (from booking in db.MakeupBookings.AsNoTracking()
+         join slot in db.MakeupSlots.AsNoTracking() on booking.SlotId equals slot.Id
+         where booking.StudentId == studentId
+         orderby slot.ScheduledAt descending
+         select new MakeupBookingListItem(
+             booking.Id,
+             booking.SlotId,
+             booking.StudentId,
+             booking.CreditId,
+             slot.TeacherId,
+             slot.ScheduledAt,
+             slot.RoomId,
+             booking.Status,
+             booking.BookedAt,
+             booking.CancelledAt)).ToListAsync(ct);
+
+    public Task<bool> ParentOwnsStudentAsync(int userId, int studentId, CancellationToken ct) =>
+        db.Parents.AnyAsync(parent => parent.UserId == userId && parent.StudentId == studentId, ct);
+
+    public Task<bool> ParentOwnsBookingAsync(int userId, long bookingId, CancellationToken ct) =>
+        (from booking in db.MakeupBookings
+         join parent in db.Parents on booking.StudentId equals parent.StudentId
+         where booking.Id == bookingId && parent.UserId == userId
+         select booking.Id).AnyAsync(ct);
 
     public Task<int?> GetTeacherInstituteIdAsync(int teacherId, CancellationToken ct) =>
         db.Teachers.Where(x => x.Id == teacherId).Select(x => (int?)x.InstituteId).FirstOrDefaultAsync(ct);

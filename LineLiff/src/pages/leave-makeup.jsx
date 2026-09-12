@@ -10,6 +10,7 @@ import {
   getChildSessions,
   getMakeupCredits,
   getMakeupSlots,
+  getMakeupBookings,
   uploadLeaveAttachment,
 } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
@@ -146,6 +147,7 @@ const LeavePanel = ({ childId, refreshKey, onRefresh }) => {
 const MakeupPanel = ({ childId, refreshKey, onRefresh }) => {
   const [credits, setCredits] = useState([]);
   const [slots, setSlots] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingId, setBookingId] = useState(null);
   const [error, setError] = useState('');
@@ -154,10 +156,11 @@ const MakeupPanel = ({ childId, refreshKey, onRefresh }) => {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    Promise.all([getMakeupCredits(childId), getMakeupSlots({ from: new Date().toISOString() })])
-      .then(([creditResponse, slotResponse]) => {
+    Promise.all([getMakeupCredits(childId), getMakeupBookings(childId), getMakeupSlots({ from: new Date().toISOString() })])
+      .then(([creditResponse, bookingResponse, slotResponse]) => {
         if (!active) return;
         setCredits(unwrap(creditResponse));
+        setBookings(unwrap(bookingResponse));
         setSlots(unwrap(slotResponse));
       })
       .catch(apiError => active && setError(apiError.message || 'โหลดสิทธิ์เรียนชดเชยไม่สำเร็จ'))
@@ -190,12 +193,15 @@ const MakeupPanel = ({ childId, refreshKey, onRefresh }) => {
     <div class="space-y-4">
       <section class="rounded-card bg-sage-700 p-5 text-white shadow-float"><div class="flex items-center gap-3"><HiOutlineTicket class="h-7 w-7 text-gold-100" /><div><p class="text-sm text-white/70">เครดิตที่พร้อมใช้</p><p class="mt-0.5 text-2xl font-bold">{loading ? '...' : availableCredit ? '1 สิทธิ์' : 'ไม่มีสิทธิ์'}</p></div></div>{availableCredit && <p class="mt-3 text-xs text-white/70">ใช้ได้ถึง {formatDate(availableCredit.expiresAt)}</p>}</section>
       {error && <Alert tone="error">{error}</Alert>}{success && <Alert tone="success">{success}</Alert>}
+      <section><SectionTitle icon={HiOutlineTicket} title="การจองของฉัน" /><div class="mt-3 space-y-2">{loading ? <SkeletonList /> : bookings.length ? bookings.map(booking => <BookingItem key={booking.id} booking={booking} busy={bookingId === booking.id} onCancel={() => cancel(booking)} />) : <EmptyState text="ยังไม่มีการจองเรียนชดเชย" />}</div></section>
       <section><SectionTitle icon={HiOutlineCalendarDays} title="ที่นั่งเรียนชดเชยที่เปิดอยู่" /><div class="mt-3 space-y-3">{loading ? <SkeletonList /> : slots.length ? slots.map(slot => <SlotItem key={slot.id} slot={slot} disabled={!availableCredit || bookingId === slot.id} busy={bookingId === slot.id} onBook={() => book(slot)} onCancel={() => cancel(slot)} />) : <EmptyState text="ยังไม่มีที่นั่งเรียนชดเชย" />}</div></section>
     </div>
   );
 };
 
 const LeaveItem = ({ request }) => <article class="rounded-2xl border border-sage-100 bg-white p-4 shadow-soft"><div class="flex items-start justify-between gap-3"><div><p class="font-bold text-ink-900">{request.courseName || 'คาบเรียน'}</p><p class="mt-1 text-xs text-ink-500">{request.reason || 'ไม่ได้ระบุเหตุผล'}</p></div><span class="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">{statusLabel(request.status)}</span></div><p class="mt-3 text-xs text-ink-500">ยื่นเมื่อ {formatDate(request.createdAt)}</p></article>;
+
+const BookingItem = ({ booking, busy, onCancel }) => <article class="rounded-2xl border border-sage-100 bg-white p-4 shadow-soft"><div class="flex items-start justify-between gap-3"><div><p class="font-bold text-ink-900">เรียนชดเชย · ครูผู้สอน #{booking.teacherId}</p><p class="mt-1 text-sm text-ink-500">{formatDate(booking.scheduledAt)} · ห้อง {booking.roomId || '-'}</p></div><span class="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">{statusLabel(booking.status)}</span></div>{booking.status === 'reserved' && <button type="button" disabled={busy} onClick={onCancel} class="mt-3 min-h-10 w-full rounded-xl border border-red-200 px-3 text-sm font-bold text-red-700 disabled:opacity-50">{busy ? 'กำลังยกเลิก...' : 'ยกเลิกการจองและคืนเครดิต'}</button>}</article>;
 
 const SlotItem = ({ slot, disabled, busy, onBook, onCancel }) => <article class="rounded-2xl border border-sage-100 bg-white p-4 shadow-soft"><div class="flex items-start justify-between gap-3"><div><p class="font-bold text-ink-900">ครูผู้สอน #{slot.teacherId}</p><p class="mt-1 text-sm text-ink-500">{formatDate(slot.scheduledAt)} · ห้อง {slot.roomId || '-'}</p></div><span class="rounded-full bg-gold-50 px-2.5 py-1 text-xs font-bold text-gold-600">{slot.bookedCount}/{slot.capacity} ที่นั่ง</span></div><div class="mt-3 flex gap-2"><button type="button" disabled={disabled} onClick={onBook} class="min-h-10 flex-1 rounded-xl bg-sage-600 px-3 text-sm font-bold text-white hover:bg-sage-700 disabled:cursor-not-allowed disabled:opacity-50">{busy ? 'กำลังดำเนินการ...' : 'จองที่นั่ง'}</button>{slot.status === 'reserved' && <button type="button" disabled={busy} onClick={onCancel} class="min-h-10 rounded-xl border border-sage-200 px-3 text-sm font-bold text-sage-700 disabled:opacity-50">ยกเลิก</button>}</div></article>;
 

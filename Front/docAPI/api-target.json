@@ -1929,6 +1929,15 @@
       }
     },
     "/api/makeup/bookings": {
+      "get": {
+        "tags": ["Makeup"],
+        "operationId": "ListMakeupBookings",
+        "x-implementation-status": "implemented",
+        "x-roles": ["parent", "admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [{ "name": "student_id", "in": "query", "required": true, "schema": { "type": "integer", "format": "int32" } }],
+        "responses": { "200": { "description": "Make-up bookings for the student", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MakeupBookingListItem" } } } } }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
       "post": {
         "tags": ["Makeup"],
         "operationId": "CreateMakeupBooking",
@@ -3051,6 +3060,22 @@
           "studentId": { "type": "integer", "format": "int32" },
           "creditId": { "type": "integer", "format": "int64" },
           "status": { "type": "string", "enum": ["reserved", "cancelled", "attended", "no_show"] }
+        }
+      },
+      "MakeupBookingListItem": {
+        "type": "object",
+        "required": ["id", "slotId", "studentId", "creditId", "teacherId", "scheduledAt", "status", "bookedAt"],
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "slotId": { "type": "integer", "format": "int32" },
+          "studentId": { "type": "integer", "format": "int32" },
+          "creditId": { "type": "integer", "format": "int64" },
+          "teacherId": { "type": "integer", "format": "int32" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "roomId": { "type": "string", "nullable": true },
+          "status": { "type": "string" },
+          "bookedAt": { "type": "string", "format": "date-time" },
+          "cancelledAt": { "type": "string", "format": "date-time", "nullable": true }
         }
       },
       "CreateMakeupBookingRequest": {

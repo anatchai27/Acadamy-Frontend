@@ -5,3 +5,14 @@ public sealed record CreateMakeupBookingRequest(int SlotId, int StudentId, long 
 public sealed record MakeupCreditResponse(long Id, int StudentId, int CourseId, string Status, DateTime ExpiresAt);
 public sealed record MakeupSlotResponse(int Id, int TeacherId, DateTime ScheduledAt, int Capacity, int BookedCount, string? RoomId, string Status);
 public sealed record MakeupBookingResponse(long Id, int SlotId, int StudentId, long CreditId, string Status);
+public sealed record MakeupBookingListItem(
+	long Id,
+	int SlotId,
+	int StudentId,
+	long CreditId,
+	int TeacherId,
+	DateTime ScheduledAt,
+	string? RoomId,
+	string Status,
+	DateTime BookedAt,
+	DateTime? CancelledAt);

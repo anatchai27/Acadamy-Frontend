@@ -50,6 +50,10 @@ export const getMakeupSlots = params => {
   return api.get('/makeup/slots', { params });
 }
 
+export const getMakeupBookings = studentId => {
+  return api.get('/makeup/bookings', { params: { student_id: studentId } });
+}
+
 export const createMakeupBooking = payload => {
   return api.post('/makeup/bookings', payload);
 }

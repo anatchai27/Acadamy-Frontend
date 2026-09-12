@@ -112,10 +112,81 @@ public class MakeupServiceTests
         var sut = new MakeupService(repository.Object);
 
         // Act
-        await sut.CancelBookingAsync(30, 99, CancellationToken.None);
+        await sut.CancelBookingAsync(30, 99, null, false, CancellationToken.None);
 
         // Assert
         repository.Verify(x => x.CancelBookingAsync(booking, credit, slot, 99, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListBookings_ParentOwnsStudent_ReturnsBookings()
+    {
+        // Arrange
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.ParentOwnsStudentAsync(7, 1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repository.Setup(x => x.ListBookingsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync([
+            new MakeupBookingListItem(30, 10, 1, 20, 4, Future(), "A1", "reserved", DateTime.UtcNow, null)]);
+        var sut = new MakeupService(repository.Object);
+
+        // Act
+        var result = await sut.ListBookingsAsync(1, 7, true, CancellationToken.None);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(30, result[0].Id);
+        repository.Verify(x => x.ListBookingsAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListBookings_ParentDoesNotOwnStudent_ThrowsForbidden()
+    {
+        // Arrange
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.ParentOwnsStudentAsync(7, 2, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var sut = new MakeupService(repository.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.ListBookingsAsync(2, 7, true, CancellationToken.None));
+
+        // Assert
+        Assert.Equal("FORBIDDEN", exception.Code);
+        repository.Verify(x => x.ListBookingsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelBooking_ParentDoesNotOwnBooking_ThrowsForbidden()
+    {
+        // Arrange
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.ParentOwnsBookingAsync(7, 30, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var sut = new MakeupService(repository.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CancelBookingAsync(30, 7, 7, true, CancellationToken.None));
+
+        // Assert
+        Assert.Equal("FORBIDDEN", exception.Code);
+        repository.Verify(x => x.GetBookingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancelBooking_CancelledBooking_ThrowsConflictValidation()
+    {
+        // Arrange
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.GetBookingAsync(30, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MakeupBooking { Id = 30, Status = "cancelled" });
+        var sut = new MakeupService(repository.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CancelBookingAsync(30, 7, null, false, CancellationToken.None));
+
+        // Assert
+        Assert.Equal("INVALID_STATE", exception.Code);
+        repository.Verify(x => x.CancelBookingAsync(It.IsAny<MakeupBooking>(), It.IsAny<MakeupCredit>(), It.IsAny<MakeupSlot?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
