@@ -8,18 +8,18 @@ namespace academy_API.Tests.unitTest;
 public class PaymentServiceTests
 {
     private static Mock<Repositories.IPaymentRepository> CreateMockRepo() => new();
-    private static Mock<Services.Contracts.ILineNotificationService> CreateMockLine() => new();
+    private static Mock<IBackgroundNotificationDispatcher> CreateMockDispatcher() => new();
     private static Mock<IReceiptPdfService> CreateMockReceipt() => new();
     private static Mock<Services.Interface.IFileStorageService> CreateMockStorage() => new();
 
     private static PaymentService CreateSut(
         Mock<Repositories.IPaymentRepository>? repoMock = null,
-        Mock<Services.Contracts.ILineNotificationService>? lineMock = null,
+        Mock<IBackgroundNotificationDispatcher>? dispatcherMock = null,
         Mock<IReceiptPdfService>? receiptMock = null,
         Mock<Services.Interface.IFileStorageService>? storageMock = null) =>
         new(
             repoMock?.Object ?? CreateMockRepo().Object,
-            lineMock?.Object ?? CreateMockLine().Object,
+            dispatcherMock?.Object ?? CreateMockDispatcher().Object,
             receiptMock?.Object ?? CreateMockReceipt().Object,
             storageMock?.Object ?? CreateMockStorage().Object);
 
@@ -48,7 +48,7 @@ public class PaymentServiceTests
     {
         // Arrange
         var repoMock = CreateMockRepo();
-        var lineMock = CreateMockLine();
+        var dispatcherMock = CreateMockDispatcher();
         var receiptMock = CreateMockReceipt();
         var storageMock = CreateMockStorage();
         var enrollment = new Enrollment
@@ -62,10 +62,11 @@ public class PaymentServiceTests
         repoMock.Setup(x => x.GetEnrollmentWithStudentAsync(7, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
         repoMock.Setup(x => x.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync(created.InvoiceNo);
         repoMock.Setup(x => x.CreatePaymentWithTransactionAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>())).ReturnsAsync(created);
+        repoMock.Setup(x => x.GetParentsWithLineByStudentIdAsync(9, It.IsAny<CancellationToken>())).ReturnsAsync([]);
         receiptMock.Setup(x => x.Render(It.IsAny<ReceiptPdfData>())).Returns([1, 2, 3]);
         storageMock.Setup(x => x.UploadAsync(It.IsAny<Stream>(), "receipts/INV-202609-0001.pdf", "application/pdf", It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example/receipts/INV-202609-0001.pdf");
-        var sut = CreateSut(repoMock, lineMock, receiptMock, storageMock);
+        var sut = CreateSut(repoMock, dispatcherMock, receiptMock, storageMock);
 
         // Act
         var result = await sut.CreateAsync(new CreatePaymentRequest(7, 1200m, "cash", null));
@@ -74,6 +75,46 @@ public class PaymentServiceTests
         Assert.Equal("https://storage.example/receipts/INV-202609-0001.pdf", result.Data.ReceiptPdfUrl);
         receiptMock.Verify(x => x.Render(It.Is<ReceiptPdfData>(data => data.InvoiceNo == created.InvoiceNo && data.Amount == 1200m)), Times.Once);
         storageMock.Verify(x => x.UploadAsync(It.IsAny<Stream>(), "receipts/INV-202609-0001.pdf", "application/pdf", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithLineParent_DispatchesLoggedPaymentNotification()
+    {
+        var repoMock = CreateMockRepo();
+        var dispatcherMock = CreateMockDispatcher();
+        var receiptMock = CreateMockReceipt();
+        var storageMock = CreateMockStorage();
+        BackgroundNotificationCandidate? candidate = null;
+        var enrollment = new Enrollment
+        {
+            Id = 7,
+            StudentId = 9,
+            InstituteId = 4,
+            Student = new Student { Id = 9, FullName = "สมชาย" },
+            Course = new Course { Name = "คณิตศาสตร์" }
+        };
+        var created = MakePayment(12, "INV-202609-0001", "สมชาย", "คณิตศาสตร์", 1200m, "cash");
+        repoMock.Setup(x => x.GetEnrollmentWithStudentAsync(7, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        repoMock.Setup(x => x.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync(created.InvoiceNo);
+        repoMock.Setup(x => x.CreatePaymentWithTransactionAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>())).ReturnsAsync(created);
+        repoMock.Setup(x => x.GetParentsWithLineByStudentIdAsync(9, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Parent { Id = 22, UserId = 31, FullName = "ผู้ปกครอง", LineUserId = "line-user" }]);
+        receiptMock.Setup(x => x.Render(It.IsAny<ReceiptPdfData>())).Returns([1, 2, 3]);
+        storageMock.Setup(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), "application/pdf", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example/receipt.pdf");
+        dispatcherMock
+            .Setup(d => d.DispatchAsync(It.IsAny<BackgroundNotificationCandidate>(), It.IsAny<CancellationToken>()))
+            .Callback<BackgroundNotificationCandidate, CancellationToken>((value, _) => candidate = value)
+            .ReturnsAsync(new BackgroundNotificationResult(true, false, 1, 10));
+
+        var sut = CreateSut(repoMock, dispatcherMock, receiptMock, storageMock);
+        await sut.CreateAsync(new CreatePaymentRequest(7, 1200m, "cash", null));
+
+        Assert.NotNull(candidate);
+        Assert.Equal("payment_received", candidate!.NotificationType);
+        Assert.Equal("payment_received:12:22", candidate.IdempotencyKey);
+        Assert.Equal(4, candidate.InstituteId);
+        Assert.Contains("INV-202609-0001", candidate.Message);
     }
 
     // ──────────────────── GetHistoryAsync ────────────────────

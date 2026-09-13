@@ -15,10 +15,10 @@ public interface IAttendanceService
 
 public class AttendanceService(
     IAttendanceRepository attendanceRepository,
-    Services.Contracts.ILineNotificationService lineNotificationService) : IAttendanceService
+    IBackgroundNotificationDispatcher notificationDispatcher) : IAttendanceService
 {
     private readonly IAttendanceRepository _repository = attendanceRepository;
-    private readonly Services.Contracts.ILineNotificationService _lineService = lineNotificationService;
+    private readonly IBackgroundNotificationDispatcher _notificationDispatcher = notificationDispatcher;
 
     public async Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default)
     {
@@ -51,24 +51,30 @@ public class AttendanceService(
 
         await _repository.ScanCheckinWithTransactionAsync(student.Id, request.SessionId, ct);
 
-        var remaining = 0;
-        _ = Task.Run(async () =>
+        var checkinTime = DateTime.UtcNow;
+        var parents = await _repository.GetParentsWithLineAsync(student.Id, CancellationToken.None);
+        foreach (var parent in parents)
         {
-            try
-            {
-                var parents = await _repository.GetParentsWithLineAsync(student.Id, CancellationToken.None);
-                foreach (var parent in parents)
-                {
-                    if (!string.IsNullOrEmpty(parent.LineUserId))
-                    {
-                        await _lineService.SendAttendanceNotificationAsync(
-                            parent.LineUserId, student.FullName, parent.FullName,
-                            DateTime.UtcNow.ToString("HH:mm:ss"), "present", CancellationToken.None);
-                    }
-                }
-            }
-            catch { }
-        });
+            if (parent.UserId is null || string.IsNullOrEmpty(parent.LineUserId))
+                continue;
+
+            await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
+                parent.UserId.Value,
+                student.InstituteId,
+                parent.LineUserId,
+                student.FullName,
+                parent.FullName,
+                NotificationMessageFactory.AttendanceCheckin(
+                    student.FullName,
+                    parent.FullName,
+                    checkinTime.ToString("HH:mm:ss"),
+                    "present"),
+                "attendance_checkin",
+                $"attendance_checkin:{request.SessionId}:{student.Id}:{parent.Id}"),
+                CancellationToken.None);
+        }
+
+        var remaining = 0;
 
         return new ScanAttendanceResponse("success", "เช็คชื่อเข้าเรียนสำเร็จ",
             new ScanAttendanceData(student.Id, student.FullName, "present", DateTime.UtcNow, remaining, billingMethod, billingDesc));

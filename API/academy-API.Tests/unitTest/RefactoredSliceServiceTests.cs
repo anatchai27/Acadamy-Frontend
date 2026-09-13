@@ -295,7 +295,7 @@ public class AttendanceCheckoutServiceTests
         var repository = new Mock<IAttendanceRepository>();
         repository.Setup(x => x.GetForCheckoutAsync(50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Attendance { Id = 50, StudentId = 1, SessionId = 10, Status = "absent" });
-        var sut = new AttendanceService(repository.Object, Mock.Of<ILineNotificationService>());
+        var sut = new AttendanceService(repository.Object, Mock.Of<IBackgroundNotificationDispatcher>());
 
         // Act
         var exception = await Assert.ThrowsAsync<AttendanceValidationException>(() =>
@@ -313,7 +313,7 @@ public class AttendanceCheckoutServiceTests
         var repository = new Mock<IAttendanceRepository>();
         repository.Setup(x => x.GetForCheckoutAsync(50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Attendance { Id = 50, StudentId = 1, SessionId = 10, Status = "present", CheckinAt = DateTime.UtcNow.AddHours(-1), CheckoutAt = DateTime.UtcNow.AddMinutes(-5) });
-        var sut = new AttendanceService(repository.Object, Mock.Of<ILineNotificationService>());
+        var sut = new AttendanceService(repository.Object, Mock.Of<IBackgroundNotificationDispatcher>());
 
         // Act
         var exception = await Assert.ThrowsAsync<AttendanceValidationException>(() =>
@@ -333,7 +333,7 @@ public class AttendanceCheckoutServiceTests
             .ReturnsAsync(new Attendance { Id = 50, StudentId = 1, SessionId = 10, Status = "present", CheckinAt = DateTime.UtcNow.AddHours(-1) });
         repository.Setup(x => x.GetPickupAuthorizationAsync(7, 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync((StudentPickupAuthorization?)null);
-        var sut = new AttendanceService(repository.Object, Mock.Of<ILineNotificationService>());
+        var sut = new AttendanceService(repository.Object, Mock.Of<IBackgroundNotificationDispatcher>());
 
         // Act
         var exception = await Assert.ThrowsAsync<AttendanceValidationException>(() =>
@@ -351,7 +351,7 @@ public class AttendanceCheckoutServiceTests
         var repository = new Mock<IAttendanceRepository>();
         repository.Setup(x => x.GetForCheckoutAsync(50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Attendance { Id = 50, StudentId = 1, SessionId = 10, Status = "present", CheckinAt = DateTime.UtcNow.AddHours(-1), CheckoutAt = DateTime.UtcNow.AddMinutes(-1) });
-        var sut = new AttendanceService(repository.Object, Mock.Of<ILineNotificationService>());
+        var sut = new AttendanceService(repository.Object, Mock.Of<IBackgroundNotificationDispatcher>());
 
         // Act
         var exception = await Assert.ThrowsAsync<AttendanceValidationException>(() =>
@@ -371,7 +371,7 @@ public class AttendanceCheckoutServiceTests
         var authorization = new StudentPickupAuthorization { Id = 7, StudentId = 1, FullName = "แม่สมใจ", IsActive = true };
         repository.Setup(x => x.GetForCheckoutAsync(50, It.IsAny<CancellationToken>())).ReturnsAsync(attendance);
         repository.Setup(x => x.GetPickupAuthorizationAsync(7, 1, It.IsAny<CancellationToken>())).ReturnsAsync(authorization);
-        var sut = new AttendanceService(repository.Object, Mock.Of<ILineNotificationService>());
+        var sut = new AttendanceService(repository.Object, Mock.Of<IBackgroundNotificationDispatcher>());
 
         // Act
         var result = await sut.CheckoutAsync(50, new CheckoutAttendanceRequest(null, 7), 99, CancellationToken.None);

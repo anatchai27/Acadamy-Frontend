@@ -8,12 +8,12 @@ namespace academy_API.Tests.unitTest;
 public class AttendanceServiceTests
 {
     private static Mock<academy_API.Repositories.IAttendanceRepository> CreateMockRepo() => new();
-    private static Mock<academy_API.Services.Contracts.ILineNotificationService> CreateMockLine() => new();
+    private static Mock<IBackgroundNotificationDispatcher> CreateMockDispatcher() => new();
 
     private static AttendanceService CreateSut(
         Mock<academy_API.Repositories.IAttendanceRepository>? repoMock = null,
-        Mock<academy_API.Services.Contracts.ILineNotificationService>? lineMock = null) =>
-        new(repoMock?.Object ?? CreateMockRepo().Object, lineMock?.Object ?? CreateMockLine().Object);
+        Mock<IBackgroundNotificationDispatcher>? dispatcherMock = null) =>
+        new(repoMock?.Object ?? CreateMockRepo().Object, dispatcherMock?.Object ?? CreateMockDispatcher().Object);
 
     // 1 ──────────────────── ScanAsync ────────────────────
 
@@ -35,6 +35,34 @@ public class AttendanceServiceTests
         Assert.Equal(105, result.Data.StudentId);
         Assert.Equal("สมชาย", result.Data.StudentName);
         Assert.Equal("present", result.Data.Status);
+    }
+
+    [Fact]
+    public async Task ScanAsync_WithLineParent_DispatchesLoggedAttendanceNotification()
+    {
+        var repoMock = CreateMockRepo();
+        var dispatcherMock = CreateMockDispatcher();
+        BackgroundNotificationCandidate? candidate = null;
+        repoMock.Setup(r => r.ValidateQrTokenAsync("valid-token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Student { Id = 105, InstituteId = 7, FullName = "สมชาย" });
+        repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        repoMock.Setup(r => r.ScanCheckinWithTransactionAsync(105, 12, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        repoMock.Setup(r => r.GetParentsWithLineAsync(105, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Parent { Id = 22, UserId = 31, FullName = "ผู้ปกครอง", LineUserId = "line-user" }]);
+        dispatcherMock
+            .Setup(d => d.DispatchAsync(It.IsAny<BackgroundNotificationCandidate>(), It.IsAny<CancellationToken>()))
+            .Callback<BackgroundNotificationCandidate, CancellationToken>((value, _) => candidate = value)
+            .ReturnsAsync(new BackgroundNotificationResult(true, false, 1, 9));
+
+        var sut = CreateSut(repoMock, dispatcherMock);
+        await sut.ScanAsync(new ScanAttendanceRequest("valid-token", 12));
+
+        Assert.NotNull(candidate);
+        Assert.Equal("attendance_checkin", candidate!.NotificationType);
+        Assert.Equal("attendance_checkin:12:105:22", candidate.IdempotencyKey);
+        Assert.Equal(7, candidate.InstituteId);
+        Assert.Contains("สมชาย", candidate.Message);
     }
 
     // 2

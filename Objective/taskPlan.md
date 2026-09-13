@@ -79,18 +79,18 @@
 
 **งาน:**
 
-- [ ] ระบุทุกจุดที่เรียก `SendAttendanceNotificationAsync` และ `SendPaymentNotificationAsync`
-- [ ] กำหนด notification type และ deterministic idempotency key ต่อ flow
-- [ ] ให้ attendance/payment ผ่าน dispatcher ที่เขียน `notifications`
-- [ ] รักษา transaction boundary เดิมของ attendance checkout และ payment
-- [ ] เพิ่ม tests สำหรับ success, provider failure, retry และ duplicate execution
-- [ ] ตรวจ multi-instance race ว่ายังมีข้อจำกัดจาก schema ที่ไม่มี unique idempotency column
+- [x] ระบุทุกจุดที่เรียก `SendAttendanceNotificationAsync` และ `SendPaymentNotificationAsync`
+- [x] กำหนด notification type และ deterministic idempotency key ต่อ flow
+- [x] ให้ attendance/payment ผ่าน dispatcher ที่เขียน `notifications`
+- [x] รักษา transaction boundary เดิมของ attendance checkout และ payment
+- [x] เพิ่ม tests สำหรับ success, provider failure, retry และ duplicate execution
+- [x] ตรวจ multi-instance race และบันทึกข้อจำกัดจาก schema ที่ไม่มี unique idempotency column
 
 **ผ่านเมื่อ:**
 
-- [ ] ทุก flow ที่ประกาศว่า log ได้ มี record ใน `notifications` จาก code path เดียวกัน
-- [ ] failed delivery มีสถานะและ retry behavior ที่ตรวจได้
-- [ ] focused tests และ full API tests ผ่าน
+- [x] ทุก flow ที่ประกาศว่า log ได้ มี record ใน `notifications` จาก code path เดียวกัน
+- [x] failed delivery มีสถานะและ retry behavior ที่ตรวจได้
+- [x] focused tests และ full API tests ผ่าน
 
 ### Slice 3: ย้าย direct EF ที่เหลือจาก ParentEndpoints
 
@@ -225,4 +225,4 @@ $hits.Count
 
 ## 7. Current next action
 
-เริ่มที่ **Slice 1: ปิด Front legacy dashboard tests** เพราะเป็น failure ที่ทำซ้ำได้ชัดเจนที่สุดใน baseline ปัจจุบัน จากนั้นค่อยเดินตามลำดับที่ระบุไว้ด้านบน ไม่ข้ามไปติ๊กงานที่ยังไม่มีหลักฐาน
+เริ่มที่ **Slice 3: ย้าย direct EF ที่เหลือจาก ParentEndpoints** หลังปิด Slice 1 และ Slice 2 พร้อมหลักฐาน test/build/contract validator แล้ว จากนั้นค่อยเดินตามลำดับที่ระบุไว้ด้านบน ไม่ข้ามไปติ๊กงานที่ยังไม่มีหลักฐาน

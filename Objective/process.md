@@ -32,7 +32,7 @@
 
 - API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `254 passed, 0 failed, 0 skipped`
+- Full API test suite: `256 passed, 0 failed, 0 skipped`
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
 - Front full suite: `76 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
@@ -45,6 +45,17 @@
 - ปรับเฉพาะ `Front/src/pages/admin/__tests__/dashboard-page.test.jsx`: mock provider/effect และ icon boundary ให้เหมาะกับ unit test, แล้วปรับ assertion ให้ตรงกับ dashboard implementation ปัจจุบัน (`oasis`, `BentoGrid`, greeting ปัจจุบัน)
 - ไม่แก้ `dashboard-page.jsx` และไม่ลบหรือ skip test
 - Validation หลังแก้: `npm.cmd test -- --run` ผ่าน `76/76`; `npm.cmd run build` ผ่าน
+
+### หลักฐาน Slice 2: Notification logging flow หลัก
+
+- `AttendanceService.ScanAsync` และ `PaymentService.CreateAsync` ไม่เรียก `SendAttendanceNotificationAsync`/`SendPaymentNotificationAsync` โดยตรงแล้ว แต่สร้าง `BackgroundNotificationCandidate` และใช้ `IBackgroundNotificationDispatcher` เดียวกับ background jobs
+- Notification types และ idempotency keys ที่ใช้จริง:
+  - `attendance_checkin` → `attendance_checkin:{sessionId}:{studentId}:{parentId}`
+  - `payment_received` → `payment_received:{paymentId}:{parentId}`
+- การสร้าง payment และ attendance transaction ยังคงอยู่ใน repository เดิม; notification dispatch เกิดหลัง persistence สำเร็จ และใช้ `CancellationToken.None` เพื่อไม่ให้ request cancellation ตัดการบันทึก log หลัง commit
+- ข้อความ notification ถูกย้ายมาไว้ใน `NotificationMessageFactory` โดยคงเนื้อหา LINE เดิม และ dispatcher เป็นจุดเดียวที่สร้าง pending record, ส่ง provider, mark `sent` หรือ mark `retrying/failed`
+- Focused notification/attendance/payment tests: `27 passed / 0 failed`; full API tests: `256 passed / 0 failed / 0 skipped`; API build และ test build ผ่าน
+- ข้อจำกัดที่ยืนยันจาก schema/code: `notifications` ยังไม่มี unique idempotency column/constraint ดังนั้นการกัน race ระหว่างหลาย API instances ยังเป็น application-level check และอาจสร้าง duplicate pending rows ได้เมื่อ concurrent ก่อน `FindByIdempotencyKeyAsync` เห็นข้อมูลเดียวกัน
 
 ---
 
@@ -323,7 +334,7 @@
 ## 4. แผนปฏิบัติการที่ต้องปรับปรุงต่อ (Priority Action Plan)
 
 ### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
-1. **บันทึก Notification Log:** background jobs บันทึกครบแล้ว; ต้อง refactor attendance/payment notification flow เดิมให้ผ่าน dispatcher เดียวกัน
+1. **บันทึก Notification Log:** attendance/payment ผ่าน dispatcher เดียวกับ background jobs แล้ว; ยังมีข้อจำกัด multi-instance race เพราะ schema ไม่มี unique idempotency constraint
 3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
 4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 1 ไฟล์ที่เหลือ (`Parent`) ให้เข้า Repository/Service Layer โดย `Institute`, `Teacher`, `User` และ `Auth` แยกชั้นแล้ว
 

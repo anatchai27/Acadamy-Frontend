@@ -12,12 +12,12 @@ public interface IPaymentService
 
 public class PaymentService(
     Repositories.IPaymentRepository repository,
-    Contracts.ILineNotificationService lineService,
+    IBackgroundNotificationDispatcher notificationDispatcher,
     IReceiptPdfService receiptPdfService,
     Interface.IFileStorageService fileStorageService) : IPaymentService
 {
     private readonly Repositories.IPaymentRepository _repository = repository;
-    private readonly Contracts.ILineNotificationService _lineService = lineService;
+    private readonly IBackgroundNotificationDispatcher _notificationDispatcher = notificationDispatcher;
     private readonly IReceiptPdfService _receiptPdfService = receiptPdfService;
     private readonly Interface.IFileStorageService _fileStorageService = fileStorageService;
 
@@ -62,30 +62,30 @@ public class PaymentService(
             "application/pdf",
             ct);
 
-        _ = Task.Run(async () =>
+        var parents = await _repository.GetParentsWithLineByStudentIdAsync(
+            enrollment.StudentId, CancellationToken.None);
+        foreach (var parent in parents)
         {
-            try
-            {
-                var parents = await _repository.GetParentsWithLineByStudentIdAsync(
-                    enrollment.StudentId, CancellationToken.None);
-                foreach (var parent in parents)
-                {
-                    if (!string.IsNullOrEmpty(parent.LineUserId))
-                    {
-                        await _lineService.SendPaymentNotificationAsync(
-                            parent.LineUserId,
-                            parent.FullName,
-                            enrollment.Student.FullName,
-                            enrollment.Course.Name,
-                            request.Amount,
-                            invoiceNo,
-                            receiptPdfUrl,
-                            CancellationToken.None);
-                    }
-                }
-            }
-            catch { }
-        });
+            if (parent.UserId is null || string.IsNullOrEmpty(parent.LineUserId))
+                continue;
+
+            await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
+                parent.UserId.Value,
+                enrollment.InstituteId,
+                parent.LineUserId,
+                enrollment.Student.FullName,
+                parent.FullName,
+                NotificationMessageFactory.PaymentReceived(
+                    parent.FullName,
+                    enrollment.Student.FullName,
+                    enrollment.Course.Name,
+                    created.Amount,
+                    invoiceNo,
+                    receiptPdfUrl),
+                "payment_received",
+                $"payment_received:{created.Id}:{parent.Id}"),
+                CancellationToken.None);
+        }
 
         return new CreatePaymentResponse(
             "success",
