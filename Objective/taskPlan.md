@@ -54,15 +54,15 @@
 
 **งาน:**
 
-- [ ] อ่าน failure ทั้ง 30 กรณีและแยกว่า test เก่ากับ implementation regression
-- [ ] เลือกแก้ implementation เมื่อ behavior ยังเป็น requirement จริง
-- [ ] แก้ test เฉพาะกรณีที่ assertion ผูกกับ UI เก่าซึ่งไม่ใช่ behavior ปัจจุบัน
-- [ ] เพิ่ม/ปรับ mock ให้ไม่ทำให้ Preact object ถูก freeze หรือ mutate ไม่ได้
+- [x] อ่าน failure ทั้ง 30 กรณีและแยกว่า test เก่ากับ implementation regression
+- [x] ตรวจแล้วว่า implementation ปัจจุบันตรง requirement จึงไม่แก้ production dashboard
+- [x] แก้ test เฉพาะกรณีที่ assertion ผูกกับ UI เก่าซึ่งไม่ใช่ behavior ปัจจุบัน
+- [x] เพิ่ม/ปรับ mock ให้ไม่ทำให้ Preact object ถูก freeze หรือ mutate ไม่ได้
 
 **ผ่านเมื่อ:**
 
-- [ ] Front full suite ผ่าน หรือมี failure ที่อธิบายได้และบันทึกเป็น known gap
-- [ ] Front build ผ่าน
+- [x] Front full suite ผ่าน หรือมี failure ที่อธิบายได้และบันทึกเป็น known gap
+- [x] Front build ผ่าน
 - [ ] ไม่มีการลบ test เพียงเพื่อให้ตัวเลขผ่าน
 
 ### Slice 2: รวม notification logging ให้ครบ flow หลัก

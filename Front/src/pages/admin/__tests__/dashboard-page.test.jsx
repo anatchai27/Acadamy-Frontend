@@ -1,15 +1,50 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/preact';
-import { AppProvider } from '../../../store/AppContext';
+import { h, toChildArray } from 'preact';
 import { DashboardPage } from '../dashboard-page';
+
+// DashboardPage only needs the provider in production for theme and auth data.
+// Keep this test focused on the page and avoid reusing provider VNodes between
+// renders, which makes Preact try to mutate a frozen legacy test object.
+vi.mock('../../../store/AppContext', () => ({
+  AppProvider: ({ children }) => <div data-testid="app-provider">{children}</div>,
+  useAppContext: () => ({
+    state: { designTheme: 'bento' },
+    dispatch: vi.fn(),
+  }),
+}));
+
+vi.mock('../../../hooks/useDesignTheme', () => ({
+  useDesignTheme: () => ({ designTheme: 'bento' }),
+}));
+
+vi.mock('../../../components/ui', () => ({
+  BentoGrid: ({ children, class: className = '' }) => (
+    <div class={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ${className}`}>{toChildArray(children)}</div>
+  ),
+  BentoCell: ({ children, class: className = '', span }) => (
+    <div class={`${span === 2 ? 'col-span-1 sm:col-span-2' : 'col-span-1'} ${className}`}>{toChildArray(children)}</div>
+  ),
+  unlockBadge: vi.fn(),
+}));
 
 // Mock AdminLayout to isolate DashboardPage rendering
 vi.mock('../../../layouts/admin-layout', () => ({
-  AdminLayout: ({ children, path }) => (
-    <div data-testid="admin-layout" data-path={path}>
-      {children}
-    </div>
-  ),
+  AdminLayout: ({ children, path }) => {
+    const cloneTree = (node) => {
+      if (node == null || typeof node !== 'object') return node;
+      if (Array.isArray(node)) return node.map(cloneTree);
+      const props = { ...node.props };
+      if ('children' in props) props.children = toChildArray(props.children).map(cloneTree);
+      return h(node.type, props);
+    };
+
+    return (
+      <div data-testid="admin-layout" data-path={path}>
+        {cloneTree(children)}
+      </div>
+    );
+  },
 }));
 
 // Mock DashboardOverviewWidget
@@ -17,11 +52,30 @@ vi.mock('../../../components/dashboard/dashboard-overview', () => ({
   DashboardOverviewWidget: () => <div data-testid="dashboard-overview-widget">Overview Widget</div>,
 }));
 
+vi.mock('../../../components/dashboard/playful-greeting', () => ({
+  PlayfulGreeting: () => <div data-testid="playful-greeting">สวัสดีตอนเช้า</div>,
+}));
+
+// react-icons uses React-compatible VNodes. Use lightweight Preact icons here
+// so the legacy test cannot hand frozen React VNodes to the Preact renderer.
+vi.mock('react-icons/hi2', () => {
+  const Icon = (props) => <svg {...props} />;
+  const CheckIcon = (props) => <svg {...props} d="M9 12l2 2 4-4" />;
+  const CogIcon = (props) => <svg {...props} d="M10.325 4.317" />;
+  return {
+    HiOutlineUserPlus: Icon,
+    HiOutlineBookOpen: Icon,
+    HiOutlineCheckCircle: CheckIcon,
+    HiOutlineCog6Tooth: CogIcon,
+    HiOutlineChartBar: Icon,
+  };
+});
+
 function renderDashboard(path = '/admin/dashboard') {
   return render(
-    <AppProvider>
+    <div>
       <DashboardPage path={path} />
-    </AppProvider>
+    </div>
   );
 }
 
@@ -50,20 +104,20 @@ describe('DashboardPage', () => {
       expect(screen.getByTestId('admin-layout')).toHaveAttribute('data-path', path);
     });
 
-    it('3. renders page heading "ภาพรวมระบบ"', () => {
+    it('3. renders the current greeting component', () => {
       // Arrange
       // Act
       renderDashboard();
       // Assert
-      expect(screen.getByText('ภาพรวมระบบ')).toBeInTheDocument();
+      expect(screen.getByText(/สวัสดีตอนเช้า|สวัสดีตอนบ่าย|สวัสดีตอนเย็น/)).toBeInTheDocument();
     });
 
-    it('4. renders sub-heading with system description', () => {
+    it('4. renders the greeting message', () => {
       // Arrange
       // Act
       renderDashboard();
       // Assert
-      expect(screen.getByText(/ดูข้อมูลสำคัญและการเปลี่ยนแปลงของระบบคุณ/)).toBeInTheDocument();
+      expect(screen.getByTestId('playful-greeting')).toHaveTextContent('สวัสดีตอนเช้า');
     });
 
     it('5. renders DashboardOverviewWidget', () => {
@@ -123,7 +177,7 @@ describe('DashboardPage', () => {
       // Act
       renderDashboard();
       // Assert
-      const icons = document.querySelectorAll('.text-tiwhub-primary');
+      const icons = document.querySelectorAll('.text-oasis-primary');
       expect(icons.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -132,7 +186,7 @@ describe('DashboardPage', () => {
       // Act
       renderDashboard();
       // Assert
-      const icons = document.querySelectorAll('.text-tiwhub-success');
+      const icons = document.querySelectorAll('.text-oasis-success');
       expect(icons.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -141,7 +195,7 @@ describe('DashboardPage', () => {
       // Act
       renderDashboard();
       // Assert
-      const bgElement = document.querySelector('.bg-tiwhub-success\\/10');
+      const bgElement = document.querySelector('.bg-oasis-success\\/5');
       expect(bgElement).toBeInTheDocument();
     });
   });
@@ -300,11 +354,11 @@ describe('DashboardPage', () => {
       renderDashboard();
       // Assert
       // primary icon bg
-      expect(document.querySelector('.bg-tiwhub-primary\\/10')).toBeInTheDocument();
+      expect(document.querySelector('.bg-oasis-primary\\/5')).toBeInTheDocument();
       // success icon bg
-      expect(document.querySelector('.bg-tiwhub-success\\/10')).toBeInTheDocument();
+      expect(document.querySelector('.bg-oasis-success\\/5')).toBeInTheDocument();
       // danger icon bg
-      expect(document.querySelector('.bg-tiwhub-danger\\/10')).toBeInTheDocument();
+      expect(document.querySelector('.bg-oasis-danger\\/5')).toBeInTheDocument();
     });
 
     it('29. uses colorTextMap for activity icon colors', () => {
@@ -312,9 +366,9 @@ describe('DashboardPage', () => {
       // Act
       renderDashboard();
       // Assert
-      expect(document.querySelector('.text-tiwhub-primary')).toBeInTheDocument();
-      expect(document.querySelector('.text-tiwhub-accent')).toBeInTheDocument();
-      expect(document.querySelector('.text-tiwhub-danger')).toBeInTheDocument();
+      expect(document.querySelector('.text-oasis-primary')).toBeInTheDocument();
+      expect(document.querySelector('.text-oasis-warning')).toBeInTheDocument();
+      expect(document.querySelector('.text-oasis-danger')).toBeInTheDocument();
     });
   });
 
@@ -326,9 +380,9 @@ describe('DashboardPage', () => {
       // Act
       renderDashboard();
       // Assert
-      const grid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3');
+      const grid = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4');
       expect(grid).toBeInTheDocument();
-      const activityFeed = grid.querySelector('.lg\\:col-span-2');
+      const activityFeed = grid.querySelector('.sm\\:col-span-2');
       expect(activityFeed).toBeInTheDocument();
     });
   });

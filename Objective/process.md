@@ -35,9 +35,16 @@
 - Full API test suite: `254 passed, 0 failed, 0 skipped`
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
-- Front focused inactivity test: `2 passed, 0 failed`; Front full suite: `46 passed, 30 failed` ใน `dashboard-page.test.jsx` (รวม 76 tests)
+- Front full suite: `76 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
 - Controller ownership audit: direct EF/data access ลดลงเหลือ 1 controller file รวม 38 matches (จากเดิม 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` เหลือ 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
+
+### หลักฐาน Slice 1: Front legacy dashboard tests
+
+- แยกสาเหตุ failure เดิมเป็น assertion ที่อ้าง UI รุ่นเก่า (`tiwhub`, heading/grid เดิม) และ test harness ที่ส่ง React-compatible/frozen VNode จาก `react-icons` เข้า Preact โดยตรง
+- ปรับเฉพาะ `Front/src/pages/admin/__tests__/dashboard-page.test.jsx`: mock provider/effect และ icon boundary ให้เหมาะกับ unit test, แล้วปรับ assertion ให้ตรงกับ dashboard implementation ปัจจุบัน (`oasis`, `BentoGrid`, greeting ปัจจุบัน)
+- ไม่แก้ `dashboard-page.jsx` และไม่ลบหรือ skip test
+- Validation หลังแก้: `npm.cmd test -- --run` ผ่าน `76/76`; `npm.cmd run build` ผ่าน
 
 ---
 
