@@ -38,11 +38,56 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public Task<User?> GetByEmailOrPhoneAsync(string email, string? phone, CancellationToken cancellationToken = default) =>
+        _context.Users.FirstOrDefaultAsync(u => u.Email == email || (phone != null && u.Phone == phone), cancellationToken);
+
     public async Task<User> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
         return user;
+    }
+
+    public async Task<User> CreateStaffAsync(User user, Teacher? teacher, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync(cancellationToken);
+        if (teacher is not null)
+        {
+            teacher.UserId = user.Id;
+            _context.Teachers.Add(teacher);
+        }
+        await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return user;
+    }
+
+    public async Task<(Institute? Institute, User User)> RegisterAsync(
+        Institute? institute, User user, PdpaConsent consent, Teacher? teacher,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        if (institute is not null)
+        {
+            _context.Institutes.Add(institute);
+            await _context.SaveChangesAsync(cancellationToken);
+            user.InstituteId = institute.Id;
+            if (teacher is not null) teacher.InstituteId = institute.Id;
+        }
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync(cancellationToken);
+        consent.UserId = user.Id;
+        consent.ReferenceId = user.Id;
+        _context.PdpaConsents.Add(consent);
+        if (teacher is not null)
+        {
+            teacher.UserId = user.Id;
+            _context.Teachers.Add(teacher);
+        }
+        await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return (institute, user);
     }
 
     public async Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken cancellationToken = default)

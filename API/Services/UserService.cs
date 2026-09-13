@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using academy_API.Data;
 using academy_API.Models;
+using academy_API.DTOs;
 using academy_API.Repositories;
 using academy_API.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,80 @@ public class UserService(
 
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _repository.GetByIdAsync(id, ct);
+
+    public async Task<User> CreateStaffAsync(CreateStaffRequest request, int instituteId, CancellationToken ct = default)
+    {
+        var email = request.Email?.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(email)) throw new UserValidationException("EMAIL_REQUIRED", "Email is required.");
+        if (string.IsNullOrWhiteSpace(request.Password)) throw new UserValidationException("PASSWORD_REQUIRED", "Password is required.");
+        if (request.Role is not (UserRole.admin or UserRole.teacher or UserRole.staff))
+            throw new UserValidationException("INVALID_ROLE", "Invalid role. Choose admin, teacher, or staff.");
+        if (string.IsNullOrWhiteSpace(request.FullName))
+            throw new UserValidationException("FULL_NAME_REQUIRED", "Full name is required for teacher/staff.");
+        if (await _repository.GetByEmailOrPhoneAsync(email, request.Phone, ct) is not null)
+            throw new UserValidationException("EMAIL_CONFLICT", "Email is already registered.");
+
+        var user = new User
+        {
+            InstituteId = instituteId,
+            Email = email,
+            Phone = request.Phone,
+            Role = request.Role,
+            PasswordHash = _tokenService.HashPassword(request.Password),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var teacher = request.Role is UserRole.teacher or UserRole.admin
+            ? new Teacher { InstituteId = instituteId, FullName = request.FullName.Trim() }
+            : null;
+        return await _repository.CreateStaffAsync(user, teacher, ct);
+    }
+
+    public async Task<(User User, Institute? Institute)> RegisterAsync(RegisterUserRequest request, string? ipAddress, CancellationToken ct = default)
+    {
+        if (request is null) throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            throw new UserValidationException("CREDENTIALS_REQUIRED", "Email and password are required.");
+        if (!request.AcceptPdpa) throw new UserValidationException("PDPA_REQUIRED", "PDPA consent must be accepted to create an account.");
+        var email = request.Email.Trim();
+        if (await _repository.GetByEmailOrPhoneAsync(email, request.Phone, ct) is not null)
+            throw new UserValidationException("DUPLICATE_USER", "Email or phone number is already registered.");
+
+        Institute? institute = request.Institute?.Name is null ? null : new Institute
+        {
+            Name = request.Institute.Name,
+            ContactPhone = request.Institute.ContactPhone,
+            LogoUrl = request.Institute.LogoBase64,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var user = new User
+        {
+            Email = email,
+            Phone = request.Phone,
+            Role = request.Role,
+            LineUserId = request.LineUserId,
+            PasswordHash = _tokenService.HashPassword(request.Password),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var consentVersion = string.IsNullOrWhiteSpace(request.PdpaConsentVersion) ? "1.0" : request.PdpaConsentVersion;
+        var consent = new PdpaConsent
+        {
+            ConsentVersion = consentVersion,
+            ConsentDocumentVersion = consentVersion,
+            IsAccepted = true,
+            IpAddress = ipAddress,
+            AcceptedAt = DateTime.UtcNow,
+            ReferenceType = "user"
+        };
+        var teacher = request.Role is UserRole.admin or UserRole.teacher
+            ? new Teacher { FullName = request.Admin?.FullName ?? "Admin" }
+            : null;
+        var result = await _repository.RegisterAsync(institute, user, consent, teacher, ct);
+        return (result.User, result.Institute);
+    }
 
     public async Task<User> CreateAsync(User user, CancellationToken ct = default)
         => await _repository.CreateAsync(user, ct);
@@ -222,4 +297,25 @@ public class UserService(
 
     public async Task<bool> DeleteUserAsync(int id, CancellationToken ct = default)
         => await _repository.DeleteAsync(id, ct);
+
+    public async Task<UserManagementResult> UpdateRoleForManagementAsync(int id, UserRole role, CancellationToken ct = default)
+    {
+        var user = await _repository.GetByIdAsync(id, ct);
+        if (user is null) return UserManagementResult.NotFound;
+        if (user.Role == UserRole.admin) return UserManagementResult.PrimaryAdmin;
+        return await _repository.UpdateRoleAsync(id, role, ct) ? UserManagementResult.Updated : UserManagementResult.NotFound;
+    }
+
+    public async Task<UserManagementResult> DeleteForManagementAsync(int id, CancellationToken ct = default)
+    {
+        var user = await _repository.GetByIdAsync(id, ct);
+        if (user is null) return UserManagementResult.NotFound;
+        if (user.Role == UserRole.admin) return UserManagementResult.PrimaryAdmin;
+        return await _repository.DeleteAsync(id, ct) ? UserManagementResult.Deleted : UserManagementResult.NotFound;
+    }
+}
+
+public sealed class UserValidationException(string code, string message) : Exception(message)
+{
+    public string Code { get; } = code;
 }
