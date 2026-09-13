@@ -1,279 +1,228 @@
-# Execution Plan ปัจจุบัน
+# Execution Plan รอบใหม่
 
-> ปรับแผน: 12 กันยายน 2026
-> เป้าหมาย: ทำงานเป็นรอบเล็กที่ build/test/ตรวจหลักฐานได้จริง ไม่ติ๊กงานจากการมี schema หรือ route อย่างเดียว
+> ปรับแผน: 13 กันยายน 2026
+> หลักการ: ทำทีละ slice, อ้างอิง code/schema/test ที่ตรวจได้จริง และห้ามติ๊กงานจากการมี route, DTO หรือ schema อย่างเดียว
 
-## Baseline ที่ยืนยันแล้ว
+## 1. Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `69 paths / 42 schemas`
-- Target API contract: `73 paths / 62 schemas`
-- Latest schema export: `Objective/results-2026-09-12-220648.csv`
-- Contract validator: `Objective/validate-api-contract.ps1`
-- API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `254 passed / 0 failed / 0 skipped`
-- Controller ที่ยังมี direct EF/data access: `1 file / 38 matches`
-  - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
-  - `ParentEndpoints.cs`
+### Validation ล่าสุด
 
-## กติกาการทำงานทุก slice
+- API contract validator: `92 current operations`, `96 target operations`
+- Validator result: `88 implemented`, `4 partial`, `4 new`, `0 errors`, `141 warnings`
+- API build: ผ่านด้วย output `API/bin/DodValidation`
+- Full API tests: `254 passed / 0 failed / 0 skipped`
+- Front build: ผ่าน
+- LineLiff build: ผ่าน
+- Front full tests: `46 passed / 30 failed`; ทั้ง 30 failures อยู่ใน `dashboard-page.test.jsx`
+- Front inactivity focused test: `2 passed / 0 failed`
 
-1. อ่าน code path และ schema ก่อนแก้
-2. แก้ contract/DTO ก่อน implementation เมื่อ response หรือ input เปลี่ยน
-3. Controller รับ request และ map HTTP status เท่านั้น
-4. Service คุม business rule/state transition
-5. Repository คุม query/persistence/transaction
-6. เพิ่ม AAA tests อย่างน้อย success, validation และ conflict/authorization ตามความเสี่ยง
+### Architecture และ schema
+
+- Controller direct EF/data access: `38 matches` ใน `ParentEndpoints.cs` ไฟล์เดียว
+- `MakeupEndpoints.cs` ใช้ service/repository แล้ว และไม่อยู่ในผล direct EF audit ล่าสุด
+- Schema export: `Objective/results-2026-09-12-220648.csv`
+- Schema export มี `38 tables / 420 columns`
+- `leave_request_attachments` มีอยู่จริงใน schema และมี 10 columns
+- `makeup_slots.institute_id` มีอยู่จริงใน schema
+- `makeup_credits.status`, `used_at`, `expired_at` มีอยู่จริงใน schema
+- `POST /api/public/leads` มีใน `Front/docAPI/api-target.json` แต่ยังไม่พบ implementation ใน `API` จากการค้น source ล่าสุด
+
+## 2. กติกาก่อนเริ่มแต่ละ slice
+
+1. อ่าน endpoint, DTO, service, repository, UI และ schema ที่เกี่ยวข้องก่อนแก้
+2. ถ้า contract เปลี่ยน ให้แก้ DTO/contract ก่อน implementation
+3. Controller ทำเฉพาะ request mapping, authorization boundary และ HTTP response
+4. Service คุม business rule และ state transition
+5. Repository คุม query, persistence และ transaction
+6. เพิ่ม test อย่างน้อย success, validation และ forbidden/conflict ตามความเสี่ยง
 7. รัน focused test ก่อน full suite
-8. รัน API build และ contract validator ก่อนปิด slice
-9. อัปเดต `process.md` จากหลักฐาน ไม่ใช้ความรู้สึก
+8. รัน API build, frontend build และ contract validator เมื่อปิด slice
+9. อัปเดต `Objective/process.md` เฉพาะสิ่งที่มีหลักฐานใหม่
+10. ถ้ายังไม่มี runtime evidence ให้ใช้สถานะ `[/]` ไม่ใช้ `[x]`
 
-## สถานะที่เสร็จแล้ว
+## 3. แผนรอบใหม่ตามลำดับความเสี่ยง
 
-- [x] Current API แยกจาก Target API
-- [x] Makeup core แยก Controller -> Service -> Repository
-- [x] Pickup authorization แยก Controller -> Service -> Repository
-- [x] Attendance checkout ใช้ attendance ID จริงและเลือก authorized pickup ได้
-- [x] Leave core: create, rule-based type, approve/reject, makeup credit และ ledger reference
-- [x] Parent LIFF: leave status, session selection, makeup credit, slot list, booking และ cancel booking (Slice A)
-- [x] Makeup credit expired validation & tests (Slice B)
-- [x] Leave attachment: schema `leave_request_attachments` verified, model, EF mapping, storage upload API และ LIFF UI (Slice C)
-- [x] Admin checkout audit log: atomic transaction, read API, UI server timestamp/actor display (Slice D)
-- [x] Legacy controller boundary: `FileUploadEndpoints.cs` ย้ายเป็น service/repository สมบูรณ์ (Slice E part 1)
-- [x] Student card PDF generator (QuestPDF + QRCoder) + S3 upload + Admin UI download (Slice F)
-- [x] Student CSV export: async streaming query + escaping + tenant isolation test + Admin UI download (Slice G)
-- [x] Payment slip verification: provider contract + amount check + conflict guard + tests (Slice H)
-- [x] Receipt PDF renderer และ upload ผ่าน `IFileStorageService`
-- [x] Contract validator, tenant-aware test fixture และ EF model cache key
-- [x] Full API test suite ผ่าน `237/237`
+### Slice 1: ปิด Front legacy dashboard tests
 
-## รอบถัดไป: P0 ปิดงานที่ค้างจาก workflow เดิม
+**เหตุผล:** เป็น test failure ที่ยืนยันได้ 30 กรณี และทำให้ Front full suite ยังไม่ผ่าน
 
-### Slice A: Parent booking cancellation
+**ขอบเขต:**
 
-**เป้าหมาย:** ผู้ปกครองเห็น booking ของลูกและยกเลิกได้อย่างปลอดภัย
+- `Front/src/pages/admin/dashboard-page.jsx`
+- `Front/src/pages/admin/__tests__/dashboard-page.test.jsx`
+- components ที่ dashboard ใช้จริง
 
-**ไฟล์เป้าหมาย:**
+**งาน:**
 
-- `API/Controllers/MakeupEndpoints.cs`
-- `API/Services/MakeupService.cs`
-- `API/Repositories/MakeupRepository.cs`
-- `API/DTOs/MakeupDtos.cs`
-- `LineLiff/src/services/parent-service.js`
-- `LineLiff/src/pages/leave-makeup.jsx`
+- [ ] อ่าน failure ทั้ง 30 กรณีและแยกว่า test เก่ากับ implementation regression
+- [ ] เลือกแก้ implementation เมื่อ behavior ยังเป็น requirement จริง
+- [ ] แก้ test เฉพาะกรณีที่ assertion ผูกกับ UI เก่าซึ่งไม่ใช่ behavior ปัจจุบัน
+- [ ] เพิ่ม/ปรับ mock ให้ไม่ทำให้ Preact object ถูก freeze หรือ mutate ไม่ได้
+
+**ผ่านเมื่อ:**
+
+- [ ] Front full suite ผ่าน หรือมี failure ที่อธิบายได้และบันทึกเป็น known gap
+- [ ] Front build ผ่าน
+- [ ] ไม่มีการลบ test เพียงเพื่อให้ตัวเลขผ่าน
+
+### Slice 2: รวม notification logging ให้ครบ flow หลัก
+
+**เหตุผล:** background jobs มี dispatcher และ log แล้ว แต่ attendance/payment flow เดิมยังเรียก LINE service โดยตรง
+
+**ขอบเขต:**
+
+- `API/Services/AttendanceService.cs`
+- `API/Services/PaymentService.cs`
+- `API/Services/BackgroundNotificationService.cs`
+- `API/Repositories/BackgroundNotificationRepository.cs`
+- tests ที่เกี่ยวข้องกับ notification, attendance และ payment
+
+**งาน:**
+
+- [ ] ระบุทุกจุดที่เรียก `SendAttendanceNotificationAsync` และ `SendPaymentNotificationAsync`
+- [ ] กำหนด notification type และ deterministic idempotency key ต่อ flow
+- [ ] ให้ attendance/payment ผ่าน dispatcher ที่เขียน `notifications`
+- [ ] รักษา transaction boundary เดิมของ attendance checkout และ payment
+- [ ] เพิ่ม tests สำหรับ success, provider failure, retry และ duplicate execution
+- [ ] ตรวจ multi-instance race ว่ายังมีข้อจำกัดจาก schema ที่ไม่มี unique idempotency column
+
+**ผ่านเมื่อ:**
+
+- [ ] ทุก flow ที่ประกาศว่า log ได้ มี record ใน `notifications` จาก code path เดียวกัน
+- [ ] failed delivery มีสถานะและ retry behavior ที่ตรวจได้
+- [ ] focused tests และ full API tests ผ่าน
+
+### Slice 3: ย้าย direct EF ที่เหลือจาก ParentEndpoints
+
+**เหตุผล:** audit ล่าสุดเหลือ `ParentEndpoints.cs` 38 matches เป็น boundary gap เดียวที่ยืนยันได้
+
+**ขอบเขต:**
+
+- `API/Controllers/ParentEndpoints.cs`
+- service/repository/DTO ที่จำเป็น
+- tests ของ parent dashboard, profile และ child data access
+
+**งาน:**
+
+- [ ] แยก query ของ dashboard/profile/child data ตาม responsibility จริง
+- [ ] ย้าย EF query ออกจาก controller โดยไม่เปลี่ยน response contract ที่ใช้งานอยู่
+- [ ] ตรวจ tenant filter และ parent-child ownership ทุก endpoint
+- [ ] เพิ่ม focused tests สำหรับ own child, foreign child และ not found
+- [ ] รัน controller ownership audit ซ้ำ
+
+**ผ่านเมื่อ:**
+
+- [ ] `ParentEndpoints.cs` direct EF/data access เหลือ `0` หรือมีเหตุผลที่บันทึกไว้ชัดเจน
+- [ ] direct EF รวมใน controllers เหลือ `0` ตาม scope ปัจจุบัน
+- [ ] API tests และ contract validator ผ่าน
+
+### Slice 4: Implement public trial-class lead ตาม contract
+
+**เหตุผล:** target contract มี `POST /api/public/leads` แต่ source API ยังไม่พบ implementation
+
+**ขอบเขต:**
+
 - `Front/docAPI/api-target.json`
+- `API/Models/Lead.cs`
+- `API/Data/TutoringDbContext.cs`
+- public endpoint/service/repository ที่ต้องเพิ่ม
+- frontend public trial-class form เมื่อ backend พร้อม
 
 **งาน:**
 
-- [x] เพิ่ม `GET /api/makeup/bookings?student_id=` หรือ parent-scoped endpoint
-- [x] ตรวจ parent ownership ใน service/repository ไม่พึ่ง route guard อย่างเดียว
-- [x] คืนเฉพาะ booking ของ student ที่ parent มีสิทธิ์ดู
-- [x] ต่อรายการ booking ใน LIFF และปุ่ม cancel เฉพาะสถานะ `reserved`
-- [x] เพิ่ม tests: own booking, booking ของคนอื่นต้อง forbidden, cancelled booking conflict
+- [ ] ตรวจ `CreateLeadRequest` ใน contract เทียบกับ model/schema จริง
+- [ ] ออกแบบ public input validation และ rate/abuse boundary ที่เหมาะสม
+- [ ] เพิ่ม endpoint ให้บันทึก Lead จริง โดยไม่เปิดข้อมูล tenant ข้ามสถาบัน
+- [ ] กำหนด notification behavior แยกจากการรับ lead ให้ชัด
+- [ ] เพิ่ม API tests สำหรับ valid input, invalid input และ duplicate/abuse case ที่ requirement กำหนด
+- [ ] ต่อ frontend form หลัง endpoint ผ่าน focused tests
 
 **ผ่านเมื่อ:**
 
-- [x] LIFF แสดง booking จริงและยกเลิกได้
-- [x] parent เดา ID ของเด็กอื่นแล้วไม่ได้ข้อมูล/แก้ข้อมูล
-- [x] focused tests ผ่าน
-- [x] LIFF build, API build และ validator ผ่าน
+- [ ] endpoint implementation, DTO และ target contract ตรงกัน
+- [ ] API test พิสูจน์ได้ว่าบันทึก lead สำเร็จและ validation ทำงาน
+- [ ] ยังไม่ประกาศว่า public website ครบ จนกว่าจะมี UI และ runtime evidence
 
-### Slice B: Makeup credit expired test
+### Slice 5: ปิด parent workflow ที่ยังไม่มี UI
 
-**เป้าหมาย:** ปิด test gap ที่เหลือของ core makeup
+**เหตุผล:** backend หลักมีแล้ว แต่ UI ยังไม่ครบตาม acceptance criteria
 
-**ไฟล์เป้าหมาย:**
+**ลำดับย่อย:**
 
-- `API/academy-API.Tests/unitTest/RefactoredSliceServiceTests.cs`
-- `Objective/taskPlan.md`
+1. Admin UI สร้างและยกเลิก make-up slot
+2. LIFF homework list และ upload submission
+3. LIFF skill score detail พร้อม chart ที่เลือกใช้จริง
 
-**งาน:**
+**งานร่วม:**
 
-- [x] เพิ่ม AAA test เมื่อ `ExpiresAt <= UtcNow` ต้องจองไม่ได้
-- [x] ยืนยันว่า repository create booking ไม่ถูกเรียก
-
-**ผ่านเมื่อ:**
-
-- [x] focused refactored slice tests ผ่าน
-- [x] checklist ข้อนี้เปลี่ยนเป็น `[x]`
-
-## รอบถัดไป: P1 schema-gated work
-
-### Slice C: Leave attachment
-
-**ต้องตัดสินใจก่อน:** schema ปัจจุบันยังไม่มี `leave_requests.attachment_url` และไม่มี attachment table
-
-**งานตามลำดับ:**
-
-- [x] ออกแบบ `leave_request_attachments` จาก SRS และเพิ่มใน `sql_script.md`/`erProjec.md` เป็น Proposed schema
-- [x] เพิ่ม model + DbContext mapping หลัง schema พร้อมเท่านั้น (schema verified from `results-2026-09-12-220648.csv`)
-- [x] เพิ่ม service validation: MIME type, size, ownership
-- [x] เพิ่ม upload endpoint และ response URL
-- [x] ต่อ LIFF file input
-- [x] เพิ่ม tests สำหรับ file type, size, ownership และ upload failure
+- [ ] ตรวจ API response กับ UI state ก่อนทำหน้าใหม่
+- [ ] แสดง loading, empty, error และ permission state
+- [ ] เพิ่ม focused frontend tests สำหรับ service และ critical interaction
+- [ ] ทดสอบ tenant/parent ownership ผ่าน API tests ไม่พึ่ง UI อย่างเดียว
 
 **ผ่านเมื่อ:**
 
-- [x] schema export รอบใหม่ยืนยัน column/table (`results-2026-09-12-220648.csv`)
-- [x] upload URL ถูกบันทึกผ่าน `IFileStorageService` และคืนกลับใน response
-- [x] UI ไม่แสดงข้อความว่า attachment ใช้ไม่ได้ก่อน backend พร้อม; มี file input และ upload flow แล้ว
+- [ ] แต่ละ flow มีหน้าใช้งานจริงต่อกับ API จริง
+- [ ] มี success/error evidence ที่ทำซ้ำได้
+- [ ] Front และ LineLiff build ผ่าน
 
-### Slice D: Admin audit log
+### Slice 6: Payment/reporting และ operational gaps
 
-**เป้าหมาย:** checkout ต้องตรวจย้อนหลังได้ว่าใครทำ เมื่อไร และรับเด็กโดยใคร
+ทำหลัง Slice 1-5 เสถียรแล้ว:
 
-**งาน:**
+- [ ] เชื่อม live AI/OCR provider ผ่าน `ISlipVerificationProvider` โดยมี timeout และ failure policy
+- [ ] เพิ่ม payment export และกราฟรายรับตาม requirement ที่ยืนยันแล้ว
+- [ ] เพิ่ม analytics/report API จากข้อมูลจริง ไม่ใช้ mock data
+- [ ] เพิ่ม holiday calendar และ room overlap validation
+- [ ] ตรวจ automated backup จาก provider/environment จริง
+- [ ] รัน k6 กับ environment จริงและเก็บผล `p95 < 2s`, `p99 < 3s`, checks `> 99%`
 
-- [x] กำหนด `AuditLog` event contract สำหรับ checkout
-- [x] เขียน audit ใน transaction เดียวกับ attendance checkout
-- [x] เพิ่ม read endpoint/service สำหรับ audit detail ที่จำเป็น
-- [x] แสดง server timestamp และ actor ใน Admin UI
-- [x] เพิ่ม tests ว่า failed checkout ไม่สร้าง audit record
+## 4. งานที่ยังห้ามติ๊ก `[x]`
 
-## รอบถัดไป: Architecture boundary
+- ห้ามนับ route ใน `api-target.json` เป็น implementation
+- ห้ามนับ schema เป็นหลักฐานว่า workflow ผ่าน
+- ห้ามนับ hosted worker เป็น runtime evidence จนกว่าจะมีผลการรันที่ตรวจสอบได้
+- ห้ามนับ k6 script เป็นผล load test
+- ห้ามปิด Front test gap ด้วยการลบหรือ skip test โดยไม่มีเหตุผลทาง requirement
+- ห้ามประกาศ public lead ว่าพร้อมจนมี endpoint implementation และ test
 
-### Slice E: ย้าย legacy controller ทีละไฟล์
+## 5. Definition of Done รอบนี้
 
-ลำดับที่แนะนำ:
+- [ ] Slice มี scope ไฟล์และ acceptance ที่ตรวจได้
+- [ ] มี focused tests และ command ที่รันซ้ำได้
+- [ ] API contract validator: `Errors = 0`
+- [ ] API build ผ่าน
+- [ ] Full API tests ผ่าน พร้อมจำนวน pass/fail/skip
+- [ ] Front และ LineLiff build ผ่านเมื่อ slice แตะ frontend
+- [ ] Controller audit มีตัวเลขก่อน/หลัง
+- [ ] `process.md` อัปเดตจากหลักฐานหลังปิด slice
 
-1. `FileUploadEndpoints.cs`
-2. `InstituteEndpoints.cs`
-3. `TeacherEndpoints.cs`
-4. `UserEndpoints.cs`
-5. `AuthEndpoints.cs`
-6. `ParentEndpoints.cs`
-7. `MakeupEndpoints.cs` ownership query
-
-ต่อหนึ่งไฟล์ให้ทำครบ:
-
-- [ ] สร้าง DTO/interface service/repository ที่จำเป็น
-- [ ] ย้าย EF query ออกจาก controller
-- [ ] ย้าย transaction/state rule ออกจาก controller
-- [ ] เพิ่ม focused tests
-- [ ] ตรวจว่า grep direct EF ของไฟล์นั้นเป็นศูนย์ หรือมีเหตุผลที่บันทึกไว้
-- [ ] build และ full test ผ่าน
-
-สถานะรายไฟล์:
-
-- [x] `FileUploadEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
-- [x] `InstituteEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
-- [x] `TeacherEndpoints.cs`: แยกเป็น service/repository, focused tests `6/6`, direct EF `0`
-- [x] `UserEndpoints.cs`: แยกเป็น service/repository, focused tests `5/5`, direct EF `0`
-- [x] `AuthEndpoints.cs`: แยก refresh/register persistence เข้า service/repository, focused tests `7/7`, direct EF `0`
-- [ ] `ParentEndpoints.cs`
-- [ ] `MakeupEndpoints.cs` ownership query
-
-**Definition of Done ของ architecture รอบนี้:**
-
-- [/] controller direct EF matches ลดจาก `101` เหลือ `38` หลังปิด FileUpload + Institute + Teacher + User + Auth; เป้าหมาย scope ทั้งหมดคือ `0`
-- [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
-- [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
-
-## P2 หลัง boundary เสถียร
-
-### Slice F: Student card PDF
-
-- [x] สร้าง `StudentCardPdfService` แยกจาก controller
-- [x] ใช้ QR token และข้อมูล student จริง
-- [x] upload ผ่าน `IFileStorageService`
-- [x] เพิ่ม endpoint `GET /api/students/{id}/card.pdf`
-- [x] เพิ่ม AAA tests สำหรับ student not found และ PDF generation
-- [x] ต่อปุ่ม download ใน Admin UI
-
-### Slice G: Export
-
-- [x] กำหนด CSV เป็น first delivery ก่อน XLSX
-- [x] เพิ่ม service/repository query แบบ async streaming
-- [x] เพิ่ม endpoint `GET /api/students/export?format=csv` และ content type `text/csv`
-- [x] เพิ่ม tests เรื่อง tenant isolation และ empty dataset
-- [ ] ค่อยเพิ่ม XLSX หลัง CSV ผ่านจริง
-
-### Slice H: Payment slip verification
-
-- [x] กำหนด provider contract และผลลัพธ์ `verified/amount/reference/reason`
-- [x] ห้ามเปลี่ยน payment เป็น verified หาก amount ไม่ตรง
-- [x] เก็บ provider payload ตาม schema ที่มีอยู่
-- [x] เพิ่ม mock provider tests และ conflict tests
-- [/] ผูก provider จริงใน production (default provider ตอนนี้ตอบ `503 provider unavailable` จนกว่าจะตั้งค่า)
-
-### Slice I: Background jobs
-
-แยก worker ตาม trigger ไม่ทำ worker ก้อนเดียว:
-
-- [x] late attendance หลังเริ่มเรียน 20 นาที (`LateAttendanceNotificationJob`)
-- [x] homework reminder ก่อน due 24 ชั่วโมง (`HomeworkReminderNotificationJob`)
-- [x] quota low เมื่อเหลือไม่เกิน 3 (`QuotaLowNotificationJob`)
-- [/] notification log ทุกการส่ง: background jobs log แล้ว; attendance/payment flow เดิมยังต้อง refactor เข้า dispatcher
-- [x] idempotency กันส่งซ้ำด้วย deterministic key ใน notification payload
-- [x] tests สำหรับ retry และ duplicate execution (`BackgroundNotificationTests` `4/4`)
-
-**หลักฐาน Slice I รอบนี้:**
-
-- Hosted worker แยก 3 service และแต่ละตัวเรียก `RunOnceAsync` ของ job เฉพาะ trigger
-- `notifications` บันทึกสถานะ `pending`, `retrying`, `sent`, `failed`, retry count และ error message
-- duplicate execution ที่พบ notification สถานะ `sent` จะไม่ส่ง LINE ซ้ำ
-- retry สูงสุด 3 ครั้ง และ worker จับ exception เพื่อไม่ให้ host หยุดทำงาน
-- idempotency ปัจจุบันใช้ payload key เพราะ schema ที่ยืนยันยังไม่มี unique `idempotency_key` column; multi-instance race ต้องปิดด้วย schema migration ในรอบถัดไป
-
-### Slice J: Admin inactivity timeout / CI / load test
-
-- [x] Admin inactivity timeout 30 นาทีใน frontend + token/cookie policy ที่สอดคล้อง
-- [x] CI build API, Front และ LineLiff (`.github/workflows/ci.yml`)
-- [/] CI รัน focused/full tests: API/full และ Front focused ผ่าน; Front full มี legacy `dashboard-page.test.jsx` ล้มเหลว 30 กรณี
-- [x] k6 attendance load test พร้อม threshold ที่ระบุ (`load-tests/attendance.js`)
-
-**หลักฐาน Slice J รอบนี้:**
-
-- Admin inactivity timer ใช้ activity events และ auto-logout เมื่อไม่มี activity 30 นาที
-- JWT access token และ auth cookie ใช้ `Jwt:ExpiryInMinutes = 30`; มี focused timeout test `2/2`
-- CI แยก API, Front และ LineLiff jobs พร้อม restore/install, build และ test commands
-- k6 ใช้ 100 VUs เป็นเวลา 30 วินาที พร้อม thresholds `p95 < 2s`, `p99 < 3s`, checks `> 99%`
-- k6 ต้องรันกับ environment จริงที่กำหนด `BASE_URL`, `AUTH_TOKEN`, `SESSION_ID` และ `QR_TOKEN`/`QR_TOKENS`
-
-## Definition of Done ของแผนนี้
-
- - [/] ทุก slice มี issue/file scope ชัดเจน (Slice J มี scope แล้ว; ยังไม่มี issue tracker reference กลาง)
- - [/] ทุก slice มี focused tests และ command ที่รันซ้ำได้ (Front full suite ยังมี legacy failures)
- - [x] `api-target.json` ตรงกับ DTO/route ของ implementation ที่ประกาศว่า implemented
- - [x] `validate-api-contract.ps1` รายงาน `Errors = 0`
- - [x] API build ผ่าน
- - [x] Full API tests ผ่าน โดยรายงานจำนวน pass/fail/skip (`241/0/0`)
- - [x] Controller boundary audit มีตัวเลขก่อน/หลัง (`101` เหลือ `77`)
- - [x] `Objective/process.md` อัปเดตจากหลักฐานหลังจบรอบ
-
-## Commands หลัก
+## 6. Commands หลัก
 
 ```powershell
 # API build
- dotnet build .\API\academy-API.csproj --no-restore -o .\API\bin\DodValidation
+dotnet build .\API\academy-API.csproj --no-restore -o .\API\bin\DodValidation
 
 # Full API tests
- dotnet build .\API\academy-API.Tests\academy-API.Tests.csproj --no-restore -o .\API\bin\DodValidation
- dotnet vstest .\API\bin\DodValidation\academy-API.Tests.dll
+dotnet build .\API\academy-API.Tests\academy-API.Tests.csproj --no-restore -o .\API\bin\DodValidation
+dotnet vstest .\API\bin\DodValidation\academy-API.Tests.dll
 
-# Front build
- Push-Location .\Front; npm run build; Pop-Location
+# Front tests and build
+Push-Location .\Front; npm.cmd test -- --run; npm.cmd run build; Pop-Location
 
 # LIFF build
- Push-Location .\LineLiff; npm run build; Pop-Location
+Push-Location .\LineLiff; npm.cmd run build; Pop-Location
 
 # Contract validation
- Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
- .\Objective\validate-api-contract.ps1
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\Objective\validate-api-contract.ps1
 
 # Controller ownership audit
- $hits = Get-ChildItem '.\API\Controllers\*.cs' | ForEach-Object { Select-String -Path $_.FullName -Pattern 'TutoringDbContext|DbContext|SaveChanges|BeginTransaction|FirstOrDefaultAsync|ToListAsync|AnyAsync' }
- $hits.Count
+$patterns = 'TutoringDbContext|DbContext|SaveChanges|BeginTransaction|FirstOrDefaultAsync|ToListAsync|AnyAsync'
+$hits = Get-ChildItem '.\API\Controllers\*.cs' | ForEach-Object { Select-String -Path $_.FullName -Pattern $patterns }
+$hits.Count
 ```
 
-## ลำดับลงมือจริง
+## 7. Current next action
 
-1. ~~Slice A: parent booking cancellation~~ (เสร็จสมบูรณ์)
-2. ~~Slice B: expired credit test~~ (เสร็จสมบูรณ์)
-3. ~~Slice C: schema decision + leave attachment~~ (เสร็จสมบูรณ์หลัง schema verified)
-4. ~~Slice D: audit log checkout~~ (เสร็จสมบูรณ์)
-5. ~~Slice F: student card PDF~~ (เสร็จสมบูรณ์)
-6. ~~Slice G: student CSV export~~ (เสร็จสมบูรณ์; XLSX รอระยะถัดไป)
-7. ~~Slice H: payment slip verification~~ (เสร็จสมบูรณ์; รอต่อ live AI provider)
-8. Slice E: legacy controller boundary 1 ไฟล์ที่เหลือ (`Parent`)
-9. Slice I: background jobs (core workers done; existing attendance/payment notification logging remains)
-10. Slice J: admin inactivity timeout / CI / load test
+เริ่มที่ **Slice 1: ปิด Front legacy dashboard tests** เพราะเป็น failure ที่ทำซ้ำได้ชัดเจนที่สุดใน baseline ปัจจุบัน จากนั้นค่อยเดินตามลำดับที่ระบุไว้ด้านบน ไม่ข้ามไปติ๊กงานที่ยังไม่มีหลักฐาน

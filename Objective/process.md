@@ -35,7 +35,7 @@
 - Full API test suite: `254 passed, 0 failed, 0 skipped`
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
-- Front focused inactivity test: `2 passed, 0 failed`; Front full suite: `44 passed, 30 failed` ใน `dashboard-page.test.jsx`
+- Front focused inactivity test: `2 passed, 0 failed`; Front full suite: `46 passed, 30 failed` ใน `dashboard-page.test.jsx` (รวม 76 tests)
 - Controller ownership audit: direct EF/data access ลดลงเหลือ 1 controller file รวม 38 matches (จากเดิม 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` เหลือ 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
@@ -86,8 +86,7 @@
 - Flow Map LINE ID และเบอร์โทรศัพท์สำหรับผู้ปกครองใน LIFF
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. ทำ Hook ตรวจจับ Activity ของ Admin ใน `Front/src/layouts/admin-layout.jsx` หากไม่มีการเลื่อนเมาส์/คลิกเกิน 30 นาที ให้ Logout อัตโนมัติ
-2. เชื่อมการบันทึก Login/Logout และการเปลี่ยนข้อมูลสำคัญเข้า `audit_logs` ที่มีอยู่แล้ว พร้อมตรวจว่ามี event เกิดจริง
+1. เพิ่มหลักฐาน runtime สำหรับการบันทึก Login/Logout และการเปลี่ยนข้อมูลสำคัญเข้า `audit_logs` ที่มีอยู่แล้ว
 
 ---
 
@@ -230,11 +229,11 @@
 - [/] **AC 1:** (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา (มีหน้าแรกเบื้องต้น `pages/index.jsx` และหน้าติดต่อ `contact-page.jsx` แต่ยังขาดหน้าผลงาน, หน้ารวมครู, และหน้าตารางคอร์ส)
 - [ ] **AC 2:** (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ (ยังไม่มีฟอร์มหน้าบ้าน)
 - [ ] **AC 3:** (Admin Panel) สร้างเมนู CMS ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้ (ยังไม่มีเมนู CMS)
-- [ ] **AC 4:** (Backend) สร้าง API สำหรับรับข้อมูลจากฟอร์ม Trial Class และบันทึกลงระบบพร้อมแจ้งเตือน Admin (โมเดล `Lead` มีใน Database แล้ว แต่ยังไม่มี Endpoint ฝั่ง Public รับข้อมูล)
+- [/] **AC 4:** (Backend) ใน `Front/docAPI/api-target.json` มี contract `POST /api/public/leads` และ schema `CreateLeadRequest` แล้ว แต่ยังไม่พบ endpoint implementation ใน `API` จากการค้น source รอบนี้ จึงยังไม่ถือว่ารับข้อมูลจริงได้
 - [x] **AC 5:** หน้าเว็บทั้งหมดรองรับ Responsive Design แสดงผลได้สวยงามทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์ (โค้ดใช้ Tailwind CSS และออกแบบ Responsive ทุกหน้า)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้าง Endpoint `POST /api/public/leads` สำหรับรับฟอร์มทดลองเรียน
+1. Implement และทดสอบ endpoint `POST /api/public/leads` ให้บันทึก `Lead` จริง พร้อมกำหนด notification behavior
 2. พัฒนาหน้าเว็บฝั่ง Landing Page ให้ครบ 5 หน้าหลักตามบรีฟ
 3. สร้างหน้า CMS จัดการเนื้อหาหน้าเว็บใน Admin Panel
 
@@ -308,17 +307,16 @@
 - [/] **AC 5:** (QA) มี k6 script จำลอง 100 concurrent users ยิง `/api/attendance/scan` พร้อม threshold p95 < 2 วินาทีและ p99 < 3 วินาที แต่ยังไม่มีผล runtime load test จาก environment จริง
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้าง GitHub Actions Workflow สำหรับ Auto-build และ Test ทุกครั้งที่ Commit
-2. เขียนสคริปต์ k6 สำหรับรัน Load Testing ทดสอบการสแกน QR 100 ครั้งพร้อมกัน
-3. ตั้งค่าระบบ Session Timeout และเคลียร์ข้อมูลที่ค้างอยู่ในหน่วยความจำ
+1. รัน k6 กับ environment จริงและเก็บผล runtime ตาม threshold ที่กำหนด
+2. ตรวจสอบ security declarations ของ API contract จาก validator warnings 141 รายการ
+3. ตรวจสอบระบบ Session Timeout และ lifecycle ของข้อมูลค้างใน environment จริง
 
 ---
 
 ## 4. แผนปฏิบัติการที่ต้องปรับปรุงต่อ (Priority Action Plan)
 
 ### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
-1. **ระบบ Auto-Logout 30 นาทีสำหรับ Admin:** ป้องกันความเสี่ยงตามข้อกำหนดความปลอดภัย NFR-S-06
-2. **บันทึก Notification Log:** background jobs บันทึกครบแล้ว; ต้อง refactor attendance/payment notification flow เดิมให้ผ่าน dispatcher เดียวกัน
+1. **บันทึก Notification Log:** background jobs บันทึกครบแล้ว; ต้อง refactor attendance/payment notification flow เดิมให้ผ่าน dispatcher เดียวกัน
 3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
 4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 1 ไฟล์ที่เหลือ (`Parent`) ให้เข้า Repository/Service Layer โดย `Institute`, `Teacher`, `User` และ `Auth` แยกชั้นแล้ว
 
@@ -331,7 +329,7 @@
 ### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
 1. **ปุ่ม Export Excel/CSV ในหน้าการเงิน:** ต่อยอดจากหน้า Students ที่ทำเสร็จแล้ว
 2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** เพิ่ม runtime evidence และ business policy ว่าการเตือนควรส่งซ้ำเมื่อใด
-3. **CI/CD Pipeline และ Load Test Script:** ตรวจสอบประสิทธิภาพของ API ก่อนเปิดใช้งานจริง
+3. **Runtime Load-test evidence:** รัน `load-tests/attendance.js` กับ environment จริงและเก็บผล threshold
 4. **หน้า Public Website & CMS:** พัฒนาให้ครบ 5 หน้าหลักและระบบจัดการเนื้อหาสำหรับโปรโมทสถาบัน
 
 ---

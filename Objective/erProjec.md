@@ -204,11 +204,11 @@ CSV ล่าสุดยืนยันว่ามีตารางนี้�
 
 ### `makeup_slots`
 
-**Verified current shape:** CSV มี `teacher_id`, `scheduled_at`, `capacity`, `booked_count` และ `room_id` ใน `makeup_slots` แต่ไม่พบ `institute_id` หรือ `course_id`
+**Verified current shape:** CSV มี `institute_id`, `teacher_id`, `scheduled_at`, `capacity`, `booked_count` และ `room_id` ใน `makeup_slots`; ยังไม่พบ `course_id`
 
 **Proposed change:**
 
-- `institute_id` NOT NULL, FK `institutes.id`
+- `institute_id` มีอยู่แล้วใน CSV ล่าสุดและมี FK `institutes.id`; ไม่ต้องเสนอเพิ่มซ้ำ
 - `course_id` NOT NULL, FK `courses.id`
 - `status` เช่น `open`, `full`, `cancelled`, `completed`
 - `cancelled_at`, `cancelled_by`, `cancel_reason`
@@ -219,25 +219,25 @@ CSV ล่าสุดยืนยันว่ามีตารางนี้�
 
 ### `leave_requests`
 
-**Verified current shape:** ใน CSV `leave_requests` ไม่พบคอลัมน์ไฟล์แนบ
+**Verified current shape:** ใน CSV `leave_requests` ไม่พบคอลัมน์ไฟล์แนบโดยตรง แต่มีตาราง `leave_request_attachments` แยกต่างหากแล้ว
 
 **Proposed change:**
 
-- `attachment_url` หรือดีกว่า `attachment_id` FK ไป `file_assets`
+- ไม่ต้องเพิ่ม `attachment_url` ใน `leave_requests`; ใช้ `leave_request_attachments` สำหรับหลายไฟล์ต่อคำขอ
 - `requested_by_user_id`
 - `approved_at`, `rejected_at`, `rejection_reason`
 - `makeup_credit_id` nullable เพื่อ trace ว่าการอนุมัติครั้งนี้สร้างเครดิตใบไหน
 
 ### `makeup_credits`
 
-**Verified current shape:** CSV มี `used_session_id` แต่ไม่พบ status lifecycle หรือ booking reference ที่ระบุในแบบร่างนี้
+**Verified current shape:** CSV มี `status`, `used_at`, `expired_at` และ `used_session_id`; ยังไม่พบ booking reference เป็นคอลัมน์โดยตรง
 
 **Proposed change:**
 
-- `status`: `available`, `reserved`, `used`, `released`, `expired`, `cancelled`
+- ตรวจสอบและบังคับ lifecycle ของ `status`: `available`, `reserved`, `used`, `released`, `expired`, `cancelled` ให้ตรงกับ service/runtime
 - `source_leave_request_id` FK nullable
 - `reserved_booking_id` FK nullable หรือให้ trace ผ่าน ledger อย่างเดียว
-- `used_at`, `expired_at`
+- `used_at` และ `expired_at` มีอยู่แล้ว; ตรวจสอบการเขียนค่าจริงในแต่ละ state transition
 
 ถ้าเพิ่ม `makeup_credit_transactions` แล้ว ให้เลิกใช้ `used_session_id` เป็นตัวตัดสินสถานะหลัก และเก็บไว้เพื่อ compatibility ชั่วคราวก่อนลบใน migration ภายหลัง
 
