@@ -30,6 +30,9 @@ public sealed class BackgroundNotificationRepository(TutoringDbContext context) 
             join parent in _context.Parents on student.Id equals parent.StudentId
             where session.ScheduledAt <= cutoff
                 && session.Status != "cancelled"
+                && session.Status != "completed"
+                && enrollment.InstituteId == session.InstituteId
+                && student.InstituteId == session.InstituteId
                 && parent.UserId != null
                 && parent.LineUserId != null
                 && !_context.Attendances.Any(a => a.SessionId == session.Id && a.StudentId == student.Id)

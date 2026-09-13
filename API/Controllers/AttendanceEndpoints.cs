@@ -27,11 +27,7 @@ public static class AttendanceEndpoints
             }
             catch (AttendanceValidationException ex)
             {
-                return Results.BadRequest(new AttendanceErrorResponse(
-                    "error",
-                    ex.ErrorCode,
-                    ex.Message
-                ));
+                return AttendanceError(ex);
             }
         });
 
@@ -52,11 +48,7 @@ public static class AttendanceEndpoints
             }
             catch (AttendanceValidationException ex)
             {
-                return Results.BadRequest(new AttendanceErrorResponse(
-                    "error",
-                    ex.ErrorCode,
-                    ex.Message
-                ));
+                return AttendanceError(ex);
             }
             catch (DbUpdateException)
             {
@@ -77,11 +69,7 @@ public static class AttendanceEndpoints
             }
             catch (AttendanceValidationException ex)
             {
-                return Results.BadRequest(new AttendanceErrorResponse(
-                    "error",
-                    ex.ErrorCode,
-                    ex.Message
-                ));
+                return AttendanceError(ex);
             }
             catch (DbUpdateException)
             {
@@ -100,17 +88,9 @@ public static class AttendanceEndpoints
             {
                 return Results.Ok(await service.CheckoutAsync(attendanceId, request, GetActorId(httpContext), ct));
             }
-            catch (AttendanceValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
-            {
-                return Results.NotFound(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
-            }
-            catch (AttendanceValidationException ex) when (ex.ErrorCode is "CHECKIN_REQUIRED" or "ALREADY_CHECKED_OUT" or "INVALID_PICKUP_AUTHORIZATION")
-            {
-                return Results.Conflict(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
-            }
             catch (AttendanceValidationException ex)
             {
-                return Results.BadRequest(new AttendanceErrorResponse("error", ex.ErrorCode, ex.Message));
+                return AttendanceError(ex);
             }
         });
 
@@ -130,5 +110,20 @@ public static class AttendanceEndpoints
     {
         var value = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(value, out var id) ? id : null;
+    }
+
+    private static IResult AttendanceError(AttendanceValidationException exception)
+    {
+        var statusCode = exception.ErrorCode switch
+        {
+            "FORBIDDEN" => StatusCodes.Status403Forbidden,
+            "SESSION_NOT_FOUND" or "NOT_FOUND" => StatusCodes.Status404NotFound,
+            "DUPLICATE_SCAN" or "NO_QUOTA" or "IDEMPOTENCY_KEY_REUSED"
+                or "CHECKIN_REQUIRED" or "ALREADY_CHECKED_OUT" or "INVALID_PICKUP_AUTHORIZATION"
+                => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest
+        };
+
+        return Results.Json(new AttendanceErrorResponse("error", exception.ErrorCode, exception.Message), statusCode: statusCode);
     }
 }

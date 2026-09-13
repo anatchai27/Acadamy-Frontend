@@ -1,524 +1,164 @@
-# รายงานหลักฐานและสถานะการพัฒนาโครงการ (Evidence & Implementation Status)
+# แผนส่งงานระบบ Academy
 
-> **วันที่ประเมิน:** 13 กันยายน 2026  
-> **เอกสารอ้างอิงหลัก:** `Objective/ProjectObj.md` (SRS Tutoring Management System)
-> **Schema evidence ล่าสุด:** `Objective/results-2026-09-12-220648.csv`
-> **ขอบเขตการตรวจสอบ:** ตรวจจากไฟล์ซอร์ส, model, endpoint และ schema ที่พบใน workspace ของ `API` (.NET 9), `Front` (Preact + Vite), และ `LineLiff` (Preact + LIFF SDK + Tailwind v4) แล้วเทียบกับ Acceptance Criteria (AC) ทั้ง 67 ข้อ รวมผล API contract validation, API build และ test suite ล่าสุด
->
-> **ข้อจำกัดของรายงาน:** เอกสารนี้เป็น static code/schema assessment ไม่ใช่ผลทดสอบ production runtime, ไม่ใช่ผล load test หรือ security penetration test เว้นแต่จะระบุหลักฐานการทดสอบไว้โดยตรง
+> เอกสารนี้ใช้เป็น checklist สำหรับส่งงานตาม `Objective/ProjectObj.md`  
+> เน้นให้ flow ใช้งานได้จริงก่อน ไม่รอ production evidence, load test หรือ schema audit ที่ไม่จำเป็นต่อการส่งงานรอบแรก
 
-### วิธีอ่านสถานะ
+## วิธีทำงาน
 
-- `[x]` = พบหลักฐานในโค้ดหรือ schema ที่สอดคล้องกับ AC จากขอบเขตที่ตรวจ
-- `[/]` = พบการทำงานบางส่วน แต่ยังไม่ครบ AC
-- `[ ]` = ยังไม่พบหลักฐานเพียงพอในขอบเขตที่ตรวจ ไม่ได้แปลว่าระบบไม่มีแน่นอน
-- การมีตาราง/คอลัมน์ใน CSV เป็นหลักฐานระดับ schema เท่านั้น ไม่ถือว่า workflow, API, UI, worker, notification หรือ transaction ผ่าน SRS โดยอัตโนมัติ
-- เปอร์เซ็นต์และชื่อสถานะเป็นผลประเมินจากหลักฐาน ไม่ใช่ metric ที่ระบบคำนวณอัตโนมัติ
-- รายการ "สิ่งที่ต้องปรับปรุงต่อ" และ Priority P0/P1/P2 เป็นข้อเสนอแนะ ไม่ใช่ข้อเท็จจริงจาก runtime
+1. อ่าน Acceptance Criteria จาก `Objective/ProjectObj.md`
+2. ทำ API และหน้าจอให้ครบตาม flow หลัก
+3. ทดสอบเส้นทางปกติและ error สำคัญด้วยข้อมูลจำลอง
+4. Build ให้ผ่านทั้ง API, Front และ LineLiff
+5. ติ๊กสถานะในเอกสารนี้เมื่อ flow ใช้งานได้
 
----
+สถานะที่ใช้:
 
-## 1. สรุปภาพรวมความคืบหน้า (Executive Overview)
+- `[x]` ทำ flow หลักแล้ว
+- `[/]` ทำบางส่วน ยังมีงานต่อเล็กน้อย
+- `[ ]` ยังไม่ได้ทำ
 
-```text
-[████████████████████████████░░░░░░░░░░░░░░░░░░░░░░] 57% (38.0 / 67 Acceptance Criteria)
+## ลำดับส่งงาน
+
+ทำตามลำดับนี้เพื่อให้ระบบมีของใช้เร็วที่สุด:
+
+1. Login และสิทธิ์ผู้ใช้
+2. นักเรียนและผู้ปกครอง
+3. เช็คชื่อ QR และหักโควต้า
+4. ลาและเรียนชดเชย
+5. การบ้านและคะแนน
+6. การเงิน
+7. LINE LIFF
+8. เว็บไซต์และ CMS
+9. รายงานและงานหลังบ้าน
+
+## สรุปสถานะตาม ProjectObj
+
+| หมวด | สถานะ | สิ่งที่มีแล้ว | งานส่งต่อหลัก |
+|---|---|---|---|
+| 1. Authentication & RBAC | `[/]` | Login, LINE login, reset password, role guard, bcrypt, admin timeout | เก็บ audit login/logout ให้ครบ |
+| 2. Student Management | `[/]` | CRUD นักเรียน, รูป, medical info, QR, PDF card, search, CSV | เชื่อมผู้รับเด็กในฟอร์มเพิ่มนักเรียน |
+| 3. QR Attendance | `[/]` | Scan, manual, quota, checkout, pickup authorization, notification worker | ทดสอบ flow ครบและแสดงผล error ให้ครูเข้าใจง่าย |
+| 4. Leave & Make-up | `[/]` | แจ้งลา, แนบไฟล์, อนุมัติ, credit, slot, booking, cancel | เก็บ flow group cancel ให้เรียบร้อย |
+| 5. Skill Card | `[/]` | สร้าง topic, กรอกคะแนน, ดูคะแนนใน LIFF | เพิ่มคะแนนจากการบ้าน, streak, badge |
+| 6. Homework | `[/]` | สร้างการบ้าน, ตรวจงาน, ดู/ส่งไฟล์จาก LIFF | ทำหน้า homework ให้ครบและแจ้งเตือนก่อนกำหนดส่ง |
+| 7. Payment & Billing | `[/]` | รับเงิน, สลิป, PDF receipt, export, quota notification | เชื่อม provider ตรวจสลิปจริงเมื่อมีข้อมูล |
+| 8. Public Website & CMS | `[/]` | Public preview, trial form, CMS shell, lead API | เพิ่ม content CRUD, media และ lead list |
+| 9. LINE Integration | `[/]` | Push notification, LIFF dashboard และหน้าหลัก | ตั้ง Rich Menu, broadcast และ webhook |
+| 10. Reports & Analytics | `[/]` | Dashboard และ revenue report | ทำสูตร analytics และ teacher timesheet |
+| 11. Operations & Compliance | `[/]` | PDPA consent, room overlap, operations UI draft | Holiday, file manager, payroll และ backup checklist |
+| 12. Architecture & NFR | `[/]` | CI, tenant isolation, bcrypt, timeout, rotating QR | ตรวจ performance เบื้องต้นก่อนส่งจริง |
+
+## งานที่ต้องทำต่อทันที
+
+### 1. ปิด QR Attendance ให้ใช้งานได้
+
+- [x] ครูเปิดกล้องและสแกน QR ได้
+- [x] ครูเช็คชื่อแบบ manual ได้
+- [x] ระบบสร้าง attendance และหัก quota ใน transaction
+- [x] เช็คชื่อซ้ำไม่สร้าง record ซ้ำ
+- [x] บันทึกผู้รับเด็กตอน checkout
+- [/] แสดงสถานะ success/error ให้ตรงกับ API
+- [/] ทดสอบ late notification และ LINE notification
+- [/] ทดสอบ offline queue แบบง่าย
+
+เกณฑ์ส่งงาน: ครูสามารถเปิด session, scan นักเรียน, เห็น quota ที่เหลือ, checkout และเลือกผู้รับเด็กได้ครบในหน้าเดียว
+
+### 2. ปิด Student Management
+
+- [x] เพิ่มนักเรียนพร้อมข้อมูลพื้นฐานและรูป
+- [x] บันทึก medical info
+- [x] สร้าง QR และ student card
+- [x] เพิ่ม/แก้ไขข้อมูลผู้ปกครอง
+- [/] เพิ่มรายชื่อผู้รับเด็กในฟอร์มสร้างนักเรียน
+- [x] ค้นหาและ export CSV
+
+เกณฑ์ส่งงาน: แอดมินเพิ่มนักเรียนหนึ่งคนแล้วได้ข้อมูลพร้อม QR, ผู้ปกครอง และผู้รับเด็กในขั้นตอนเดียว
+
+### 3. ปิด Leave & Make-up
+
+- [x] ผู้ปกครองแจ้งลาและแนบเอกสาร
+- [x] ครูอนุมัติ/ปฏิเสธคำลา
+- [x] ระบบสร้าง credit เมื่ออนุมัติ
+- [x] ครูสร้าง slot
+- [x] ผู้ปกครองจองและยกเลิก slot
+- [/] group cancel คืน credit ให้ครบ
+
+เกณฑ์ส่งงาน: ตั้งแต่แจ้งลาจนถึงจองคลาสชดเชยได้ โดยไม่ต้องทำรายการในฐานข้อมูลเอง
+
+### 4. ปิด Homework และ Skill Card
+
+- [x] ครูสร้างการบ้าน
+- [x] นักเรียน/ผู้ปกครองเห็นโจทย์
+- [x] ส่งไฟล์การบ้าน
+- [x] ครูตรวจและให้คะแนน/feedback
+- [x] ครูสร้างหัวข้อ skill และกรอกคะแนน
+- [/] แสดงคะแนนและ feedback ใน LIFF ให้ครบ
+- [ ] เชื่อมคะแนนการบ้านเข้า skill score
+- [ ] เพิ่ม streak และ badge ในหน้าเด็ก
+
+เกณฑ์ส่งงาน: ผู้ปกครองเห็นการบ้าน คะแนน และ feedback ของลูกใน LIFF
+
+### 5. ปิด Payment และ Public Website
+
+- [x] รับเงินและเลือกวิธีชำระ
+- [x] อัปโหลดสลิป
+- [x] ออกใบเสร็จ PDF
+- [x] ดูรายรับและ export CSV
+- [x] มีหน้า public website และ trial form
+- [/] CMS แก้ไข content แบบ draft ได้
+- [ ] เชื่อม CMS content/media API จริง
+- [ ] ทำ lead list สำหรับแอดมิน
+
+เกณฑ์ส่งงาน: ลูกค้าเห็นเว็บไซต์ ส่ง trial lead ได้ และแอดมินบันทึก/ตรวจการชำระเงินได้
+
+## กติกาการส่งงาน
+
+- ทำตาม flow ใน `ProjectObj.md` ก่อนเพิ่มฟีเจอร์เสริม
+- ไม่เพิ่ม table หรือ feature ที่ไม่มีใน requirement ถ้าไม่จำเป็นต่อ flow หลัก
+- ใช้ API จริงจากระบบ ไม่ใส่ mock data ในหน้าที่ประกาศว่าใช้งานได้
+- ทุกหน้าต้องมี loading, empty และ error state ที่เหมาะสม
+- ทุก mutation ต้องมี success/error message ให้ผู้ใช้รู้ผล
+- ต้องไม่ให้ user ข้าม tenant หรือทำ action ที่ role ไม่มีสิทธิ์
+- ถ้า feature ยังไม่มี backend ให้แสดงเป็น `ยังไม่พร้อมใช้งาน` ไม่แสดงข้อมูลปลอม
+
+## คำสั่งตรวจสอบก่อนส่ง
+
+```powershell
+dotnet build .\API\academy-API.csproj
+dotnet test .\API\academy-API.Tests\academy-API.Tests.csproj
+
+Push-Location .\Front
+npm.cmd run build
+Pop-Location
+
+Push-Location .\LineLiff
+npm.cmd run build
+Pop-Location
 ```
 
-- **ผลประเมินจากหลักฐานที่ตรวจ:** อยู่ในขั้น **Feature Integration & Stabilization**
-- **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อและ checkout พร้อมบันทึกผู้รับ/audit log, ระบบส่งออกข้อมูลนักเรียนเป็น CSV และบัตรนักเรียน PDF, ระบบรับชำระเงินและออกใบเสร็จ PDF จริง, ระบบตรวจสอบสลิป, ระบบแจ้งลาและจองเรียนชดเชยบน LINE LIFF พร้อมแนบไฟล์หลักฐาน
-- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ปิด runtime/integration evidence ของ flow ที่เพิ่มแล้ว, payment status policy, live slip provider, runtime load-test evidence, CMS CRUD/auth/media และ analytics ที่มีสูตรยืนยันแล้ว
-
-### หลักฐาน validation ล่าสุด
-
-- API contract validator: `92` current operations, `98` target operations, `Errors = 0`, `Warnings = 142` (`Objective/validate-api-contract.ps1`)
-- API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `277 passed, 0 failed, 0 skipped` หลังเพิ่ม Make-up idempotency/concurrency boundary tests
-- Front build: ผ่าน (`npm.cmd run build`)
-- LineLiff build: ผ่าน (`npm.cmd run build`)
-- Front full suite: `87 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
-- Controller ownership audit: direct EF/data access ลดลงจาก 1 controller file รวม 38 matches เหลือ `0` ใน `ParentEndpoints.cs` และ `0` ใน controllers ทั้งหมดตาม scope (เดิม audit รอบก่อน 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` ยังคง 0
-- Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
-
-### หลักฐาน CMS Next.js รอบเริ่มงาน (13 กันยายน 2026)
-
-- เพิ่มแอป `CMS/` ด้วย Next.js `15.5.25` ที่ติดตั้งตาม semver range ใน `CMS/package.json` และใช้ App Router
-- เพิ่ม route ที่ build ได้จริง: `/`, `/content`, `/leads`, `/settings` พร้อม responsive shell สำหรับ workspace admin
-- `/content` มี section editor, draft status และ local draft persistence ผ่าน `localStorage`; ระบุ integration boundary เพราะยังไม่พบ CRUD endpoint ของ `public_website_contents` ใน target contract/source
-- `/leads` ต่อกับ `POST /api/public/leads` ตาม `CreateLeadRequest` ที่ยืนยันจาก source และมี success/error/loading state; ใช้ `NEXT_PUBLIC_API_URL` เท่านั้น ไม่ฝัง credential ใน client
-- Validation: `Push-Location .\CMS; npm.cmd install --no-audit --no-fund; npm.cmd run build; Pop-Location` ผ่าน, Next static generation `7/7` routes
-- สถานะ evidence: `[/]` มี code/build evidence แล้ว แต่ยังไม่มี API CRUD content, auth/RBAC runtime, media upload หรือ production integration evidence จึงยังไม่ประกาศ CMS acceptance ผ่าน
-- เพิ่ม public SSG preview `CMS/app/p/[slug]/page.tsx` ที่ `/p/oasis-learning` ตาม Objective: home, student stories, teachers, courses/pricing และ contact พร้อม metadata/SEO
-- เพิ่ม trial journey `CMS/app/trial-class/page.tsx` ที่ส่ง `instituteSlug`, contact, phone และข้อมูลผู้เรียนไปยัง `POST /api/public/leads` พร้อม loading/success/error state
-- สถานะ P0 หลังรอบนี้: Public Website และ Trial-class เป็น `[/]` เพราะมี code/build evidence แต่ยังขาด dynamic CMS CRUD, media/auth runtime และ admin lead follow-up/list/status evidence
-
-### หลักฐาน P1 Operations UI รอบเริ่มงาน (13 กันยายน 2026)
-
-- เพิ่ม `CMS/app/operations/page.tsx` และ navigation `/operations` เป็น provisional workspace สำหรับ Holiday Calendar, File Manager, Teacher Payroll, Broadcast และ Analytics
-- Holiday Calendar มี institute/timezone/date/recurrence form และบันทึก draft state โดยยังไม่เปลี่ยน worker suppression
-- File Manager มี file picker, empty state และ storage contract notice; ยังไม่ upload หรือสร้าง signed link เพราะยังไม่มี storage API
-- Teacher Payroll มี period, teacher, actual hours, hourly rate, estimated total และ status preview ตาม Objective rule `hourly_rate × actual teaching hours`; ยังไม่ export production
-- Broadcast มี recipient group, class selector, message, preview และ disabled confirmation จนกว่าจะมี recipient/consent/notification audit policy
-- Analytics มี Renewal Rate, Churn Risk และ Revenue Forecast states พร้อมระบุ source assumptions (`enrollments`, `attendances`, `payments`, `sessions`) โดยไม่แสดงตัวเลขปลอม
-- Validation: `Push-Location .\CMS; npm.cmd run build; Pop-Location` ผ่าน, Next routes `10/10`; พบเพียง autoprefixer warning เดิมจาก `align-items: end` ใน CSS
-- สถานะ P1: `[/]` เป็น code/build/UI-state evidence เท่านั้น ยังไม่มี API, tenant/RBAC, storage, worker, notification หรือ report runtime evidence
-
-### หลักฐาน Slice 6: Payment/reporting และ operational gaps
-
-- เพิ่ม `GET /api/reports/revenue?from=...&to=...&group_by=day|month|year` ตาม target contract; service ดึง payment จริงผ่าน repository ที่มี tenant query filter และคืน `period`, `grossAmount`, `paymentCount` โดยไม่ใช้ mock data
-- เพิ่ม `GET /api/payments/export` สำหรับ CSV UTF-8 พร้อม BOM จากรายการ payment จริง และต่อปุ่ม export ในหน้า Finance
-- หน้า Finance แสดงกราฟแท่งรายรับตามวันจาก revenue API หลังเลือกช่วงวันที่ พร้อม loading/empty state
-- เพิ่ม relational integration test ครอบคลุม tenant filter, navigation และ date boundary และ host-level authorization test ที่ยืนยัน `admin` ผ่านกับ `teacher` ได้ `403`
-- `Payment.Status` ยังไม่มี business rule ที่ยืนยันว่า status ใดนับเป็นรายรับ; implementation ปัจจุบันรวม payment ทุก status จึงยังไม่ประกาศ policy นี้
-- เพิ่ม room-overlap validation ใน `SessionRepository`/`SessionService`: ช่วงเวลาชนกันใน room เดียวกันของ tenant เดียวกันจะไม่สร้าง session และ endpoint คืน `409` พร้อม `ROOM_OVERLAP`; ระยะเวลาที่ไม่ถูกต้องคืน validation error
-- Focused evidence: revenue grouping, relational payment filter/navigation/date-boundary และ report authorization tests `3 passed / 0 failed`; full API tests `268 passed / 0 failed / 0 skipped`; contract validator รอบนี้ `Errors = 0`, warnings `142`
-- ยังไม่ประกาศ live AI/OCR, holiday calendar, automated backup หรือ k6 performance เพราะยังไม่มี provider credential, business/schema contract หรือ runtime environment evidence ที่ตรวจได้จริง
-
-### หลักฐาน P0-02: Finance payment status policy (13 กันยายน 2026)
-
-- บันทึก decision record ที่ `Objective/finance-payment-status-policy.md` โดยกำหนด `pending`, `succeeded`, `failed`, `cancelled`, `partially_refunded` และ `refunded` เป็น payment lifecycle
-- Revenue นับเฉพาะ `succeeded`; ใช้ `NetAmount` เมื่อมีค่า และ fallback เป็น `Amount`
-- แยก slip verification ออกจาก payment lifecycle โดยใช้ `VerifiedAt`, `VerifiedBy`, `VerificationProvider`, `VerificationPayload`, `SlipAmount`, `SlipTransRef` และ `SlipVerifiedAt` ที่มีอยู่แล้ว
-- Payment creation กำหนด `cash`/`credit_card` เป็น `succeeded` และ `transfer` เป็น `pending`; slip verification ที่ผ่านเปลี่ยนสถานะเป็น `succeeded` ไม่ใช้ `verified` เป็น payment status
-- Payment history response และ CSV เพิ่ม lifecycle status; CSV ยังคงเป็น full payment ledger export ไม่ใช่ revenue-only export
-- เพิ่ม revenue focused test สำหรับการตัด `pending` และการใช้ `NetAmount`; focused API tests ผ่าน `17 passed / 0 failed`; Front full tests ผ่าน `87 passed / 0 failed`
-- ยังไม่ปิด P0-02 เพราะยังขาด payment CSV response test โดยตรง และ production database/runtime evidence; invalid date contract และ payment form `paymentId` mapping ถูกแก้และทดสอบในรอบล่าสุด
-
-### หลักฐาน Slice 1: Front legacy dashboard tests
-
-- แยกสาเหตุ failure เดิมเป็น assertion ที่อ้าง UI รุ่นเก่า (`tiwhub`, heading/grid เดิม) และ test harness ที่ส่ง React-compatible/frozen VNode จาก `react-icons` เข้า Preact โดยตรง
-- ปรับเฉพาะ `Front/src/pages/admin/__tests__/dashboard-page.test.jsx`: mock provider/effect และ icon boundary ให้เหมาะกับ unit test, แล้วปรับ assertion ให้ตรงกับ dashboard implementation ปัจจุบัน (`oasis`, `BentoGrid`, greeting ปัจจุบัน)
-- ไม่แก้ `dashboard-page.jsx` และไม่ลบหรือ skip test
-- Validation หลังแก้: `npm.cmd test -- --run` ผ่าน `76/76`; `npm.cmd run build` ผ่าน
-
-### หลักฐาน Slice 2: Notification logging flow หลัก
-
-- `AttendanceService.ScanAsync` และ `PaymentService.CreateAsync` ไม่เรียก `SendAttendanceNotificationAsync`/`SendPaymentNotificationAsync` โดยตรงแล้ว แต่สร้าง `BackgroundNotificationCandidate` และใช้ `IBackgroundNotificationDispatcher` เดียวกับ background jobs
-- Notification types และ idempotency keys ที่ใช้จริง:
-  - `attendance_checkin` → `attendance_checkin:{sessionId}:{studentId}:{parentId}`
-  - `payment_received` → `payment_received:{paymentId}:{parentId}`
-- การสร้าง payment และ attendance transaction ยังคงอยู่ใน repository เดิม; notification dispatch เกิดหลัง persistence สำเร็จ และใช้ `CancellationToken.None` เพื่อไม่ให้ request cancellation ตัดการบันทึก log หลัง commit
-- ข้อความ notification ถูกย้ายมาไว้ใน `NotificationMessageFactory` โดยคงเนื้อหา LINE เดิม และ dispatcher เป็นจุดเดียวที่สร้าง pending record, ส่ง provider, mark `sent` หรือ mark `retrying/failed`
-- Focused notification/attendance/payment tests: `27 passed / 0 failed`; full API tests: `256 passed / 0 failed / 0 skipped`; API build และ test build ผ่าน
-- ข้อจำกัดที่ยืนยันจาก schema/code: `notifications` ยังไม่มี unique idempotency column/constraint ดังนั้นการกัน race ระหว่างหลาย API instances ยังเป็น application-level check และอาจสร้าง duplicate pending rows ได้เมื่อ concurrent ก่อน `FindByIdempotencyKeyAsync` เห็นข้อมูลเดียวกัน
-
-### หลักฐาน Slice 3: Parent repository/service boundary
-
-- ก่อนแก้: `ParentEndpoints.cs` มี direct EF/data access `38 matches` จาก `TutoringDbContext`, EF async queries และ `SaveChangesAsync`
-- หลังแก้: `ParentEndpoints.cs` มี direct EF/data access `0 matches`; audit controllers ทั้งหมดตาม patterns เดิมได้ `0 matches`
-- เพิ่ม `ParentRepository` สำหรับ query/persistence และ `ParentService` สำหรับ parent resolution, profile update, dashboard mapping และ child ownership checks
-- ย้าย bind-line, dashboard, profile, attendance, payments, scores, homework, leave requests และ sessions ออกจาก controller โดยคง route/response shape และ authorization behavior เดิม
-- เพิ่ม `ParentServiceTests` ครอบคลุม own child, foreign child, profile mapping และ profile update
-- Validation: focused parent tests `3 passed`; full API tests `259 passed / 0 failed / 0 skipped`; API build/test build ผ่าน; contract validator `Errors = 0`, warnings `141`
-
-### หลักฐาน Slice 4: Public trial-class lead
-
-- Contract เดิมไม่มีวิธีระบุ tenant และ schema `institutes.slug` มีอยู่จริง จึงเพิ่ม `instituteSlug` เป็น required request field เพื่อ resolve active institute โดยไม่ใช้ default institute ID
-- `CreateLeadRequest` รองรับ `instituteSlug`, `contactName`, `phone`, `email`, `studentName`, `courseInterest` และ `message` ตาม target contract; เพิ่ม `leads.student_name` ใน `API/Database/lead-tenant-fields.sql` เพราะ schema เดิมไม่มี field นี้
-- เพิ่ม `PublicLeadEndpoints`, `LeadService` และ `LeadRepository` สำหรับ validation, active-institute lookup และ persistence; endpoint เป็น public และไม่รับ/เปิดข้อมูล tenant จากค่าอื่นนอก slug
-- เพิ่ม fixed-window rate limit `10 requests/IP/minute` ที่ `POST /api/public/leads`; invalid input และ unknown institute ถูกปฏิเสธก่อนสร้าง lead
-- เพิ่มหน้า `Front/src/pages/trial-class-page.jsx` ที่ route `/trial-class` และ service สำหรับเรียก endpoint; Front build ผ่าน
-- Notification ยังไม่ถูกผูกกับ lead creation เพราะ contract/code ที่ตรวจไม่มี admin LINE recipient ที่เชื่อมกับ institute อย่างยืนยันได้ การบันทึก lead จึงไม่ล้มเหลวเพราะ notification
-- Focused lead tests `3 passed`; full API tests `262 passed / 0 failed / 0 skipped`; API build ผ่าน; Front build ผ่าน; contract validator `Errors = 0`, warnings `141`
-- ยังไม่มี runtime evidence กับฐานข้อมูลจริง และยังไม่ประกาศ duplicate/abuse business rule นอกเหนือจาก rate limit เพราะ requirement ไม่ได้กำหนดกติกา duplicate ที่ตรวจได้
-
-### หลักฐาน Slice 5: Parent workflows ที่ขาด UI
-
-- Admin เพิ่มหน้า `Front/src/pages/admin/makeup-slots-page.jsx` ที่ `/admin/makeup-slots` สำหรับโหลดครู/slot, สร้าง slot และ group-cancel slot ผ่าน API จริง พร้อม loading, empty, error และ confirmation state
-- เพิ่ม `Front/src/services/makeup-service.js` และ focused service tests `3 passed`; Front full tests `79 passed / 0 failed / 0 skipped`; Front build ผ่าน
-- ตรวจพบว่า LIFF homework เดิมมีเพียง list endpoint และ upload endpoint ที่ต้องใช้ `submissionId` แต่ไม่มีทางสร้าง submission จึงเพิ่ม parent-owned endpoint `POST /api/parents/children/{childId}/homework/{homeworkId}/submission`
-- Parent submission flow ตรวจ parent-child ownership, ตรวจ enrollment ของ child กับ homework course, reuse submission เดิมตาม unique `(homework_id, student_id)` และ upload จะตรวจ ownership ของ submission พร้อมบันทึก `file_url` และ `submitted_at`
-- เพิ่มหน้า `LineLiff/src/pages/homework.jsx` ที่ `/liff/homework/:childId` สำหรับโหลดรายการ, empty/error/loading state และเลือกไฟล์รูปเพื่อส่งงาน
-- เพิ่มหน้า `LineLiff/src/pages/scores.jsx` ที่ `/liff/scores/:childId` แสดงข้อมูลจริงจาก `/api/parents/children/{childId}/scores` เป็น horizontal bar chart ช่วงคะแนน 0-5 พร้อม note
-- เพิ่ม action จาก LIFF dashboard ไปยังหน้า homework และ skill scores; LineLiff build ผ่าน
-- Full API tests หลังเพิ่ม parent submission boundary `264 passed / 0 failed / 0 skipped`; API build ผ่าน; contract validator `97 target operations`, `Errors = 0`, `Warnings = 141`
-- ยังไม่มี component tests ของ LIFF pages และยังไม่มี runtime integration test กับฐานข้อมูลจริง จึงไม่ประกาศว่า ownership/upload flow ผ่าน production runtime
-
-### หลักฐาน P0-01: Trial Class UI + API (13 กันยายน 2026)
-
-- ตรวจ contract ระหว่าง `Front/src/pages/trial-class-page.jsx`, `Front/src/services/lead-service.js`, `CreateLeadRequest` และ `POST /api/public/leads`; request fields และ `201 CreateLeadResponse` ตรงกัน
-- เพิ่ม client validation สำหรับ `instituteSlug`, `contactName` และ `phone`; trim ค่า request ก่อนส่ง และกำหนด `email` เป็นชนิด email โดยไม่เพิ่ม business rule ใหม่
-- ปรับ API error mapping ใน `Front/src/services/api.js` ให้แสดงข้อความแรกจาก `ValidationProblem.errors` รวมถึง error response ของ endpoint แทนข้อความทั่วไปเมื่อมีรายละเอียด
-- เพิ่ม focused Front tests สำหรับ lead service success/failure และ trial page validation/success: `4 passed / 0 failed`
-- Focused API `LeadServiceTests`: `3 passed / 0 failed`; Front full suite: `83 passed / 0 failed`; Front build และ API build ผ่าน
-- สถานะ P0-01: `[x]` สำหรับ UI/API flow, validation และ focused evidence; ยังไม่มี production DB runtime evidence และ admin lead follow-up/list/status contract จึงไม่ประกาศ scope ดังกล่าวว่าเสร็จ
-
-### หลักฐาน P0-03: Leave & Make-up Admin UI + API (13 กันยายน 2026)
-
-- ตรวจ response shape ของ `GET /api/makeup/slots`, `POST /api/makeup/slots` และ `POST /api/makeup/slots/{slotId}/cancel` เทียบกับ `MakeupSlotResponse`; หน้า Admin ใช้ `status`, `teacherId`, `bookedCount`, `capacity`, `roomId` จาก response จริง
-- แก้หน้า `Front/src/pages/admin/makeup-slots-page.jsx` ให้ map ชื่อครูจาก response ของ `GET /api/teachers` และแสดง status label จากค่า status ที่ API ส่งมา โดยไม่สร้าง field ใหม่
-- จำกัด mutation routes สร้าง/ยกเลิก slot ให้ role `admin` หรือ `teacher`; tenant isolation ของ teacher/slot/booking/credit ใช้ global query filters ของ `TutoringDbContext` และ teacher lookup ก่อนสร้าง slot
-- เพิ่ม focused API tests สำหรับ valid create, invalid capacity, unknown teacher, tenant-scoped not-found cancel, group-cancel delegation และ role forbidden: `16 passed / 0 failed` ใน filter ที่เกี่ยวข้อง
-- เพิ่ม component/service tests สำหรับ response mapping, validation, create และ group cancel: `6 passed / 0 failed`
-- Full API tests: `273 passed / 0 failed / 0 skipped`; Front full tests: `86 passed / 0 failed`; API build และ Front build ผ่าน
-- API contract validator: `92` current operations, `98` target operations, `Errors = 0`, `Warnings = 142`
-- สถานะ P0-03: `[/]`; ยังไม่ประกาศปิด task เพราะไม่มี production DB runtime evidence และยังไม่มี concurrency integration evidence สำหรับ capacity/group-cancel transaction
-
-### หลักฐาน P0-04: LIFF Homework + Make-up UI + API (13 กันยายน 2026)
-
-- ตรวจ `LineLiff/src/pages/homework.jsx`, `LineLiff/src/pages/leave-makeup.jsx`, `LineLiff/src/services/parent-service.js` เทียบกับ parent และ make-up endpoints/DTO ที่ใช้งานจริง
-- Homework list ใช้ `GET /api/parents/children/{childId}/homework`; การสร้าง submission ใช้ `POST /api/parents/children/{childId}/homework/{homeworkId}/submission`; upload ใช้ `POST /api/uploads/homework-submission?submissionId=...`
-- Parent submission boundary ตรวจ parent-child ownership, child enrollment กับ homework course และ tenant-scoped submission; upload endpoint ตรวจ parent ownership ของ submission อีกชั้น
-- Make-up flow ใช้ credits, bookings, slots, booking และ cancel endpoints จริง; service ตรวจ parent ownership ของ child/booking, credit-student match, credit expiry/status และ slot capacity/state
-- เพิ่ม `LineLiff/src/utils/validation.js`: homework image ไม่เกิน 10MB, leave attachment เป็น PDF/JPG/PNG/WEBP ไม่เกิน 5MB และ map 403/409 เป็นข้อความ UI
-- หน้า LIFF มี loading, empty, validation, upload error, booking conflict, forbidden และ success state; ปุ่ม booking ถูก disable เมื่อ slot เต็มหรือไม่ใช่ `open`; layout ใช้ responsive max-width/padding ที่มีอยู่
-- เพิ่ม focused API test `UploadHomeworkSubmission_Over10Mb_RejectsBeforeRepositoryLookup`; focused filter `FileUploadServiceTests|ParentServiceTests|MakeupServiceTests`: `25 passed / 0 failed`
-- LineLiff production build ผ่าน (`npm.cmd run build`)
-- สถานะ P0-04: `[/]`; ยังไม่มี LIFF component/service test runner, production DB/runtime evidence หรือ live upload/booking integration evidence จึงไม่ประกาศ flow production acceptance
-
-### หลักฐาน P0-05: Public Website + CMS Read Flow (13 กันยายน 2026)
-
-- ตรวจ Front route `/`, `IndexPage`, `/trial-class`, `lead-service` และ CMS routes `/`, `/content`, `/p/oasis-learning`, `/trial-class` เทียบกับ Objective และ `POST /api/public/leads`
-- Front public home มี CTA หลักและ CTA ใน header ไป `/trial-class`; sign-in controls ไป `/login`; ไม่ใช้ registration flow เป็น trial lead substitute
-- CMS `/p/oasis-learning` เป็น SSG preview ที่ prerender สำเร็จและมี static sections ตาม scope: student stories, teachers, courses/pricing และ contact; source คือ `CMS/lib/content.ts`
-- CMS `/content` ระบุ local draft เป็น integration boundary เพราะไม่พบ content read/CRUD API, authentication/RBAC หรือ media storage contract; เพิ่ม safe parsing เมื่อ localStorage draft เสียรูปแบบ
-- CMS overview ลบ hardcoded enquiry metrics, chart และ “Live” activity ที่ไม่มี API source แล้วแทนด้วย explicit unavailable/read-boundary states เพื่อไม่แสดง mock data เป็นข้อมูลจริง
-- Trial lead ใช้ implementation เดิมของ `POST /api/public/leads`, `CreateLeadRequest` และ `instituteSlug`; ไม่มี duplicate lead endpoint หรือ duplicate service เพิ่ม
-- เพิ่ม `Front/src/pages/__tests__/index-page.test.jsx` สำหรับ public CTA/sign-in route; focused public/lead tests `5 passed / 0 failed`; Front full suite `87 passed / 0 failed`
-- Front build ผ่าน (`npm.cmd run build`); CMS build ผ่าน (`npm.cmd run build`) และรายงาน `/p/oasis-learning` เป็น SSG output
-- สถานะ P0-05: `[/]`; ยังไม่มี content read API/CRUD, CMS auth/RBAC, media upload, lead list/status/follow-up contract หรือ production runtime evidence จึงไม่ประกาศ CMS acceptance ผ่าน
-
-### หลักฐาน P1-01: Operations UI + API discovery (13 กันยายน 2026)
-
-- ตรวจ `CMS/app/operations/page.tsx`, Objective Operations requirements, schema CSV, `TeacherPayrollPeriod`, file upload endpoints และ API registration เทียบกับ task board
-- CMS `/operations` มี provisional UI สำหรับ Holiday Calendar, File Manager, Teacher Payroll และ Broadcast พร้อม loading/empty/validation-like gate states; draft holiday ถูกเก็บใน local UI เท่านั้น และ Broadcast ยังคง disable การส่งจริง
-- Schema มีตาราง `teacher_payroll_periods` พร้อม `institute_id`, `teacher_id`, period, total hours, hourly rate, total amount และ status; API มี model และ global tenant query filter แต่ยังไม่มี endpoint/service/DTO/test สำหรับ payroll
-- Existing file upload service มี upload flow สำหรับ resource อื่น แต่ยังไม่มี teaching-material list, upload ownership, delete หรือ signed-link expiry contract
-- Objective ระบุ Holiday Calendar ว่าต้องมีผลต่อ attendance/homework workers แต่ยังไม่มี holiday schema, suppression matrix หรือ endpoint ที่ยืนยันได้
-- Broadcast ยังไม่มี recipient resolution, class/course scope, consent enforcement, notification audit หรือ send mutation contract
-- Room-overlap validation ที่มีอยู่เป็นหลักฐานของ session scheduling เท่านั้น ไม่ถือเป็น Operations UI/API slice ที่เหลือ
-- สถานะ P1-01: `[/]`; ยังไม่ปิด task และไม่เพิ่ม implementation จนกว่า role, tenant/ownership, schema, endpoint/response, worker/notification policy และ focused tests จะได้รับการยืนยัน
-
-### หลักฐาน P1-02: Reports + Analytics UI + API discovery (13 กันยายน 2026)
-
-- ตรวจ `API/Controllers/ReportEndpoints.cs`, `API/Services/RevenueReportService.cs`, `Front/src/pages/admin/finance-page.jsx`, report service และ focused tests เทียบกับ task board
-- `GET /api/reports/revenue` เป็น implementation จริง รับ `from`, `to` และ `group_by=day|month|year`; validation ปฏิเสธช่วงวันที่ไม่ถูกต้องและ grouping ที่ไม่รองรับ; endpoint จำกัด role เป็น `admin`
-- Revenue response ใช้ `RevenueReportRow(period, grossAmount, paymentCount)` และ service ดึง payment ผ่าน repository ที่มี tenant query filter; มี grouping unit test และ authorization integration test (`admin` ผ่าน, `teacher` ได้ `403`)
-- Finance UI เรียก revenue API และ payment CSV export จริง พร้อม loading, empty และ error state; implementation ปัจจุบันรวม payment ทุก status เพราะยังไม่มี payment-status policy ที่ owner ยืนยัน
-- ยังไม่มี API หรือสูตรที่ยืนยันสำหรับ Renewal Rate, Churn Risk และ Revenue Forecast; CMS `/operations` แสดง definition-gate state โดยไม่แสดงตัวเลขปลอม
-- ยังไม่มี Teacher Timesheet API/service/DTO/export contract; Objective อ้าง `sessions` และ `attendances` แต่ยังไม่เลือก source และกติกานับชั่วโมง
-- สถานะ P1-02: `[/]`; ปิดไม่ได้จนกว่าจะยืนยัน payment status policy, สูตร analytics, date window/timezone/privacy rule, timesheet source/export และเพิ่ม focused tests ตาม contract
-
-### หลักฐานรอบแก้ไข: Make-up concurrency และ Finance contract hardening (13 กันยายน 2026)
-
-- `POST /api/makeup/bookings` รองรับ `Idempotency-Key`; เมื่อ key เดิมถูกใช้กับ operation เดิมจะ replay booking เดิม และถ้าใช้กับ payload อื่นจะคืน `409` พร้อม `IDEMPOTENCY_KEY_REUSED`
-- `MakeupRepository.CreateBookingAsync` เปลี่ยนจากการเพิ่ม `BookedCount` ใน entity ที่อ่านมา เป็น atomic `UPDATE ... WHERE booked_count < capacity` และ atomic credit reservation ภายใน transaction เดียวกัน เพื่อป้องกัน oversubscription จาก concurrent request
-- เพิ่ม `MakeupBooking.IdempotencyKey`, unique index `(institute_id, idempotency_key)` ใน EF model และ deployment SQL ที่ `API/Database/makeup-idempotency.sql`; SQL ยังต้อง apply บน database environment จริง
-- เพิ่ม focused Make-up tests สำหรับ idempotency replay/key mismatch; ล่าสุด `17 passed / 0 failed`; focused API รวม Finance/Make-up/authorization `31 passed / 0 failed`
-- Finance endpoint ไม่กลืน malformed `start_date`/`end_date` อีกต่อไป แต่คืน `400`; ปฏิเสธ range ที่ start หลัง end และคง revenue policy เฉพาะ `succeeded` กับ `NetAmount` ตาม decision record
-- แก้ Finance UI ให้ map `CreatePaymentData.paymentId` ตาม response จริง และแสดง empty revenue state แยกจากสถานะยังไม่ได้ค้นหา; Front test `87 passed / 0 failed` และ Front build ผ่าน
-- ยังไม่มี MySQL concurrency integration run, production DB/runtime evidence, payment CSV response test โดยตรง, LIFF component runner, feature-flag service หรือ OpenTelemetry backend evidence จึงยังไม่ปิด P0 acceptance จาก static/unit evidence เพียงอย่างเดียว
-- ระยะ 1 เพิ่ม payment CSV response test โดยตรงใน `PaymentServiceTests`, เพิ่ม Vitest + Testing Library runner ให้ `LineLiff`, เพิ่ม `API/Database/verify-makeup-idempotency.ps1` สำหรับตรวจ `idempotency_key` column กับ unique index บน MySQL/TiDB จริง และปรับ CI ให้รัน LIFF tests/build กับเก็บ API TRX artifact; ยังไม่มีการนับ staging/production evidence จาก local run
-
----
-
-## 2. ตารางสรุปความคืบหน้าแยกตาม 12 หมวดหมู่
-
-| หมวด | ชื่อระบบ / Objective | ผ่านตามหลักฐาน | ทั้งหมด | เปอร์เซ็นต์ประเมิน | สถานะประเมิน |
-|:---:|---|:---:|:---:|:---:|:---:|
-| **1** | Authentication & RBAC (ความปลอดภัยและการจัดการสิทธิ์) | 5 | 6 | **83%** | 🟢 ใกล้สมบูรณ์ |
-| **2** | Student Management (ประวัตินักเรียนและออกบัตร QR) | 6.5 | 7 | **93%** | 🟢 ใกล้สมบูรณ์ |
-| **3** | QR Attendance (ระบบเช็คชื่อ หักโควต้า และแจ้งเตือน) | 4.5 | 7 | **64%** | 🟡 กำลังพัฒนา |
-| **4** | Leave & Make-up (ระบบแจ้งลาและบริหารคลาสชดเชย) | 4.0 | 5 | **80%** | 🟢 ใกล้สมบูรณ์ |
-| **5** | Skill Card & Gamification (การ์ดพลังและประเมินผล) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
-| **6** | Homework System (การบ้านและการตรวจงานออนไลน์) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
-| **7** | Payment & Billing (รับชำระเงินและออกใบเสร็จ) | 3.0 | 5 | **60%** | 🟡 กำลังพัฒนา |
-| **8** | Public Website & CMS (เว็บไซต์ประชาสัมพันธ์และหาลูกค้า) | 1.5 | 5 | **30%** | 🔴 ต้องเร่งทำ |
-| **9** | LINE Integration (Push, LIFF App, Rich Menu, Bot) | 2.5 | 6 | **42%** | 🟡 กำลังพัฒนา |
-| **10** | Reports & Analytics (รายงานเชิงวิเคราะห์สำหรับผู้บริหาร) | 1.5 | 5 | **30%** | 🔴 ต้องเร่งทำ |
-| **11** | Operations & Compliance (จัดการหลังบ้านและ PDPA) | 2 | 6 | **33%** | 🔴 ต้องเร่งทำ |
-| **12** | Architecture & NFR (ประสิทธิภาพ ความปลอดภัย สถาปัตยกรรม) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
-| **รวม** | **ผลรวมจากคะแนนในตาราง** | **38.0** | **67** | **~57%** | 🟡 อยู่ระหว่าง integration |
-
-> **หมายเหตุการคำนวณ:** คะแนนรวมในตารางคือ `38.0 / 67 = 56.71%` ปัดเป็น `57%`. ตัวเลขนี้เป็นคะแนนแบบนับ AC เท่ากันทุกข้อ ไม่ใช่ weighted progress จริง เพราะเอกสารยังไม่ได้กำหนดน้ำหนักของแต่ละ AC
-
----
-
-## 3. รายละเอียดความคืบหน้าแต่ละหมวด (Acceptance Criteria Breakdown)
-
----
-
-### หมวดที่ 1: ระบบยืนยันตัวตน, จัดการสิทธิ์ผู้ใช้งาน และความปลอดภัย (Authentication & RBAC)
-* **ความคืบหน้า:** `83%` (5 / 6 ผ่าน)
-* **สถานะ:** 🟢 ใกล้สมบูรณ์
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** สร้างหน้า Login ที่รองรับการกรอก อีเมล/เบอร์โทรศัพท์ และรหัสผ่าน (`Front/src/features/auth/login-page.jsx`, API `/api/auth/login`)
-- [x] **AC 2:** สร้างระบบเชื่อมต่อ LINE Login สำหรับผู้ปกครอง ให้สามารถเข้าสู่ระบบอัตโนมัติเมื่อกดผ่าน LINE (`LineLiff/src/pages/login.jsx`, `api/parents/bind-line`)
-- [x] **AC 3:** สร้างฟังก์ชัน "ลืมรหัสผ่าน" ที่รองรับการส่งผ่านอีเมล (`/api/users/forget-password`, `/api/users/reset-password`, Smtp settings)
-- [x] **AC 4:** Middleware/Guard ของ API ต้องตรวจสอบ `role` ก่อนอนุญาตให้เข้าถึง Endpoint ต่างๆ (`TenantMiddleware.cs`, `RequireAuthorization()`)
-- [x] **AC 5:** พิสูจน์ได้ว่ารหัสผ่านใน Database (ตาราง `users`) ถูกเข้ารหัสด้วย bcrypt (`BCrypt.Net-Next` ใน `UserService`, `AuthEndpoints`)
-- [x] **AC 6:** ระบบมีการตั้งเวลา Timeout 30 นาทีสำหรับผู้ใช้งานระดับ Admin (`admin-session-timeout.js`, AdminLayout auto-logout และ JWT/cookie expiry 30 นาที)
-
-#### สิ่งที่ทำเสร็จแล้วในโค้ด:
-- JWT Bearer authentication พร้อม `institute_id` claim สำหรับ Multi-tenancy
-- Refresh Token rotation (`POST /api/auth/refresh-token`)
-- คุ้กกี้ `auth_token` แบบ HttpOnly สำหรับเว็บเบราว์เซอร์
-- Flow Map LINE ID และเบอร์โทรศัพท์สำหรับผู้ปกครองใน LIFF
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มหลักฐาน runtime สำหรับการบันทึก Login/Logout และการเปลี่ยนข้อมูลสำคัญเข้า `audit_logs` ที่มีอยู่แล้ว
-
----
-
-### หมวดที่ 2: ระบบจัดการประวัตินักเรียนและออกบัตร QR Code (Student Management)
-* **ความคืบหน้า:** `93%` (6.5 / 7 ผ่าน)
-* **สถานะ:** 🟢 ใกล้สมบูรณ์
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** สร้างหน้าฟอร์มลงทะเบียนนักเรียน รองรับการอัปโหลดรูปภาพ (`photo_url`) และข้อมูลพื้นฐาน (`Front/src/pages/admin/student-add-page.jsx`, `/api/uploads/student-photo`)
-- [/] **AC 2:** ในฟอร์ม มีส่วนให้เพิ่มข้อมูลผู้ปกครองแบบ Dynamic (กดเพิ่มคนที่ 1, คนที่ 2 ได้) และระบุรายชื่อคนรับกลับ (ทำ Dynamic Parent และระบบสิทธิ์รับส่งเด็ก `student_pickup_authorizations` CRUD สมบูรณ์แล้ว รอเชื่อมเข้าฟอร์มตอนลงทะเบียนใหม่)
-- [x] **AC 3:** ในฟอร์ม มีช่อง (Textarea) ให้ระบุข้อมูลโรคประจำตัว/แพ้อาหาร (`medicalInfo` มีในหน้าเพิ่มนักเรียนและหน้ารายละเอียด)
-- [x] **AC 4:** เมื่อกดบันทึก ระบบต้องสร้างบัตรนักเรียนดิจิทัลที่มี QR Code อัตโนมัติ (`POST /students` ส่งคืน `qrToken`, แสดงผลด้วย `react-qr-code` ใน `student-profile-page.jsx`)
-- [x] **AC 5:** มีฟังก์ชันให้ Export หน้าบัตรเป็นไฟล์ PDF สำหรับพิมพ์จริงได้ (FR-STD-08) (`StudentCardPdfService.cs` เรนเดอร์บัตรขนาด A6 พร้อม QR Code อัปโหลดขึ้น S3 ผ่าน `GET /api/students/{id}/card.pdf` และปุ่ม "ดาวน์โหลดบัตร PDF" ใน `student-profile-page.jsx`)
-- [x] **AC 6:** สร้างหน้าแสดงตารางรายชื่อนักเรียน ที่สามารถค้นหาด้วยชื่อ, รหัส, หรือเบอร์โทรผู้ปกครองได้ (`students-page.jsx` ค้นหาผ่าน `StudentRepository.SearchAsync`)
-- [x] **AC 7:** มีปุ่มกด Export ข้อมูลนักเรียนทั้งหมดออกมาเป็นไฟล์ Excel/CSV (FR-STD-07) (`StudentExportService.cs` สตรีม CSV พร้อม UTF-8 BOM ผ่าน `GET /api/students/export?format=csv` และปุ่ม "ส่งออก CSV" ใน `students-page.jsx`)
-
-#### สิ่งที่ทำเสร็จแล้วในโค้ด:
-- API `/api/students` (CRUD สมบูรณ์ รองรับ Multi-parent, Medical Info, Photo Upload)
-- API `/api/students/{id}/qr` สำหรับสร้าง rotating QR Token
-- API `/api/students/{id}/card.pdf` สำหรับสร้างบัตรนักเรียนขนาดพิมพ์จริง
-- API `/api/students/export?format=csv` ส่งออก CSV นักเรียนแบบ async streaming พร้อม tenant isolation
-- API `/api/students/{id}/pickup-authorizations` (CRUD รายชื่อผู้มีสิทธิ์รับเด็ก)
-- ปุ่มดาวน์โหลดบัตร PDF และปุ่มส่งออก CSV ในหน้า Admin
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เชื่อมฟอร์มลงทะเบียนนักเรียนหน้าแรกเข้ากับตาราง `student_pickup_authorizations` ตอนกดเพิ่มเด็กใหม่
-2. เพิ่มตัวเลือก Export เป็น XLSX ควบคู่กับ CSV ที่พร้อมแล้ว
-
----
-
-### หมวดที่ 3: ระบบเช็คชื่อด้วย QR Code (Attendance)
-* **ความคืบหน้า:** `64%` (4.5 / 7 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [/] **AC 1:** สร้างหน้าเว็บเปิดกล้องมือถือให้ครูสแกน QR Code เพื่อ Check-in และ Check-out ได้ (`attendance-page.jsx` มี `jsQR`, mode `check-in`/`check-out`, scan confirmation และ checkout จากรายชื่อนักเรียนที่เช็คเข้าแล้ว; QR checkout endpoint โดยตรงยังไม่ถูกเพิ่ม)
-- [x] **AC 2:** มี UI ให้ครูสามารถกดเช็คชื่อแบบ Manual ได้ (เผื่อเด็กลืมบัตร) พร้อมระบุสถานะ มา/สาย/ลา/ขาด (แท็บ "รายชื่อวันนี้" ใน `attendance-page.jsx`)
-- [/] **AC 3:** ระบบสามารถหักโควต้าคงเหลือของนักเรียนได้อัตโนมัติเมื่อเช็คชื่อสำเร็จ (`ScanCheckinWithTransactionAsync` ทำ transaction/no-quota/unique-boundary และ response อ่าน quota คงเหลือ; ยังไม่มี DB concurrency runtime evidence)
-- [x] **AC 4:** มีช่องให้บันทึกข้อมูลว่า "ผู้ที่มารับกลับ" คือใครในตอน Check-out (`POST /api/attendance/{id}/checkout` รับ `pickedUpBy`, `pickupAuthorizationId`, บันทึก `AuditLog` ใน transaction เดียวกัน และหน้า UI มี modal เลือกผู้รับเด็กที่ active พร้อมแสดงเวลา/ผู้บันทึก)
-- [/] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (`LateAttendanceNotificationJob` เป็น hosted worker; ยังไม่มี staging runtime evidence)
-- [/] **AC 6:** ทันทีที่ Check-in / Check-out สำเร็จ ต้องมีข้อความ Push ยิงเข้า LINE ผู้ปกครอง (check-in/checkout ใช้ `IBackgroundNotificationDispatcher`; ยังไม่มี LINE provider runtime evidence และ notification unique database constraint)
-- [/] **AC 7:** แอปสแกนรองรับโหมด Offline เก็บข้อมูลลง Cache และส่งกลับ Server เมื่อมีเน็ต (`attendance-offline-queue.js` ใช้ IndexedDB, expiry/idempotency/replay handling; ยังไม่มี Service Worker และ real-device evidence)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม endpoint/contract สำหรับ QR checkout โดยตรง และทดสอบ Android Chrome/iOS Safari
-2. เพิ่ม runtime evidence ของ worker เช็คเวลาเรียนหลังเริ่มเรียน 20 นาที และ LINE provider success/failure/retry
-3. ตรวจ metadata ฐานข้อมูลจริงก่อนเพิ่ม notification idempotency unique constraint และรัน concurrent transaction test
-4. รัน offline network-transition test จริง และ k6 load test 100 concurrent users พร้อมบันทึกผลใน `process.md`
-
----
-
-### หมวดที่ 4: ระบบลาและเรียนชดเชย (Leave & Make-up)
-* **ความคืบหน้า:** `80%` (4.0 / 5 ผ่าน)
-* **สถานะ:** 🟢 ใกล้สมบูรณ์
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (LINE LIFF) สร้างหน้าฟอร์มให้ผู้ปกครองกดแจ้งลา เลือกคาบเรียน ระบุเหตุผล และแนบไฟล์ใบรับรองแพทย์ได้ (`leave-makeup.jsx` มีฟอร์มเลือก session, ใส่เหตุผล, แนบไฟล์ PDF/JPG/PNG/WEBP อัปโหลดผ่าน `POST /api/leave-requests/{id}/attachment` ลงตาราง `leave_request_attachments`)
-- [x] **AC 2:** (Admin Panel) สร้าง UI ให้ครูจัดการคำขอลา (อนุมัติ/ปฏิเสธ) หรือครูสามารถสร้างคำขอลาแทนผู้ปกครองได้ (`Front/src/pages/admin/requests-page.jsx` พร้อม API approve ที่ออกเครดิตชดเชยอัตโนมัติ)
-- [/] **AC 3:** (Admin Panel) ครูสามารถสร้าง Slot ว่างสำหรับเรียนชดเชย พร้อมระบุจำนวนที่นั่งที่รับได้ (Capacity) (API `POST /api/makeup/slots` และหน้า `/admin/makeup-slots` มีแล้ว พร้อม loading/empty/error/confirmation state; ยังไม่มี runtime integration evidence)
-- [x] **AC 4:** (LINE LIFF) ผู้ปกครองสามารถดู Slot ว่าง และใช้ `makeup_credits` กดจองเรียนชดเชยได้ (`leave-makeup.jsx` แสดงสิทธิ์คงเหลือ, แสดง slot ที่เปิด, กดจองเรียนชดเชย, และแสดงรายการ booking พร้อมปุ่มยกเลิก)
-- [/] **AC 5:** (Backend) หากครูกดยกเลิก Slot แบบ Group Cancel ระบบต้องคืนเครดิตกลับเข้าบัญชีของนักเรียนทุกคนที่จองไว้ (`POST /api/makeup/slots/{slotId}/cancel` และปุ่มในหน้า `/admin/makeup-slots` มีแล้ว; ยังต้องพิสูจน์ transaction/concurrency กับฐานข้อมูลจริง)
-
-#### สิ่งที่ทำเสร็จแล้วในโค้ด:
-- API จัดการ Leave Requests (คำนวณประเภทลา advance/urgent/absence อัตโนมัติ)
-- API แนบไฟล์ใบรับรองแพทย์ `POST /api/leave-requests/{id}/attachment` พร้อมตาราง `leave_request_attachments`
-- API อนุมัติ/ปฏิเสธคำขอลาพร้อมออก `makeup_credits` และบันทึก `makeup_credit_transactions`
-- API จองเรียนชดเชย, แสดงรายการ booking, ยกเลิก booking และบันทึก no-show
-- หน้า "ลาและเรียนชดเชย" บน LINE LIFF รองรับทั้งแจ้งลา แนบไฟล์ ดูสิทธิ์ จองที่นั่ง และยกเลิกการจอง
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม component/integration/runtime evidence ให้หน้า Admin makeup slot และ group cancel
-2. เพิ่ม Background Worker จัดการเครดิตที่หมดอายุ (`status = expired`)
-
----
-
-### หมวดที่ 5: ระบบการ์ดพลังและระบบแรงจูงใจ (Skill Card & Gamification)
-* **ความคืบหน้า:** `50%` (2.5 / 5 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (Admin Panel) มี UI ให้ครูเข้าไปสร้างและแก้ไขหัวข้อบทเรียน (`skill_topics`) พร้อมจัดเรียงลำดับได้ (`academics-page.jsx` แท็บทักษะ)
-- [x] **AC 2:** (Admin Panel) มี UI สำหรับให้ครูกรอกคะแนน (`score`) และพิมพ์คอมเมนต์ (`note`) ให้เด็กแต่ละคนในคลาสได้สะดวกรวดเร็ว (`academics-page.jsx` ตารางกรอกคะแนน)
-- [/] **AC 3:** (LINE LIFF) ผู้ปกครองสามารถเปิดดูการ์ดพลังของลูก พร้อมเห็นกราฟพัฒนาการและข้อความ Feedback จากครู (มี Endpoint `/api/parents/children/{childId}/scores` และหน้า `/liff/scores/:childId` แบบ horizontal bar chart แล้ว; ยังไม่มี component/integration runtime evidence)
-- [ ] **AC 4:** (Backend) หากมีคะแนนมาจากการบ้าน (`homework_submissions`) ระบบสามารถนำคะแนนนั้นมาอัปเดตใน `skill_scores` ได้อัตโนมัติ (ยังไม่มี Trigger/Logic เชื่อม)
-- [ ] **AC 5:** (Frontend) หน้าโปรไฟล์เด็กมีการแสดงผล Streak Counter (นับวันมาเรียนต่อเนื่อง) และโชว์ Icon เหรียญตรา (Badges) ที่ปลดล็อคแล้ว (มีระบบ Badge ในฝั่ง Admin Layout แต่ในโปรไฟล์เด็กของ LIFF ยังไม่ได้นำไปแสดง)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม component/integration evidence ให้หน้า `/liff/scores/:childId`
-2. เพิ่มตัวนับวันมาเรียนต่อเนื่อง (Streak Counter) ในหน้าโปรไฟล์เด็ก
-3. ทำ Logic คำนวณคะแนนเฉลี่ยจากการบ้านเข้า Skill Card อัตโนมัติ
-
----
-
-### หมวดที่ 6: ระบบการบ้าน (Homework)
-* **ความคืบหน้า:** `50%` (2.5 / 5 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (Admin Panel) UI สำหรับครูในการสร้างการบ้าน เลือกคอร์ส พิมพ์โจทย์ แนบไฟล์ และกำหนดเวลาส่ง (`academics-page.jsx` แท็บการบ้าน, `/api/homeworks`)
-- [/] **AC 2:** (LINE LIFF) UI สำหรับนักเรียน/ผู้ปกครอง เพื่อดูโจทย์การบ้าน และมีปุ่มเลือกไฟล์เพื่ออัปโหลดส่งงาน (หน้า `/liff/homework/:childId` และ parent-owned submission endpoint มีแล้ว; ยังไม่มี component/integration runtime evidence)
-- [x] **AC 3:** (Admin Panel) UI สำหรับครูเพื่อดู List รายชื่อเด็กที่ส่ง/ยังไม่ส่ง และสามารถเปิดดูรูปที่เด็กส่ง พร้อมกรอกคะแนน/Feedback ได้ (`academics-page.jsx` ส่วนตรวจการบ้าน)
-- [/] **AC 4:** (LINE LIFF & Web) หน้าการ์ดของนักเรียน มีการแสดง Badge สถานะการบ้านอย่างชัดเจน (ใน LIFF Dashboard มี StatCard บอกจำนวนการบ้านค้างส่ง แต่ยังไม่มีหน้ารายการแยกย่อย)
-- [/] **AC 5:** (Backend/Worker) ระบบทวงงานล่วงหน้า 1 วันมี `HomeworkReminderNotificationJob` และ retry/idempotency แล้ว แต่ยังไม่มี trigger แจ้งเตือนทันทีตอนสร้างการบ้าน
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม component/integration evidence ให้หน้า `/liff/homework/:childId` และ upload flow
-2. เชื่อมต่อ Push Notification เมื่อครูสร้างการบ้านใหม่
-3. เพิ่ม trigger แจ้งเตือนทันทีเมื่อสร้างการบ้าน และเก็บ runtime evidence ของ `due_at` reminder worker
-
----
-
-### หมวดที่ 7: ระบบการเงิน (Payment & Billing)
-* **ความคืบหน้า:** `60%` (3.0 / 5 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (Admin Panel) หน้าจอ POS ให้พนักงานบันทึกการรับเงิน ระบุวิธีชำระ และอัปโหลดสลิป (`Front/src/pages/admin/finance-page.jsx`, `/api/payments`)
-- [/] **AC 2:** (Backend) API ตรวจสอบสลิป เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (`PaymentSlipVerificationService.cs` มี provider interface `ISlipVerificationProvider`, ตรวจสอบยอดเงิน slip กับยอดชำระ, ป้องกัน amount mismatch ด้วยสถานะ conflict, บันทึก slip metadata ลงฐานข้อมูล และมี endpoint `POST /api/payments/{id}/verify-slip` พร้อม unit tests; รอเชื่อม AI provider จริงใน production)
-- [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
-- [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (`finance-page.jsx` มีกราฟรายรับ, ตารางประวัติ, ยอดรวม และปุ่ม export CSV; API มี revenue report และ payment export; ยังรอยืนยันว่า payment status ใดนับเป็นรายรับ)
-- [x] **AC 5:** (Backend/Worker) ระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ผ่าน `QuotaLowNotificationJob` พร้อม notification log และ idempotency
-
-#### สิ่งที่ทำเสร็จแล้วในโค้ด:
-- API บันทึกการรับเงิน POS และคำนวณยอดชำระสะสมใน Enrollment
-- ระบบสร้างใบเสร็จรับเงิน PDF ขนาด A5 ด้วย QuestPDF และอัปโหลดขึ้น S3 พร้อมส่งลิงก์จริงทาง LINE
-- API ตรวจสอบสลิป `POST /api/payments/{id}/verify-slip` พร้อมตรวจสอบยอดเงินตรงกันก่อน verify
-- Service/Repository และ Unit Tests สำหรับการรับเงินและการตรวจสอบสลิป
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เชื่อม 3rd-party AI OCR Slip Provider ตัวจริงเข้ากับ `ISlipVerificationProvider` หลัง discovery gate ครบ
-2. ยืนยัน payment status policy ก่อนสรุปตัวเลขรายรับ
-3. เพิ่ม runtime evidence และ business policy ว่าการเตือนโควต้า `<= 3` ควรส่งซ้ำเมื่อใด
-
----
-
-### หมวดที่ 8: เว็บไซต์สาธารณะ (Public Website & CMS)
-* **ความคืบหน้า:** `30%` (1.5 / 5 ผ่าน)
-* **สถานะ:** 🔴 ต้องเร่งทำ
-
-#### รายการ Acceptance Criteria:
-- [/] **AC 1:** (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา (CMS SSG preview `/p/oasis-learning` มี section ครบตาม Objective; ยังไม่มี dynamic content/media runtime)
-- [/] **AC 2:** (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ (มี `/trial-class` และส่ง `instituteSlug` ไป `POST /api/public/leads`; ยังไม่มี admin follow-up/list/status evidence)
-- [/] **AC 3:** (Admin Panel) สร้างเมนู CMS ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้ (มี CMS routes `/content`, `/leads`, `/settings` และ local draft editor; ยังไม่มี CRUD API, auth/RBAC หรือ media storage)
-- [x] **AC 4:** (Backend) มี implementation ของ `POST /api/public/leads` พร้อม `CreateLeadRequest`, institute resolution, validation และ rate limit; ยังไม่มี runtime DB evidence และ duplicate policy
-- [x] **AC 5:** หน้าเว็บทั้งหมดรองรับ Responsive Design แสดงผลได้สวยงามทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์ (โค้ดใช้ Tailwind CSS และออกแบบ Responsive ทุกหน้า)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม dynamic content CRUD, auth/RBAC และ media contract ของ CMS หลัง requirement พร้อม
-2. เพิ่ม API/UI integration และ runtime evidence ของ trial lead รวม admin follow-up/list/status
-3. ทำ responsive/render evidence ของ public preview ให้ครบตาม acceptance
-
----
-
-### หมวดที่ 9: ระบบ LINE Integration
-* **ความคืบหน้า:** `42%` (2.5 / 6 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (Backend) เชื่อมต่อ LINE Messaging API สำเร็จ และสามารถยิง Push Message ตาม Trigger ได้ (`LineNotificationService.cs` ยิงแจ้งเตือนเช็คชื่อและการจ่ายเงิน)
-- [ ] **AC 2:** (LINE OA) ตั้งค่า Rich Menu ใน LINE Official Account และผูก Action ลิงก์เข้ากับ LIFF App (ต้องนำ URL ของ LIFF ไปกำหนดค่าใน LINE Developers Console)
-- [x] **AC 3:** (Frontend) พัฒนาหน้า LIFF App สำหรับผู้ปกครอง (`LineLiff` มีหน้า Dashboard, Attendance, Payments, Profile)
-- [ ] **AC 4:** (Admin Panel) สร้างหน้าจอให้ Admin สามารถเลือกห้องเรียนและพิมพ์ส่งข้อความแบบ Bulk Message หาผู้ปกครองทั้งคลาสได้ (ยังไม่มีหน้า Broadcast)
-- [ ] **AC 5:** (Backend) พัฒนา Webhook API เพื่อทำหน้าที่เป็น Chatbot จับ Keyword และตอบคำถามพื้นฐาน (ยังไม่มีตัวดัก Event Webhook)
-- [/] **AC 6:** (Database) ทุกข้อความที่ส่งออกไป ต้องถูกบันทึกลงตาราง `notifications` เพื่อทำ Audit Trail (attendance/payment และ background jobs ใช้ dispatcher/logging แล้ว; ยังต้อง audit flow อื่นและแก้ multi-instance race ของ idempotency)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. ตรวจทุก notification flow ที่ยังไม่ผ่าน dispatcher เดียวกัน และเพิ่ม integration evidence
-2. พิจารณา unique idempotency constraint หลังยืนยัน schema/migration policy
-3. เพิ่มหน้า Broadcast ข้อความหาผู้ปกครองรายห้องใน Admin Panel
-4. จัดทำภาพต้นแบบ Rich Menu เพื่อนำไปติดตั้งใน LINE Official Account
-
----
-
-### หมวดที่ 10: รายงานและการวิเคราะห์ (Reports & Analytics)
-* **ความคืบหน้า:** `30%` (1.5 / 5 ผ่าน)
-* **สถานะ:** 🔴 ต้องเร่งทำ
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (Frontend) พัฒนาหน้า Dashboard สำหรับ Admin โดยมี Card สรุปตัวเลขรายวัน (มี Stat Card นักเรียน, การเข้าเรียน, คำร้องขอ และการเงินใน `Front/src/pages/admin/dashboard-page.jsx`)
-- [ ] **AC 2:** (Backend) สร้าง API สำหรับดึงข้อมูล Analytics เชิงลึก (Renewal Rate, Churn Risk) (CMS มี provisional state และระบุ source assumptions แล้ว แต่ยังไม่มีสูตร/API ที่ owner ยืนยัน)
-- [/] **AC 3:** (Frontend) สร้างหน้ารายงานเฉพาะ (Reports) แสดงกราฟแนวโน้มรายได้ (Revenue Forecast) (CMS `/operations` มี provisional state เท่านั้น; revenue report API เป็น actual payment grouping ไม่ใช่ forecast)
-- [ ] **AC 4:** (Frontend/Backend) สร้างรายงานสรุปชั่วโมงสอนของครูแต่ละคน (Teacher Timesheet) พร้อมปุ่ม Export เป็น Excel เพื่อนำไปทำ Payroll (ยังไม่มี)
-- [ ] **AC 5:** (Backend) พัฒนาระบบติดตาม Referral ผู้แนะนำนักเรียน (ยังไม่มี)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. ยืนยันสูตร, source tables, date window, timezone และ privacy rule ของ Analytics
-2. สร้าง API จากข้อมูลจริงหลังสูตรผ่าน และแยก revenue report ออกจาก forecast
-3. เพิ่มรายงานชั่วโมงสอนครูจากตาราง `sessions` และ `attendances` หลังยืนยัน column/export contract
-
----
-
-### หมวดที่ 11: ระบบจัดการอื่น ๆ (Operations & Compliance)
-* **ความคืบหน้า:** `33%` (2 / 6 ผ่าน)
-* **สถานะ:** 🔴 ต้องเร่งทำ
-
-#### รายการ Acceptance Criteria:
-- [/] **AC 1:** (Admin Panel) มีหน้าต่างตั้งค่าปฏิทินวันหยุด (Holiday Calendar) ซึ่งส่งผลให้ไม่มีการแจ้งเตือนทวงงาน/เช็คชื่อในวันนั้น (CMS `/operations` มี provisional form; ยังไม่มี schema, worker suppression หรือ runtime evidence)
-- [/] **AC 2:** (Backend) Validation ป้องกันการจองห้องเรียนซ้ำซ้อน (Room Overlap) มี overlap query และ MySQL/TiDB named lock + transaction ใน `SessionRepository` แล้ว; ยังไม่มี integration/concurrency runtime evidence กับ database environment จริง
-- [/] **AC 3:** (Frontend/Backend) สร้าง UI สำหรับคลังเอกสารและอัปโหลดไฟล์การสอนไปยัง Storage (CMS `/operations` มี provisional file picker/empty state; ยังไม่มี list/upload/permission/error/signed-link contract)
-- [/] **AC 4:** (Admin Panel) มีรายงานสรุปค่าตอบแทนครูรายเดือน (CMS มี provisional period/table/rate/status preview; ยังไม่ยืนยันสูตรและ export source)
-- [x] **AC 5:** (Frontend/Backend) สร้างระบบขอ Consent PDPA พร้อมบันทึกประวัติ และฟังก์ชันขอ Export/ลบข้อมูล (`PdpaConsent` ถูกบันทึกตอนสมัครเรียนและสมัครสถาบัน, มีปุ่มลบบัญชีใน Settings)
-- [ ] **AC 6:** (DevOps) ตรวจสอบว่าระบบ Automated Backup ถูกเปิดใช้งานแล้วบนฐานข้อมูล (ยังไม่มีเอกสารยืนยัน Backup Schedule)
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม integration/concurrency evidence ของ room overlap กับ database engine ที่ใช้จริง
-2. สร้างระบบจัดการวันหยุดสถาบันหลัง schema, timezone และ suppression policy ผ่าน
-3. ตรวจสอบและตั้งเวลา Backup ฐานข้อมูล TiDB Cloud จาก provider console/API
-
----
-
-### หมวดที่ 12: การตั้งค่าสถาปัตยกรรมระบบ และบังคับใช้ NFR (System Architecture & NFR)
-* **ความคืบหน้า:** `50%` (2.5 / 5 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
-
-#### รายการ Acceptance Criteria:
-- [x] **AC 1:** (DevOps) มี GitHub Actions สำหรับ build/test API, Front และ LineLiff (`.github/workflows/ci.yml`); deploy workflow เดิมยังแยกอยู่
-- [x] **AC 2:** (Database) ตั้งค่าฐานข้อมูล TiDB Cloud (MySQL Compatible) พร้อม Multi-Tenant Isolation และ Connection Monitoring (`/api/health`, `/api/v1/test-connection`)
-- [x] **AC 3:** (Backend/Frontend) มี BCrypt, Admin inactivity timeout 30 นาที และ access token/auth cookie expiry 30 นาที
-- [x] **AC 4:** (Backend) สร้าง Algorithm ระบบ Rotating QR Code ที่ฝั่ง Client สร้าง Token ที่หมดอายุใน 60 วินาทีได้ (`/api/students/{id}/qr` กำหนดอายุและรีเฟรชทุก 60 วินาที)
-- [/] **AC 5:** (QA) มี k6 script จำลอง 100 concurrent users ยิง `/api/attendance/scan` พร้อม threshold p95 < 2 วินาทีและ p99 < 3 วินาที แต่ยังไม่มีผล runtime load test จาก environment จริง
-
-#### สิ่งที่ต้องปรับปรุงต่อ:
-1. รัน k6 กับ environment จริงและเก็บผล runtime ตาม threshold ที่กำหนด
-2. ตรวจสอบ security declarations ของ API contract จาก validator warnings 141 รายการ
-3. ตรวจสอบระบบ Session Timeout และ lifecycle ของข้อมูลค้างใน environment จริง
-
----
-
-## 4. แผนปฏิบัติการที่ต้องปรับปรุงต่อ (Priority Action Plan)
-
-### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
-1. **ปิด P0 UI evidence:** ตรวจ route/render, responsive และ state evidence ของ Public Website, Trial-class, Finance, Make-up และ LIFF Homework/Make-up
-2. **ยืนยัน payment status policy:** ห้ามสรุป payment ทุก status เป็นรายรับจนกว่า owner จะยืนยันกติกา
-3. **ปิด notification evidence:** audit flow ที่ยังไม่ใช้ dispatcher และเก็บหลักฐาน multi-instance/idempotency ตาม schema ที่อนุมัติ
-4. **ย้าย Direct EF ออกจาก Legacy Controllers:** เสร็จแล้วตาม scope; controller audit เหลือ `0 matches`
-
-### ระยะกลาง (P1: การปิด Loop ฟังก์ชันหลักให้ครบวงจร)
-1. **Runtime evidence ของ LIFF:** ทดสอบ homework upload, scores และ leave/make-up ด้วย response/ownership จริง
-2. **Runtime evidence ของ Make-up Admin:** ทดสอบ create/group cancel, credit return และ conflict กับ database จริง
-3. **CMS contract:** ยืนยัน content CRUD, auth/RBAC, media storage และ lead follow-up ก่อนเชื่อม production
-4. **เชื่อมต่อ AI OCR Slip Provider จริง:** ทำเฉพาะหลัง provider discovery gate ครบ
-
-### หลักฐานรอบ implement Public Website + CMS (13 กันยายน 2026)
-
-- รวม public content เป็น typed source เดียวใน `CMS/lib/content.ts` และเพิ่ม `getPublicInstitute(slug)` เพื่อไม่ให้ route มี lookup logic กระจายหลายจุด
-- ปรับ `CMS/app/p/[slug]/page.tsx` ให้ใช้ source เดียวทั้ง page และ metadata พร้อม canonical path, Open Graph และ JSON-LD ของสถาบัน
-- เพิ่ม `CMS/app/p/[slug]/not-found.tsx` สำหรับ public slug ที่ไม่พบ แทนการแสดงหน้าเปล่าหรือข้อมูล fallback ที่เดาเอง
-- ปรับ `CMS/app/content/page.tsx` ให้ตรวจ shape ของ local draft ก่อนโหลด, ลบ draft ที่ผิดรูปแบบ และมี `Discard local draft` กับลิงก์ไป public preview
-- Validation: `Push-Location .\CMS; npm.cmd run build; Pop-Location` ผ่าน, Next static generation `10/10` routes และ `/p/oasis-learning` เป็น SSG output
-- พบ warning เดิมจาก Autoprefixer เรื่อง `align-items: end`; ไม่กระทบ build แต่ควรเปลี่ยนเป็น `flex-end` ในงาน cleanup CSS รอบถัดไป
-- สถานะยังเป็น `[/]`: การเปลี่ยนแปลงนี้เป็น static/source-hardening และ local draft UX เท่านั้น ยังไม่มี content read/CRUD API, CMS auth/RBAC, media storage หรือ production runtime evidence
-
-### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
-1. **Runtime Load-test evidence:** รัน `load-tests/attendance.js` กับ environment ที่อนุมัติและเก็บผล threshold
-2. **Backup/restore evidence:** ตรวจ schedule, retention และ restore drill จาก provider จริง
-3. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** เพิ่ม runtime evidence และ business policy ว่าการเตือนควรส่งซ้ำเมื่อใด
-4. **Analytics/Payroll/Operations:** ทำ production integration หลังสูตร, schema และ role policy ผ่าน
-
----
-
-## 5. บทสรุปขั้นตอนปัจจุบัน (Current Stage)
-
-โครงการผ่านขั้นตอน **Foundational Setup**, **Core CRUD** และบางส่วนของ **Cross-Platform Integration** แล้ว ปัจจุบันอยู่ในช่วง **Evidence Reconciliation & Customer-flow Stabilization**: ปิด UI state/build evidence ที่มี code แล้ว และแยกงานที่ยังขาด contract, database runtime หรือ provider evidence ออกจาก implementation
-
-จุดที่ต้องให้ความสำคัญสูงสุดนับจากนี้คือ **"หลักฐานการใช้งานจริงของ customer flow"**, **"ความแม่นยำของ payment/credit state"** และ **"การไม่เดา contract ของ provider หรือ business rule"** เพื่อให้การทดลองใช้งาน Pilot Class อ้างอิงผลตรวจที่ทำซ้ำได้และไม่แสดงข้อมูลปลอม.
+## ผลตรวจล่าสุด
+
+- API attendance focused tests: `12 passed / 0 failed / 0 skipped`
+- API full test suite: `279 passed / 0 failed / 0 skipped`
+- Front full test suite: `87 passed / 0 failed / 0 skipped`
+- Front build หลังปรับ attendance scanner UX: ผ่าน
+- API build หลังแก้ attendance transaction: ผ่าน `0 warnings / 0 errors`
+- Attendance ใช้ database unique constraint กันเช็คชื่อซ้ำ และ atomic quota update
+- P4 late worker suppress `cancelled`/`completed` session และตรวจ tenant ของ session/enrollment/student ก่อนสร้าง candidate
+- Scan response คืน notification status ตาม dispatcher จริง (`sent`, `skipped`, `failed`) ไม่ hardcode `queued`
+- P4 focused tests: `16 passed / 0 failed / 0 skipped` ครอบคลุม attendance และ notification dispatcher/job
+- P5 offline queue เพิ่มการอัปเดต `status`, `attempts`, `lastError`, expiry state และ lock กัน sync ซ้ำจากหลาย trigger; event ที่หมดอายุจะไม่ถูกหยิบกลับมาส่งซ้ำ
+- P6 API tests: `279 passed / 0 failed / 0 skipped`; Front tests: `87 passed / 0 failed / 0 skipped`; LineLiff tests: `4 passed / 0 failed / 0 skipped`
+- P6 builds ผ่านทั้ง API, Front และ LineLiff; ยังไม่มี k6 ใน environment จึงยังไม่มีผล 100-concurrent load test
+- P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
+- ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
+
+## Definition of Done
+
+งานหนึ่งหมวดถือว่าส่งได้เมื่อ:
+
+- Flow หลักตาม `ProjectObj.md` ใช้ได้ตั้งแต่ต้นจนจบ
+- API และหน้าจอใช้ field/route เดียวกัน
+- มี validation และข้อความ error ที่ผู้ใช้เข้าใจได้
+- ผ่าน build และ test ที่เกี่ยวข้อง
+- ไม่มี mock data ในผลลัพธ์ที่ผู้ใช้คิดว่าเป็นข้อมูลจริง

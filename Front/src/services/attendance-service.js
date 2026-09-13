@@ -1,5 +1,7 @@
 import { api } from './api';
-import { queueAttendanceEvent, listPendingAttendanceEvents, removeAttendanceEvent } from './attendance-offline-queue';
+import { queueAttendanceEvent, listPendingAttendanceEvents, removeAttendanceEvent, updateAttendanceEvent } from './attendance-offline-queue';
+
+let syncPromise = null;
 
 export const scanAttendance = async (payload, options = {}) => {
   const idempotencyKey = payload.idempotencyKey || crypto.randomUUID();
@@ -14,17 +16,18 @@ export const scanAttendance = async (payload, options = {}) => {
   });
 }
 
-export const syncPendingAttendance = async () => {
+const runPendingAttendanceSync = async () => {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return { synced: 0, failed: 0 };
   const events = await listPendingAttendanceEvents();
   let synced = 0;
   let failed = 0;
   for (const event of events) {
     if (event.expiresAt && Date.parse(event.expiresAt) <= Date.now()) {
-      await removeAttendanceEvent(event.clientEventId);
+      await updateAttendanceEvent(event.clientEventId, { status: 'expired', lastError: 'Event expired before sync' });
       failed += 1;
       continue;
     }
+    await updateAttendanceEvent(event.clientEventId, { status: 'syncing', attempts: (event.attempts || 0) + 1, lastError: null });
     try {
       await api.post('/attendance/scan', event.payload, {
         headers: { 'Idempotency-Key': event.payload.idempotencyKey },
@@ -36,11 +39,24 @@ export const syncPendingAttendance = async () => {
         await removeAttendanceEvent(event.clientEventId);
         synced += 1;
       } else {
+        await updateAttendanceEvent(event.clientEventId, {
+          status: 'failed',
+          lastError: error?.data?.message || error?.message || 'Unable to sync attendance event',
+        });
         failed += 1;
       }
     }
   }
   return { synced, failed };
+};
+
+export const syncPendingAttendance = () => {
+  if (!syncPromise) {
+    syncPromise = runPendingAttendanceSync().finally(() => {
+      syncPromise = null;
+    });
+  }
+  return syncPromise;
 };
 
 export const getDailyAttendance = (params = {}, options = {}) => {

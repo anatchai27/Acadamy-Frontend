@@ -211,13 +211,16 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                 case "private":
                 case null:
                 {
-                    var activeEnrollments = await _context.Enrollments
-                        .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
-                        .ToListAsync(ct);
-                    if (activeEnrollments.Count == 0)
+                    var affectedRows = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+                        UPDATE enrollments
+                        SET sessions_remaining = sessions_remaining - 1
+                        WHERE student_id = {studentId}
+                          AND course_id = {session.CourseId}
+                          AND institute_id = {session.InstituteId}
+                          AND sessions_remaining > 0
+                        """, ct);
+                    if (affectedRows == 0)
                         throw new AttendanceValidationException("NO_QUOTA", "โควต้าคงเหลือไม่เพียงพอ");
-                    foreach (var enrollment in activeEnrollments)
-                        enrollment.SessionsRemaining--;
                     break;
                 }
                 case "subscription":
@@ -279,28 +282,27 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
+            var session = await _context.Sessions
+                .Include(s => s.Course)
+                .FirstOrDefaultAsync(s => s.Id == sessionId
+                    && (_context.TenantInstituteId == 0 || s.InstituteId == _context.TenantInstituteId), ct);
+            if (session is null)
+                throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
+
+            var studentBelongsToSessionTenant = await _context.Students
+                .AnyAsync(s => s.Id == studentId && s.InstituteId == session.InstituteId && s.DeletedAt == null, ct);
+            if (!studentBelongsToSessionTenant)
+                throw new AttendanceValidationException("FORBIDDEN", "นักเรียนไม่ได้อยู่ในสถาบันเดียวกับ session นี้");
+
             var attendance = new Attendance
             {
                 StudentId = studentId,
                 SessionId = sessionId,
                 Status = status,
                 CheckinAt = status == "present" || status == "late" ? DateTime.UtcNow : null,
-                InstituteId = await _context.Sessions
-                    .Where(s => s.Id == sessionId)
-                    .Select(s => s.InstituteId)
-                    .FirstAsync(ct)
+                InstituteId = session.InstituteId
             };
             _context.Attendances.Add(attendance);
-
-            var session = await _context.Sessions
-                .Include(s => s.Course)
-                .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
-            var studentBelongsToSessionTenant = session is not null && await _context.Students
-                .AnyAsync(s => s.Id == studentId && s.InstituteId == session.InstituteId && s.DeletedAt == null, ct);
-            if (session is null)
-                throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
-            if (!studentBelongsToSessionTenant)
-                throw new AttendanceValidationException("FORBIDDEN", "นักเรียนไม่ได้อยู่ในสถาบันเดียวกับ session นี้");
 
             if (status == "present" || status == "late")
             {
@@ -310,13 +312,16 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                     case "private":
                     case null:
                     {
-                        var activeEnrollments = await _context.Enrollments
-                            .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
-                            .ToListAsync(ct);
-                        if (activeEnrollments.Count == 0)
+                        var affectedRows = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+                            UPDATE enrollments
+                            SET sessions_remaining = sessions_remaining - 1
+                            WHERE student_id = {studentId}
+                              AND course_id = {session.CourseId}
+                              AND institute_id = {session.InstituteId}
+                              AND sessions_remaining > 0
+                            """, ct);
+                        if (affectedRows == 0)
                             throw new AttendanceValidationException("NO_QUOTA", "โควต้าคงเหลือไม่เพียงพอ");
-                        foreach (var enrollment in activeEnrollments)
-                            enrollment.SessionsRemaining--;
                         break;
                     }
                     case "subscription":

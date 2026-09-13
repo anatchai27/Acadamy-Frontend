@@ -34,7 +34,9 @@ public class AttendanceService(
             throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
 
         var session = await _repository.GetSessionByIdAsync(request.SessionId, ct);
-        if (session is not null && (session.Status == "cancelled" || session.Status == "completed"))
+        if (session is null)
+            throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
+        if (session.Status == "cancelled" || session.Status == "completed")
             throw new AttendanceValidationException("SESSION_NOT_FOUND", "session นี้ไม่เปิดให้เช็คชื่อ");
         var courseType = session?.Course.CourseType;
 
@@ -64,13 +66,14 @@ public class AttendanceService(
         }
 
         var checkinTime = DateTime.UtcNow;
+        var notificationStatus = "skipped";
         var parents = await _repository.GetParentsWithLineAsync(student.Id, CancellationToken.None);
         foreach (var parent in parents)
         {
             if (parent.UserId is null || string.IsNullOrEmpty(parent.LineUserId))
                 continue;
 
-            await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
+            var notification = await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
                 parent.UserId.Value,
                 student.InstituteId,
                 parent.LineUserId,
@@ -84,13 +87,20 @@ public class AttendanceService(
                 "attendance_checkin",
                 $"attendance_checkin:{request.SessionId}:{student.Id}:{parent.Id}"),
                 CancellationToken.None);
+            notificationStatus = notification.Sent
+                ? "sent"
+                : notificationStatus == "sent"
+                    ? "sent"
+                    : notification.Skipped
+                        ? "skipped"
+                        : "failed";
         }
 
         var remaining = await _repository.GetSessionsRemainingAsync(student.Id, request.SessionId, ct) ?? 0;
         var attendanceId = await _repository.GetAttendanceIdAsync(student.Id, request.SessionId, ct);
 
         return new ScanAttendanceResponse("success", "เช็คชื่อเข้าเรียนสำเร็จ",
-            new ScanAttendanceData(student.Id, student.FullName, "present", checkinTime, remaining, billingMethod, billingDesc, attendanceId, request.SessionId, null, "queued"));
+            new ScanAttendanceData(student.Id, student.FullName, "present", checkinTime, remaining, billingMethod, billingDesc, attendanceId, request.SessionId, null, notificationStatus));
     }
 
     public async Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default)
@@ -100,14 +110,23 @@ public class AttendanceService(
             throw new AttendanceValidationException("INVALID_STATUS", "สถานะไม่ถูกต้อง (ค่าที่ใช้ได้: present, late, absent, leave)");
 
         var session = await _repository.GetSessionByIdAsync(request.SessionId, ct);
-        if (session is not null && (session.Status == "cancelled" || session.Status == "completed"))
+        if (session is null)
+            throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
+        if (session.Status == "cancelled" || session.Status == "completed")
             throw new AttendanceValidationException("SESSION_NOT_FOUND", "session นี้ไม่เปิดให้เช็คชื่อ");
 
         var isDuplicate = await _repository.IsDuplicateScanAsync(request.StudentId, request.SessionId, ct);
         if (isDuplicate)
             throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
 
-        await _repository.ManualCheckinWithTransactionAsync(request.StudentId, request.SessionId, request.Status, ct);
+        try
+        {
+            await _repository.ManualCheckinWithTransactionAsync(request.StudentId, request.SessionId, request.Status, ct);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("uq_attendance_session_student", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
+        }
 
         var attendanceId = await _repository.GetAttendanceIdAsync(request.StudentId, request.SessionId, ct) ?? 0;
 
@@ -137,8 +156,10 @@ public class AttendanceService(
 
     public async Task<CheckoutAttendanceResponse> CheckoutAsync(long attendanceId, CheckoutAttendanceRequest request, int? actorId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.PickedUpBy) && !request.PickupAuthorizationId.HasValue)
-            throw new AttendanceValidationException("PICKUP_REQUIRED", "pickedUpBy or pickupAuthorizationId is required.");
+        var hasPickedUpBy = !string.IsNullOrWhiteSpace(request.PickedUpBy);
+        var hasPickupAuthorization = request.PickupAuthorizationId.HasValue;
+        if (hasPickedUpBy == hasPickupAuthorization)
+            throw new AttendanceValidationException("PICKUP_REQUIRED", "Provide exactly one pickup identity.");
 
         var attendance = await _repository.GetForCheckoutAsync(attendanceId, ct);
         if (attendance is null)

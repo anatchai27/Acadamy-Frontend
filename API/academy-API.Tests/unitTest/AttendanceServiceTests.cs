@@ -23,6 +23,8 @@ public class AttendanceServiceTests
         var repoMock = CreateMockRepo();
         repoMock.Setup(r => r.ValidateQrTokenAsync("valid-token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Student { Id = 105, FullName = "สมชาย" });
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active", Course = new Course() });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         repoMock.Setup(r => r.ScanCheckinWithTransactionAsync(105, 12, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -45,6 +47,8 @@ public class AttendanceServiceTests
         BackgroundNotificationCandidate? candidate = null;
         repoMock.Setup(r => r.ValidateQrTokenAsync("valid-token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Student { Id = 105, InstituteId = 7, FullName = "สมชาย" });
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active", Course = new Course() });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         repoMock.Setup(r => r.ScanCheckinWithTransactionAsync(105, 12, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -56,13 +60,14 @@ public class AttendanceServiceTests
             .ReturnsAsync(new BackgroundNotificationResult(true, false, 1, 9));
 
         var sut = CreateSut(repoMock, dispatcherMock);
-        await sut.ScanAsync(new ScanAttendanceRequest("valid-token", 12));
+        var result = await sut.ScanAsync(new ScanAttendanceRequest("valid-token", 12));
 
         Assert.NotNull(candidate);
         Assert.Equal("attendance_checkin", candidate!.NotificationType);
         Assert.Equal("attendance_checkin:12:105:22", candidate.IdempotencyKey);
         Assert.Equal(7, candidate.InstituteId);
         Assert.Contains("สมชาย", candidate.Message);
+        Assert.Equal("sent", result.Data.NotificationStatus);
     }
 
     // 2
@@ -101,6 +106,8 @@ public class AttendanceServiceTests
         var repoMock = CreateMockRepo();
         repoMock.Setup(r => r.ValidateQrTokenAsync("token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Student { Id = 105 });
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active", Course = new Course() });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         repoMock.Setup(r => r.ScanCheckinWithTransactionAsync(105, 12, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -118,6 +125,8 @@ public class AttendanceServiceTests
     public async Task ManualAsync_ValidPresent_ReturnsManualResponse()
     {
         var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active" });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         repoMock.Setup(r => r.ManualCheckinWithTransactionAsync(105, 12, "present", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -134,6 +143,8 @@ public class AttendanceServiceTests
     public async Task ManualAsync_AbsentStatus_CallsTransactionMethod()
     {
         var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active" });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         repoMock.Setup(r => r.ManualCheckinWithTransactionAsync(105, 12, "absent", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -159,12 +170,25 @@ public class AttendanceServiceTests
     public async Task ManualAsync_DuplicateScan_ThrowsException()
     {
         var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.GetSessionByIdAsync(12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Session { Id = 12, Status = "active" });
         repoMock.Setup(r => r.IsDuplicateScanAsync(105, 12, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var sut = CreateSut(repoMock);
         var ex = await Assert.ThrowsAsync<AttendanceValidationException>(
             () => sut.ManualAsync(new ManualAttendanceRequest(12, 105, "present")));
         Assert.Equal("DUPLICATE_SCAN", ex.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ManualAsync_MissingSession_ThrowsSessionNotFound()
+    {
+        var sut = CreateSut();
+
+        var ex = await Assert.ThrowsAsync<AttendanceValidationException>(
+            () => sut.ManualAsync(new ManualAttendanceRequest(12, 105, "present")));
+
+        Assert.Equal("SESSION_NOT_FOUND", ex.ErrorCode);
     }
 
     // 9 ──────────────────── GetDailyAsync ────────────────────

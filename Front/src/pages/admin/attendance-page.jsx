@@ -18,6 +18,8 @@ export function AttendancePage({ path }) {
   const [pickupOptions, setPickupOptions] = useState([]);
   const [pickupLoading, setPickupLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [scanSubmitting, setScanSubmitting] = useState(false);
+  const [manualLoadingId, setManualLoadingId] = useState(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
@@ -52,6 +54,7 @@ export function AttendancePage({ path }) {
   }, []);
 
   const handleScan = (qrData) => {
+    if (scanSubmitting) return;
     if (!sessionId) {
       showToast('กรุณาเลือก session ก่อนสแกน', 'error');
       return;
@@ -60,18 +63,35 @@ export function AttendancePage({ path }) {
   };
 
   const confirmScan = async () => {
-    if (!pendingScan) return;
+    if (!pendingScan || scanSubmitting) return;
     const qrData = pendingScan.qrToken;
+    setScanSubmitting(true);
     setPendingScan(null);
     try {
       const response = await attendanceService.scanAttendance(pendingScan);
       const queued = response.offlineQueued;
-      setRecentScans((prev) => [{ qrData, name: response.data?.data?.studentName || qrData, status: queued ? 'pending' : 'present', time: new Date().toLocaleTimeString('th-TH') }, ...prev]);
+      const scanData = response.data?.data || {};
+      setRecentScans((prev) => [{
+        qrData,
+        name: scanData.studentName || qrData,
+        status: queued ? 'pending' : scanData.status || 'present',
+        sessionsRemaining: scanData.sessionsRemaining,
+        time: new Date().toLocaleTimeString('th-TH'),
+      }, ...prev]);
       showToast(queued ? 'บันทึกไว้ในคิวออฟไลน์แล้ว จะซิงค์เมื่อออนไลน์' : 'เช็คชื่อสำเร็จ', queued ? 'warning' : 'success');
     } catch (err) {
       const code = err?.data?.errorCode || err?.data?.ErrorCode;
-      const messages = { DUPLICATE_SCAN: 'นักเรียนเช็คชื่อแล้ว', INVALID_QR: 'QR ไม่ถูกต้องหรือหมดอายุ', NO_QUOTA: 'โควต้าไม่เพียงพอ', SESSION_NOT_FOUND: 'ไม่พบ session นี้' };
+      const messages = {
+        DUPLICATE_SCAN: 'นักเรียนเช็คชื่อแล้ว',
+        INVALID_QR: 'QR ไม่ถูกต้องหรือหมดอายุ',
+        NO_QUOTA: 'โควต้าไม่เพียงพอ',
+        SESSION_NOT_FOUND: 'ไม่พบ session นี้',
+        FORBIDDEN: 'คุณไม่มีสิทธิ์ทำรายการนี้',
+        ALREADY_CHECKED_OUT: 'นักเรียนบันทึกรับกลับแล้ว',
+      };
       showToast(messages[code] || err?.data?.message || 'สแกนไม่สำเร็จ กรุณาลองใหม่', 'error');
+    } finally {
+      setScanSubmitting(false);
     }
   };
 
@@ -85,19 +105,18 @@ export function AttendancePage({ path }) {
       return;
     }
 
-    setStudents((prev) =>
-      prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === newStatus ? null : newStatus } : s))
-    );
+    if (manualLoadingId === studentId) return;
+    setManualLoadingId(studentId);
 
     try {
       await attendanceService.submitManualAttendance({ sessionId: Number(sessionId), studentId, status: newStatus });
+      setStudents((prev) => prev.map((s) => (s.studentId === studentId ? { ...s, status: newStatus } : s)));
       showToast('บันทึกสถานะเรียบร้อย', 'success');
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
       showToast(msg, 'error');
-      setStudents((prev) =>
-        prev.map((s) => (s.studentId === studentId ? { ...s, status: s.status === newStatus ? null : newStatus } : s))
-      );
+    } finally {
+      setManualLoadingId(null);
     }
   };
 
@@ -182,7 +201,7 @@ export function AttendancePage({ path }) {
         </button>
       </div>
 
-      <div class="mb-4 flex flex-wrap items-center gap-2">
+       <div class="mb-4 flex flex-wrap items-center gap-2">
         {['check-in', 'check-out'].map(value => (
           <button type="button" key={value} onClick={() => { setScannerMode(value); setPendingScan(null); }} class={`rounded-lg px-4 py-2 text-sm font-semibold ${scannerMode === value ? 'bg-oasis-primary text-white' : 'bg-zinc-100 text-zinc-600'}`}>
             {value === 'check-in' ? 'เช็คเข้า' : 'เช็คออก'}
@@ -194,7 +213,7 @@ export function AttendancePage({ path }) {
       {mode === 'scan' ? (
         <BentoGrid>
           <div class="lg:col-span-3">
-            {scannerMode === 'check-in' ? <ScannerCamera active={!pendingScan} onScan={handleScan} onError={handleScanError} /> : (
+             {scannerMode === 'check-in' ? <ScannerCamera active={!pendingScan && !scanSubmitting} onScan={handleScan} onError={handleScanError} /> : (
               <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
                 <p class="text-sm font-semibold text-zinc-800">เลือกนักเรียนที่เช็คเข้าแล้วเพื่อบันทึกการรับกลับ</p>
                 <div class="mt-4 grid gap-2 sm:grid-cols-2">
@@ -202,7 +221,7 @@ export function AttendancePage({ path }) {
                 </div>
               </div>
             )}
-            {pendingScan && <div class="mt-4 flex items-center justify-between rounded-xl border border-oasis-primary/20 bg-white p-4 shadow-sm"><div><p class="text-xs text-zinc-500">ยืนยัน QR</p><p class="mt-1 max-w-[16rem] truncate text-sm font-semibold text-zinc-900">{pendingScan.qrToken}</p><p class="mt-1 text-xs text-zinc-500">ขั้นตอนสุดท้ายก่อนบันทึก</p></div><div class="flex gap-2"><button type="button" onClick={() => setPendingScan(null)} class="rounded-lg px-3 py-2 text-sm text-zinc-500">ยกเลิก</button><button type="button" onClick={confirmScan} class="rounded-lg bg-oasis-primary px-4 py-2 text-sm font-semibold text-white">ยืนยันเช็คเข้า</button></div></div>}
+            {pendingScan && <div class="mt-4 flex items-center justify-between rounded-xl border border-oasis-primary/20 bg-white p-4 shadow-sm"><div><p class="text-xs text-zinc-500">ยืนยัน QR</p><p class="mt-1 max-w-[16rem] truncate text-sm font-semibold text-zinc-900">{pendingScan.qrToken}</p><p class="mt-1 text-xs text-zinc-500">ขั้นตอนสุดท้ายก่อนบันทึก</p></div><div class="flex gap-2"><button type="button" disabled={scanSubmitting} onClick={() => setPendingScan(null)} class="rounded-lg px-3 py-2 text-sm text-zinc-500 disabled:opacity-50">ยกเลิก</button><button type="button" disabled={scanSubmitting} onClick={confirmScan} class="rounded-lg bg-oasis-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{scanSubmitting ? 'กำลังบันทึก...' : 'ยืนยันเช็คเข้า'}</button></div></div>}
           </div>
 
           <div class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} max-h-[600px] overflow-y-auto`}>
@@ -220,7 +239,7 @@ export function AttendancePage({ path }) {
                   >
                     <div class="min-w-0">
                       <p class="text-sm font-medium text-zinc-800 truncate">{scan.name}</p>
-                      <p class="text-xs text-zinc-500">{scan.time}</p>
+                      <p class="text-xs text-zinc-500">{scan.time}{scan.sessionsRemaining !== undefined && scan.sessionsRemaining !== null ? ` · เหลือ ${scan.sessionsRemaining} ครั้ง` : ''}</p>
                     </div>
                     <StatusBadge status={scan.status} />
                   </div>
@@ -272,8 +291,9 @@ export function AttendancePage({ path }) {
                       <button
                         key={opt.value}
                         type="button"
-                        onClick={() => handleManualStatus(student.studentId, opt.value)}
-                        class={'px-3 py-1.5 text-xs font-medium rounded-lg transition-all ' + (student.status === opt.value ? opt.activeClass : 'text-zinc-500 hover:text-zinc-700')}
+                         disabled={manualLoadingId === student.studentId}
+                         onClick={() => handleManualStatus(student.studentId, opt.value)}
+                         class={'px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-50 ' + (student.status === opt.value ? opt.activeClass : 'text-zinc-500 hover:text-zinc-700')}
                       >
                         {opt.label}
                       </button>

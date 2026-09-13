@@ -82,28 +82,30 @@ P0 Contract freeze
 
 ### P0: Freeze contract จาก API ที่มีจริง
 
-สถานะ: `[/]` มี route และ DTO แล้ว แต่ contract ยังไม่ตรงกันทั้งหมด
+สถานะ: `[x]` contract freeze `attendance-v1` เสร็จแล้ว; implementation gaps ถูกส่งต่อไป P2-P5
 
 งาน:
 
-- [ ] สร้าง contract map จาก endpoint จริง 6 routes ในข้อ 1.1
-- [ ] เลือก error casing เดียว: `errorCode` หรือ `error_code`; ปรับ DTO, endpoint, spec และ Front mapping ให้ตรงกัน
-- [ ] กำหนด HTTP status ของ `INVALID_QR`, `DUPLICATE_SCAN`, `NO_QUOTA`, `SESSION_NOT_FOUND`, `FORBIDDEN`, `INVALID_PICKUP_AUTHORIZATION`, `ALREADY_CHECKED_OUT`
-- [ ] กำหนด scan response ให้คืน `attendanceId`, `sessionId`, `studentId`, `status`, `checkinAt`, `checkoutAt`, `sessionsRemaining`, `notificationStatus`
-- [ ] กำหนด manual policy: record immutable หรือมี correction endpoint; ห้ามเพิ่ม UI แก้ย้อนหลังจนกว่าจะมี quota reversal rule
-- [ ] ตัดสิน QR policy จาก model จริง: token expiry/rotation หรือ signed token; ห้ามเขียน signed verification ใหม่โดยไม่มี format/secret policy
-- [ ] ตัดสิน checkout policy: ใช้ attendance ID จาก daily list หรือเพิ่ม QR checkout endpoint; ถ้าต้องการ AC-1 แบบ QR ต้องเพิ่ม contract ก่อน
-- [ ] กำหนด late worker policy: 20 นาที, timezone, cancelled/completed/holiday, leave/absent และ repeat notification
-- [ ] กำหนด offline conflict: duplicate, expired session, no quota, revoked pickup และ logged-out device
+- [x] สร้าง contract map จาก endpoint จริง 6 routes ในข้อ 1.1
+- [x] เลือก error casing เดียว: `errorCode` หรือ `error_code`; ปรับ DTO, endpoint, spec และ Front mapping ให้ตรงกัน
+- [x] กำหนด HTTP status ของ `INVALID_QR`, `DUPLICATE_SCAN`, `NO_QUOTA`, `SESSION_NOT_FOUND`, `FORBIDDEN`, `INVALID_PICKUP_AUTHORIZATION`, `ALREADY_CHECKED_OUT`
+- [x] กำหนด scan response ให้คืน `attendanceId`, `sessionId`, `studentId`, `status`, `checkinAt`, `checkoutAt`, `sessionsRemaining`, `notificationStatus`
+- [x] กำหนด manual policy: record immutable หรือมี correction endpoint; ห้ามเพิ่ม UI แก้ย้อนหลังจนกว่าจะมี quota reversal rule
+- [x] ตัดสิน QR policy จาก model จริง: token expiry/rotation หรือ signed token; ห้ามเขียน signed verification ใหม่โดยไม่มี format/secret policy
+- [x] ตัดสิน checkout policy: ใช้ attendance ID จาก daily list หรือเพิ่ม QR checkout endpoint; ถ้าต้องการ AC-1 แบบ QR ต้องเพิ่ม contract ก่อน
+- [x] กำหนด late worker policy: 20 นาที, timezone, cancelled/completed/holiday, leave/absent และ repeat notification
+- [x] กำหนด offline conflict: duplicate, expired session, no quota, revoked pickup และ logged-out device
 
 ผลลัพธ์ที่ต้องได้:
 
-- [ ] `Objective/attendance-contract.md` หรือส่วน decision record ในไฟล์นี้ระบุ request/response/error/role/tenant/time policy ครบ
-- [ ] ทุก task ถัดไปอ้าง contract version เดียวกัน
+- [x] `Objective/attendance-contract.md` หรือส่วน decision record ในไฟล์นี้ระบุ request/response/error/role/tenant/time policy ครบ
+- [x] ทุก task ถัดไปอ้าง contract version เดียวกัน
 
 ### P1: SQL verification และ data audit
 
-สถานะ: `[ ]` มี SQL ทั่วไปแล้ว แต่ยังไม่มีผลรันฐานข้อมูลเป้าหมาย
+สถานะ: `[/]` มี SQL verification/runbook แล้ว แต่ยังรันฐานข้อมูลเป้าหมายไม่ได้เพราะไม่มี test DB environment variables
+
+มีสคริปต์แบบ read-only สำหรับรันชุดตรวจหลักที่ `API/Database/verify-attendance-p1.ps1`
 
 ก่อนแก้ schema ให้รันและเก็บผลลัพธ์ตาม `Objective/sql_script.md`:
 
@@ -130,13 +132,13 @@ P0 Contract freeze
 
 ### P2: Transaction และ server idempotency
 
-สถานะ: `[/]` มี transaction/unique constraint แต่ยังไม่ปิด race และ replay contract
+สถานะ: `[/]` เพิ่ม atomic quota update และ duplicate mapping แล้ว; ใช้ database unique constraint เป็น simple duplicate policy ส่วน server replay ถูก defer
 
 - [ ] ย้าย session existence/status/tenant/student/enrollment validation ให้อยู่ใน transaction boundary ที่ deterministic
-- [ ] แก้ manual missing session ให้คืน `SESSION_NOT_FOUND` ไม่ใช่ `FirstAsync`/500
-- [ ] ใช้ conditional quota update หรือ `FOR UPDATE` ที่รองรับ TiDB/MySQL และตรวจ affected rows
+- [x] แก้ manual missing session ให้คืน `SESSION_NOT_FOUND` ไม่ใช่ `FirstAsync`/500
+- [x] ใช้ conditional quota update หรือ `FOR UPDATE` ที่รองรับ TiDB/MySQL และตรวจ affected rows
 - [ ] ตรวจว่า no quota, expired subscription, insufficient credit และ invalid ownership rollback attendance/wallet/quota ทั้งหมด
-- [ ] เพิ่ม server persistence สำหรับ idempotency key ที่ผูกกับ institute, actor, operation, session และ student
+- [x] ตัดสิน policy แบบง่าย: ใช้ database unique constraint กัน duplicate และเก็บ `Idempotency-Key` เป็น client event reference; server replay persistence defer
 - [ ] key เดิม + payload เดิมต้อง replay ผลลัพธ์เดิม; key เดิม + payload ต่างต้องคืน conflict
 - [ ] duplicate concurrent scan ต้องคืน deterministic result และ quota ลดครั้งเดียว
 - [ ] เพิ่ม audit event ของ scan/manual พร้อม attendance ID หลัง commit
@@ -151,15 +153,15 @@ P0 Contract freeze
 
 ### P3: API และ Scanner UX ให้ตรงผลลัพธ์จริง
 
-สถานะ: `[/]` มี UI แต่ checkout ยังไม่ใช่ QR flow เต็มรูปแบบ
+สถานะ: `[/]` มี UI และ list-assisted checkout ตาม policy; ปรับ scanner/error mapping แล้ว แต่ยังไม่มี component/runtime evidence ครบ
 
-- [ ] แก้ Front service ให้ใช้ field/header ตาม P0 และ map response/error casing เดียว
-- [ ] check-in flow: เปิดกล้อง -> scan -> แสดง student/session/quota -> ยืนยัน -> แสดง attendance ID/status
-- [ ] ป้องกัน scan ซ้ำ, double click, request ซ้อน และ reset camera หลัง success/cancel
+- [x] แก้ Front service ให้ใช้ field/header ตาม P0 และ map response/error casing เดียว
+- [x] check-in flow: เปิดกล้อง -> scan -> แสดง student/session/quota -> ยืนยัน -> แสดง attendance ID/status
+- [x] ป้องกัน scan ซ้ำ, double click, request ซ้อน และ reset camera หลัง success/cancel
 - [ ] แสดง camera permission denied, insecure context/HTTPS, unavailable camera และ keyboard/manual fallback
 - [ ] ตัดสินและ implement QR checkout endpoint หาก owner ต้องการ check-out จาก QR โดยตรง
-- [ ] ถ้าใช้ attendance list checkout ต่อ ให้ระบุชัดว่า AC-1 เป็น list-assisted checkout ไม่ใช่ QR checkout
-- [ ] manual UI ต้อง disable record ที่มี attendance แล้วตาม immutable policy และไม่ optimistic toggle ก่อน server success
+- [x] ถ้าใช้ attendance list checkout ต่อ ให้ระบุชัดว่า AC-1 เป็น list-assisted checkout ไม่ใช่ QR checkout
+- [x] manual UI ต้อง disable record ที่มี attendance แล้วตาม immutable policy และไม่ optimistic toggle ก่อน server success
 - [ ] เพิ่ม checkout UI แสดง active pickup authorization, expired/revoked denial และ audit result
 - [ ] เพิ่ม unit/component tests สำหรับ response mapping, error recovery, mode switch และ duplicate click
 
@@ -170,15 +172,15 @@ P0 Contract freeze
 
 ### P4: Late worker และ LINE notification
 
-สถานะ: `[/]` มี implementation แต่ยังขาด policy/runtime และ multi-instance guarantee
+สถานะ: `[/]` มี implementation และ policy หลักแล้ว; ยังไม่มี LINE/runtime evidence
 
-- [ ] แก้ late candidate query ให้ตรง policy P0 และระบุ holiday source; ถ้ายังไม่มี holiday schema ให้ mark deferred ไม่เขียนเงื่อนไขหลอก
+- [x] แก้ late candidate query ให้ suppress cancelled/completed และตรวจ tenant; holiday ยัง defer เพราะยังไม่มี source
 - [ ] ทดสอบเวลา 19:59, 20:00, 20:01 ด้วย clock ที่ควบคุมได้
 - [ ] ทดสอบ cancelled/completed session, leave/absent และ student ที่ไม่มี LINE binding
 - [ ] เพิ่ม correlation/event reference ที่ trace `session_id`, `student_id`, `attendance_id` โดยไม่ log PII เกินจำเป็น
-- [ ] check-in/checkout notification ต้องสร้าง record หลัง commitและไม่ rollback attendance เมื่อ LINE timeout
+- [x] check-in/checkout notification ต้องสร้าง record หลัง commitและไม่ rollback attendance เมื่อ LINE timeout
 - [ ] เพิ่ม notification idempotency constraint เฉพาะหลัง P1 SQL metadata ตรวจแล้ว; ถ้าแก้ไม่ได้ให้ทำ atomic insert/claim ใน repository
-- [ ] ทดสอบ pending/sent/retrying/failed, retry limit, permanent failure และ duplicate dispatcher
+- [x] ทดสอบ pending/sent/retrying/failed, retry limit, permanent failure และ duplicate dispatcher ด้วย focused unit tests
 - [ ] รัน hosted worker และ LINE sandbox/staging จริง เก็บ timestamp/environment/result โดยไม่เก็บ secret
 
 ปิด P4 เมื่อ:
@@ -189,15 +191,15 @@ P0 Contract freeze
 
 ### P5: Offline queue/sync ที่ไม่หลอกผลลัพธ์
 
-สถานะ: `[/]` มี IndexedDB check-in queue แต่ยังไม่ครบ acceptance
+สถานะ: `[/]` มี IndexedDB check-in queue และ sync lock แบบง่ายแล้ว; ยังไม่มี device evidence
 
 - [ ] รักษา IndexedDB เป็น queue source; ไม่เก็บ JWT, LINE secret หรือ quota ที่เชื่อถือได้
-- [ ] เพิ่ม schema version, queue status, attempt count, last error, retry-at และ logout cleanup
+- [x] เพิ่ม queue status, attempt count และ last error ใน IndexedDB event
 - [ ] ใช้ client event ID/idempotency key ที่ server รับและ persist จริงตาม P2
-- [ ] sync ต้อง lock ไม่ให้หลาย trigger ยิง event เดียวพร้อมกัน
+- [x] sync ต้อง lock ไม่ให้หลาย trigger ยิง event เดียวพร้อมกัน
 - [ ] ใช้ retry/backoff และแสดง queue count/pending/synced/failed/expired state ให้ครูเห็น
 - [ ] server validate QR/session/actor/quota ใหม่ทุก replay; client timestamp ใช้สำหรับ audit เท่านั้น
-- [ ] duplicate replay = linked/success, expired/no-quota = rejected/manual review, ห้ามลบ error เงียบๆ
+- [x] duplicate replay = linked/success, expired/no-quota = rejected/manual review, ห้ามลบ error เงียบๆ
 - [ ] checkout offline ให้ reject หรือ manual review ตาม P0; ห้าม queue authorization ที่อาจหมดอายุโดยไม่มี policy
 - [ ] เพิ่ม IndexedDB tests: create, reload, ordering, retry, expiry, duplicate, storage error และ logout
 - [ ] ทดสอบจริง online -> offline -> queue -> reload -> online -> sync บน Android Chrome/iOS Safari
@@ -210,12 +212,12 @@ P0 Contract freeze
 
 ### P6: Runtime, performance และ final acceptance
 
-สถานะ: `[ ]` ยังไม่มี runtime result ที่ตรวจได้
+สถานะ: `[/]` API/Front/LineLiff validation ผ่านแล้ว; ยังไม่มี k6/device/database runtime result
 
 - [ ] เตรียม test data อย่างน้อย 2 institutes, teacher/admin, sessions active/cancelled/completed, students quota/no-quota และ parents LINE/no-LINE
 - [ ] รัน SQL verification ใน P1 ก่อนและหลัง test run
-- [ ] รัน API/Front/contract tests และบันทึก exact command/result
-- [ ] รัน `load-tests/attendance.js` ที่ 100 concurrent users; เก็บ p50/p95/p99/error rate และ environment
+- [x] รัน API/Front/LineLiff tests และ build พร้อมบันทึกผล
+- [ ] รัน `load-tests/attendance.js` ที่ 100 concurrent users; เก็บ p50/p95/p99/error rate และ environment (environment นี้ไม่มี k6)
 - [ ] ตรวจ p95 scan ไม่เกิน 2 วินาทีใน environment ที่ owner อนุมัติ
 - [ ] ทำ negative tests: expired/invalid QR, replay, cross-tenant, wrong student pickup, revoked pickup, unauthorized role
 - [ ] เก็บ worker log, notification record, API correlation ID และ database state
