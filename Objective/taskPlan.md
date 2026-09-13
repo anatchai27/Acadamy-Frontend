@@ -264,7 +264,22 @@ C:\Project\Acadamy-Frontend\skills\skills.md
 
 ### P1-02 Reports + Analytics UI + API
 
-สถานะเริ่มต้น: `[/]` เฉพาะ revenue report ที่มี implementation
+สถานะ: `[/]` มีเฉพาะ revenue report และ Finance flow ที่เชื่อม API จริง
+
+หลักฐานรอบ discovery:
+
+- `GET /api/reports/revenue` รับ `from`, `to` และ `group_by=day|month|year`; จำกัด role เป็น `admin` และคืน `period`, `grossAmount`, `paymentCount`
+- Revenue service ใช้ payment query ที่มี tenant filter และมี focused grouping test; มี authorization test ที่ยืนยัน `teacher` ได้ `403`
+- Front Finance เชื่อม revenue report และ payment CSV export จริง พร้อม loading, empty และ error state
+- Analytics ใน CMS ยังเป็น definition-gate state และไม่แสดงตัวเลขปลอม
+
+ช่องว่างที่ยืนยันแล้ว:
+
+- `Payment.Status` ยังไม่มี policy ว่า status ใดนับเป็นรายรับ จึงยังรับรองยอด revenue ไม่ได้
+- ยังไม่มีสูตรที่ owner ยืนยันสำหรับ Renewal Rate, Churn Risk และ Revenue Forecast รวมถึง date window, timezone, missing-data และ privacy rule
+- Revenue report ปัจจุบันเป็น historical aggregation ไม่ใช่ forecast
+- ยังไม่มี Teacher Timesheet API/service/DTO/export contract; ยังต้องเลือก source ระหว่าง `sessions` และ `attendances`
+- ยังไม่มี focused tests สำหรับ analytics formula, empty result, privacy, forecast และ timesheet export
 
 งาน:
 

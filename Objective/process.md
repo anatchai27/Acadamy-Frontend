@@ -167,6 +167,16 @@
 - Front build ผ่าน (`npm.cmd run build`); CMS build ผ่าน (`npm.cmd run build`) และรายงาน `/p/oasis-learning` เป็น SSG output
 - สถานะ P0-05: `[/]`; ยังไม่มี content read API/CRUD, CMS auth/RBAC, media upload, lead list/status/follow-up contract หรือ production runtime evidence จึงไม่ประกาศ CMS acceptance ผ่าน
 
+### หลักฐาน P1-02: Reports + Analytics UI + API discovery (13 กันยายน 2026)
+
+- ตรวจ `API/Controllers/ReportEndpoints.cs`, `API/Services/RevenueReportService.cs`, `Front/src/pages/admin/finance-page.jsx`, report service และ focused tests เทียบกับ task board
+- `GET /api/reports/revenue` เป็น implementation จริง รับ `from`, `to` และ `group_by=day|month|year`; validation ปฏิเสธช่วงวันที่ไม่ถูกต้องและ grouping ที่ไม่รองรับ; endpoint จำกัด role เป็น `admin`
+- Revenue response ใช้ `RevenueReportRow(period, grossAmount, paymentCount)` และ service ดึง payment ผ่าน repository ที่มี tenant query filter; มี grouping unit test และ authorization integration test (`admin` ผ่าน, `teacher` ได้ `403`)
+- Finance UI เรียก revenue API และ payment CSV export จริง พร้อม loading, empty และ error state; implementation ปัจจุบันรวม payment ทุก status เพราะยังไม่มี payment-status policy ที่ owner ยืนยัน
+- ยังไม่มี API หรือสูตรที่ยืนยันสำหรับ Renewal Rate, Churn Risk และ Revenue Forecast; CMS `/operations` แสดง definition-gate state โดยไม่แสดงตัวเลขปลอม
+- ยังไม่มี Teacher Timesheet API/service/DTO/export contract; Objective อ้าง `sessions` และ `attendances` แต่ยังไม่เลือก source และกติกานับชั่วโมง
+- สถานะ P1-02: `[/]`; ปิดไม่ได้จนกว่าจะยืนยัน payment status policy, สูตร analytics, date window/timezone/privacy rule, timesheet source/export และเพิ่ม focused tests ตาม contract
+
 ---
 
 ## 2. ตารางสรุปความคืบหน้าแยกตาม 12 หมวดหมู่
