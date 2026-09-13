@@ -5,15 +5,14 @@
 
 ## Baseline ที่ยืนยันแล้ว
 
-- Current API snapshot: `68 paths / 42 schemas`
+- Current API snapshot: `69 paths / 42 schemas`
 - Target API contract: `73 paths / 62 schemas`
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `230 passed / 0 failed / 0 skipped`
-- Controller ที่ยังมี direct EF/data access: `5 files / 82 matches`
+- Full API tests ล่าสุด: `237 passed / 0 failed / 0 skipped`
+- Controller ที่ยังมี direct EF/data access: `4 files / 77 matches`
   - `AuthEndpoints.cs`
-  - `InstituteEndpoints.cs`
   - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
   - `ParentEndpoints.cs`
   - `TeacherEndpoints.cs`
@@ -38,11 +37,17 @@
 - [x] Pickup authorization แยก Controller -> Service -> Repository
 - [x] Attendance checkout ใช้ attendance ID จริงและเลือก authorized pickup ได้
 - [x] Leave core: create, rule-based type, approve/reject, makeup credit และ ledger reference
-- [x] Parent LIFF: leave status, session selection, makeup credit, slot list และ booking
-- [x] Admin attendance/pickup UI
+- [x] Parent LIFF: leave status, session selection, makeup credit, slot list, booking และ cancel booking (Slice A)
+- [x] Makeup credit expired validation & tests (Slice B)
+- [x] Leave attachment: schema `leave_request_attachments` verified, model, EF mapping, storage upload API และ LIFF UI (Slice C)
+- [x] Admin checkout audit log: atomic transaction, read API, UI server timestamp/actor display (Slice D)
+- [x] Legacy controller boundary: `FileUploadEndpoints.cs` ย้ายเป็น service/repository สมบูรณ์ (Slice E part 1)
+- [x] Student card PDF generator (QuestPDF + QRCoder) + S3 upload + Admin UI download (Slice F)
+- [x] Student CSV export: async streaming query + escaping + tenant isolation test + Admin UI download (Slice G)
+- [x] Payment slip verification: provider contract + amount check + conflict guard + tests (Slice H)
 - [x] Receipt PDF renderer และ upload ผ่าน `IFileStorageService`
 - [x] Contract validator, tenant-aware test fixture และ EF model cache key
-- [x] Full API test suite ผ่าน `225/225`
+- [x] Full API test suite ผ่าน `237/237`
 
 ## รอบถัดไป: P0 ปิดงานที่ค้างจาก workflow เดิม
 
@@ -153,7 +158,7 @@
 สถานะรายไฟล์:
 
 - [x] `FileUploadEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
-- [ ] `InstituteEndpoints.cs` (ไฟล์ถัดไป)
+- [x] `InstituteEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
 - [ ] `TeacherEndpoints.cs`
 - [ ] `UserEndpoints.cs`
 - [ ] `AuthEndpoints.cs`
@@ -162,7 +167,7 @@
 
 **Definition of Done ของ architecture รอบนี้:**
 
-- [/] controller direct EF matches ลดจาก `101` เหลือ `82` หลังปิด FileUpload; เป้าหมาย scope ทั้งหมดคือ `0`
+- [/] controller direct EF matches ลดจาก `101` เหลือ `77` หลังปิด FileUpload + Institute; เป้าหมาย scope ทั้งหมดคือ `0`
 - [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
 - [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
 
@@ -187,10 +192,11 @@
 
 ### Slice H: Payment slip verification
 
-- [ ] กำหนด provider contract และผลลัพธ์ `verified/amount/reference/reason`
-- [ ] ห้ามเปลี่ยน payment เป็น verified หาก amount ไม่ตรง
-- [ ] เก็บ provider payload ตาม schema ที่มีอยู่
-- [ ] เพิ่ม mock provider tests และ conflict tests
+- [x] กำหนด provider contract และผลลัพธ์ `verified/amount/reference/reason`
+- [x] ห้ามเปลี่ยน payment เป็น verified หาก amount ไม่ตรง
+- [x] เก็บ provider payload ตาม schema ที่มีอยู่
+- [x] เพิ่ม mock provider tests และ conflict tests
+- [/] ผูก provider จริงใน production (default provider ตอนนี้ตอบ `503 provider unavailable` จนกว่าจะตั้งค่า)
 
 ### Slice I: Background jobs
 
@@ -248,9 +254,13 @@
 
 ## ลำดับลงมือจริง
 
-1. Slice A: parent booking cancellation
-2. Slice B: expired credit test
-3. Slice C: schema decision + leave attachment
-4. Slice D: audit log checkout
-5. Slice E: legacy controller boundary ทีละไฟล์
-6. Slice F-J: P2 ที่เหลือตาม dependency
+1. ~~Slice A: parent booking cancellation~~ (เสร็จสมบูรณ์)
+2. ~~Slice B: expired credit test~~ (เสร็จสมบูรณ์)
+3. ~~Slice C: schema decision + leave attachment~~ (เสร็จสมบูรณ์หลัง schema verified)
+4. ~~Slice D: audit log checkout~~ (เสร็จสมบูรณ์)
+5. ~~Slice F: student card PDF~~ (เสร็จสมบูรณ์)
+6. ~~Slice G: student CSV export~~ (เสร็จสมบูรณ์; XLSX รอระยะถัดไป)
+7. ~~Slice H: payment slip verification~~ (เสร็จสมบูรณ์; รอต่อ live AI provider)
+8. Slice E: legacy controller boundary 4 ไฟล์ที่เหลือ (`Teacher`, `User`, `Auth`, `Parent`)
+9. Slice I: background jobs (late attendance, homework reminder, quota low)
+10. Slice J: admin inactivity timeout / CI / load test

@@ -20,6 +20,8 @@ public interface IPaymentRepository
     Task<int> GetPaymentCountAsync(
         DateTime? startDate, DateTime? endDate, string? method,
         CancellationToken ct = default);
+    Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default);
+    Task SaveVerifiedSlipAsync(Payment payment, CancellationToken ct = default);
 }
 
 public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
@@ -125,5 +127,15 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
             query = query.Where(p => p.Method == method);
 
         return await query.CountAsync(ct);
+    }
+
+    public Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default) =>
+        _context.Payments.FirstOrDefaultAsync(p => p.Id == paymentId, ct);
+
+    public async Task SaveVerifiedSlipAsync(Payment payment, CancellationToken ct = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+        await _context.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
     }
 }

@@ -1974,11 +1974,11 @@
       "post": {
         "tags": ["Payments"],
         "operationId": "VerifyPaymentSlip",
-        "x-implementation-status": "new",
+        "x-implementation-status": "partial",
         "x-roles": ["admin", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
-        "parameters": [{ "name": "paymentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
-        "responses": { "200": { "description": "Slip verification result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaymentSlipVerification" } } } } }
+        "parameters": [{ "name": "paymentId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "200": { "description": "Slip verification result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaymentSlipVerification" } } } }, "409": { "$ref": "#/components/responses/Conflict" }, "503": { "description": "Verification provider unavailable" } }
       }
     },
     "/api/payments/{paymentId}/receipt.pdf": {
@@ -3141,12 +3141,15 @@
       },
       "PaymentSlipVerification": {
         "type": "object",
-        "required": ["verified"],
+        "required": ["paymentId", "verified", "provider"],
         "properties": {
+          "paymentId": { "type": "integer", "format": "int64" },
           "verified": { "type": "boolean" },
           "amount": { "type": "number", "format": "double", "nullable": true },
           "reference": { "type": "string", "nullable": true },
-          "reason": { "type": "string", "nullable": true }
+          "reason": { "type": "string", "nullable": true },
+          "provider": { "type": "string" },
+          "verifiedAt": { "type": "string", "format": "date-time", "nullable": true }
         }
       },
       "CreateLeadRequest": {

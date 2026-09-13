@@ -1,6 +1,6 @@
 # รายงานหลักฐานและสถานะการพัฒนาโครงการ (Evidence & Implementation Status)
 
-> **วันที่ประเมิน:** 12 กันยายน 2026  
+> **วันที่ประเมิน:** 13 กันยายน 2026  
 > **เอกสารอ้างอิงหลัก:** `Objective/ProjectObj.md` (SRS Tutoring Management System)
 > **Schema evidence ล่าสุด:** `Objective/results-2026-09-12-220648.csv`
 > **ขอบเขตการตรวจสอบ:** ตรวจจากไฟล์ซอร์ส, model, endpoint และ schema ที่พบใน workspace ของ `API` (.NET 9), `Front` (Preact + Vite), และ `LineLiff` (Preact + LIFF SDK + Tailwind v4) แล้วเทียบกับ Acceptance Criteria (AC) ทั้ง 67 ข้อ รวมผล API contract validation, API build และ test suite ล่าสุด
@@ -21,19 +21,20 @@
 ## 1. สรุปภาพรวมความคืบหน้า (Executive Overview)
 
 ```text
-[███████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 47% (31.5 / 67 Acceptance Criteria)
+[████████████████████████████░░░░░░░░░░░░░░░░░░░░░░] 57% (38.0 / 67 Acceptance Criteria)
 ```
 
 - **ผลประเมินจากหลักฐานที่ตรวจ:** อยู่ในขั้น **Feature Integration & Stabilization**
-- **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อพื้นฐาน, ระบบชำระเงิน POS เบื้องต้น, การเชื่อมต่อ LINE LIFF และการรัน Dev Environment อัตโนมัติ (`Run-Dev.ps1`)
-- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ระบบแนบหลักฐานลา, parent booking cancellation, audit log ถาวร, ระบบ Background Workers/Cron (แจ้งเตือน/ทวงงาน/เตือนโควต้า), และหน้า Public Website/CMS
+- **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อและ checkout พร้อมบันทึกผู้รับ/audit log, ระบบส่งออกข้อมูลนักเรียนเป็น CSV และบัตรนักเรียน PDF, ระบบรับชำระเงินและออกใบเสร็จ PDF จริง, ระบบตรวจสอบสลิป, ระบบแจ้งลาและจองเรียนชดเชยบน LINE LIFF พร้อมแนบไฟล์หลักฐาน
+- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ระบบ Background Workers/Cron (แจ้งเตือนมาสาย/ทวงงาน/เตือนโควต้า), หน้ารายงาน Analytics และหน้า Public Website/CMS
 
 ### หลักฐาน validation ล่าสุด
 
-- API contract validator: `86` current operations, `94` target operations, `Errors = 0`
+- API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `212 passed, 0 failed, 0 skipped`
-- Controller ownership audit: ยังพบ direct EF/data access ใน 7 controller files รวม 101 matches; จึงยังไม่ถือว่า DoD ownership boundary ผ่านทั้งระบบ
+- Full API test suite: `237 passed, 0 failed, 0 skipped`
+- Controller ownership audit: direct EF/data access ลดลงเหลือ 4 controller files รวม 77 matches (จากเดิม 7 files / 101 matches)
+- Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
 ---
 
@@ -42,20 +43,20 @@
 | หมวด | ชื่อระบบ / Objective | ผ่านตามหลักฐาน | ทั้งหมด | เปอร์เซ็นต์ประเมิน | สถานะประเมิน |
 |:---:|---|:---:|:---:|:---:|:---:|
 | **1** | Authentication & RBAC (ความปลอดภัยและการจัดการสิทธิ์) | 5 | 6 | **83%** | 🟢 ใกล้สมบูรณ์ |
-| **2** | Student Management (ประวัตินักเรียนและออกบัตร QR) | 4.5 | 7 | **64%** | 🟡 กำลังพัฒนา |
-| **3** | QR Attendance (ระบบเช็คชื่อ หักโควต้า และแจ้งเตือน) | 3.5 | 7 | **50%** | 🟡 กำลังพัฒนา |
-| **4** | Leave & Make-up (ระบบแจ้งลาและบริหารคลาสชดเชย) | 1.5 | 5 | **30%** | 🔴 ต้องเร่งทำ |
+| **2** | Student Management (ประวัตินักเรียนและออกบัตร QR) | 6.5 | 7 | **93%** | 🟢 ใกล้สมบูรณ์ |
+| **3** | QR Attendance (ระบบเช็คชื่อ หักโควต้า และแจ้งเตือน) | 4.5 | 7 | **64%** | 🟡 กำลังพัฒนา |
+| **4** | Leave & Make-up (ระบบแจ้งลาและบริหารคลาสชดเชย) | 4.0 | 5 | **80%** | 🟢 ใกล้สมบูรณ์ |
 | **5** | Skill Card & Gamification (การ์ดพลังและประเมินผล) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
 | **6** | Homework System (การบ้านและการตรวจงานออนไลน์) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
-| **7** | Payment & Billing (รับชำระเงินและออกใบเสร็จ) | 2 | 5 | **40%** | 🔴 ต้องเร่งทำ |
+| **7** | Payment & Billing (รับชำระเงินและออกใบเสร็จ) | 3.0 | 5 | **60%** | 🟡 กำลังพัฒนา |
 | **8** | Public Website & CMS (เว็บไซต์ประชาสัมพันธ์และหาลูกค้า) | 1.5 | 5 | **30%** | 🔴 ต้องเร่งทำ |
 | **9** | LINE Integration (Push, LIFF App, Rich Menu, Bot) | 2.5 | 6 | **42%** | 🟡 กำลังพัฒนา |
 | **10** | Reports & Analytics (รายงานเชิงวิเคราะห์สำหรับผู้บริหาร) | 1.5 | 5 | **30%** | 🔴 ต้องเร่งทำ |
 | **11** | Operations & Compliance (จัดการหลังบ้านและ PDPA) | 2 | 6 | **33%** | 🔴 ต้องเร่งทำ |
 | **12** | Architecture & NFR (ประสิทธิภาพ ความปลอดภัย สถาปัตยกรรม) | 2.5 | 5 | **50%** | 🟡 กำลังพัฒนา |
-| **รวม** | **ผลรวมจากคะแนนในตาราง** | **31.5** | **67** | **~47%** | 🟡 อยู่ระหว่าง integration |
+| **รวม** | **ผลรวมจากคะแนนในตาราง** | **38.0** | **67** | **~57%** | 🟡 อยู่ระหว่าง integration |
 
-> **หมายเหตุการคำนวณ:** คะแนนรวมในตารางคือ `31.5 / 67 = 47.01%` ปัดเป็น `47%`. ตัวเลขนี้เป็นคะแนนแบบนับ AC เท่ากันทุกข้อ ไม่ใช่ weighted progress จริง เพราะเอกสารยังไม่ได้กำหนดน้ำหนักของแต่ละ AC
+> **หมายเหตุการคำนวณ:** คะแนนรวมในตารางคือ `38.0 / 67 = 56.71%` ปัดเป็น `57%`. ตัวเลขนี้เป็นคะแนนแบบนับ AC เท่ากันทุกข้อ ไม่ใช่ weighted progress จริง เพราะเอกสารยังไม่ได้กำหนดน้ำหนักของแต่ละ AC
 
 ---
 
@@ -88,65 +89,73 @@
 ---
 
 ### หมวดที่ 2: ระบบจัดการประวัตินักเรียนและออกบัตร QR Code (Student Management)
-* **ความคืบหน้า:** `64%` (4.5 / 7 ผ่าน)
-* **สถานะ:** 🟡 กำลังพัฒนา
+* **ความคืบหน้า:** `93%` (6.5 / 7 ผ่าน)
+* **สถานะ:** 🟢 ใกล้สมบูรณ์
 
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** สร้างหน้าฟอร์มลงทะเบียนนักเรียน รองรับการอัปโหลดรูปภาพ (`photo_url`) และข้อมูลพื้นฐาน (`Front/src/pages/admin/student-add-page.jsx`, `/api/uploads/student-photo`)
-- [/] **AC 2:** ในฟอร์ม มีส่วนให้เพิ่มข้อมูลผู้ปกครองแบบ Dynamic (กดเพิ่มคนที่ 1, คนที่ 2 ได้) และระบุรายชื่อคนรับกลับ (ทำ Dynamic Parent และค้นหาเบอร์โทรได้แล้ว แต่ยังขาดช่องระบุ "รายชื่อผู้มีสิทธิ์รับเด็กกลับ")
+- [/] **AC 2:** ในฟอร์ม มีส่วนให้เพิ่มข้อมูลผู้ปกครองแบบ Dynamic (กดเพิ่มคนที่ 1, คนที่ 2 ได้) และระบุรายชื่อคนรับกลับ (ทำ Dynamic Parent และระบบสิทธิ์รับส่งเด็ก `student_pickup_authorizations` CRUD สมบูรณ์แล้ว รอเชื่อมเข้าฟอร์มตอนลงทะเบียนใหม่)
 - [x] **AC 3:** ในฟอร์ม มีช่อง (Textarea) ให้ระบุข้อมูลโรคประจำตัว/แพ้อาหาร (`medicalInfo` มีในหน้าเพิ่มนักเรียนและหน้ารายละเอียด)
 - [x] **AC 4:** เมื่อกดบันทึก ระบบต้องสร้างบัตรนักเรียนดิจิทัลที่มี QR Code อัตโนมัติ (`POST /students` ส่งคืน `qrToken`, แสดงผลด้วย `react-qr-code` ใน `student-profile-page.jsx`)
-- [ ] **AC 5:** มีฟังก์ชันให้ Export หน้าบัตรเป็นไฟล์ PDF สำหรับพิมพ์จริงได้ (FR-STD-08) (ยังไม่มี PDF Renderer สำหรับบัตรนักเรียน)
+- [x] **AC 5:** มีฟังก์ชันให้ Export หน้าบัตรเป็นไฟล์ PDF สำหรับพิมพ์จริงได้ (FR-STD-08) (`StudentCardPdfService.cs` เรนเดอร์บัตรขนาด A6 พร้อม QR Code อัปโหลดขึ้น S3 ผ่าน `GET /api/students/{id}/card.pdf` และปุ่ม "ดาวน์โหลดบัตร PDF" ใน `student-profile-page.jsx`)
 - [x] **AC 6:** สร้างหน้าแสดงตารางรายชื่อนักเรียน ที่สามารถค้นหาด้วยชื่อ, รหัส, หรือเบอร์โทรผู้ปกครองได้ (`students-page.jsx` ค้นหาผ่าน `StudentRepository.SearchAsync`)
-- [ ] **AC 7:** มีปุ่มกด Export ข้อมูลนักเรียนทั้งหมดออกมาเป็นไฟล์ Excel/CSV (FR-STD-07) (ยังไม่มีปุ่ม Export ในหน้า `students-page.jsx`)
+- [x] **AC 7:** มีปุ่มกด Export ข้อมูลนักเรียนทั้งหมดออกมาเป็นไฟล์ Excel/CSV (FR-STD-07) (`StudentExportService.cs` สตรีม CSV พร้อม UTF-8 BOM ผ่าน `GET /api/students/export?format=csv` และปุ่ม "ส่งออก CSV" ใน `students-page.jsx`)
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:
 - API `/api/students` (CRUD สมบูรณ์ รองรับ Multi-parent, Medical Info, Photo Upload)
 - API `/api/students/{id}/qr` สำหรับสร้าง rotating QR Token
-- ฟังก์ชัน Auto-suggest ข้อมูลผู้ปกครองเดิมจากเบอร์โทรศัพท์เพื่อไม่ให้พิมพ์ซ้ำ
+- API `/api/students/{id}/card.pdf` สำหรับสร้างบัตรนักเรียนขนาดพิมพ์จริง
+- API `/api/students/export?format=csv` ส่งออก CSV นักเรียนแบบ async streaming พร้อม tenant isolation
+- API `/api/students/{id}/pickup-authorizations` (CRUD รายชื่อผู้มีสิทธิ์รับเด็ก)
+- ปุ่มดาวน์โหลดบัตร PDF และปุ่มส่งออก CSV ในหน้า Admin
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เชื่อมฟอร์มนักเรียนกับตาราง `student_pickup_authorizations` ที่มีอยู่แล้ว แทนการเก็บรายชื่อในฟิลด์ข้อความ `authorized_pickups`
-2. เพิ่มปุ่ม Export Excel/CSV ในหน้า `students-page.jsx`
-3. พัฒนาหน้าพิมพ์/ดาวน์โหลดบัตรประจำตัวนักเรียนขนาดมาตรฐาน (พร้อม QR Code) เป็น PDF
+1. เชื่อมฟอร์มลงทะเบียนนักเรียนหน้าแรกเข้ากับตาราง `student_pickup_authorizations` ตอนกดเพิ่มเด็กใหม่
+2. เพิ่มตัวเลือก Export เป็น XLSX ควบคู่กับ CSV ที่พร้อมแล้ว
 
 ---
 
 ### หมวดที่ 3: ระบบเช็คชื่อด้วย QR Code (Attendance)
-* **ความคืบหน้า:** `50%` (3.5 / 7 ผ่าน)
+* **ความคืบหน้า:** `64%` (4.5 / 7 ผ่าน)
 * **สถานะ:** 🟡 กำลังพัฒนา
 
 #### รายการ Acceptance Criteria:
-- [/] **AC 1:** สร้างหน้าเว็บเปิดกล้องมือถือให้ครูสแกน QR Code เพื่อ Check-in และ Check-out ได้ (`attendance-page.jsx` มีกล้องสแกนด้วย `jsQR` สำหรับ Check-in แต่ยังไม่มีโหมด Check-out ชัดเจน)
+- [/] **AC 1:** สร้างหน้าเว็บเปิดกล้องมือถือให้ครูสแกน QR Code เพื่อ Check-in และ Check-out ได้ (`attendance-page.jsx` มีกล้องสแกนด้วย `jsQR` สำหรับ Check-in และมีปุ่ม Checkout พร้อมเลือกผู้มารับ)
 - [x] **AC 2:** มี UI ให้ครูสามารถกดเช็คชื่อแบบ Manual ได้ (เผื่อเด็กลืมบัตร) พร้อมระบุสถานะ มา/สาย/ลา/ขาด (แท็บ "รายชื่อวันนี้" ใน `attendance-page.jsx`)
 - [x] **AC 3:** ระบบสามารถหักโควต้าคงเหลือของนักเรียนได้อัตโนมัติเมื่อเช็คชื่อสำเร็จ (`AttendanceService.ScanCheckinWithTransactionAsync` หัก `sessionsRemaining` ทันที)
-- [ ] **AC 4:** มีช่องให้บันทึกข้อมูลว่า "ผู้ที่มารับกลับ" คือใครในตอน Check-out (schema ล่าสุดมีทั้ง `picked_up_by` และ `pickup_authorization_id`/ตารางสิทธิ์รับเด็ก แต่หน้าบ้านและ flow ตรวจสิทธิ์ยังไม่มีหลักฐาน)
+- [x] **AC 4:** มีช่องให้บันทึกข้อมูลว่า "ผู้ที่มารับกลับ" คือใครในตอน Check-out (`POST /api/attendance/{id}/checkout` รับ `pickedUpBy`, `pickupAuthorizationId`, บันทึก `AuditLog` ใน transaction เดียวกัน และหน้า UI มี modal เลือกผู้รับเด็กที่ active พร้อมแสดงเวลา/ผู้บันทึก)
 - [ ] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (ยังไม่มี Background Service / Worker)
 - [x] **AC 6:** ทันทีที่ Check-in / Check-out สำเร็จ ต้องมีข้อความ Push ยิงเข้า LINE ผู้ปกครอง (`LineNotificationService.SendAttendanceNotificationAsync`)
 - [ ] **AC 7:** แอปสแกนรองรับโหมด Offline เก็บข้อมูลลง Cache และส่งกลับ Server เมื่อมีเน็ต (ยังไม่มี Service Worker หรือ IndexedDB Sync)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มโหมดสลับ "สแกนเข้าเรียน (Check-in)" และ "สแกนเลิกเรียน (Check-out พร้อมเลือกผู้มารับ)"
+1. เพิ่มกล้องสแกนโหมดสลับ "สแกนเข้า (Check-in)" และ "สแกนออก (Check-out)" โดยตรงจาก QR
 2. เพิ่ม Background Worker เช็คเวลาเรียนเพื่อยิงแจ้งเตือนเด็กที่ยังไม่มาหลังเริ่มเรียน 20 นาที
 3. ทำ Offline Queue ด้วย LocalStorage/IndexedDB ในหน้าสแกน
 
 ---
 
 ### หมวดที่ 4: ระบบลาและเรียนชดเชย (Leave & Make-up)
-* **ความคืบหน้า:** `30%` (1.5 / 5 ผ่าน)
-* **สถานะ:** 🔴 ต้องเร่งทำ
+* **ความคืบหน้า:** `80%` (4.0 / 5 ผ่าน)
+* **สถานะ:** 🟢 ใกล้สมบูรณ์
 
 #### รายการ Acceptance Criteria:
-- [ ] **AC 1:** (LINE LIFF) สร้างหน้าฟอร์มให้ผู้ปกครองกดแจ้งลา เลือกคาบเรียน ระบุเหตุผล และแนบไฟล์ใบรับรองแพทย์ได้ (API `POST /api/parents/children/{childId}/leave-requests` พร้อมแล้ว แต่หน้า LIFF ยังไม่มีฟอร์ม)
-- [x] **AC 2:** (Admin Panel) สร้าง UI ให้ครูจัดการคำขอลา (อนุมัติ/ปฏิเสธ) หรือครูสามารถสร้างคำขอลาแทนผู้ปกครองได้ (`Front/src/pages/admin/requests-page.jsx`)
-- [ ] **AC 3:** (Admin Panel) ครูสามารถสร้าง Slot ว่างสำหรับเรียนชดเชย พร้อมระบุจำนวนที่นั่งที่รับได้ (Capacity) (schema `makeup_slots` มีแล้ว แต่ยังไม่พบหลักฐาน API/UI สำหรับสร้างและจัดการ slot)
-- [ ] **AC 4:** (LINE LIFF) ผู้ปกครองสามารถดู Slot ว่าง และใช้ `makeup_credits` กดจองเรียนชดเชยได้ (schema `makeup_bookings` และ `makeup_credits` มีแล้ว แต่ยังไม่พบหลักฐาน LIFF booking flow)
-- [ ] **AC 5:** (Backend) หากครูกดยกเลิก Slot แบบ Group Cancel ระบบต้องคืนเครดิตกลับเข้าบัญชีของนักเรียนทุกคนที่จองไว้ (มี `makeup_credit_transactions` แล้ว แต่ยังไม่พบหลักฐาน group-cancel transaction ที่ทำงานครบ)
+- [x] **AC 1:** (LINE LIFF) สร้างหน้าฟอร์มให้ผู้ปกครองกดแจ้งลา เลือกคาบเรียน ระบุเหตุผล และแนบไฟล์ใบรับรองแพทย์ได้ (`leave-makeup.jsx` มีฟอร์มเลือก session, ใส่เหตุผล, แนบไฟล์ PDF/JPG/PNG/WEBP อัปโหลดผ่าน `POST /api/leave-requests/{id}/attachment` ลงตาราง `leave_request_attachments`)
+- [x] **AC 2:** (Admin Panel) สร้าง UI ให้ครูจัดการคำขอลา (อนุมัติ/ปฏิเสธ) หรือครูสามารถสร้างคำขอลาแทนผู้ปกครองได้ (`Front/src/pages/admin/requests-page.jsx` พร้อม API approve ที่ออกเครดิตชดเชยอัตโนมัติ)
+- [/] **AC 3:** (Admin Panel) ครูสามารถสร้าง Slot ว่างสำหรับเรียนชดเชย พร้อมระบุจำนวนที่นั่งที่รับได้ (Capacity) (API `POST /api/makeup/slots` ใน `MakeupService` และ repository ทำงานได้แล้ว รอทำหน้า UI บน Admin Panel)
+- [x] **AC 4:** (LINE LIFF) ผู้ปกครองสามารถดู Slot ว่าง และใช้ `makeup_credits` กดจองเรียนชดเชยได้ (`leave-makeup.jsx` แสดงสิทธิ์คงเหลือ, แสดง slot ที่เปิด, กดจองเรียนชดเชย, และแสดงรายการ booking พร้อมปุ่มยกเลิก)
+- [/] **AC 5:** (Backend) หากครูกดยกเลิก Slot แบบ Group Cancel ระบบต้องคืนเครดิตกลับเข้าบัญชีของนักเรียนทุกคนที่จองไว้ (`POST /api/makeup/slots/{slotId}/cancel` คืนเครดิตเข้า ledger ทุก booking อัตโนมัติใน transaction เดียวกัน รอทำปุ่มกดยกเลิกบน UI)
+
+#### สิ่งที่ทำเสร็จแล้วในโค้ด:
+- API จัดการ Leave Requests (คำนวณประเภทลา advance/urgent/absence อัตโนมัติ)
+- API แนบไฟล์ใบรับรองแพทย์ `POST /api/leave-requests/{id}/attachment` พร้อมตาราง `leave_request_attachments`
+- API อนุมัติ/ปฏิเสธคำขอลาพร้อมออก `makeup_credits` และบันทึก `makeup_credit_transactions`
+- API จองเรียนชดเชย, แสดงรายการ booking, ยกเลิก booking และบันทึก no-show
+- หน้า "ลาและเรียนชดเชย" บน LINE LIFF รองรับทั้งแจ้งลา แนบไฟล์ ดูสิทธิ์ จองที่นั่ง และยกเลิกการจอง
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้างหน้าฟอร์มแจ้งลาใน LINE LIFF เชื่อมกับ Endpoint ที่มีอยู่
-2. เพิ่ม API/service สำหรับจัดการ `makeup_slots`, reserve booking และ capacity concurrency โดยใช้ตารางที่มีอยู่แล้ว
-3. เพิ่มหน้าจองที่นั่งเรียนชดเชยใน LINE LIFF และผูกการคืน/ใช้เครดิตกับ ledger
+1. สร้างหน้า UI ใน Admin Panel สำหรับให้ครูเปิด Slot ชดเชยและกดยกเลิก Slot (Group Cancel)
+2. เพิ่ม Background Worker จัดการเครดิตที่หมดอายุ (`status = expired`)
 
 ---
 
@@ -187,19 +196,25 @@
 ---
 
 ### หมวดที่ 7: ระบบการเงิน (Payment & Billing)
-* **ความคืบหน้า:** `50%` (2.5 / 5 ผ่าน)
-* **สถานะ:** 🔴 ต้องเร่งทำ
+* **ความคืบหน้า:** `60%` (3.0 / 5 ผ่าน)
+* **สถานะ:** 🟡 กำลังพัฒนา
 
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (Admin Panel) หน้าจอ POS ให้พนักงานบันทึกการรับเงิน ระบุวิธีชำระ และอัปโหลดสลิป (`Front/src/pages/admin/finance-page.jsx`, `/api/payments`)
-- [ ] **AC 2:** (Backend) API ตรวจสอบสลิป (เรียกใช้ 3rd-party AI API) เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (ปัจจุบันอัปโหลดรูปภาพเก็บเข้า Storage เท่านั้น ยังไม่มี AI Verification)
+- [/] **AC 2:** (Backend) API ตรวจสอบสลิป เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (`PaymentSlipVerificationService.cs` มี provider interface `ISlipVerificationProvider`, ตรวจสอบยอดเงิน slip กับยอดชำระ, ป้องกัน amount mismatch ด้วยสถานะ conflict, บันทึก slip metadata ลงฐานข้อมูล และมี endpoint `POST /api/payments/{id}/verify-slip` พร้อม unit tests; รอเชื่อม AI provider จริงใน production)
 - [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
 - [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (หน้า `finance-page.jsx` มีตารางประวัติและยอดรวม แต่ยังไม่มีกราฟรายวัน/เดือน/ปี และยังไม่มีปุ่ม Export)
 - [ ] **AC 5:** (Backend/Worker) ทดสอบระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ให้ทำงานได้อย่างถูกต้อง (ยังไม่มี Background Worker ตรวจสอบ)
 
+#### สิ่งที่ทำเสร็จแล้วในโค้ด:
+- API บันทึกการรับเงิน POS และคำนวณยอดชำระสะสมใน Enrollment
+- ระบบสร้างใบเสร็จรับเงิน PDF ขนาด A5 ด้วย QuestPDF และอัปโหลดขึ้น S3 พร้อมส่งลิงก์จริงทาง LINE
+- API ตรวจสอบสลิป `POST /api/payments/{id}/verify-slip` พร้อมตรวจสอบยอดเงินตรงกันก่อน verify
+- Service/Repository และ Unit Tests สำหรับการรับเงินและการตรวจสอบสลิป
+
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มตราสถาบัน/รายละเอียดภาษีใน receipt PDF และทำ student card PDF ด้วย renderer/storage pattern เดียวกัน
-2. เพิ่มกราฟสรุปรายรับในหน้าการเงิน และเพิ่มปุ่ม Export CSV/Excel
+1. เชื่อม 3rd-party AI OCR Slip Provider ตัวจริงเข้ากับ `ISlipVerificationProvider`
+2. เพิ่มกราฟสรุปรายรับในหน้าการเงิน และเพิ่มปุ่ม Export CSV/Excel ในหน้าการเงิน
 3. พัฒนา Background Worker ตรวจสอบโควต้าคงเหลือ `<= 3` เพื่อยิงเสนอคอร์สใหม่เข้า LINE
 
 ---
@@ -298,23 +313,23 @@
 
 ## 4. แผนปฏิบัติการที่ต้องปรับปรุงต่อ (Priority Action Plan)
 
-### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริงใน LIFF & ความปลอดภัย)
-1. **เพิ่มหน้ายื่นคำขอลาใน LINE LIFF:** ผู้ปกครองต้องกดขอลาและเลือกคาบเรียนจากมือถือได้จริง
-2. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
-3. **ระบบ Auto-Logout 30 นาทีสำหรับ Admin:** ป้องกันความเสี่ยงตามข้อกำหนดความปลอดภัย NFR-S-06
-4. **บันทึก Notification Log:** จัดเก็บข้อความ LINE ทุกฉบับที่ส่งออกลงฐานข้อมูลตาราง `notifications`
+### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
+1. **ระบบ Auto-Logout 30 นาทีสำหรับ Admin:** ป้องกันความเสี่ยงตามข้อกำหนดความปลอดภัย NFR-S-06
+2. **บันทึก Notification Log:** จัดเก็บข้อความ LINE ทุกฉบับที่ส่งออกลงฐานข้อมูลตาราง `notifications`
+3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
+4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 4 ไฟล์ที่เหลือ (`Teacher`, `User`, `Auth`, `Parent`) ให้เข้า Repository/Service Layer โดย `Institute` แยกชั้นแล้ว
 
 ### ระยะกลาง (P1: การปิด Loop ฟังก์ชันหลักให้ครบวงจร)
-1. **ระบบสร้างใบเสร็จ PDF จริง:** ใช้ C# Library สร้าง PDF ทันทีหลังบันทึกเงิน และส่งลิงก์จริงให้ผู้ปกครอง
-2. **หน้ารายการการบ้านใน LIFF:** ให้ผู้ปกครอง/นักเรียนเปิดดูโจทย์และอัปโหลดส่งภาพการบ้านได้
-3. **หน้าแสดงการ์ดพลัง (Radar Chart) ใน LIFF:** แสดงผลลัพธ์พัฒนาการเด็กเป็นกราฟใยแมงมุม
-4. **ระบบจองเรียนชดเชย (Make-up Slot):** เปิดห้องชดเชยและให้ผู้ปกครองนำเครดิตมากดจองที่นั่งได้
+1. **หน้ารายการการบ้านใน LIFF:** ให้ผู้ปกครอง/นักเรียนเปิดดูโจทย์และอัปโหลดส่งภาพการบ้านได้
+2. **หน้าแสดงการ์ดพลัง (Radar Chart) ใน LIFF:** แสดงผลลัพธ์พัฒนาการเด็กเป็นกราฟใยแมงมุม
+3. **UI สำหรับสร้าง/ยกเลิก Make-up Slot ใน Admin:** ให้ครูสามารถเปิด slot และยกเลิก slot ชดเชยได้จากหน้าเว็บ
+4. **เชื่อมต่อ AI OCR Slip Provider จริง:** ต่อ API ภายนอกเข้ากับ `ISlipVerificationProvider` สำหรับตรวจสลิปอัตโนมัติ
 
 ### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
-1. **ปุ่ม Export Excel/CSV:** ใส่ในหน้ารายชื่อนักเรียน และหน้าประวัติการเงิน
-2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** ยิงเตือนผู้ปกครองอัตโนมัติเพื่อต่อคอร์ส
+1. **ปุ่ม Export Excel/CSV ในหน้าการเงิน:** ต่อยอดจากหน้า Students ที่ทำเสร็จแล้ว
+2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** พัฒนา Background Worker ยิงเตือนผู้ปกครองอัตโนมัติเพื่อต่อคอร์ส
 3. **CI/CD Pipeline และ Load Test Script:** ตรวจสอบประสิทธิภาพของ API ก่อนเปิดใช้งานจริง
-4. **หน้า Public Website เพิ่มเติม:** พัฒนาให้ครบ 5 หน้าหลักสำหรับโปรโมทสถาบัน
+4. **หน้า Public Website & CMS:** พัฒนาให้ครบ 5 หน้าหลักและระบบจัดการเนื้อหาสำหรับโปรโมทสถาบัน
 
 ---
 

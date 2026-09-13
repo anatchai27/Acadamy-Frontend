@@ -295,8 +295,8 @@ CSV รอบใหม่ยืนยัน schema แล้ว จึงสา�
 
 ## 9. สรุปสถานะตามหลักฐาน
 
-- **Schema:** ตารางหลักของ Leave & Make-up, Audit และ Pickup มีอยู่ตาม CSV ล่าสุด
+- **Schema:** ตารางหลักของ Leave & Make-up, Audit, Pickup และ `leave_request_attachments` มีอยู่ตาม CSV ล่าสุด (`results-2026-09-12-220648.csv`)
+- **Backend/Code:** Model `LeaveRequestAttachment`, EF mapping, Service validation (MIME/size/ownership), Repository, Endpoint `POST /api/leave-requests/{id}/attachment`, Unit tests และ LIFF UI file upload ถูกพัฒนาแล้ว
 - **SRS:** ยังสรุปผ่านครบไม่ได้จาก CSV; ต้องยืนยัน service transaction, endpoint, UI, worker, notification และข้อมูล runtime
 - **Migration:** ไม่มี DDL สร้างตารางเดิมซ้ำในเอกสารฉบับนี้
-- **Leave attachment:** schema ยืนยันแล้วจาก CSV ใหม่; ยังต้องยืนยัน model/mapping/API/UI/validation/runtime flow
 - **ข้อมูลที่ต้องตรวจต่อ:** orphan, tenant mismatch, active booking ซ้ำ, capacity mismatch, leave-to-credit consistency และ audit events

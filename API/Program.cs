@@ -89,6 +89,8 @@ builder.Services.AddAuthorization();
 // Register application services
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IInstituteRepository, InstituteRepository>();
+builder.Services.AddScoped<IInstituteService, InstituteService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -111,6 +113,8 @@ builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentSlipVerificationService, PaymentSlipVerificationService>();
+builder.Services.AddScoped<ISlipVerificationProvider, UnconfiguredSlipVerificationProvider>();
 builder.Services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();

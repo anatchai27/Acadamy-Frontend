@@ -83,6 +83,7 @@ erDiagram
     STUDENTS ||--o{ PARENTS : currently_has
     STUDENTS ||--o{ LEAVE_REQUESTS : submits
     SESSIONS ||--o{ LEAVE_REQUESTS : concerns
+    LEAVE_REQUESTS ||--o{ LEAVE_REQUEST_ATTACHMENTS : has
     STUDENTS ||--o{ MAKEUP_CREDITS : receives
     COURSES ||--o{ MAKEUP_CREDITS : applies_to
 

@@ -56,6 +56,22 @@ public static class PaymentEndpoints
             return Results.Ok(result);
         });
 
+        group.MapPost("/{paymentId:long}/verify-slip", async (
+            long paymentId,
+            IPaymentSlipVerificationService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            var actorId = int.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) ? id : (int?)null;
+            try { return Results.Ok(await service.VerifyAsync(paymentId, actorId, ct)); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode == "PAYMENT_NOT_FOUND" || ex.ErrorCode == "SLIP_NOT_FOUND")
+            { return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode is "AMOUNT_MISMATCH" or "ALREADY_VERIFIED")
+            { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode == "VERIFICATION_UNAVAILABLE")
+            { return Results.StatusCode(StatusCodes.Status503ServiceUnavailable); }
+        });
+
         return app;
     }
 }
