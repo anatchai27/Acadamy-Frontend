@@ -21,6 +21,7 @@ public static class ParentEndpoints
         group.MapGet("/children/{childId:int}/payments", GetChildPayments).RequireAuthorization();
         group.MapGet("/children/{childId:int}/scores", GetChildScores).RequireAuthorization();
         group.MapGet("/children/{childId:int}/homework", GetChildHomework).RequireAuthorization();
+        group.MapPost("/children/{childId:int}/homework/{homeworkId:int}/submission", CreateChildHomeworkSubmission).RequireAuthorization();
         group.MapGet("/children/{childId:int}/leave-requests", GetChildLeaveRequests).RequireAuthorization();
         group.MapGet("/children/{childId:int}/sessions", GetChildSessions).RequireAuthorization();
         group.MapPost("/children/{childId:int}/leave-requests", CreateChildLeaveRequest).RequireAuthorization();
@@ -194,6 +195,16 @@ public static class ParentEndpoints
                 createdAt = i.CreatedAt.ToString("yyyy-MM-dd")
             })
         });
+    }
+
+    private static async Task<IResult> CreateChildHomeworkSubmission(int childId, int homeworkId, HttpContext httpContext, IParentService service, CancellationToken ct)
+    {
+        var userId = GetUserId(httpContext);
+        if (!userId.HasValue) return Results.Unauthorized();
+        var submission = await service.CreateOrGetHomeworkSubmissionAsync(userId.Value, childId, homeworkId, ct);
+        return submission is null
+            ? ParentForbidden(httpContext)
+            : Results.Ok(new { status = "success", data = new { submissionId = submission.Id, fileUrl = submission.FileUrl, submittedAt = submission.SubmittedAt } });
     }
 
     private static async Task<IResult> CreateChildLeaveRequest(

@@ -24,6 +24,16 @@ export const getChildHomework = childId => {
   return api.get(`/parents/children/${childId}/homework`);
 }
 
+export const createHomeworkSubmission = (childId, homeworkId) => {
+  return api.post(`/parents/children/${childId}/homework/${homeworkId}/submission`, {});
+}
+
+export const uploadHomeworkSubmission = (submissionId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.postForm('/uploads/homework-submission', formData, { params: { submissionId } });
+}
+
 export const getChildSessions = childId => {
   return api.get(`/parents/children/${childId}/sessions`);
 }

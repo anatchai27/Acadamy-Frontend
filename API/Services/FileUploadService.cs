@@ -36,7 +36,19 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
     }
 
     public Task<FileUploadResponse> UploadHomeworkAsync(int instituteId, int homeworkId, IFormFile file, CancellationToken ct) => UploadAsync(file, 10, false, $"homeworks/homework_{homeworkId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "file", Task.FromResult, ct);
-    public Task<FileUploadResponse> UploadHomeworkSubmissionAsync(int instituteId, int submissionId, IFormFile file, CancellationToken ct) => UploadAsync(file, 10, false, $"submissions/submission_{submissionId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "file", Task.FromResult, ct);
+    public async Task<FileUploadResponse> UploadHomeworkSubmissionAsync(int instituteId, int submissionId, IFormFile file, CancellationToken ct)
+    {
+        ValidateFile(file, 10, false);
+        var submission = await repository.GetHomeworkSubmissionAsync(submissionId, instituteId, ct)
+            ?? throw new FileUploadValidationException("NOT_FOUND", "Homework submission not found.");
+        return await UploadAsync(file, 10, false, $"submissions/submission_{submissionId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "file", async url =>
+        {
+            submission.FileUrl = url;
+            submission.SubmittedAt = DateTime.UtcNow;
+            await repository.SaveAsync(ct);
+            return url;
+        }, ct);
+    }
 
     public async Task<FileUploadResponse> UploadStudentPhotoAsync(int instituteId, int studentId, IFormFile file, CancellationToken ct)
     {

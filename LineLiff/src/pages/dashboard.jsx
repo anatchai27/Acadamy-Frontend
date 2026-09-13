@@ -182,6 +182,15 @@ export const DashboardPage = () => {
               </div>
             </section>
 
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => route(`/liff/scores/${activeChild.id}`)} class="rounded-card border border-indigo-100 bg-white p-4 text-left shadow-soft">
+                <p class="font-bold text-ink-900">ดูคะแนนทักษะ</p><p class="mt-1 text-xs text-ink-500">ดูกราฟพัฒนาการรายหัวข้อ</p>
+              </button>
+              <button type="button" onClick={() => route(`/liff/homework/${activeChild.id}`)} class="rounded-card border border-gold-100 bg-white p-4 text-left shadow-soft">
+                <p class="font-bold text-ink-900">การบ้าน</p><p class="mt-1 text-xs text-ink-500">ดูโจทย์และส่งรูปงาน</p>
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => route(`/liff/leave-makeup/${activeChild.id}`)}

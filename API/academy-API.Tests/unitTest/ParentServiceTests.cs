@@ -58,4 +58,29 @@ public class ParentServiceTests
         Assert.Equal("new@example.com", user.Email);
         repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task CreateOrGetHomeworkSubmissionAsync_DelegatesOwnershipScopedRequest()
+    {
+        var submission = new HomeworkSubmission { Id = 15, StudentId = 20, HomeworkId = 30 };
+        var repository = new Mock<IParentRepository>();
+        repository.Setup(r => r.CreateOrGetHomeworkSubmissionAsync(10, 20, 30, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(submission);
+        var sut = new ParentService(repository.Object);
+
+        var result = await sut.CreateOrGetHomeworkSubmissionAsync(10, 20, 30);
+
+        Assert.Same(submission, result);
+        repository.Verify(r => r.CreateOrGetHomeworkSubmissionAsync(10, 20, 30, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IsParentOfHomeworkSubmissionAsync_DelegatesOwnershipCheck()
+    {
+        var repository = new Mock<IParentRepository>();
+        repository.Setup(r => r.IsParentOfHomeworkSubmissionAsync(10, 15, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var sut = new ParentService(repository.Object);
+
+        Assert.True(await sut.IsParentOfHomeworkSubmissionAsync(10, 15));
+    }
 }

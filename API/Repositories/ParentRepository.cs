@@ -23,6 +23,8 @@ public interface IParentRepository
     Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, DateTime from, CancellationToken ct = default);
     Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default);
+    Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default);
+    Task<bool> IsParentOfHomeworkSubmissionAsync(int userId, int submissionId, CancellationToken ct = default);
 }
 
 public sealed class ParentRepository(TutoringDbContext context) : IParentRepository
@@ -179,4 +181,38 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
 
     public Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default) =>
         _context.Parents.AnyAsync(p => p.UserId == userId && p.StudentId == studentId, ct);
+
+    public async Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default)
+    {
+        var student = await _context.Parents
+            .Where(p => p.UserId == userId && p.StudentId == studentId)
+            .Select(p => p.Student)
+            .FirstOrDefaultAsync(ct);
+        if (student is null) return null;
+
+        var homework = await _context.Homeworks
+            .FirstOrDefaultAsync(h => h.Id == homeworkId && _context.Enrollments.Any(e => e.StudentId == studentId && e.CourseId == h.CourseId), ct);
+        if (homework is null) return null;
+
+        var submission = await _context.HomeworkSubmissions
+            .FirstOrDefaultAsync(s => s.HomeworkId == homeworkId && s.StudentId == studentId, ct);
+        if (submission is not null) return submission;
+
+        submission = new HomeworkSubmission
+        {
+            HomeworkId = homeworkId,
+            StudentId = studentId,
+            InstituteId = student.InstituteId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.HomeworkSubmissions.Add(submission);
+        await _context.SaveChangesAsync(ct);
+        return submission;
+    }
+
+    public Task<bool> IsParentOfHomeworkSubmissionAsync(int userId, int submissionId, CancellationToken ct = default) =>
+        (from submission in _context.HomeworkSubmissions
+         join parent in _context.Parents on submission.StudentId equals parent.StudentId
+         where submission.Id == submissionId && parent.UserId == userId
+         select submission.Id).AnyAsync(ct);
 }

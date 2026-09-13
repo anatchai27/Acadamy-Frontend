@@ -979,6 +979,20 @@
         }
       }
     },
+    "/api/parents/children/{childId}/homework/{homeworkId}/submission": {
+      "post": {
+        "tags": ["Parents"],
+        "operationId": "CreateChildHomeworkSubmission",
+        "x-implementation-status": "new",
+        "x-roles": ["parent"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          { "name": "childId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } },
+          { "name": "homeworkId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }
+        ],
+        "responses": { "200": { "description": "Homework submission created or reused" } }
+      }
+    },
     "/api/parents/children/{childId}/leave-requests": {
       "get": {
         "tags": [

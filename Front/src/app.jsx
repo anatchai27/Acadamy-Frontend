@@ -3,7 +3,7 @@ import { IndexPage } from './pages/index';
 import { NotFoundPage } from './pages/not-found-page';
 import { TrialClassPage } from './pages/trial-class-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage } from './pages/admin';
+import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage, MakeupSlotsPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth } from './components/require-auth';
 import './app.css';
@@ -22,6 +22,7 @@ const AdminFinance = requireAuth(FinancePage);
 const AdminUsers = requireAuth(UsersPage);
 const AdminSettings = requireAuth(SettingsPage);
 const AdminProducts = requireAuth(ProductsPage);
+const AdminMakeupSlots = requireAuth(MakeupSlotsPage);
 
 export function App() {
   return (
@@ -50,6 +51,7 @@ export function App() {
         <AdminUsers path="/admin/users" />
         <AdminSettings path="/admin/settings" />
         <AdminProducts path="/admin/products" />
+        <AdminMakeupSlots path="/admin/makeup-slots" />
         <NotFoundPage default />
       </Router>
       <ToastContainer />

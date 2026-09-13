@@ -155,16 +155,16 @@
 
 **งานร่วม:**
 
-- [ ] ตรวจ API response กับ UI state ก่อนทำหน้าใหม่
-- [ ] แสดง loading, empty, error และ permission state
-- [ ] เพิ่ม focused frontend tests สำหรับ service และ critical interaction
-- [ ] ทดสอบ tenant/parent ownership ผ่าน API tests ไม่พึ่ง UI อย่างเดียว
+- [x] ตรวจ API response กับ UI state ก่อนทำหน้าใหม่ และเติม parent submission API ที่ขาดจริง
+- [x] แสดง loading, empty, error และ permission/ownership state ในทั้ง 3 flow
+- [/] เพิ่ม focused frontend tests: makeup service `3 passed`; ยังไม่มี component test สำหรับ LIFF pages
+- [/] ทดสอบ tenant/parent ownership ผ่าน service/API boundary tests; ยังไม่มี runtime integration test กับ DB จริง
 
 **ผ่านเมื่อ:**
 
-- [ ] แต่ละ flow มีหน้าใช้งานจริงต่อกับ API จริง
-- [ ] มี success/error evidence ที่ทำซ้ำได้
-- [ ] Front และ LineLiff build ผ่าน
+- [x] แต่ละ flow มีหน้าใช้งานจริงต่อกับ API จริง
+- [x] มี success/error/loading/empty evidence จาก code path และ focused tests
+- [x] Front และ LineLiff build ผ่าน
 
 ### Slice 6: Payment/reporting และ operational gaps
 

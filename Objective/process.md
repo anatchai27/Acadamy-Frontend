@@ -77,6 +77,18 @@
 - Focused lead tests `3 passed`; full API tests `262 passed / 0 failed / 0 skipped`; API build ผ่าน; Front build ผ่าน; contract validator `Errors = 0`, warnings `141`
 - ยังไม่มี runtime evidence กับฐานข้อมูลจริง และยังไม่ประกาศ duplicate/abuse business rule นอกเหนือจาก rate limit เพราะ requirement ไม่ได้กำหนดกติกา duplicate ที่ตรวจได้
 
+### หลักฐาน Slice 5: Parent workflows ที่ขาด UI
+
+- Admin เพิ่มหน้า `Front/src/pages/admin/makeup-slots-page.jsx` ที่ `/admin/makeup-slots` สำหรับโหลดครู/slot, สร้าง slot และ group-cancel slot ผ่าน API จริง พร้อม loading, empty, error และ confirmation state
+- เพิ่ม `Front/src/services/makeup-service.js` และ focused service tests `3 passed`; Front full tests `79 passed / 0 failed / 0 skipped`; Front build ผ่าน
+- ตรวจพบว่า LIFF homework เดิมมีเพียง list endpoint และ upload endpoint ที่ต้องใช้ `submissionId` แต่ไม่มีทางสร้าง submission จึงเพิ่ม parent-owned endpoint `POST /api/parents/children/{childId}/homework/{homeworkId}/submission`
+- Parent submission flow ตรวจ parent-child ownership, ตรวจ enrollment ของ child กับ homework course, reuse submission เดิมตาม unique `(homework_id, student_id)` และ upload จะตรวจ ownership ของ submission พร้อมบันทึก `file_url` และ `submitted_at`
+- เพิ่มหน้า `LineLiff/src/pages/homework.jsx` ที่ `/liff/homework/:childId` สำหรับโหลดรายการ, empty/error/loading state และเลือกไฟล์รูปเพื่อส่งงาน
+- เพิ่มหน้า `LineLiff/src/pages/scores.jsx` ที่ `/liff/scores/:childId` แสดงข้อมูลจริงจาก `/api/parents/children/{childId}/scores` เป็น horizontal bar chart ช่วงคะแนน 0-5 พร้อม note
+- เพิ่ม action จาก LIFF dashboard ไปยังหน้า homework และ skill scores; LineLiff build ผ่าน
+- Full API tests หลังเพิ่ม parent submission boundary `264 passed / 0 failed / 0 skipped`; API build ผ่าน; contract validator `97 target operations`, `Errors = 0`, `Warnings = 141`
+- ยังไม่มี component tests ของ LIFF pages และยังไม่มี runtime integration test กับฐานข้อมูลจริง จึงไม่ประกาศว่า ownership/upload flow ผ่าน production runtime
+
 ---
 
 ## 2. ตารางสรุปความคืบหน้าแยกตาม 12 หมวดหมู่

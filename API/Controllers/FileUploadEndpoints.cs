@@ -15,8 +15,16 @@ public static class FileUploadEndpoints
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentSlipAsync(instituteId, paymentId, uploadedFile, ct)));
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
-        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkSubmissionAsync(instituteId, submissionId, uploadedFile, ct)));
+        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, IParentService parentService, CancellationToken ct) =>
+        {
+            if (context.User.IsInRole("parent"))
+            {
+                var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userId, out var parsedUserId) || !await parentService.IsParentOfHomeworkSubmissionAsync(parsedUserId, submissionId, ct))
+                    return Results.Forbid();
+            }
+            return await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkSubmissionAsync(instituteId, submissionId, uploadedFile, ct));
+        });
         group.MapPost("/student-photo", async (HttpContext context, IFormFile file, int studentId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadStudentPhotoAsync(instituteId, studentId, uploadedFile, ct)));
         group.MapPost("/teacher-photo", async (HttpContext context, IFormFile file, int teacherId, IFileUploadService service, CancellationToken ct) =>
