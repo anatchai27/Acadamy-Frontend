@@ -46,7 +46,46 @@
 - ไม่มี backup schedule/provider evidence
 - ไม่มี k6 result จาก environment จริง
 
-## 3. แผนใหม่ตามลำดับความเสี่ยง
+## 3. แผนใหม่ตามลำดับ Customer Value
+
+> หลักการปรับลำดับ: ส่งมอบสิ่งที่ลูกค้ามองเห็นและใช้งานได้ก่อน technical hardening แต่ห้ามสร้าง UI ที่แสดงข้อมูลปลอมหรือผูกกับ business rule ที่ยังไม่ยืนยัน
+
+### 3.0 Priority order ใหม่
+
+| Priority | Customer-facing slice | เหตุผล | Gate ก่อนเริ่ม |
+|---|---|---|---|
+| P0 | ปิดช่องว่าง UI ที่ลูกค้าใช้งานประจำ: Public Website/ทดลองเรียน, Admin finance, Leave & Make-up, Homework/LIFF | กระทบการสมัครเรียน การเงิน และ daily operation โดยตรง | contract, API response และ ownership ต้องตรวจจาก source |
+| P1 | Admin Operations UI: Holiday Calendar, File Manager, Teacher Payroll, Broadcast | ลดงาน manual และทำให้ customer/staff เห็น workflow ครบ | requirement/schema/role ต้องยืนยันก่อน |
+| P1 | Reports UI: Analytics, Teacher Timesheet, Revenue detail/export | ทำให้ผู้บริหารใช้ข้อมูลตัดสินใจได้ | สูตร, source data, timezone และ export contract ต้องยืนยัน |
+| P2 | Technical hardening: concurrency, backup evidence, k6, provider/runtime validation | ลดความเสี่ยง production หลัง customer flow ใช้งานได้ | ต้องมี environment และ acceptance ที่ตรวจได้ |
+
+### 3.1 Customer-facing UI backlog (ทำก่อน technical backlog)
+
+**P0: ทำต่อทันทีเมื่อ contract พร้อม**
+
+- [ ] Public Website: หน้า home, ผลงานนักเรียน, ครู, คอร์ส/ราคา และติดต่อเรา ให้ครบตาม content contract
+- [ ] Trial-class journey: เชื่อม landing page → ฟอร์มทดลองเรียน → success/error state → admin lead follow-up
+- [ ] Finance UI: ยืนยัน payment status policy ก่อนปรับ revenue chart, history และ CSV export ให้ตรงกับรายรับจริง
+- [ ] Leave & Make-up Admin UI: จัดการ slot, group cancel, คืนเครดิต และแสดงผลสำเร็จ/ข้อผิดพลาดจาก API จริง
+- [ ] LIFF Homework/Make-up: ตรวจ loading, empty, validation, upload และ booking state บน flow ที่ customer ใช้จริง
+
+**P1: หลัง P0 และ requirement ผ่าน**
+
+- [ ] Holiday Calendar Admin UI: ทำได้เฉพาะหลังยืนยัน institute scope, timezone, recurrence, suppression matrix, RBAC และ schema
+- [ ] File Manager UI: แสดงรายการไฟล์, upload, permission, error และลิงก์ storage ตาม contract ที่ยืนยัน
+- [ ] Teacher Payroll UI: แสดงงวด, ชั่วโมง, rate, status และ export หลังยืนยันสูตรและ source tables
+- [ ] Broadcast UI: เลือกกลุ่มผู้รับ, preview, confirmation, result และ audit หลังยืนยัน recipient/notification policy
+- [ ] Analytics UI: Renewal, churn, forecast และ timesheet หลังยืนยันสูตร, date window, timezone และ privacy rule
+
+**P2: UI quality gate**
+
+- [ ] ทุกหน้าต้องมี loading, empty, validation, error, forbidden และ success state ตามความเสี่ยง
+- [ ] ทุก mutation ต้องตรวจ tenant/ownership ที่ API และมี focused UI/service test
+- [ ] หน้าที่แตะ Front หรือ LIFF ต้องผ่าน responsive check และ build ก่อนปิด slice
+
+### 3.2 Technical backlog หลัง customer-facing slices
+
+**ผ่าน UI gate แล้วจึงกลับไปทำตามลำดับความเสี่ยง:**
 
 ### Phase 0: Reconcile evidence และ contract
 
@@ -244,4 +283,4 @@ $hits.Count
 
 ## 7. Next Action
 
-เริ่ม **Phase 0: Reconcile evidence และ contract** ก่อนเพิ่ม feature ใหม่ โดยเฉพาะการแก้ตัวเลข baseline ที่เก่า, ตรวจ target operations ที่ยังระบุ `new/partial` และแยก code evidence ออกจาก runtime evidence ให้เรียบร้อย
+เริ่มจาก **Customer-facing UI backlog P0** โดยทำตาราง scope แยกต่อหน้า: customer outcome, API contract, existing implementation, missing state และ evidence ที่ต้องรัน จากนั้นเลือก slice แรกที่ contract พร้อมทำ focused implementation/test ก่อนกลับไป technical hardening
