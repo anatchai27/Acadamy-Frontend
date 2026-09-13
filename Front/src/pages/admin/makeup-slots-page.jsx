@@ -9,6 +9,7 @@ const emptyForm = { teacherId: '', scheduledAt: '', capacity: '1', roomId: '' };
 
 const unwrap = response => response?.data?.data || response?.data || [];
 const formatDate = value => value ? new Date(value).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+const formatStatus = value => ({ open: 'เปิดรับจอง', full: 'เต็ม', cancelled: 'ยกเลิกแล้ว' }[value] || value || '-');
 
 export function MakeupSlotsPage({ path }) {
   const [slots, setSlots] = useState([]);
@@ -41,6 +42,8 @@ export function MakeupSlotsPage({ path }) {
   useEffect(() => { load(); }, []);
 
   const update = field => event => setForm(current => ({ ...current, [field]: event.target.value }));
+
+  const teacherName = teacherId => teachers.find(teacher => String(teacher.id) === String(teacherId))?.fullName || `ครู #${teacherId}`;
 
   const submit = async event => {
     event.preventDefault();
@@ -127,11 +130,14 @@ export function MakeupSlotsPage({ path }) {
           {!loading && slots.map(slot => (
             <article class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm" key={slot.id}>
               <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="font-semibold text-zinc-900">ครู #{slot.teacherId}</p>
+               <div>
+                  <p class="font-semibold text-zinc-900">{teacherName(slot.teacherId)}</p>
                   <p class="mt-1 flex items-center gap-1 text-sm text-zinc-500"><HiOutlineCalendarDays class="h-4 w-4" />{formatDate(slot.scheduledAt)}</p>
                 </div>
-                <span class="rounded-full bg-oasis-primary/10 px-2.5 py-1 text-xs font-semibold text-oasis-primary">{slot.bookedCount}/{slot.capacity}</span>
+                <div class="text-right">
+                  <span class="rounded-full bg-oasis-primary/10 px-2.5 py-1 text-xs font-semibold text-oasis-primary">{formatStatus(slot.status)}</span>
+                  <p class="mt-2 text-xs text-zinc-500">{slot.bookedCount}/{slot.capacity} ที่นั่ง</p>
+                </div>
               </div>
               <p class="mt-3 text-sm text-zinc-500">ห้อง {slot.roomId || '-'}</p>
               <Button class="mt-4 w-full" variant="outline" disabled={busyId === slot.id} onClick={() => cancel(slot)}>

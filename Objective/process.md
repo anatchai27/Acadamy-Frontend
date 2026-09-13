@@ -123,6 +123,50 @@
 - Full API tests หลังเพิ่ม parent submission boundary `264 passed / 0 failed / 0 skipped`; API build ผ่าน; contract validator `97 target operations`, `Errors = 0`, `Warnings = 141`
 - ยังไม่มี component tests ของ LIFF pages และยังไม่มี runtime integration test กับฐานข้อมูลจริง จึงไม่ประกาศว่า ownership/upload flow ผ่าน production runtime
 
+### หลักฐาน P0-01: Trial Class UI + API (13 กันยายน 2026)
+
+- ตรวจ contract ระหว่าง `Front/src/pages/trial-class-page.jsx`, `Front/src/services/lead-service.js`, `CreateLeadRequest` และ `POST /api/public/leads`; request fields และ `201 CreateLeadResponse` ตรงกัน
+- เพิ่ม client validation สำหรับ `instituteSlug`, `contactName` และ `phone`; trim ค่า request ก่อนส่ง และกำหนด `email` เป็นชนิด email โดยไม่เพิ่ม business rule ใหม่
+- ปรับ API error mapping ใน `Front/src/services/api.js` ให้แสดงข้อความแรกจาก `ValidationProblem.errors` รวมถึง error response ของ endpoint แทนข้อความทั่วไปเมื่อมีรายละเอียด
+- เพิ่ม focused Front tests สำหรับ lead service success/failure และ trial page validation/success: `4 passed / 0 failed`
+- Focused API `LeadServiceTests`: `3 passed / 0 failed`; Front full suite: `83 passed / 0 failed`; Front build และ API build ผ่าน
+- สถานะ P0-01: `[x]` สำหรับ UI/API flow, validation และ focused evidence; ยังไม่มี production DB runtime evidence และ admin lead follow-up/list/status contract จึงไม่ประกาศ scope ดังกล่าวว่าเสร็จ
+
+### หลักฐาน P0-03: Leave & Make-up Admin UI + API (13 กันยายน 2026)
+
+- ตรวจ response shape ของ `GET /api/makeup/slots`, `POST /api/makeup/slots` และ `POST /api/makeup/slots/{slotId}/cancel` เทียบกับ `MakeupSlotResponse`; หน้า Admin ใช้ `status`, `teacherId`, `bookedCount`, `capacity`, `roomId` จาก response จริง
+- แก้หน้า `Front/src/pages/admin/makeup-slots-page.jsx` ให้ map ชื่อครูจาก response ของ `GET /api/teachers` และแสดง status label จากค่า status ที่ API ส่งมา โดยไม่สร้าง field ใหม่
+- จำกัด mutation routes สร้าง/ยกเลิก slot ให้ role `admin` หรือ `teacher`; tenant isolation ของ teacher/slot/booking/credit ใช้ global query filters ของ `TutoringDbContext` และ teacher lookup ก่อนสร้าง slot
+- เพิ่ม focused API tests สำหรับ valid create, invalid capacity, unknown teacher, tenant-scoped not-found cancel, group-cancel delegation และ role forbidden: `16 passed / 0 failed` ใน filter ที่เกี่ยวข้อง
+- เพิ่ม component/service tests สำหรับ response mapping, validation, create และ group cancel: `6 passed / 0 failed`
+- Full API tests: `273 passed / 0 failed / 0 skipped`; Front full tests: `86 passed / 0 failed`; API build และ Front build ผ่าน
+- API contract validator: `92` current operations, `98` target operations, `Errors = 0`, `Warnings = 142`
+- สถานะ P0-03: `[/]`; ยังไม่ประกาศปิด task เพราะไม่มี production DB runtime evidence และยังไม่มี concurrency integration evidence สำหรับ capacity/group-cancel transaction
+
+### หลักฐาน P0-04: LIFF Homework + Make-up UI + API (13 กันยายน 2026)
+
+- ตรวจ `LineLiff/src/pages/homework.jsx`, `LineLiff/src/pages/leave-makeup.jsx`, `LineLiff/src/services/parent-service.js` เทียบกับ parent และ make-up endpoints/DTO ที่ใช้งานจริง
+- Homework list ใช้ `GET /api/parents/children/{childId}/homework`; การสร้าง submission ใช้ `POST /api/parents/children/{childId}/homework/{homeworkId}/submission`; upload ใช้ `POST /api/uploads/homework-submission?submissionId=...`
+- Parent submission boundary ตรวจ parent-child ownership, child enrollment กับ homework course และ tenant-scoped submission; upload endpoint ตรวจ parent ownership ของ submission อีกชั้น
+- Make-up flow ใช้ credits, bookings, slots, booking และ cancel endpoints จริง; service ตรวจ parent ownership ของ child/booking, credit-student match, credit expiry/status และ slot capacity/state
+- เพิ่ม `LineLiff/src/utils/validation.js`: homework image ไม่เกิน 10MB, leave attachment เป็น PDF/JPG/PNG/WEBP ไม่เกิน 5MB และ map 403/409 เป็นข้อความ UI
+- หน้า LIFF มี loading, empty, validation, upload error, booking conflict, forbidden และ success state; ปุ่ม booking ถูก disable เมื่อ slot เต็มหรือไม่ใช่ `open`; layout ใช้ responsive max-width/padding ที่มีอยู่
+- เพิ่ม focused API test `UploadHomeworkSubmission_Over10Mb_RejectsBeforeRepositoryLookup`; focused filter `FileUploadServiceTests|ParentServiceTests|MakeupServiceTests`: `25 passed / 0 failed`
+- LineLiff production build ผ่าน (`npm.cmd run build`)
+- สถานะ P0-04: `[/]`; ยังไม่มี LIFF component/service test runner, production DB/runtime evidence หรือ live upload/booking integration evidence จึงไม่ประกาศ flow production acceptance
+
+### หลักฐาน P0-05: Public Website + CMS Read Flow (13 กันยายน 2026)
+
+- ตรวจ Front route `/`, `IndexPage`, `/trial-class`, `lead-service` และ CMS routes `/`, `/content`, `/p/oasis-learning`, `/trial-class` เทียบกับ Objective และ `POST /api/public/leads`
+- Front public home มี CTA หลักและ CTA ใน header ไป `/trial-class`; sign-in controls ไป `/login`; ไม่ใช้ registration flow เป็น trial lead substitute
+- CMS `/p/oasis-learning` เป็น SSG preview ที่ prerender สำเร็จและมี static sections ตาม scope: student stories, teachers, courses/pricing และ contact; source คือ `CMS/lib/content.ts`
+- CMS `/content` ระบุ local draft เป็น integration boundary เพราะไม่พบ content read/CRUD API, authentication/RBAC หรือ media storage contract; เพิ่ม safe parsing เมื่อ localStorage draft เสียรูปแบบ
+- CMS overview ลบ hardcoded enquiry metrics, chart และ “Live” activity ที่ไม่มี API source แล้วแทนด้วย explicit unavailable/read-boundary states เพื่อไม่แสดง mock data เป็นข้อมูลจริง
+- Trial lead ใช้ implementation เดิมของ `POST /api/public/leads`, `CreateLeadRequest` และ `instituteSlug`; ไม่มี duplicate lead endpoint หรือ duplicate service เพิ่ม
+- เพิ่ม `Front/src/pages/__tests__/index-page.test.jsx` สำหรับ public CTA/sign-in route; focused public/lead tests `5 passed / 0 failed`; Front full suite `87 passed / 0 failed`
+- Front build ผ่าน (`npm.cmd run build`); CMS build ผ่าน (`npm.cmd run build`) และรายงาน `/p/oasis-learning` เป็น SSG output
+- สถานะ P0-05: `[/]`; ยังไม่มี content read API/CRUD, CMS auth/RBAC, media upload, lead list/status/follow-up contract หรือ production runtime evidence จึงไม่ประกาศ CMS acceptance ผ่าน
+
 ---
 
 ## 2. ตารางสรุปความคืบหน้าแยกตาม 12 หมวดหมู่

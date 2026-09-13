@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { getChildHomework, createHomeworkSubmission, uploadHomeworkSubmission } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
+import { apiErrorMessage, validateHomeworkFile } from '../utils/validation';
 
 const unwrap = response => response?.data?.data || response?.data || [];
 const formatDate = value => value ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium' }).format(new Date(value)) : '-';
@@ -29,6 +30,12 @@ export const HomeworkPage = ({ childId }) => {
   const upload = async (homework, event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const validationError = validateHomeworkFile(file);
+    if (validationError) {
+      setError(validationError);
+      event.target.value = '';
+      return;
+    }
     setBusyId(homework.id);
     setError('');
     setSuccess('');
@@ -38,7 +45,7 @@ export const HomeworkPage = ({ childId }) => {
       await uploadHomeworkSubmission(submission.submissionId, file);
       setSuccess(`ส่งงาน "${homework.title}" สำเร็จ`);
     } catch (apiError) {
-      setError(apiError.message || 'ส่งการบ้านไม่สำเร็จ');
+      setError(apiErrorMessage(apiError, 'ส่งการบ้านไม่สำเร็จ'));
     } finally {
       setBusyId(null);
       event.target.value = '';
@@ -68,8 +75,9 @@ export const HomeworkPage = ({ childId }) => {
             {homework.description && <p class="mt-3 text-sm leading-6 text-ink-700">{homework.description}</p>}
             <label class="mt-4 flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-sage-600 px-3 text-sm font-bold text-white hover:bg-sage-700">
               {busyId === homework.id ? 'กำลังส่ง...' : 'เลือกรูปเพื่อส่งงาน'}
-              <input class="sr-only" type="file" accept="image/*" disabled={busyId === homework.id} onChange={event => upload(homework, event)} />
+              <input class="sr-only" aria-label={`เลือกรูปส่งงาน ${homework.title}`} type="file" accept="image/*" disabled={busyId === homework.id} onChange={event => upload(homework, event)} />
             </label>
+            <p class="mt-2 text-center text-xs text-ink-500">รูปภาพไม่เกิน 10MB</p>
           </article>
         ))}
       </div>

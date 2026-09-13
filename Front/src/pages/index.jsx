@@ -11,8 +11,8 @@ export function IndexPage() {
           <Button variant="ghost" size="sm" onClick={() => route('/login')}>
             Sign In
           </Button>
-          <Button variant="primary" size="sm" onClick={() => route('/register')}>
-            Get Started
+            <Button variant="primary" size="sm" onClick={() => route('/trial-class')}>
+              Book a Trial
           </Button>
         </div>
       </nav>
@@ -29,10 +29,10 @@ export function IndexPage() {
             A modern learning platform built for speed, clarity, and scalability. Start your journey today.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="primary" size="lg" onClick={() => route('/register')} class="shadow-lg shadow-sky-blue/20">
-              Get Started Free
+            <Button variant="primary" size="lg" onClick={() => route('/trial-class')} class="shadow-lg shadow-sky-blue/20">
+            Book a Trial Class
             </Button>
-            <Button variant="secondary" size="lg" onClick={() => route('/')}>
+            <Button variant="secondary" size="lg" onClick={() => route('/login')}>
               Sign In
             </Button>
           </div>

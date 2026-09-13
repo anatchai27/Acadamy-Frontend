@@ -13,6 +13,65 @@ namespace academy_API.Tests.unitTest;
 public class MakeupServiceTests
 {
     [Fact]
+    public async Task CreateSlot_InvalidCapacity_RejectsBeforeTeacherLookup()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        var sut = new MakeupService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CreateSlotAsync(new CreateMakeupSlotRequest(4, Future(), 0, null), CancellationToken.None));
+
+        Assert.Equal("INVALID_SLOT", exception.Code);
+        repository.Verify(x => x.GetTeacherInstituteIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateSlot_UnknownTeacher_RejectsWithoutPersisting()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.GetTeacherInstituteIdAsync(4, It.IsAny<CancellationToken>())).ReturnsAsync((int?)null);
+        var sut = new MakeupService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CreateSlotAsync(new CreateMakeupSlotRequest(4, Future(), 3, "A1"), CancellationToken.None));
+
+        Assert.Equal("TEACHER_NOT_FOUND", exception.Code);
+        repository.Verify(x => x.CreateSlotAsync(It.IsAny<MakeupSlot>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateSlot_ValidTeacher_PersistsTenantBoundSlot()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.GetTeacherInstituteIdAsync(4, It.IsAny<CancellationToken>())).ReturnsAsync(9);
+        repository.Setup(x => x.CreateSlotAsync(It.IsAny<MakeupSlot>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MakeupSlot slot, CancellationToken _) => { slot.Id = 12; return slot; });
+        var sut = new MakeupService(repository.Object);
+
+        var result = await sut.CreateSlotAsync(new CreateMakeupSlotRequest(4, Future(), 3, "A1"), CancellationToken.None);
+
+        Assert.Equal(12, result.Id);
+        Assert.Equal(4, result.TeacherId);
+        Assert.Equal("open", result.Status);
+        repository.Verify(x => x.CreateSlotAsync(It.Is<MakeupSlot>(slot =>
+            slot.InstituteId == 9 && slot.TeacherId == 4 && slot.Capacity == 3 && slot.RoomId == "A1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancelSlot_UnknownTenantSlot_ReturnsNotFoundValidation()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.GetSlotAsync(12, It.IsAny<CancellationToken>())).ReturnsAsync((MakeupSlot?)null);
+        var sut = new MakeupService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() =>
+            sut.CancelSlotAsync(12, 99, CancellationToken.None));
+
+        Assert.Equal("NOT_FOUND", exception.Code);
+        repository.Verify(x => x.CancelSlotAsync(It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateBooking_CreditBelongsToAnotherStudent_ThrowsValidationException()
     {
         // Arrange

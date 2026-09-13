@@ -49,7 +49,10 @@ const fetcher = async (endpoint, options = {}) => {
     : null;
 
   return response.ok ? { data, status: response.status } : (() => {
-    const serverMessage = data?.message || data?.error || '';
+    const validationMessage = data?.errors && typeof data.errors === 'object'
+      ? Object.values(data.errors).flat().find(Boolean)
+      : '';
+    const serverMessage = validationMessage || data?.message || data?.error || '';
     const isTenantContextInvalid = response.status === 403
       && /tenant validation failed|invalid or missing institute context/i.test(String(serverMessage));
     const isUnauthorized = response.status === 401 || isTenantContextInvalid;

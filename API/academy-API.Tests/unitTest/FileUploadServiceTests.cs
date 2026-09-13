@@ -80,6 +80,22 @@ public class FileUploadServiceTests
         storage.Verify(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task UploadHomeworkSubmission_Over10Mb_RejectsBeforeRepositoryLookup()
+    {
+        var repository = new Mock<IFileUploadRepository>();
+        var storage = new Mock<IFileStorageService>();
+        var sut = new FileUploadService(repository.Object, storage.Object);
+        var file = CreateFile("submission.jpg", "image/jpeg", 10 * 1024 * 1024 + 1);
+
+        var exception = await Assert.ThrowsAsync<FileUploadValidationException>(() =>
+            sut.UploadHomeworkSubmissionAsync(1, 15, file, CancellationToken.None));
+
+        Assert.Equal("FILE_TOO_LARGE", exception.Code);
+        repository.Verify(x => x.GetHomeworkSubmissionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        storage.Verify(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static FormFile CreateFile(string name, string contentType, int length)
     {
         var stream = new MemoryStream(new byte[length]);

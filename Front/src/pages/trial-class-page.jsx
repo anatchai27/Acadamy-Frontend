@@ -19,10 +19,24 @@ export function TrialClassPage() {
 
   const submit = async event => {
     event.preventDefault();
+
+    const requiredFields = [
+      ['instituteSlug', 'Institute slug'],
+      ['contactName', 'Contact name'],
+      ['phone', 'Phone'],
+    ];
+    const missingField = requiredFields.find(([name]) => !form[name].trim());
+    if (missingField) {
+      setState({ status: 'error', message: `${missingField[1]} is required.` });
+      return;
+    }
+
     setState({ status: 'loading', message: '' });
 
     try {
-      await createPublicLead(form);
+      await createPublicLead(Object.fromEntries(
+        Object.entries(form).map(([key, value]) => [key, value.trim()]),
+      ));
       setForm(initialForm);
       setState({ status: 'success', message: 'Your request has been received.' });
     } catch (error) {
@@ -53,6 +67,7 @@ export function TrialClassPage() {
                 name={name}
                 value={form[name]}
                 required={required}
+                type={name === 'email' ? 'email' : 'text'}
                 onInput={update}
               />
             </label>

@@ -17,9 +17,11 @@ public static class MakeupEndpoints
         group.MapGet("/slots", async (IMakeupService service, DateTime? from, DateTime? to, int? teacher_id, CancellationToken ct) =>
             Results.Ok(await service.ListSlotsAsync(from, to, teacher_id, ct)));
         group.MapPost("/slots", async (CreateMakeupSlotRequest request, IMakeupService service, CancellationToken ct) =>
-            await Execute(() => service.CreateSlotAsync(request, ct), result => Results.Created("/api/makeup/slots", result)));
+            await Execute(() => service.CreateSlotAsync(request, ct), result => Results.Created("/api/makeup/slots", result)))
+            .RequireAuthorization(policy => policy.RequireRole("admin", "teacher"));
         group.MapPost("/slots/{slotId:int}/cancel", async (int slotId, IMakeupService service, HttpContext context, CancellationToken ct) =>
-            await Execute(async () => { await service.CancelSlotAsync(slotId, ActorId(context), ct); return new { status = "cancelled" }; }, Results.Ok));
+            await Execute(async () => { await service.CancelSlotAsync(slotId, ActorId(context), ct); return new { status = "cancelled" }; }, Results.Ok))
+            .RequireAuthorization(policy => policy.RequireRole("admin", "teacher"));
         group.MapPost("/bookings", async (CreateMakeupBookingRequest request, IMakeupService service, HttpContext context, CancellationToken ct) =>
             await Execute(() => service.CreateBookingForUserAsync(request, ActorId(context), context.User.IsInRole("parent"), ct), result => Results.Created("/api/makeup/bookings", result)));
         group.MapDelete("/bookings/{bookingId:long}", async (long bookingId, IMakeupService service, HttpContext context, CancellationToken ct) =>

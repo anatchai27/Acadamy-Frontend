@@ -9,7 +9,7 @@ export default function ContentPage() {
   const [sections, setSections] = useState<ContentSection[]>(defaultSections);
   const [selected, setSelected] = useState(defaultSections[0].key);
   const [saved, setSaved] = useState(false);
-  useEffect(() => { const raw = window.localStorage.getItem(STORAGE_KEY); if (raw) setSections(JSON.parse(raw)); }, []);
+  useEffect(() => { const raw = window.localStorage.getItem(STORAGE_KEY); if (!raw) return; try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) setSections(parsed); } catch { window.localStorage.removeItem(STORAGE_KEY); } }, []);
   const current = sections.find((section) => section.key === selected) ?? sections[0];
   function update(field: "title" | "body", value: string) { setSections((items) => items.map((item) => item.key === selected ? { ...item, [field]: value, status: "Draft" } : item)); setSaved(false); }
   function saveDraft() { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sections)); setSaved(true); }
