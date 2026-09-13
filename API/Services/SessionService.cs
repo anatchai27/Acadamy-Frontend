@@ -50,7 +50,17 @@ public class SessionService(Repositories.ISessionRepository repository) : ISessi
             Status = "scheduled"
         };
 
-        var created = await _repository.CreateAsync(session, ct);
+        session.InstituteId = instituteId;
+
+        Models.Session created;
+        try
+        {
+            created = await _repository.CreateAsync(session, ct);
+        }
+        catch (Repositories.RoomBookingConflictException)
+        {
+            throw new SessionValidationException("ROOM_OVERLAP", "ห้องเรียนมีคาบเรียนทับซ้อนในช่วงเวลานี้");
+        }
 
         return new CreateSessionResponse(
             "success",

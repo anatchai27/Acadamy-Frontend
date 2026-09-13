@@ -343,7 +343,7 @@
 
 #### รายการ Acceptance Criteria:
 - [ ] **AC 1:** (Admin Panel) มีหน้าต่างตั้งค่าปฏิทินวันหยุด (Holiday Calendar) ซึ่งส่งผลให้ไม่มีการแจ้งเตือนทวงงาน/เช็คชื่อในวันนั้น (ยังไม่มี)
-- [ ] **AC 2:** (Backend) Validation ป้องกันการจองห้องเรียนซ้ำซ้อน (Room Overlap) ในตอนสร้างคาบเรียน (ยังไม่มีการเช็ค `scheduled_at` + `duration_min` ชนกับ `room_id` เดียวกัน)
+- [/] **AC 2:** (Backend) Validation ป้องกันการจองห้องเรียนซ้ำซ้อน (Room Overlap) มี overlap query และ MySQL/TiDB named lock + transaction ใน `SessionRepository` แล้ว; ยังไม่มี integration/concurrency runtime evidence กับ database environment จริง
 - [/] **AC 3:** (Frontend/Backend) สร้าง UI สำหรับคลังเอกสารและอัปโหลดไฟล์การสอนไปยัง Storage (มี API File Upload เข้า Thai Data Cloud S3 แล้ว แต่ยังไม่มีหน้า FileManager กลาง)
 - [ ] **AC 4:** (Admin Panel) มีรายงานสรุปค่าตอบแทนครูรายเดือน (ยังไม่มี)
 - [x] **AC 5:** (Frontend/Backend) สร้างระบบขอ Consent PDPA พร้อมบันทึกประวัติ และฟังก์ชันขอ Export/ลบข้อมูล (`PdpaConsent` ถูกบันทึกตอนสมัครเรียนและสมัครสถาบัน, มีปุ่มลบบัญชีใน Settings)

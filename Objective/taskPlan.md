@@ -97,10 +97,10 @@
 - [x] ตรวจช่วงเวลาทับซ้อนที่ room เดียวกันใน tenant เดียวกัน
 - [x] ปฏิเสธ duration ที่ไม่ถูกต้อง
 - [x] เพิ่ม unit test กรณี overlap และไม่สร้าง session
-- [ ] ตรวจว่า `sessions` หรือ `room_bookings` เป็น source of truth ของการจองห้องตาม schema/runtime จริง
-- [ ] ออกแบบ transaction/locking หรือ database constraint ที่ป้องกัน concurrent insert ได้จริง
+- [/] จาก code evidence ปัจจุบัน `sessions` เป็น source of truth ของ create flow; `room_bookings` ยังไม่มี repository/endpoint ที่ใช้งาน แต่ยังไม่มี production runtime evidence
+- [/] ออกแบบและ implement MySQL/TiDB named lock + transaction สำหรับ concurrent insert; ยังต้องพิสูจน์ด้วย integration/concurrency test กับ database environment จริง
 - [ ] เพิ่ม integration/concurrency test กับ engine ที่ใช้จริง
-- [ ] ตรวจ cancellation/status ว่ารายการ cancelled ไม่ block ห้อง แต่ status อื่นต้อง block ตาม requirement
+- [/] overlap query ไม่ block `sessions.status = cancelled` และ block status อื่นตาม code; ยังต้องยืนยัน requirement/runtime data จริง
 
 **ผ่านเมื่อ:** ไม่เกิด overbooking จาก request พร้อมกัน และ rule ของ status/tenant มีหลักฐานจาก test หรือ runtime
 
