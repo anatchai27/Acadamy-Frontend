@@ -216,7 +216,145 @@ LIMIT 100;
 
 SRS ต้องการ audit สำหรับ login/logout และการเปลี่ยนข้อมูลสำคัญ การมี table หรือ interceptor อย่างเดียวไม่พอจะสรุปว่าผ่าน requirement
 
-## 7. สิ่งที่ยังไม่ควรเพิ่มจากหลักฐานปัจจุบัน
+## 7. ตรวจ Homework, Skill, Badge, Lead และ Public Content
+
+### 7.1 Homework submission ซ้ำ/ค้างส่ง
+
+```sql
+SELECT homework_id, student_id, COUNT(*) AS submission_count
+FROM homework_submissions
+GROUP BY homework_id, student_id
+HAVING COUNT(*) > 1;
+
+SELECT h.id AS homework_id, h.institute_id, h.due_at,
+       e.student_id, hs.id AS submission_id, hs.submitted_at
+FROM homeworks AS h
+JOIN enrollments AS e
+  ON e.course_id = h.course_id
+LEFT JOIN homework_submissions AS hs
+  ON hs.homework_id = h.id
+ AND hs.student_id = e.student_id
+WHERE h.due_at <= UTC_TIMESTAMP()
+  AND (hs.id IS NULL OR hs.submitted_at IS NULL);
+```
+
+ผล query แรกต้องว่าง เพราะ official mapping มี unique `(homework_id, student_id)`. ผล query ที่สองใช้ตรวจค้างส่งและเป็น input ของ reminder เท่านั้น ห้ามแก้ `submitted_at` ด้วย SQL เดาเอง
+
+### 7.2 Homework -> Skill Score mapping
+
+```sql
+SELECT h.id AS homework_id, h.course_id,
+       st.id AS skill_topic_id, st.name AS skill_topic_name
+FROM homeworks AS h
+LEFT JOIN skill_topics AS st ON st.course_id = h.course_id
+ORDER BY h.id, st.order_index;
+```
+
+Query นี้ใช้ตรวจ candidate topics เท่านั้น ไม่ใช่ mapping ที่อนุมัติแล้ว ถ้า homework หนึ่งรายการมีหลาย topic หรือไม่มี topic ต้องมี `homework.topic_id` หรือ mapping table/owner decision ก่อนจึงจะ update `skill_scores` ได้ ห้ามเลือก topic แรกอัตโนมัติ
+
+### 7.3 Skill score orphan และ duplicate
+
+```sql
+SELECT ss.id, ss.student_id, ss.topic_id, ss.institute_id
+FROM skill_scores AS ss
+LEFT JOIN students AS s ON s.id = ss.student_id
+LEFT JOIN skill_topics AS st ON st.id = ss.topic_id
+WHERE s.id IS NULL
+   OR st.id IS NULL
+   OR s.institute_id <> ss.institute_id;
+
+SELECT student_id, topic_id, COUNT(*) AS score_count
+FROM skill_scores
+GROUP BY student_id, topic_id
+HAVING COUNT(*) > 1;
+```
+
+### 7.4 Streak และ Badge consistency
+
+```sql
+SELECT student_id, streak_type, COUNT(*) AS counter_count
+FROM streak_counters
+GROUP BY student_id, streak_type
+HAVING COUNT(*) > 1;
+
+SELECT sb.student_id, sb.badge_id, COUNT(*) AS award_count
+FROM student_badges AS sb
+GROUP BY sb.student_id, sb.badge_id
+HAVING COUNT(*) > 1;
+
+SELECT sb.id, sb.student_id, sb.badge_id, sb.institute_id,
+       s.institute_id AS student_institute_id,
+       b.institute_id AS badge_institute_id
+FROM student_badges AS sb
+LEFT JOIN students AS s ON s.id = sb.student_id
+LEFT JOIN badges AS b ON b.id = sb.badge_id
+WHERE s.id IS NULL
+   OR b.id IS NULL
+   OR s.institute_id <> sb.institute_id
+   OR b.institute_id <> sb.institute_id;
+```
+
+ผล query ใช้ตรวจความพร้อมก่อนทำ streak/badge worker. การกำหนดว่า attendance, homework, leave หรือ no-show มีผลต่อ streak ต้องเป็น business rule ไม่ใช่ SQL mapping inference
+
+### 7.5 Lead status และ tenant
+
+```sql
+SELECT status, COUNT(*) AS lead_count
+FROM leads
+GROUP BY status
+ORDER BY status;
+
+SELECT id, institute_id, full_name, phone, status, assigned_to,
+       created_at, updated_at
+FROM leads
+ORDER BY created_at DESC
+LIMIT 100;
+
+SELECT l.id, l.institute_id, l.assigned_to, u.institute_id AS assignee_institute_id
+FROM leads AS l
+LEFT JOIN users AS u ON u.id = l.assigned_to
+WHERE l.assigned_to IS NOT NULL
+  AND (u.id IS NULL OR u.institute_id <> l.institute_id);
+```
+
+สถานะที่ใช้ใน lead list ต้อง owner ยืนยันก่อน เช่น `new`, `contacted`, `qualified`, `converted`, `lost`; SQL นี้ไม่เปลี่ยนสถานะเอง
+
+### 7.6 Public website content และ duplicate section
+
+```sql
+SELECT institute_id, section_key, content_type, COUNT(*) AS active_count
+FROM public_website_contents
+WHERE is_active = 1
+GROUP BY institute_id, section_key, content_type
+HAVING COUNT(*) > 1;
+
+SELECT id, institute_id, section_key, content_type,
+       sort_order, is_active, created_at, updated_at
+FROM public_website_contents
+ORDER BY institute_id, sort_order, section_key;
+```
+
+ถ้าจะทำ CMS publish ต้องกำหนดว่าหนึ่ง `(institute_id, section_key, content_type)` มี active record ได้กี่รายการก่อนเพิ่ม unique constraint หรือ API publish rule
+
+### 7.7 Payment slip verification
+
+```sql
+SELECT status, verification_provider, COUNT(*) AS payment_count
+FROM payments
+GROUP BY status, verification_provider
+ORDER BY status, verification_provider;
+
+SELECT id, institute_id, invoice_no, status, slip_url,
+       verification_provider, verified_at, slip_verified_at
+FROM payments
+WHERE slip_url IS NOT NULL
+  AND (status IS NULL OR status = 'pending')
+ORDER BY created_at DESC;
+```
+
+ผล query นี้บอกงานค้างตรวจเท่านั้น ไม่ควร mark approved จนกว่าจะมี provider หรือแอดมินตรวจจริง
+
+## 8. สิ่งที่ยังไม่ควรเพิ่มจากหลักฐานปัจจุบัน
 
 - ไม่เพิ่ม `makeup_slots.course_id` เพราะ CSV ไม่มีและ SRS ไม่ได้ยืนยัน mapping ที่ใช้ได้
 - ไม่เพิ่ม `makeup_slots.status` จนกว่าจะมี business lifecycle ที่อนุมัติ
@@ -225,7 +363,7 @@ SRS ต้องการ audit สำหรับ login/logout และกา�
 - ไม่ใช้ `booked_count` เป็นหลักฐานแทน booking rows โดยไม่ตรวจ concurrency และ consistency
 - ไม่ถือว่า schema มีอยู่แล้วหมายความว่า LIFF, API, worker, transaction และ notification ผ่าน SRS แล้ว
 
-## 8. ถ้าต้องแก้ schema รอบถัดไป
+## 9. ถ้าต้องแก้ schema รอบถัดไป
 
 ก่อน DDL ทุกครั้ง:
 
@@ -238,7 +376,7 @@ SRS ต้องการ audit สำหรับ login/logout และกา�
 
 DDL ของ TiDB ทำ implicit commit; การตรวจ runbook นี้จึงไม่ใช่ transaction ครอบคลุมทั้งเอกสาร
 
-### 8.1 Proposed: leave request attachments
+### 9.1 Proposed: leave request attachments
 
 > สถานะ: **Verified in schema export** จาก `Objective/results-2026-09-12-220648.csv`; ยังต้องตรวจ runtime data/flow ก่อนสรุปว่า SRS ผ่าน
 
@@ -293,10 +431,24 @@ WHERE CONSTRAINT_SCHEMA = DATABASE()
 
 CSV รอบใหม่ยืนยัน schema แล้ว จึงสามารถเพิ่ม `LeaveRequestAttachment` model, DbContext mapping, repository/service และ upload endpoint ตามลำดับ
 
-## 9. สรุปสถานะตามหลักฐาน
+## 10. สรุปสถานะตามหลักฐาน
 
 - **Schema:** ตารางหลักของ Leave & Make-up, Audit, Pickup และ `leave_request_attachments` มีอยู่ตาม CSV ล่าสุด (`results-2026-09-12-220648.csv`)
 - **Backend/Code:** Model `LeaveRequestAttachment`, EF mapping, Service validation (MIME/size/ownership), Repository, Endpoint `POST /api/leave-requests/{id}/attachment`, Unit tests และ LIFF UI file upload ถูกพัฒนาแล้ว
 - **SRS:** ยังสรุปผ่านครบไม่ได้จาก CSV; ต้องยืนยัน service transaction, endpoint, UI, worker, notification และข้อมูล runtime
 - **Migration:** ไม่มี DDL สร้างตารางเดิมซ้ำในเอกสารฉบับนี้
 - **ข้อมูลที่ต้องตรวจต่อ:** orphan, tenant mismatch, active booking ซ้ำ, capacity mismatch, leave-to-credit consistency และ audit events
+
+## 11. Missing Mapping ที่ต้องมีเจ้าของตัดสิน
+
+| งาน | Official schema ที่มี | สิ่งที่ยังขาด | ห้ามทำแทน |
+|---|---|---|---|
+| Homework -> Skill | `homeworks.course_id`, `skill_topics.course_id`, `skill_scores.topic_id` | key ระบุ topic ของ homework | ห้ามใช้ topic แรกของ course อัตโนมัติ |
+| Streak | `streak_counters`, attendance, submissions | event และ reset rule | ห้ามคำนวณจากยอดรวมโดยไม่มี date rule |
+| Badge | `badges`, `student_badges` | criteria/event/duplicate award rule | ห้าม award จาก hardcode ใน UI |
+| Lead follow-up | `leads`, `users` | status transition, assigned-role policy | ห้ามให้ user ข้าม tenant |
+| CMS publish | `public_website_contents` | active version/publish/rollback rule | ห้าม publish local draft เป็น production |
+| Holiday | ไม่พบ `holidays` | source วันหยุดและ timezone | ห้าม hardcode วันหยุดใน worker |
+| File manager | ไม่พบ `file_assets` | storage/object permission | ห้ามสร้าง URL ที่ไม่มี object จริง |
+
+เอกสารนี้เป็น verification/runbook แบบ read-only. ก่อนเพิ่ม DDL ให้เก็บผล `information_schema`, `SHOW CREATE TABLE`, backup และ owner decision ไว้เป็นหลักฐานก่อนเสมอ

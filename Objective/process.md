@@ -56,21 +56,21 @@
 |---|---:|---:|---:|---|
 | 1. Authentication & RBAC | 6 | 6 | 100% | เพิ่ม runtime audit ได้ภายหลัง |
 | 2. Student Management | 7 | 7 | 100% | XLSX เป็นงานเสริม |
-| 3. QR Attendance | 3 | 7 | 43% | QR checkout โดยตรง, LINE/runtime, device offline |
+| 3. QR Attendance | 4 | 7 | 57% | QR checkout โดยตรง, LINE/runtime, device offline |
 | 4. Leave & Make-up | 5 | 5 | 100% | expiry/no-show worker เป็นงานเสริม |
 | 5. Skill Card | 2 | 5 | 40% | คะแนนจากการบ้าน, streak, badge |
-| 6. Homework | 3 | 5 | 60% | trigger แจ้งเตือนทันทีและ runtime LIFF |
+| 6. Homework | 4 | 5 | 80% | runtime LIFF และ score-to-skill mapping |
 | 7. Payment & Billing | 3 | 5 | 60% | provider ตรวจสลิปจริง, runtime report policy |
 | 8. Public Website & CMS | 2 | 5 | 40% | CMS CRUD/media และ lead follow-up |
 | 9. LINE Integration | 2 | 6 | 33% | Rich Menu, broadcast, webhook และ audit ที่เหลือ |
 | 10. Reports & Analytics | 1 | 5 | 20% | analytics สูตรจริง, forecast, timesheet, referral |
 | 11. Operations & Compliance | 2 | 6 | 33% | holiday, file manager, payroll, backup |
 | 12. Architecture & NFR | 2 | 5 | 40% | deploy/ฐานข้อมูลตาม SRS และ load test |
-| **รวม** | **38** | **67** | **57%** | **29 AC ยังไม่ครบสำหรับส่งจริง** |
+| **รวม** | **40** | **67** | **60%** | **27 AC ยังไม่ครบสำหรับส่งจริง** |
 
 ### สรุปเปอร์เซ็นต์
 
-**ความคืบหน้าแบบส่งงานที่จับต้องได้: `38 / 67 = 57%`**
+**ความคืบหน้าแบบส่งงานที่จับต้องได้: `40 / 67 = 60%`**
 
 ตัวเลขนี้ไม่นับ build/test เป็น feature เพิ่มเอง และไม่นับงานที่มีแค่ UI draft เป็นงานเสร็จ ถือเป็นคะแนนจาก Acceptance Criteria ของ `ProjectObj.md` เท่านั้น
 
@@ -201,6 +201,14 @@ Pop-Location
 - P6 builds ผ่านทั้ง API, Front และ LineLiff; ยังไม่มี k6 ใน environment จึงยังไม่มีผล 100-concurrent load test
 - P7 API tests `279 passed / 0 failed / 0 skipped`, API build ผ่าน และ Front tests `87 passed / 0 failed / 0 skipped`
 - P8 CMS build ผ่านด้วย Next.js `15.5.25`, สร้าง static routes `10/10` รวม `/p/oasis-learning` และ `/trial-class`
+- P5 offline conflict UI ปิดแล้ว: Attendance โหลด IndexedDB queue, แสดง pending/failed/attempts/lastError และ refresh หลัง online sync; Front tests `87 passed` และ build ผ่าน
+- หลังปิด offline conflict UI คะแนนส่งจริงขยับเป็น `39/67 = 58%`
+- Homework reminder verified: `HomeworkReminderNotificationJob` ใช้ `DueAt` window 23-24 ชั่วโมง, ตัดรายการที่มี `SubmittedAt` และใช้ key `homework_reminder:{homeworkId}:{studentId}:{dueAt}` กันแจ้งซ้ำ
+- หลังยืนยัน homework reminder คะแนนส่งจริงขยับเป็น `40/67 = 60%`; ยังไม่ปิด score-to-skill เพราะ official schema ไม่มี mapping key
+- P15 release validation ล่าสุด: API tests `279 passed / 0 failed / 0 skipped`, Front tests `87 passed / 0 failed / 0 skipped`, LineLiff tests `4 passed / 0 failed / 0 skipped`; API/Front/LineLiff/CMS build ผ่าน
+- Official SQL mapping review: `homeworks` ไม่มี `topic_id`/homework-skill mapping, และ CSV ไม่พบ `holidays`/`file_assets`; จึงยังไม่ implement score auto-map, holiday worker หรือ file manager แบบเดา schema
+- Mapping ที่ทำได้แล้วใช้ official columns: `homework_submissions.homework_id/student_id`, `submitted_at`, `score`, `feedback`, `skill_scores.topic_id`, attendance unique `(session_id, student_id)` และ `student_pickup_authorizations.id`
+- งานที่ทำไม่ได้เพราะ mapping/contract ไม่ครบถูกย้ายเป็น `[/]` พร้อม owner decision ใน `Objective/taskPlan.md` แทนการเพิ่ม DDL หรือใช้ `course_id` แทน `topic_id`
 - Task 1 Student Registration ปิดแล้ว: ฟอร์มเพิ่มนักเรียนมี dynamic pickup people และเรียก `POST /api/students/{id}/pickup-authorizations` หลังสร้างนักเรียนสำเร็จ
 - หลังปิด Task 1 คะแนนส่งจริงขยับเป็น `36/67 = 54%`; Front tests `87 passed` และ API tests `279 passed`
 - Task 2 Leave & Make-up group cancel ปิดแล้ว: คืน credit ทุก booking ที่ active, ปิด booking/slot และบันทึก credit transaction ใน transaction เดียว
@@ -209,6 +217,11 @@ Pop-Location
 - ลบค่า attendance `96%` ที่ hardcode ใน LIFF dashboard และแสดงค่าจาก API หรือ `-` เมื่อยังไม่มีข้อมูล
 - API tests `279 passed / 0 failed / 0 skipped`; LineLiff tests `4 passed / 0 failed / 0 skipped`; LineLiff build ผ่าน
 - หลังปิด Homework status/feedback คะแนนส่งจริงขยับเป็น `38/67 = 57%`
+- P5 ตรวจแล้ว: API ยังไม่มี Rich Menu/broadcast endpoint และยังไม่มี LINE provider contract จึงไม่สร้าง integration ปลอม; dispatcher/push/late worker เดิมยังผ่านตาม flow หลัก
+- P6 ตรวจแล้ว: CMS build ผ่าน, public preview/trial class และ `POST /api/public/leads` ใช้งานตาม contract ที่มี; content editor ยังเก็บ local draft ตาม integration boundary ที่ระบุในหน้า
+- P5/P6 validation: API tests `279 passed / 0 failed / 0 skipped`, LineLiff tests `4 passed / 0 failed / 0 skipped`, LineLiff build และ CMS build ผ่าน
+- P7 ตรวจ CMS Operations แล้วนำข้อมูล payroll ตัวอย่าง hardcode ออก เหลือ empty state จนกว่าจะมี payroll API/formula contract; revenue report เดิมยังอ่านจาก API จริง
+- P8 source check ยืนยัน route authorization/role, tenant query filter, bcrypt password hash, QR expiry/rotation และ rate limiting มีอยู่แล้ว; ยังไม่มี deploy/load/database runtime evidence
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
 

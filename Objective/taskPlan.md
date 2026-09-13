@@ -1,136 +1,215 @@
-# Task Plan: แผนส่งงาน Academy แบบใช้งานจริง
+# Task Plan: Academy Delivery 15P
 
-> อ้างอิงหลัก: `Objective/ProjectObj.md`  
-> สถานะล่าสุด: **35 / 67 AC = 52% แบบส่งจริง**  
-> เป้าหมาย: ปิด flow ตาม requirement ให้ครบก่อนทำงานเสริมด้าน production
+> อ้างอิง requirement: `Objective/ProjectObj.md`  
+> สถานะล่าสุด: **40 / 67 AC = 60% แบบส่งจริง**  
+> วิธีทำงาน: ทำ flow ที่ผู้ใช้จับต้องได้ก่อน, ไม่ทำ mock แทน API จริง และไม่เพิ่ม schema/feature ที่ไม่มี contract
 
-## กติกาคะแนน
+## เกณฑ์สถานะ
 
-- `[x]` = flow ครบ มี source และมี test/build หรือหลักฐานการใช้งาน
-- `[/]` = ทำบางส่วน ยังส่งเป็น flow เต็มไม่ได้
-- `[ ]` = ยังไม่ได้ทำ
-- ไม่นับ UI draft, mock data หรือเอกสารแทน feature ที่ยังไม่มี flow จริง
-- ไม่เพิ่ม table/API/feature ใหม่ ถ้าไม่มี requirement หรือยังไม่มี contract ที่ชัดเจน
+- `[x]` flow ครบ มี source และผ่าน test/build หรือมีหลักฐานการใช้งาน
+- `[/]` มีบางส่วน แต่ยังส่งเป็น flow เต็มไม่ได้
+- `[ ]` ยังไม่เริ่มหรือยังไม่มีหลักฐานพอ
 
-## สถานะภาพรวม
+## แผน 15P
 
-| หมวด | ผ่านส่งจริง | ทั้งหมด | เปอร์เซ็นต์ | งานถัดไป |
-|---|---:|---:|---:|---|
-| 1. Authentication & RBAC | 6 | 6 | 100% | audit runtime เป็นงานเสริม |
-| 2. Student Management | 6 | 7 | 86% | เชื่อมผู้รับเด็กในฟอร์มเพิ่มนักเรียน |
-| 3. QR Attendance | 3 | 7 | 43% | ปิด flow notification/offline ที่จำเป็น |
-| 4. Leave & Make-up | 5 | 5 | 100% | งานเสริม: expiry/no-show worker |
-| 5. Skill Card | 2 | 5 | 40% | แสดง LIFF และเชื่อมคะแนนการบ้าน |
-| 6. Homework | 2 | 5 | 40% | ปิด LIFF status/badge/reminder |
-| 7. Payment & Billing | 3 | 5 | 60% | provider ตรวจสลิปจริงเป็นงานต่อ |
-| 8. Public Website & CMS | 2 | 5 | 40% | CMS CRUD/media และ lead list |
-| 9. LINE Integration | 2 | 6 | 33% | Rich Menu และ broadcast |
-| 10. Reports & Analytics | 1 | 5 | 20% | analytics/timesheet |
-| 11. Operations & Compliance | 2 | 6 | 33% | holiday/file/payroll/backup |
-| 12. Architecture & NFR | 2 | 5 | 40% | deploy/load test เป็นงานเสริม |
-| **รวม** | **35** | **67** | **52%** | **เหลือ 32 AC** |
+### P1: Baseline และ Scope Lock
 
-## ลำดับทำงานต่อ
+สถานะ: `[x]`
 
-ทำตามลำดับนี้เพื่อเพิ่มคะแนนเร็วและได้ของที่ผู้ใช้จับต้องได้:
+- [x] อ่าน AC ทั้ง 67 ข้อจาก `ProjectObj.md`
+- [x] แยกงานที่ส่งจริงออกจากงาน draft/งานเสริม
+- [x] ล็อก contract หลักของ attendance, error, role และ tenant
+- [x] กำหนดคะแนนล่าสุด `39/67 = 58%`
 
-1. **Student Management:** เชื่อม pickup authorization ตอนเพิ่มนักเรียน ปิด `7/7`
-2. **Leave & Make-up:** ปิด group cancel และตรวจคืน credit ปิด `5/5`
-3. **Homework + Skill Card:** ทำหน้า LIFF ให้เห็น status, score และ feedback ครบ
-4. **QR Attendance:** ปิดข้อความ notification/offline ที่ผู้ใช้เห็นจริง
-5. **LINE Integration:** ทำ Rich Menu และ broadcast แบบใช้งานได้
-6. **CMS:** ทำ content/lead management เมื่อมี backend contract ที่พร้อม
-7. **Reports/Operations:** ทำเฉพาะรายงานที่ owner ยืนยันสูตรและข้อมูล
+เกณฑ์จบ: ทุกงานถัดไปอ้าง requirement และไม่ขยาย scope เอง
 
-## Task 1: Student Registration + Pickup Authorization
+### P2: Authentication และ RBAC
 
-สถานะ: `[x]` ปิด flow เพิ่มนักเรียนพร้อมผู้ปกครองและผู้รับเด็กแล้ว
+สถานะ: `[x]`
 
-- [x] ฟอร์มเพิ่มนักเรียนรับข้อมูลพื้นฐาน รูป และ medical info
-- [x] API สร้างนักเรียนและคืน QR
-- [x] API pickup authorization รองรับการเพิ่ม/แก้ไข/ลบ
-- [x] เพิ่มส่วนผู้ปกครองแบบ dynamic ในฟอร์มเดียวกับการเพิ่มนักเรียน
-- [x] เพิ่มส่วนรายชื่อผู้รับเด็กแบบ dynamic ในฟอร์มเดียวกัน
-- [x] บันทึกนักเรียนและผู้รับเด็กตามลำดับที่ผู้ใช้เข้าใจได้
-- [x] แสดง error หากข้อมูลผู้รับเด็กไม่ครบหรือบันทึกไม่สำเร็จ
+- [x] Login/logout และ password reset
+- [x] bcrypt password hashing
+- [x] Role guard สำหรับ admin/teacher/parent/student
+- [x] Session timeout และ route authorization
+- [x] LINE parent binding flow
 
-เกณฑ์จบ: แอดมินเพิ่มนักเรียนหนึ่งคน พร้อมผู้ปกครองและผู้รับเด็กได้จาก flow เดียว แล้วเปิดหน้า profile เห็นข้อมูลครบ
+เกณฑ์จบ: ผู้ใช้ login ได้และทำได้เฉพาะ action ตาม role/tenant
 
-## Task 2: Leave & Make-up Group Cancel
+### P3: Student Registration
 
-สถานะ: `[x]` group cancel คืน credit และปิด booking ใน transaction แล้ว
+สถานะ: `[x]`
 
-- [x] ครูสร้าง makeup slot
-- [x] ผู้ปกครองจอง slot ด้วย credit
-- [x] ครูยกเลิก slot แบบ group cancel
-- [x] คืน credit ให้ทุก booking ที่ยัง active
-- [x] เปลี่ยนสถานะ booking และปิด slot ตาม schema ปัจจุบัน
-- [x] แสดง error กรณี cancel ซ้ำหรือ slot ไม่มี booking
+- [x] เพิ่ม/แก้ไข/ค้นหานักเรียน
+- [x] รูป, medical info, QR และ student card
+- [x] เพิ่มผู้ปกครองในฟอร์มเดียว
+- [x] เพิ่ม pickup authorization ในฟอร์มเดียว
+- [x] Export CSV
 
-เกณฑ์จบ: group cancel หนึ่งครั้งคืน credit ครบ และผู้ปกครองเห็นสิทธิ์กลับมาโดยไม่ต้องแก้ฐานข้อมูลเอง
+เกณฑ์จบ: แอดมินเพิ่มนักเรียนพร้อมผู้ปกครองและผู้รับเด็กได้จาก flow เดียว
 
-## Task 3: Homework + Skill Card LIFF
+### P4: QR Attendance Core
 
-สถานะ: `[/]` backend และหน้าหลักมีแล้ว แต่ยังไม่ครบ parent journey
+สถานะ: `[/]`
 
-- [x] ครูสร้างการบ้านและตรวจงาน
-- [x] ผู้ปกครองดูโจทย์และส่งไฟล์
-- [x] ครูสร้าง skill topic และให้คะแนน
-- [x] LIFF แสดงสถานะส่งงาน คะแนน และ feedback จาก submission จริง
-- [x] แสดงสถานะการบ้านค้างส่ง/ส่งแล้วให้ผู้ปกครองเห็นชัด
-- [ ] เชื่อมคะแนนจาก homework submission เข้า skill score
-- [ ] เพิ่ม streak และ badge ในหน้าเด็ก
+- [x] Scan QR และ manual attendance
+- [x] Validate session, tenant, quota และ duplicate
+- [x] Atomic quota update ใน transaction
+- [x] Checkout แบบ list-assisted พร้อม pickup authorization
+- [x] Error mapping และกัน double click
+- [ ] QR checkout โดยตรง ถ้า owner ยืนยันว่าจำเป็น
 
-เกณฑ์จบ: ผู้ปกครองเปิด LIFF แล้วเห็นการบ้าน คะแนน feedback และสถานะของลูกได้ใน flow เดียว
+เกณฑ์จบ: ครูเช็คเข้า/ออกได้และ attendance/quota ไม่ซ้ำ
 
-## Task 4: QR Attendance ที่ผู้ใช้เห็นจริง
+### P5: Attendance Notification และ Offline
 
-สถานะ: `[/]` check-in/manual/checkout พร้อมแล้ว; notification/offline มี implementation พื้นฐาน
+สถานะ: `[/]`
 
-- [x] scan QR และ manual attendance
-- [x] หัก quota และกัน attendance ซ้ำ
-- [x] checkout พร้อมเลือกผู้รับเด็ก
-- [x] error mapping และกันกดซ้ำ
-- [ ] แสดง notification status ที่ผู้ใช้เข้าใจได้
-- [ ] offline queue แสดง pending/failed/expired ให้ครูเห็น
-- [ ] ทดสอบ late notification กับข้อมูลตัวอย่าง
+- [x] Check-in/checkout dispatcher
+- [x] Late worker 20 นาที และ suppress cancelled/completed
+- [x] Notification status `sent/skipped/failed`
+- [x] Offline queue พร้อม attempts/error/expiry/sync lock
+- [x] แสดง queue conflict ในหน้าครูให้ครบ
+- [ ] ทดสอบ LINE/device runtime จริง
 
-เกณฑ์จบ: ครูเช็คเข้า/ออกได้ เห็นผลสำเร็จหรือ error ชัดเจน และไม่เกิด attendance/quota ซ้ำ
+เกณฑ์จบ: ผู้ใช้รู้ว่ารายการถูกส่ง, รอ sync หรือผิดพลาด และไม่มี notification ซ้ำแบบง่าย
 
-## Task 5: LINE และ Notification
+### P6: Leave Request
 
-สถานะ: `[/]` push และ dispatcher มีแล้ว
+สถานะ: `[x]`
 
-- [x] check-in/checkout ส่งผ่าน dispatcher
-- [x] late worker suppress session ที่ไม่ควรแจ้ง
-- [x] retry และ notification status พื้นฐาน
-- [ ] ตั้ง Rich Menu ให้เข้า LIFF ได้
-- [ ] ทำ broadcast สำหรับห้องเรียนที่เลือก
-- [ ] ตรวจข้อความและ recipient จาก flow จริง
+- [x] ผู้ปกครองแจ้งลา
+- [x] แนบไฟล์
+- [x] ครูอนุมัติ/ปฏิเสธ
+- [x] สร้าง makeup credit หลังอนุมัติ
 
-## Task 6: CMS และ Trial Lead
+เกณฑ์จบ: แจ้งลาและอนุมัติได้โดยไม่แก้ฐานข้อมูลเอง
 
-สถานะ: `[/]` public website/trial flow พร้อม, CMS ยังเป็น local draft
+### P7: Make-up Booking
 
-- [x] public preview และ responsive pages
-- [x] trial form ส่ง `POST /api/public/leads`
-- [x] CMS draft editor ไม่แสดงข้อมูลปลอม
-- [ ] เพิ่ม content CRUD เมื่อมี API
-- [ ] เพิ่ม media upload เมื่อมี storage contract
-- [ ] เพิ่มหน้า lead list/status สำหรับแอดมิน
+สถานะ: `[x]`
 
-## Task 7: Reports และ Operations
+- [x] ครูสร้าง slot
+- [x] ผู้ปกครองดู credit และจอง slot
+- [x] กัน slot เต็ม/credit หมด/booking ซ้ำ
+- [x] ยกเลิก booking และคืน credit
+- [x] Group cancel คืน credit ทุก booking ที่ active
 
-สถานะ: `[ ]` ทำหลัง flow หลักด้านบน
+เกณฑ์จบ: leave ถึง booking makeup ได้ครบตั้งแต่ต้นจนจบ
 
-- [ ] ยืนยันสูตร Renewal Rate, Churn Risk และ Revenue Forecast
-- [ ] ทำ Teacher Timesheet และ export
-- [ ] ทำ Holiday Calendar ที่ worker ใช้จริง
-- [ ] ทำ File Manager และสิทธิ์ไฟล์
-- [ ] ทำ Payroll ตามสูตรที่ owner ยืนยัน
-- [ ] ตรวจ backup schedule
+### P8: Homework
 
-## ตรวจสอบก่อนปิดแต่ละ task
+สถานะ: `[/]`
+
+- [x] ครูสร้างการบ้าน
+- [x] ผู้ปกครองดูโจทย์
+- [x] ส่งไฟล์จาก LIFF
+- [x] แสดง submitted status, score และ feedback
+- [x] แจ้งเตือนก่อนกำหนดส่งจากข้อมูลจริง: worker ใช้ `due_at`, `submitted_at` และ idempotency key
+- [/] เชื่อม score เข้า skill score: รอ official mapping ระหว่าง `homeworks` กับ `skill_topics`
+
+เกณฑ์จบ: ผู้ปกครองเห็นโจทย์ ส่งงาน และเห็นผลตรวจในหน้าเดียว
+
+### P9: Skill Card และ Progress
+
+สถานะ: `[/]`
+
+- [x] ครูสร้าง skill topic
+- [x] ครูกรอก score/note
+- [x] ผู้ปกครองดู score และ feedback ใน LIFF
+- [/] รวม score จาก homework: schema official ยังไม่มี `homeworks.topic_id` หรือ mapping table
+- [/] เพิ่ม streak และ badge จากข้อมูลจริง: model/schema มีแล้ว แต่ยังต้องกำหนด event และ badge criteria
+
+เกณฑ์จบ: คะแนนทักษะของเด็กแสดงจาก API จริงและติดตามพัฒนาการได้
+
+### P10: Payment และ Billing
+
+สถานะ: `[/]`
+
+- [x] รับ payment และอัปโหลด slip
+- [x] ออก receipt PDF
+- [x] Revenue report และ CSV export
+- [x] Payment notification dispatcher
+- [ ] เชื่อม slip provider จริงเมื่อมี contract/credentials
+
+เกณฑ์จบ: แอดมินบันทึก ตรวจ และออกหลักฐานการเงินได้
+
+### P11: Public Website และ Trial Lead
+
+สถานะ: `[/]`
+
+- [x] Public institute preview
+- [x] Responsive pages
+- [x] Trial class form
+- [x] `POST /api/public/leads` พร้อม validation/rate limit
+- [ ] Lead list และ follow-up status สำหรับแอดมิน
+
+เกณฑ์จบ: ลูกค้าเห็นเว็บไซต์และส่ง lead เข้า API จริงได้
+
+### P12: CMS Content และ Media
+
+สถานะ: `[/]`
+
+- [x] Local draft editor ไม่แสดงข้อมูลปลอม
+- [x] Preview public content
+- [ ] Content CRUD API
+- [ ] Media upload/storage
+- [ ] Tenant/permission/signed-link policy
+
+เกณฑ์จบ: แอดมินแก้ content แล้ว publish ไป public page ผ่าน API จริง
+
+### P13: LINE Integration
+
+สถานะ: `[/]`
+
+- [x] Parent LINE binding
+- [x] Push ผ่าน notification dispatcher
+- [x] LIFF dashboard/homework/score/leave flows
+- [ ] Rich Menu พร้อม URL และ provider config จริง
+- [ ] Broadcast กลุ่มพร้อม recipient/consent/audit
+- [ ] Webhook และ retry evidence
+
+เกณฑ์จบ: ผู้ปกครองเข้า LIFF จาก LINE และรับข้อความจาก flow จริง
+
+### P14: Reports และ Operations
+
+สถานะ: `[/]`
+
+- [x] Revenue report จาก API
+- [ ] Renewal rate/churn risk/forecast พร้อมสูตรที่ owner ยืนยัน
+- [ ] Teacher timesheet/export
+- [/] Holiday calendar ที่ worker ใช้จริง: official CSV ยังไม่พบตาราง `holidays`
+- [/] File manager แบบ tenant-scoped: official CSV ยังไม่พบตาราง `file_assets`
+- [ ] Payroll จาก actual hours/rate ที่อนุมัติ
+- [ ] Backup schedule/checklist
+
+เกณฑ์จบ: รายงานที่ส่งให้ owner มีสูตร, source และช่วงเวลาอ้างอิงชัดเจน
+
+### P15: Release Acceptance
+
+สถานะ: `[/]`
+
+- [x] API full tests ผ่าน
+- [x] Front/LineLiff/CMS build ผ่าน
+- [x] ไม่มี mock data ใน flow ที่ประกาศว่าส่งได้
+- [x] Release validation ล่าสุดรัน API/Front/LineLiff/CMS แล้ว
+- [ ] Run smoke test ตาม user journey จริง
+- [ ] ตรวจ database metadata กับ test DB
+- [ ] ทดสอบ device/LINE provider จริง
+- [ ] owner sign-off รายการ AC ที่เหลือ
+
+เกณฑ์จบ: ส่งมอบได้โดยมีรายการ known gaps และ owner ยอมรับอย่างชัดเจน
+
+## ลำดับลงมือรอบถัดไป
+
+1. ปิด P5 offline conflict UI และ late notification sample
+2. ปิด P8 homework reminder หรือเชื่อม score เข้า P9
+3. ปิด P9 score จาก homework
+4. ปิด P11 lead list ถ้ามี admin endpoint พร้อม
+5. ทำ P13 Rich Menu เมื่อมี LINE provider config
+6. ทำ P14 reports/operations เฉพาะสูตรที่ owner อนุมัติ
+7. ปิด P15 smoke test และ owner acceptance
+
+## คำสั่งตรวจสอบ
 
 ```powershell
 dotnet test .\API\academy-API.Tests\academy-API.Tests.csproj
@@ -151,21 +230,35 @@ npm.cmd run build
 Pop-Location
 ```
 
-## สิ่งที่ไม่ทำตอนนี้
-
-- ไม่เพิ่ม server idempotency table เพื่อปิดคะแนนแบบเอกสาร
-- ไม่เพิ่ม QR checkout endpoint ถ้า list-assisted checkout ยังตอบ requirement ได้
-- ไม่เพิ่ม signed QR, holiday table หรือ analytics formula โดยไม่มี owner decision
-- ไม่ถือ load test, schema export หรือ unit test เพียงอย่างเดียวว่า feature ผ่าน
-- ไม่ทำ mock data แทน API จริง
-
 ## Definition of Done
 
-Task หนึ่งข้อจบเมื่อ:
+P หนึ่งข้อจะปิดได้เมื่อ:
 
 - Flow ตาม `ProjectObj.md` ใช้ได้ตั้งแต่ต้นจนจบ
 - API/UI ใช้ route และ field ตรงกัน
-- มี loading, empty, validation และ error state
+- มี validation, loading, empty และ error state
 - ผ่าน test/build ที่เกี่ยวข้อง
-- ผู้ใช้ทำงานได้โดยไม่ต้องแก้ฐานข้อมูลเอง
-- อัปเดตสถานะและคะแนนใน `Objective/process.md`
+- ไม่ใช้ mock data แทนข้อมูลจริง
+- ผู้ใช้ทำงานได้โดยไม่ต้องแก้ database เอง
+- อัปเดตคะแนนใน `Objective/process.md`
+
+## Official SQL Mapping Blockers
+
+อ้างอิง `Objective/sql_script.md`, `Objective/erProjec.md` และ schema CSV ล่าสุด ห้ามแก้ด้วยการเดา mapping:
+
+| งาน | สิ่งที่ official schema มี | สิ่งที่ยังขาด | วิธีปลดล็อก |
+|---|---|---|---|
+| Homework -> Skill Score | `homeworks.course_id`, `skill_topics.course_id`, `skill_scores.topic_id` | ไม่มี `homeworks.topic_id` หรือ homework-skill mapping table | Owner เลือก `topic_id` ใน homework หรืออนุมัติ mapping table |
+| Holiday worker | `sessions`, `notifications` | ไม่พบ `holidays` | Owner ยืนยัน source วันหยุดหรืออนุมัติ table |
+| File manager | upload flow และ URL บาง entity | ไม่พบ `file_assets` official | Owner ยืนยัน storage table/provider และ signed-link policy |
+| LINE Rich Menu/Broadcast | `users.line_user_id`, `notifications` | ไม่มี provider contract/recipient consent/audit rule ครบ | ให้ LINE channel config และ broadcast contract |
+| Payroll | มี `teachers.hourly_rate`, payroll model | ยังไม่มี approved actual-hours source/period rule | Owner ยืนยันสูตรและ source ของเวลาสอน |
+
+สิ่งที่ห้ามทำเพื่อปิด task แบบหลอก:
+
+- ห้ามใช้ `course_id` เป็น `topic_id` แทน mapping ของ homework
+- ห้ามสร้างวันหยุดจาก hardcode ใน worker
+- ห้ามสร้าง file URL โดยไม่มี storage object และ permission policy
+- ห้ามแสดง payroll/analytics ตัวอย่างเป็นข้อมูลจริง
+
+เมื่อมี mapping/contract แล้ว ให้เพิ่ม model + EF `HasColumnName`/relation ให้ตรง official schema ก่อนเขียน service/query และเพิ่ม test ที่พิสูจน์ tenant กับ ownership ทุกครั้ง

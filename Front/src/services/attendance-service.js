@@ -59,6 +59,8 @@ export const syncPendingAttendance = () => {
   return syncPromise;
 };
 
+export const getPendingAttendanceEvents = () => listPendingAttendanceEvents();
+
 export const getDailyAttendance = (params = {}, options = {}) => {
   return api.get('/attendance/daily', { params, ...options });
 }
@@ -78,6 +80,7 @@ export const checkoutAttendance = (attendanceId, payload) => {
 export const attendanceService = {
   scanAttendance,
   syncPendingAttendance,
+  getPendingAttendanceEvents,
   getDailyAttendance,
   submitManualAttendance,
   getPickupAuthorizations,

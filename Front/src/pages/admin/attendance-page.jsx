@@ -11,6 +11,7 @@ export function AttendancePage({ path }) {
   const [pendingScan, setPendingScan] = useState(null);
   const [offline, setOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine);
   const [recentScans, setRecentScans] = useState([]);
+  const [offlineEvents, setOfflineEvents] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState('');
@@ -23,6 +24,10 @@ export function AttendancePage({ path }) {
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+
+  const refreshOfflineEvents = () => attendanceService.getPendingAttendanceEvents()
+    .then(setOfflineEvents)
+    .catch(() => setOfflineEvents([]));
 
   useEffect(() => {
     attendanceService.getDailyAttendance({}, { signal: getSignal() })
@@ -40,9 +45,10 @@ export function AttendancePage({ path }) {
   }, []);
 
   useEffect(() => {
+    refreshOfflineEvents();
     const handleOnline = () => {
       setOffline(false);
-      attendanceService.syncPendingAttendance().catch(() => {});
+      attendanceService.syncPendingAttendance().finally(refreshOfflineEvents);
     };
     const handleOffline = () => setOffline(true);
     window.addEventListener('online', handleOnline);
@@ -70,6 +76,7 @@ export function AttendancePage({ path }) {
     try {
       const response = await attendanceService.scanAttendance(pendingScan);
       const queued = response.offlineQueued;
+      if (queued) refreshOfflineEvents();
       const scanData = response.data?.data || {};
       setRecentScans((prev) => [{
         qrData,
@@ -181,8 +188,15 @@ export function AttendancePage({ path }) {
     <AdminLayout path={path}>
       <div class="mb-8">
         <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">เช็คชื่อ</h2>
-        <p class="text-sm text-zinc-500 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
+       <p class="text-sm text-zinc-500 mt-1">บันทึกการเข้าเรียนของนักเรียน</p>
       </div>
+
+      {offlineEvents.length > 0 && <div role="status" class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p class="font-semibold">มีรายการ attendance รอจัดการ {offlineEvents.length} รายการ</p>
+        <div class="mt-2 space-y-1 text-xs">
+          {offlineEvents.slice(0, 3).map((event) => <p key={event.clientEventId}>{event.status === 'failed' ? 'ซิงค์ไม่สำเร็จ' : 'รอซิงค์'} · ลองแล้ว {event.attempts || 0} ครั้ง{event.lastError ? ` · ${event.lastError}` : ''}</p>)}
+        </div>
+      </div>}
 
       <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
            <button

@@ -29,8 +29,7 @@ function FilesPanel() {
 }
 
 function PayrollPanel() {
-  const rows = [{ name: "Kru Mali", hours: "32.0", rate: "฿450", status: "Review" }, { name: "Kru Ton", hours: "28.5", rate: "฿450", status: "Ready" }, { name: "Kru Fern", hours: "24.0", rate: "฿400", status: "Draft" }];
-  return <Panel title="Teacher payroll" status="Formula gate"><div className="toolbar"><div><span className="eyebrow">Payroll period</span><strong>September 2026</strong></div><button className="button secondary" disabled>Export CSV</button></div><div className="table-wrap"><table><thead><tr><th>Teacher</th><th>Actual hours</th><th>Hourly rate</th><th>Estimated total</th><th>Status</th></tr></thead><tbody>{rows.map((row) => <tr key={row.name}><td><strong>{row.name}</strong></td><td>{row.hours}</td><td>{row.rate}</td><td>฿{(Number(row.hours) * Number(row.rate.replace(/\D/g, ""))).toLocaleString()}</td><td><span className={`pill ${row.status !== "Ready" ? "warm" : ""}`}>{row.status}</span></td></tr>)}</tbody></table></div><StateMessage tone="info">Calculation preview follows `hourly_rate × actual teaching hours`. Confirm whether actual hours come from `sessions`, `attendances` or approved payroll periods.</StateMessage></Panel>;
+  return <Panel title="Teacher payroll" status="Formula gate"><div className="toolbar"><div><span className="eyebrow">Payroll period</span><strong>ยังไม่มีรอบเงินเดือนที่เชื่อม API</strong></div><button className="button secondary" disabled>Export CSV</button></div><div className="empty">ยังไม่มีข้อมูล payroll จริง จึงไม่แสดงข้อมูลตัวอย่างแทนข้อมูลครู</div><StateMessage tone="info">Calculation preview follows `hourly_rate × actual teaching hours`. Confirm whether actual hours come from `sessions`, `attendances` or approved payroll periods.</StateMessage></Panel>;
 }
 
 function BroadcastPanel() {
