@@ -175,7 +175,7 @@ export const DashboardPage = () => {
               </div>
 
               <div class="grid grid-cols-2 gap-3">
-                <StatCard icon={HiOutlineCheckCircle} label="มาเรียนเดือนนี้" value="96%" detail="ดีมาก" tone="sage" />
+                 <StatCard icon={HiOutlineCheckCircle} label="มาเรียนเดือนนี้" value={data?.attendanceRate || '-'} detail={data?.attendanceRate ? 'จากข้อมูลจริง' : 'ยังไม่มีข้อมูล'} tone="sage" />
                 <StatCard icon={HiOutlineChartBar} label="คะแนนล่าสุด" value={data?.latestSkillScore || '-'} detail="คะแนนทักษะ" tone="indigo" />
                 <StatCard icon={HiOutlineClipboardDocumentCheck} label="การบ้านคงค้าง" value={data?.pendingHomework || '0'} detail="งานที่ต้องส่ง" tone="gold" />
                 <StatCard icon={HiOutlineClock} label="เช็คชื่อวันนี้" value={data?.todayAttendance || '0'} detail="ครั้งที่บันทึก" tone="sage" />

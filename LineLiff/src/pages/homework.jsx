@@ -42,7 +42,10 @@ export const HomeworkPage = ({ childId }) => {
     try {
       const submissionResponse = await createHomeworkSubmission(selectedChildId, homework.id);
       const submission = unwrap(submissionResponse);
-      await uploadHomeworkSubmission(submission.submissionId, file);
+       await uploadHomeworkSubmission(submission.submissionId, file);
+       setHomeworks(previous => previous.map(item => item.id === homework.id
+         ? { ...item, submissionId: submission.submissionId, submittedAt: new Date().toISOString() }
+         : item));
       setSuccess(`ส่งงาน "${homework.title}" สำเร็จ`);
     } catch (apiError) {
       setError(apiErrorMessage(apiError, 'ส่งการบ้านไม่สำเร็จ'));
@@ -73,8 +76,13 @@ export const HomeworkPage = ({ childId }) => {
               <span class="rounded-full bg-gold-50 px-2.5 py-1 text-xs font-bold text-gold-600">ส่งภายใน {formatDate(homework.dueAt)}</span>
             </div>
             {homework.description && <p class="mt-3 text-sm leading-6 text-ink-700">{homework.description}</p>}
+            <div class="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-ink-600">
+              <span class={`font-bold ${homework.submittedAt ? 'text-sage-700' : 'text-red-700'}`}>สถานะ: {homework.submittedAt ? 'ส่งแล้ว' : 'ยังไม่ส่ง'}</span>
+              {homework.score !== null && homework.score !== undefined && <span> · คะแนน {homework.score}</span>}
+              {homework.feedback && <p class="mt-1">Feedback: {homework.feedback}</p>}
+            </div>
             <label class="mt-4 flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-sage-600 px-3 text-sm font-bold text-white hover:bg-sage-700">
-              {busyId === homework.id ? 'กำลังส่ง...' : 'เลือกรูปเพื่อส่งงาน'}
+              {busyId === homework.id ? 'กำลังส่ง...' : homework.submittedAt ? 'ส่งงานใหม่อีกครั้ง' : 'เลือกรูปเพื่อส่งงาน'}
               <input class="sr-only" aria-label={`เลือกรูปส่งงาน ${homework.title}`} type="file" accept="image/*" disabled={busyId === homework.id} onChange={event => upload(homework, event)} />
             </label>
             <p class="mt-2 text-center text-xs text-ink-500">รูปภาพไม่เกิน 10MB</p>

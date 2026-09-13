@@ -35,6 +35,10 @@ export function StudentControll({ path, id }) {
   const [parents, setParents] = useState([
     { _key: ++parentIdCounter.current, fullName: '', phone: '', lineUserId: '', relationship: 'แม่' },
   ]);
+  const pickupIdCounter = useRef(0);
+  const [pickupPeople, setPickupPeople] = useState([
+    { _key: ++pickupIdCounter.current, fullName: '', phone: '', relationship: 'ผู้ปกครอง', idCardLast4: '' },
+  ]);
   const [consent, setConsent] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -90,6 +94,26 @@ export function StudentControll({ path, id }) {
 
   const removeParent = (key) => {
     setParents((prev) => prev.filter((p) => p._key !== key));
+  };
+
+  const updatePickupPerson = (key, field) => (e) => {
+    setPickupPeople((prev) => prev.map((person) => (
+      person._key === key ? { ...person, [field]: e.target.value } : person
+    )));
+  };
+
+  const addPickupPerson = () => {
+    setPickupPeople((prev) => [...prev, {
+      _key: ++pickupIdCounter.current,
+      fullName: '',
+      phone: '',
+      relationship: 'ผู้ปกครอง',
+      idCardLast4: '',
+    }]);
+  };
+
+  const removePickupPerson = (key) => {
+    setPickupPeople((prev) => prev.filter((person) => person._key !== key));
   };
 
   const handleParentSearch = (e) => {
@@ -152,6 +176,10 @@ export function StudentControll({ path, id }) {
       showToast('กรุณายอมรับข้อตกลง PDPA', 'error');
       return;
     }
+    if (!isEdit && pickupPeople.some((person) => !person.fullName.trim())) {
+      showToast('กรุณาระบุชื่อผู้รับเด็กให้ครบ หรือกดลบรายการที่ไม่ใช้', 'error');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -211,6 +239,15 @@ export function StudentControll({ path, id }) {
 
         if (photoFile && studentId) {
           await uploadService.uploadStudentPhoto(photoFile, studentId);
+        }
+
+        if (studentId) {
+          await Promise.all(pickupPeople.map((person) => studentService.createPickupAuthorization(studentId, {
+            fullName: person.fullName.trim(),
+            phone: person.phone.trim() || null,
+            relationship: person.relationship,
+            idCardLast4: person.idCardLast4.trim() || null,
+          })));
         }
 
         showToast('เพิ่มนักเรียนสำเร็จ', 'success');
@@ -420,6 +457,43 @@ export function StudentControll({ path, id }) {
             ))}
           </div>
         </div>
+
+        {!isEdit && (
+          <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h3 class="text-base font-semibold text-zinc-900">รายชื่อผู้รับเด็กกลับ</h3>
+                <p class="mt-1 text-xs text-zinc-500">เพิ่มรายชื่อคนที่ได้รับอนุญาตให้รับเด็กกลับบ้าน</p>
+              </div>
+              <button type="button" onClick={addPickupPerson} class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark">
+                + เพิ่มผู้รับเด็ก
+              </button>
+            </div>
+            <div class="space-y-4 mt-4">
+              {pickupPeople.map((person, index) => (
+                <div key={person._key} class="relative rounded-xl border border-zinc-200 p-4">
+                  {pickupPeople.length > 1 && (
+                    <button type="button" onClick={() => removePickupPerson(person._key)} class="absolute right-2 top-2 text-zinc-400 hover:text-oasis-danger">
+                      <HiOutlineXMark class="h-4 w-4" />
+                    </button>
+                  )}
+                  <p class="mb-3 text-xs font-medium text-zinc-500">ผู้รับเด็กคนที่ {index + 1}</p>
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <SolidInput label="ชื่อ-นามสกุล" placeholder="ชื่อผู้รับเด็ก" required value={person.fullName} onInput={updatePickupPerson(person._key, 'fullName')} />
+                    <SolidInput label="เบอร์โทรศัพท์" placeholder="08XXXXXXXX" value={person.phone} onInput={updatePickupPerson(person._key, 'phone')} />
+                    <SolidInput label="เลขบัตรประชาชน 4 ตัวท้าย" placeholder="ถ้ามี" value={person.idCardLast4} onInput={updatePickupPerson(person._key, 'idCardLast4')} />
+                    <div class="flex flex-col gap-1.5 md:col-span-3">
+                      <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ความสัมพันธ์</label>
+                      <select value={person.relationship} onChange={updatePickupPerson(person._key, 'relationship')} class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}>
+                        {['แม่', 'พ่อ', 'ญาติ', 'รถรับส่ง', 'อื่นๆ'].map((relationship) => <option key={relationship} value={relationship}>{relationship}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!isEdit && (
 <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>

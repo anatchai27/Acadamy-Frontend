@@ -36,9 +36,9 @@
 | หมวด | สถานะ | สิ่งที่มีแล้ว | งานส่งต่อหลัก |
 |---|---|---|---|
 | 1. Authentication & RBAC | `[/]` | Login, LINE login, reset password, role guard, bcrypt, admin timeout | เก็บ audit login/logout ให้ครบ |
-| 2. Student Management | `[/]` | CRUD นักเรียน, รูป, medical info, QR, PDF card, search, CSV | เชื่อมผู้รับเด็กในฟอร์มเพิ่มนักเรียน |
+| 2. Student Management | `[x]` | CRUD นักเรียน, รูป, medical info, QR, PDF card, search, CSV, pickup authorization ในฟอร์มสร้าง | งาน XLSX เป็นงานเสริม |
 | 3. QR Attendance | `[/]` | Scan, manual, quota, checkout, pickup authorization, notification worker | ทดสอบ flow ครบและแสดงผล error ให้ครูเข้าใจง่าย |
-| 4. Leave & Make-up | `[/]` | แจ้งลา, แนบไฟล์, อนุมัติ, credit, slot, booking, cancel | เก็บ flow group cancel ให้เรียบร้อย |
+| 4. Leave & Make-up | `[x]` | แจ้งลา, แนบไฟล์, อนุมัติ, credit, slot, booking, group cancel | expiry/no-show worker เป็นงานเสริม |
 | 5. Skill Card | `[/]` | สร้าง topic, กรอกคะแนน, ดูคะแนนใน LIFF | เพิ่มคะแนนจากการบ้าน, streak, badge |
 | 6. Homework | `[/]` | สร้างการบ้าน, ตรวจงาน, ดู/ส่งไฟล์จาก LIFF | ทำหน้า homework ให้ครบและแจ้งเตือนก่อนกำหนดส่ง |
 | 7. Payment & Billing | `[/]` | รับเงิน, สลิป, PDF receipt, export, quota notification | เชื่อม provider ตรวจสลิปจริงเมื่อมีข้อมูล |
@@ -47,6 +47,40 @@
 | 10. Reports & Analytics | `[/]` | Dashboard และ revenue report | ทำสูตร analytics และ teacher timesheet |
 | 11. Operations & Compliance | `[/]` | PDPA consent, room overlap, operations UI draft | Holiday, file manager, payroll และ backup checklist |
 | 12. Architecture & NFR | `[/]` | CI, tenant isolation, bcrypt, timeout, rotating QR | ตรวจ performance เบื้องต้นก่อนส่งจริง |
+
+## คะแนนแบบส่งจริง
+
+เกณฑ์คำนวณ: นับเฉพาะ Acceptance Criteria ที่มี flow ครบจาก source และมี test/build หรือหลักฐานการใช้งานในระบบแล้ว ข้อ `[/]` และข้อที่มีเฉพาะหน้า draft ยังไม่นับเป็นคะแนนเต็ม
+
+| หมวด | ผ่านส่งจริง | AC ทั้งหมด | คิดเป็น | สิ่งที่ยังไม่นับ |
+|---|---:|---:|---:|---|
+| 1. Authentication & RBAC | 6 | 6 | 100% | เพิ่ม runtime audit ได้ภายหลัง |
+| 2. Student Management | 7 | 7 | 100% | XLSX เป็นงานเสริม |
+| 3. QR Attendance | 3 | 7 | 43% | QR checkout โดยตรง, LINE/runtime, device offline |
+| 4. Leave & Make-up | 5 | 5 | 100% | expiry/no-show worker เป็นงานเสริม |
+| 5. Skill Card | 2 | 5 | 40% | คะแนนจากการบ้าน, streak, badge |
+| 6. Homework | 3 | 5 | 60% | trigger แจ้งเตือนทันทีและ runtime LIFF |
+| 7. Payment & Billing | 3 | 5 | 60% | provider ตรวจสลิปจริง, runtime report policy |
+| 8. Public Website & CMS | 2 | 5 | 40% | CMS CRUD/media และ lead follow-up |
+| 9. LINE Integration | 2 | 6 | 33% | Rich Menu, broadcast, webhook และ audit ที่เหลือ |
+| 10. Reports & Analytics | 1 | 5 | 20% | analytics สูตรจริง, forecast, timesheet, referral |
+| 11. Operations & Compliance | 2 | 6 | 33% | holiday, file manager, payroll, backup |
+| 12. Architecture & NFR | 2 | 5 | 40% | deploy/ฐานข้อมูลตาม SRS และ load test |
+| **รวม** | **38** | **67** | **57%** | **29 AC ยังไม่ครบสำหรับส่งจริง** |
+
+### สรุปเปอร์เซ็นต์
+
+**ความคืบหน้าแบบส่งงานที่จับต้องได้: `38 / 67 = 57%`**
+
+ตัวเลขนี้ไม่นับ build/test เป็น feature เพิ่มเอง และไม่นับงานที่มีแค่ UI draft เป็นงานเสร็จ ถือเป็นคะแนนจาก Acceptance Criteria ของ `ProjectObj.md` เท่านั้น
+
+### งานที่คุ้มค่าที่สุดเพื่อเพิ่มคะแนน
+
+1. เชื่อมผู้รับเด็กเข้า student registration ให้ Student Management ครบ `7/7`
+2. ปิด group cancel ใน Leave & Make-up ให้ครบ `5/5`
+3. ทำ LIFF homework/skill score ให้ครบ flow แล้วปิด Homework กับ Skill Card
+4. ทำ Rich Menu และ audit notification ขั้นพื้นฐานให้ LINE Integration ครบขึ้น
+5. ทำ CMS content CRUD และ lead list เมื่อมี backend endpoint พร้อม
 
 ## งานที่ต้องทำต่อทันที
 
@@ -69,10 +103,12 @@
 - [x] บันทึก medical info
 - [x] สร้าง QR และ student card
 - [x] เพิ่ม/แก้ไขข้อมูลผู้ปกครอง
-- [/] เพิ่มรายชื่อผู้รับเด็กในฟอร์มสร้างนักเรียน
+- [x] เพิ่มรายชื่อผู้รับเด็กในฟอร์มสร้างนักเรียนและบันทึกผ่าน pickup authorization API
 - [x] ค้นหาและ export CSV
 
 เกณฑ์ส่งงาน: แอดมินเพิ่มนักเรียนหนึ่งคนแล้วได้ข้อมูลพร้อม QR, ผู้ปกครอง และผู้รับเด็กในขั้นตอนเดียว
+
+สถานะ: `[x]` flow หลักครบแล้ว; XLSX เป็นงานเสริม
 
 ### 3. ปิด Leave & Make-up
 
@@ -81,9 +117,11 @@
 - [x] ระบบสร้าง credit เมื่ออนุมัติ
 - [x] ครูสร้าง slot
 - [x] ผู้ปกครองจองและยกเลิก slot
-- [/] group cancel คืน credit ให้ครบ
+- [x] group cancel คืน credit ให้ครบและปิด booking ที่ active
 
 เกณฑ์ส่งงาน: ตั้งแต่แจ้งลาจนถึงจองคลาสชดเชยได้ โดยไม่ต้องทำรายการในฐานข้อมูลเอง
+
+สถานะ: `[x]` flow หลัก leave, credit, booking และ group cancel ครบแล้ว
 
 ### 4. ปิด Homework และ Skill Card
 
@@ -98,18 +136,29 @@
 
 เกณฑ์ส่งงาน: ผู้ปกครองเห็นการบ้าน คะแนน และ feedback ของลูกใน LIFF
 
-### 5. ปิด Payment และ Public Website
+### 5. P7: ปิด Payment & Billing
 
 - [x] รับเงินและเลือกวิธีชำระ
 - [x] อัปโหลดสลิป
 - [x] ออกใบเสร็จ PDF
 - [x] ดูรายรับและ export CSV
-- [x] มีหน้า public website และ trial form
-- [/] CMS แก้ไข content แบบ draft ได้
-- [ ] เชื่อม CMS content/media API จริง
-- [ ] ทำ lead list สำหรับแอดมิน
 
-เกณฑ์ส่งงาน: ลูกค้าเห็นเว็บไซต์ ส่ง trial lead ได้ และแอดมินบันทึก/ตรวจการชำระเงินได้
+เกณฑ์ส่งงาน: แอดมินบันทึกการชำระเงิน ตรวจสลิป ออกใบเสร็จ และดู/export รายรับได้
+
+สถานะ P7: `[/]` flow หลักพร้อมส่งแล้ว เหลือ provider ตรวจสลิปจริงถ้าจะใช้งาน production
+
+### 6. P8: Public Website & CMS
+
+- [x] มีหน้า public website และ trial form
+- [x] มีหน้า preview `/p/oasis-learning` ครบ home, stories, teachers, courses/pricing และ contact
+- [/] CMS แก้ไข content แบบ draft ได้ผ่าน local storage
+- [x] Trial form ส่งข้อมูลไป `POST /api/public/leads`
+- [ ] เชื่อม CMS content/media API จริง
+- [ ] ทำ lead list และ status follow-up สำหรับแอดมิน
+
+เกณฑ์ส่งงาน: ลูกค้าเห็นเว็บไซต์และส่ง trial lead ได้ โดยไม่แสดงข้อมูลปลอม
+
+สถานะ P8: `[/]` public website/trial flow พร้อมส่งแล้ว ส่วน CMS CRUD, media และ lead follow-up เป็นงานต่อเมื่อมี backend contract
 
 ## กติกาการส่งงาน
 
@@ -150,6 +199,16 @@ Pop-Location
 - P5 offline queue เพิ่มการอัปเดต `status`, `attempts`, `lastError`, expiry state และ lock กัน sync ซ้ำจากหลาย trigger; event ที่หมดอายุจะไม่ถูกหยิบกลับมาส่งซ้ำ
 - P6 API tests: `279 passed / 0 failed / 0 skipped`; Front tests: `87 passed / 0 failed / 0 skipped`; LineLiff tests: `4 passed / 0 failed / 0 skipped`
 - P6 builds ผ่านทั้ง API, Front และ LineLiff; ยังไม่มี k6 ใน environment จึงยังไม่มีผล 100-concurrent load test
+- P7 API tests `279 passed / 0 failed / 0 skipped`, API build ผ่าน และ Front tests `87 passed / 0 failed / 0 skipped`
+- P8 CMS build ผ่านด้วย Next.js `15.5.25`, สร้าง static routes `10/10` รวม `/p/oasis-learning` และ `/trial-class`
+- Task 1 Student Registration ปิดแล้ว: ฟอร์มเพิ่มนักเรียนมี dynamic pickup people และเรียก `POST /api/students/{id}/pickup-authorizations` หลังสร้างนักเรียนสำเร็จ
+- หลังปิด Task 1 คะแนนส่งจริงขยับเป็น `36/67 = 54%`; Front tests `87 passed` และ API tests `279 passed`
+- Task 2 Leave & Make-up group cancel ปิดแล้ว: คืน credit ทุก booking ที่ active, ปิด booking/slot และบันทึก credit transaction ใน transaction เดียว
+- Group cancel focused tests: `2 passed / 0 failed`; หลังปิด Task 2 คะแนนส่งจริงขยับเป็น `37/67 = 55%`
+- P3 Homework/Skill LIFF เพิ่ม status, submittedAt, score และ feedback จาก `homework_submissions` จริง; ส่งงานสำเร็จแล้วอัปเดตสถานะบนหน้าโดยไม่ reload
+- ลบค่า attendance `96%` ที่ hardcode ใน LIFF dashboard และแสดงค่าจาก API หรือ `-` เมื่อยังไม่มีข้อมูล
+- API tests `279 passed / 0 failed / 0 skipped`; LineLiff tests `4 passed / 0 failed / 0 skipped`; LineLiff build ผ่าน
+- หลังปิด Homework status/feedback คะแนนส่งจริงขยับเป็น `38/67 = 57%`
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
 

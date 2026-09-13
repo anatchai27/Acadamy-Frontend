@@ -26,6 +26,9 @@ export const getStudentCardPdf = id => {
 
 export const downloadStudentCsv = () => api.download('/students/export', { params: { format: 'csv' } });
 
+export const createPickupAuthorization = (studentId, payload) =>
+  api.post(`/students/${studentId}/pickup-authorizations`, payload);
+
 export const studentService = {
   getStudents,
   getStudentById,
@@ -34,4 +37,5 @@ export const studentService = {
   getStudentQR,
   getStudentCardPdf,
   downloadStudentCsv,
+  createPickupAuthorization,
 };

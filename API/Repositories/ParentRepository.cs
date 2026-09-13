@@ -147,7 +147,27 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 h.Title,
                 h.Description ?? string.Empty,
                 h.DueAt,
-                h.FileUrl ?? string.Empty))
+                h.FileUrl ?? string.Empty,
+                _context.HomeworkSubmissions
+                    .Where(s => s.HomeworkId == h.Id && s.StudentId == studentId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Select(s => (long?)s.Id)
+                    .FirstOrDefault(),
+                _context.HomeworkSubmissions
+                    .Where(s => s.HomeworkId == h.Id && s.StudentId == studentId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Select(s => s.SubmittedAt)
+                    .FirstOrDefault(),
+                _context.HomeworkSubmissions
+                    .Where(s => s.HomeworkId == h.Id && s.StudentId == studentId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Select(s => s.Score)
+                    .FirstOrDefault(),
+                _context.HomeworkSubmissions
+                    .Where(s => s.HomeworkId == h.Id && s.StudentId == studentId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Select(s => s.Feedback ?? string.Empty)
+                    .FirstOrDefault() ?? string.Empty))
             .ToListAsync(ct);
 
     public Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default) =>

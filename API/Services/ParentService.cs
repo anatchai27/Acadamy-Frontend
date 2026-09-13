@@ -120,5 +120,5 @@ public record ParentSessionItem(int Id, int CourseId, string CourseName, DateTim
 public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string Status, DateTime CheckinAt, DateTime CheckoutAt);
 public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl);
 public record ParentSkillScoreItem(string CourseName, string TopicName, decimal Score, string Note);
-public record ParentHomeworkItem(long Id, long HomeworkId, string CourseName, string Title, string Description, DateTime DueAt, string FileUrl);
+public record ParentHomeworkItem(long Id, long HomeworkId, string CourseName, string Title, string Description, DateTime DueAt, string FileUrl, long? SubmissionId, DateTime? SubmittedAt, decimal? Score, string Feedback);
 public record ParentLeaveRequestItem(long Id, string CourseName, string Reason, string Type, string Status, DateTime CreatedAt);
