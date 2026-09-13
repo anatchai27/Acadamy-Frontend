@@ -1057,7 +1057,7 @@
       "get": {
         "tags": ["Parents"],
         "operationId": "GetChildSessions",
-        "x-implementation-status": "implemented",
+        "x-implementation-status": "new",
         "x-roles": ["parent", "admin", "teacher", "staff"],
         "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
         "parameters": [{ "name": "childId", "in": "path", "required": true, "schema": { "type": "integer", "format": "int32" } }],
@@ -1139,6 +1139,23 @@
           "200": {
             "description": "OK"
           }
+        }
+      }
+    },
+    "/api/payments/export": {
+      "get": {
+        "tags": ["Payments"],
+        "operationId": "ExportPayments",
+        "x-implementation-status": "new",
+        "x-roles": ["admin", "teacher", "staff"],
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          { "name": "start_date", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_date", "in": "query", "schema": { "type": "string" } },
+          { "name": "method", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Payment CSV export", "content": { "text/csv": { "schema": { "type": "string", "format": "binary" } } } }
         }
       }
     },

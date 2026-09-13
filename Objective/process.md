@@ -30,9 +30,9 @@
 
 ### หลักฐาน validation ล่าสุด
 
-- API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
+- API contract validator: `92` current operations, `98` target operations, `Errors = 0`, `Warnings = 142` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `266 passed, 0 failed, 0 skipped` หลังเพิ่ม Slice 6 tests
+- Full API test suite: `268 passed, 0 failed, 0 skipped` หลังเพิ่ม Phase 1 integration/authorization tests
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
 - Front full suite: `79 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
@@ -44,8 +44,10 @@
 - เพิ่ม `GET /api/reports/revenue?from=...&to=...&group_by=day|month|year` ตาม target contract; service ดึง payment จริงผ่าน repository ที่มี tenant query filter และคืน `period`, `grossAmount`, `paymentCount` โดยไม่ใช้ mock data
 - เพิ่ม `GET /api/payments/export` สำหรับ CSV UTF-8 พร้อม BOM จากรายการ payment จริง และต่อปุ่ม export ในหน้า Finance
 - หน้า Finance แสดงกราฟแท่งรายรับตามวันจาก revenue API หลังเลือกช่วงวันที่ พร้อม loading/empty state
+- เพิ่ม relational integration test ครอบคลุม tenant filter, navigation และ date boundary และ host-level authorization test ที่ยืนยัน `admin` ผ่านกับ `teacher` ได้ `403`
+- `Payment.Status` ยังไม่มี business rule ที่ยืนยันว่า status ใดนับเป็นรายรับ; implementation ปัจจุบันรวม payment ทุก status จึงยังไม่ประกาศ policy นี้
 - เพิ่ม room-overlap validation ใน `SessionRepository`/`SessionService`: ช่วงเวลาชนกันใน room เดียวกันของ tenant เดียวกันจะไม่สร้าง session และ endpoint คืน `409` พร้อม `ROOM_OVERLAP`; ระยะเวลาที่ไม่ถูกต้องคืน validation error
-- Focused evidence: revenue grouping test และ room-overlap service test; full API tests `266 passed / 0 failed / 0 skipped`; API build, Front build, LineLiff build และ contract validator ผ่าน (`Errors = 0`, warnings `141`)
+- Focused evidence: revenue grouping, relational payment filter/navigation/date-boundary และ report authorization tests `3 passed / 0 failed`; full API tests `268 passed / 0 failed / 0 skipped`; contract validator รอบนี้ `Errors = 0`, warnings `142`
 - ยังไม่ประกาศ live AI/OCR, holiday calendar, automated backup หรือ k6 performance เพราะยังไม่มี provider credential, business/schema contract หรือ runtime environment evidence ที่ตรวจได้จริง
 
 ### หลักฐาน Slice 1: Front legacy dashboard tests
@@ -264,7 +266,7 @@
 - [x] **AC 1:** (Admin Panel) หน้าจอ POS ให้พนักงานบันทึกการรับเงิน ระบุวิธีชำระ และอัปโหลดสลิป (`Front/src/pages/admin/finance-page.jsx`, `/api/payments`)
 - [/] **AC 2:** (Backend) API ตรวจสอบสลิป เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (`PaymentSlipVerificationService.cs` มี provider interface `ISlipVerificationProvider`, ตรวจสอบยอดเงิน slip กับยอดชำระ, ป้องกัน amount mismatch ด้วยสถานะ conflict, บันทึก slip metadata ลงฐานข้อมูล และมี endpoint `POST /api/payments/{id}/verify-slip` พร้อม unit tests; รอเชื่อม AI provider จริงใน production)
 - [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
-- [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (หน้า `finance-page.jsx` มีตารางประวัติและยอดรวม แต่ยังไม่มีกราฟรายวัน/เดือน/ปี และยังไม่มีปุ่ม Export)
+- [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (`finance-page.jsx` มีกราฟรายรับ, ตารางประวัติ, ยอดรวม และปุ่ม export CSV; API มี revenue report และ payment export)
 - [x] **AC 5:** (Backend/Worker) ระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ผ่าน `QuotaLowNotificationJob` พร้อม notification log และ idempotency
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:

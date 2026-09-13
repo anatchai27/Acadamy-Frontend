@@ -82,8 +82,8 @@
 - [x] Payment CSV export จากข้อมูลจริง พร้อม tenant filter
 - [x] Finance chart, loading และ empty state
 - [x] ตรวจช่วงวันที่, invalid `group_by`, CSV escaping และ locale-independent period format
-- [ ] เพิ่ม integration test กับ relational provider สำหรับ query filter, navigation และ date boundary
-- [ ] ทดสอบ authorization ของ report ให้ admin ผ่านและ role อื่นถูกปฏิเสธ
+- [x] เพิ่ม integration test กับ relational provider สำหรับ query filter, navigation และ date boundary
+- [x] ทดสอบ authorization ของ report ให้ admin ผ่านและ role อื่นถูกปฏิเสธ
 - [ ] ตัดสินใจจาก requirement ว่ารายงานต้องรวม payment status ใดบ้าง ห้ามสมมติว่า payment ทุก status คือรายรับ
 
 **ผ่านเมื่อ:** contract, response shape, authorization, date boundary, tenant isolation และ export behavior มี test ที่รันซ้ำได้
