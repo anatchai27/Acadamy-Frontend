@@ -30,7 +30,7 @@ export function App() {
     {/* todo: add a route for index page */}
     
       <Router>
-        <LoginPage path="/" />
+        <IndexPage path="/" />
         <LoginPage path="/login" />
         <RegisterPage path="/register" />
         <ForgotPasswordPage path="/forgot-password" />

@@ -1,6 +1,6 @@
 # Execution Plan รอบใหม่
 
-> ปรับแผน: 13 กันยายน 2026
+> ปรับแผน: 13 กันยายน 2026 (revision หลัง P0 route audit และ live slip provider audit)
 > หลักการ: ทำทีละ slice, ใช้หลักฐานจาก source/schema/test/runtime เท่านั้น และแยก “มีโค้ด” ออกจาก “พิสูจน์ว่าใช้งานจริง”
 
 ## 1. กติกาหลัก
@@ -20,13 +20,13 @@
 
 ### Validation ล่าสุด
 
-- API build: ผ่านด้วย output `API/bin/Slice6Validation`
-- Full API tests: `266 passed / 0 failed / 0 skipped`
+- API build: ผ่านด้วย output `API/bin/DodValidation`
+- Full API tests: `268 passed / 0 failed / 0 skipped` ตามหลักฐานล่าสุดใน `process.md`
 - Front tests: `79 passed / 0 failed / 0 skipped`
 - Front build: ผ่าน
 - LineLiff build: ผ่าน
-- API contract validator: `Errors = 0`, `Warnings = 141`
-- Contract validator แสดง `92 current operations`, `97 target operations`; ตัวเลขนี้ต้องตรวจซ้ำหลังปรับสถานะ target ให้ตรง source
+- API contract validator: `Errors = 0`, `Warnings = 142` ตามหลักฐานล่าสุดใน `process.md`
+- Contract validator แสดง `92 current operations`, `98 target operations`; ต้องรันซ้ำเมื่อมี contract/source change
 - Controller direct EF/data access audit: `0` ตาม scope ปัจจุบัน
 
 ### หลักฐาน Slice ที่ปิดแล้ว
@@ -37,6 +37,7 @@
 - Slice 4: public lead endpoint, rate limit, institute resolution, trial-class UI และ tests มีแล้ว; duplicate rule และ admin recipient ยังไม่ยืนยัน
 - Slice 5: makeup slot UI, LIFF homework submission และ skill score page มีแล้ว; ยังไม่มี component/integration runtime tests
 - Slice 6 ส่วนที่ทำแล้ว: revenue report API, payment CSV export, Finance revenue chart และ room-overlap validation
+- P0 route audit: เปลี่ยน `Front/src/app.jsx` ให้ `/` เปิด `IndexPage`; Front tests `79 passed` และ Front build ผ่าน
 
 ### หลักฐาน schema/runtime ที่ยังไม่มี
 
@@ -61,21 +62,34 @@
 
 ### 3.1 Customer-facing UI backlog (ทำก่อน technical backlog)
 
+### P0 scope/evidence matrix รอบเริ่มงาน
+
+| Slice | Customer outcome | Contract/API ที่พบจาก source | Implementation ที่พบ | Gap ที่ยืนยันได้ | Evidence ก่อนปิด slice |
+|---|---|---|---|---|---|
+| Public Website / home | ผู้สนใจเปิดหน้า home ได้จาก public entry point | ยังไม่พบ content CRUD/media contract สำหรับข้อความ/รูป/โครงสร้าง CMS | `Front/src/pages/index.jsx` และ route `/` ไป `IndexPage` แล้ว; `CMS/` Next.js App Router มี `/content` draft editor และ `/settings` แล้ว | หน้า ผลงาน/ครู/คอร์ส/ราคา, CMS auth/RBAC, content CRUD และ media storage contract ยังไม่มี source ให้เติมเนื้อหา | Front focused route/render test, CMS build, responsive check; หลังมี contract จึงเพิ่ม API integration/auth/media evidence |
+| Trial class | ส่ง lead ทดลองเรียนและเห็นผลลัพธ์ที่ตรวจได้ | `POST /api/public/leads`, `CreateLeadRequest`, `instituteSlug` required, response `201` | `trial-class-page.jsx`, `lead-service.js`, `PublicLeadEndpoints`, `LeadService` | admin follow-up/notification recipient และ duplicate policy ยังไม่ยืนยัน | API contract + validation/forbidden tests, Front service/UI states, build |
+| Admin finance | ดูประวัติ/กราฟ/export จาก payment จริง | revenue report และ payment export มี target contract; status policy ยังไม่ยืนยัน | `finance-page.jsx`, report/payment services, API tests | ห้ามสรุปว่า payment ทุก status เป็นรายรับจนกว่าจะยืนยัน policy | status-policy decision, focused API/UI tests, Front build |
+| Leave & Make-up Admin | เปิด slot และ group cancel พร้อมคืนเครดิต | makeup slot list/create/cancel routes มีใน target contract | `makeup-slots-page.jsx`, `makeup-service.js`, API service | teacher label, slot status และ runtime concurrency ยังต้องตรวจจาก response/schema/runtime | response-shape test, mutation ownership/forbidden test, responsive check, build |
+| LIFF Homework / Make-up | ดูการบ้าน/slot, upload/จอง และเห็น state จริง | parent homework/submission และ make-up routes มีใน target contract | `LineLiff/src/pages/homework.jsx`, `leave-makeup.jsx`, parent/makeup services | component/runtime evidence และ upload/booking response shape ยังไม่ครบ | loading/empty/validation/error/success tests, LIFF responsive check, build |
+
+> สถานะนี้เป็น source audit ไม่ใช่การอนุมัติ requirement ใหม่: ช่องที่ระบุว่า “ยังไม่ยืนยัน” ต้องเปิดประเด็นกับ owner/contract ก่อน implementation ต่อ และห้ามใช้ mock data เพื่อปิด gap
+
 **P0: ทำต่อทันทีเมื่อ contract พร้อม**
 
-- [ ] Public Website: หน้า home, ผลงานนักเรียน, ครู, คอร์ส/ราคา และติดต่อเรา ให้ครบตาม content contract
-- [ ] Trial-class journey: เชื่อม landing page → ฟอร์มทดลองเรียน → success/error state → admin lead follow-up
-- [ ] Finance UI: ยืนยัน payment status policy ก่อนปรับ revenue chart, history และ CSV export ให้ตรงกับรายรับจริง
-- [ ] Leave & Make-up Admin UI: จัดการ slot, group cancel, คืนเครดิต และแสดงผลสำเร็จ/ข้อผิดพลาดจาก API จริง
-- [ ] LIFF Homework/Make-up: ตรวจ loading, empty, validation, upload และ booking state บน flow ที่ customer ใช้จริง
+- [/] Public Website: เพิ่ม SSG preview ที่ `/p/oasis-learning` ครบ home, student stories, teachers, courses/pricing และ contact ตาม Objective; dynamic content/CMS contract ยังไม่ปิด
+- [/] CMS Next.js: เพิ่มแอป `CMS/` แบบ App Router สำหรับ overview, content draft editor, lead intake และ settings; code/build evidence ผ่านแล้ว แต่ content CRUD/media/auth runtime ยังรอ API contract
+- [/] Trial-class journey: เพิ่ม `/trial-class` เชื่อม public page → form → success/error state → `POST /api/public/leads`; admin lead follow-up API/list/status ยังไม่พบใน contract
+- [/] Finance UI: มี revenue chart, history และ CSV export จาก API แล้ว; ยังต้องยืนยัน payment status policy และเพิ่ม runtime evidence
+- [/] Leave & Make-up Admin UI: มี slot create/group cancel UI แล้ว; ยังต้องพิสูจน์ response shape, ownership และ transaction/concurrency จาก API จริง
+- [/] LIFF Homework/Make-up: มี homework/scores/leave-makeup pages แล้ว; ยังต้องตรวจ loading, empty, validation, upload และ booking state บน flow ที่ customer ใช้จริง
 
 **P1: หลัง P0 และ requirement ผ่าน**
 
-- [ ] Holiday Calendar Admin UI: ทำได้เฉพาะหลังยืนยัน institute scope, timezone, recurrence, suppression matrix, RBAC และ schema
-- [ ] File Manager UI: แสดงรายการไฟล์, upload, permission, error และลิงก์ storage ตาม contract ที่ยืนยัน
-- [ ] Teacher Payroll UI: แสดงงวด, ชั่วโมง, rate, status และ export หลังยืนยันสูตรและ source tables
-- [ ] Broadcast UI: เลือกกลุ่มผู้รับ, preview, confirmation, result และ audit หลังยืนยัน recipient/notification policy
-- [ ] Analytics UI: Renewal, churn, forecast และ timesheet หลังยืนยันสูตร, date window, timezone และ privacy rule
+- [/] Holiday Calendar Admin UI: เพิ่ม provisional form ใน `CMS/operations`; ยังรอ institute scope, timezone, recurrence, suppression matrix, RBAC และ schema เพื่อเชื่อมจริง
+- [/] File Manager UI: เพิ่ม provisional file picker/empty state ใน `CMS/operations`; ยังรอ list/upload/permission/error/signed-link storage contract
+- [/] Teacher Payroll UI: เพิ่ม provisional period/table/rate/status preview ใน `CMS/operations`; ยังรอยืนยันสูตรและ source tables ก่อน export จริง
+- [/] Broadcast UI: เพิ่ม provisional recipient/message/preview flow ใน `CMS/operations`; confirm send ยัง disabled จนยืนยัน recipient/notification/audit policy
+- [/] Analytics UI: เพิ่ม provisional Renewal/Churn/Forecast cards ใน `CMS/operations`; ยังรอสูตร, date window, timezone และ privacy rule
 
 **P2: UI quality gate**
 
@@ -146,6 +160,28 @@
 ### Phase 3: Live slip verification provider
 
 **สถานะ:** `[ ]` ยังไม่มีข้อมูลที่พอ implement โดยไม่เดา
+
+**Source audit ล่าสุด:**
+
+- `API/Services/SlipVerificationProvider.cs` มี `ISlipVerificationProvider` และ `UnconfiguredSlipVerificationProvider` เป็น boundary อยู่แล้ว
+- `API/Services/PaymentSlipVerificationService.cs` เรียกผ่าน interface และบันทึก amount/reference/provider/payload หลังตรวจผ่าน; ยังไม่มี provider-specific adapter
+- `API/Program.cs` bind `ISlipVerificationProvider` ไปที่ `UnconfiguredSlipVerificationProvider` จึงยังไม่ใช่ live verification
+- unit tests ที่ใช้ mock provider เป็นการทดสอบ domain boundary เท่านั้น ไม่ใช่หลักฐานว่า OCR/provider ใช้งานจริง และไม่ควรนำ mock ไปต่อเป็น production provider
+- ยังไม่พบ provider name, API documentation, auth/secret source, payload, error catalog, SLA/retry policy หรือ approved test environment จาก source ที่ตรวจ
+- `API/appsettings.json` มีค่า connection/JWT และ config ที่มีลักษณะเป็น secret อยู่ในไฟล์; ห้ามนำไฟล์นี้เป็นหลักฐานของ provider credential และควรแยกตรวจ/rotate เป็น security operation
+
+**ผลการตัดสินใจ:** ยังไม่ทำ adapter, DI production binding, contract test ด้วย payload จริง หรือเปลี่ยนสถานะเป็น `[/]` จนกว่าจะได้รับข้อมูล provider และ environment ตาม gate ด้านล่าง
+
+**Discovery deliverable ก่อนเริ่ม implementation:**
+
+- [ ] บันทึก provider decision พร้อมชื่อผลิตภัณฑ์, version ของเอกสาร และลิงก์เอกสาร API ที่ตรวจได้
+- [ ] บันทึก environment ที่อนุมัติให้ทดสอบ, test account/merchant identifier และแหล่ง secret แบบ reference เท่านั้น ห้ามเก็บ secret ใน repo
+- [ ] บันทึก request/response examples ที่ provider อนุญาตให้ใช้ทดสอบ โดยลบ/แทนค่า PII และ secret
+- [ ] ทำตาราง mapping provider result → domain result/error code โดย owner ยืนยัน `verified`, invalid, unavailable, amount mismatch และ duplicate
+- [ ] ทำ policy decision record เรื่อง timeout, retry, circuit breaker, cancellation, raw payload retention และ PII masking
+- [ ] ระบุ acceptance และ evidence command สำหรับ sandbox/approved environment ก่อนต่อ DI
+
+**Gate decision:** ถ้า discovery deliverable ข้อใดข้อหนึ่งยังไม่มี ให้คงสถานะ `[ ]` และทำได้เฉพาะ boundary/unit tests ที่ไม่อ้าง provider จริง
 
 **ต้องได้ก่อนเริ่ม implementation:**
 
@@ -283,4 +319,4 @@ $hits.Count
 
 ## 7. Next Action
 
-เริ่มจาก **Customer-facing UI backlog P0** โดยทำตาราง scope แยกต่อหน้า: customer outcome, API contract, existing implementation, missing state และ evidence ที่ต้องรัน จากนั้นเลือก slice แรกที่ contract พร้อมทำ focused implementation/test ก่อนกลับไป technical hardening
+เริ่มจาก **P0 remaining UI evidence**: ตรวจ focused route/render และ responsive evidence ของ Public Website home ที่แก้แล้ว จากนั้นเลือก P0 slice ถัดไปจาก matrix ที่ contract พร้อมที่สุด โดยบันทึก API response shape, ownership และ missing states ก่อนแก้ UI; Live slip verification ให้ทำเฉพาะ discovery deliverable ตาม Phase 3 และห้ามทำ provider implementation จน gate ครบ

@@ -26,7 +26,7 @@
 
 - **ผลประเมินจากหลักฐานที่ตรวจ:** อยู่ในขั้น **Feature Integration & Stabilization**
 - **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อและ checkout พร้อมบันทึกผู้รับ/audit log, ระบบส่งออกข้อมูลนักเรียนเป็น CSV และบัตรนักเรียน PDF, ระบบรับชำระเงินและออกใบเสร็จ PDF จริง, ระบบตรวจสอบสลิป, ระบบแจ้งลาและจองเรียนชดเชยบน LINE LIFF พร้อมแนบไฟล์หลักฐาน
-- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** notification logging ให้ครอบคลุม flow เดิมทั้งหมด, แก้ Front legacy dashboard tests, runtime load-test evidence, หน้ารายงาน Analytics และหน้า Public Website/CMS
+- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ปิด runtime/integration evidence ของ flow ที่เพิ่มแล้ว, payment status policy, live slip provider, runtime load-test evidence, CMS CRUD/auth/media และ analytics ที่มีสูตรยืนยันแล้ว
 
 ### หลักฐาน validation ล่าสุด
 
@@ -38,6 +38,29 @@
 - Front full suite: `79 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
 - Controller ownership audit: direct EF/data access ลดลงจาก 1 controller file รวม 38 matches เหลือ `0` ใน `ParentEndpoints.cs` และ `0` ใน controllers ทั้งหมดตาม scope (เดิม audit รอบก่อน 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` ยังคง 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
+
+### หลักฐาน CMS Next.js รอบเริ่มงาน (13 กันยายน 2026)
+
+- เพิ่มแอป `CMS/` ด้วย Next.js `15.5.25` ที่ติดตั้งตาม semver range ใน `CMS/package.json` และใช้ App Router
+- เพิ่ม route ที่ build ได้จริง: `/`, `/content`, `/leads`, `/settings` พร้อม responsive shell สำหรับ workspace admin
+- `/content` มี section editor, draft status และ local draft persistence ผ่าน `localStorage`; ระบุ integration boundary เพราะยังไม่พบ CRUD endpoint ของ `public_website_contents` ใน target contract/source
+- `/leads` ต่อกับ `POST /api/public/leads` ตาม `CreateLeadRequest` ที่ยืนยันจาก source และมี success/error/loading state; ใช้ `NEXT_PUBLIC_API_URL` เท่านั้น ไม่ฝัง credential ใน client
+- Validation: `Push-Location .\CMS; npm.cmd install --no-audit --no-fund; npm.cmd run build; Pop-Location` ผ่าน, Next static generation `7/7` routes
+- สถานะ evidence: `[/]` มี code/build evidence แล้ว แต่ยังไม่มี API CRUD content, auth/RBAC runtime, media upload หรือ production integration evidence จึงยังไม่ประกาศ CMS acceptance ผ่าน
+- เพิ่ม public SSG preview `CMS/app/p/[slug]/page.tsx` ที่ `/p/oasis-learning` ตาม Objective: home, student stories, teachers, courses/pricing และ contact พร้อม metadata/SEO
+- เพิ่ม trial journey `CMS/app/trial-class/page.tsx` ที่ส่ง `instituteSlug`, contact, phone และข้อมูลผู้เรียนไปยัง `POST /api/public/leads` พร้อม loading/success/error state
+- สถานะ P0 หลังรอบนี้: Public Website และ Trial-class เป็น `[/]` เพราะมี code/build evidence แต่ยังขาด dynamic CMS CRUD, media/auth runtime และ admin lead follow-up/list/status evidence
+
+### หลักฐาน P1 Operations UI รอบเริ่มงาน (13 กันยายน 2026)
+
+- เพิ่ม `CMS/app/operations/page.tsx` และ navigation `/operations` เป็น provisional workspace สำหรับ Holiday Calendar, File Manager, Teacher Payroll, Broadcast และ Analytics
+- Holiday Calendar มี institute/timezone/date/recurrence form และบันทึก draft state โดยยังไม่เปลี่ยน worker suppression
+- File Manager มี file picker, empty state และ storage contract notice; ยังไม่ upload หรือสร้าง signed link เพราะยังไม่มี storage API
+- Teacher Payroll มี period, teacher, actual hours, hourly rate, estimated total และ status preview ตาม Objective rule `hourly_rate × actual teaching hours`; ยังไม่ export production
+- Broadcast มี recipient group, class selector, message, preview และ disabled confirmation จนกว่าจะมี recipient/consent/notification audit policy
+- Analytics มี Renewal Rate, Churn Risk และ Revenue Forecast states พร้อมระบุ source assumptions (`enrollments`, `attendances`, `payments`, `sessions`) โดยไม่แสดงตัวเลขปลอม
+- Validation: `Push-Location .\CMS; npm.cmd run build; Pop-Location` ผ่าน, Next routes `10/10`; พบเพียง autoprefixer warning เดิมจาก `align-items: end` ใน CSS
+- สถานะ P1: `[/]` เป็น code/build/UI-state evidence เท่านั้น ยังไม่มี API, tenant/RBAC, storage, worker, notification หรือ report runtime evidence
 
 ### หลักฐาน Slice 6: Payment/reporting และ operational gaps
 
@@ -205,9 +228,9 @@
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (LINE LIFF) สร้างหน้าฟอร์มให้ผู้ปกครองกดแจ้งลา เลือกคาบเรียน ระบุเหตุผล และแนบไฟล์ใบรับรองแพทย์ได้ (`leave-makeup.jsx` มีฟอร์มเลือก session, ใส่เหตุผล, แนบไฟล์ PDF/JPG/PNG/WEBP อัปโหลดผ่าน `POST /api/leave-requests/{id}/attachment` ลงตาราง `leave_request_attachments`)
 - [x] **AC 2:** (Admin Panel) สร้าง UI ให้ครูจัดการคำขอลา (อนุมัติ/ปฏิเสธ) หรือครูสามารถสร้างคำขอลาแทนผู้ปกครองได้ (`Front/src/pages/admin/requests-page.jsx` พร้อม API approve ที่ออกเครดิตชดเชยอัตโนมัติ)
-- [/] **AC 3:** (Admin Panel) ครูสามารถสร้าง Slot ว่างสำหรับเรียนชดเชย พร้อมระบุจำนวนที่นั่งที่รับได้ (Capacity) (API `POST /api/makeup/slots` ใน `MakeupService` และ repository ทำงานได้แล้ว รอทำหน้า UI บน Admin Panel)
+- [/] **AC 3:** (Admin Panel) ครูสามารถสร้าง Slot ว่างสำหรับเรียนชดเชย พร้อมระบุจำนวนที่นั่งที่รับได้ (Capacity) (API `POST /api/makeup/slots` และหน้า `/admin/makeup-slots` มีแล้ว พร้อม loading/empty/error/confirmation state; ยังไม่มี runtime integration evidence)
 - [x] **AC 4:** (LINE LIFF) ผู้ปกครองสามารถดู Slot ว่าง และใช้ `makeup_credits` กดจองเรียนชดเชยได้ (`leave-makeup.jsx` แสดงสิทธิ์คงเหลือ, แสดง slot ที่เปิด, กดจองเรียนชดเชย, และแสดงรายการ booking พร้อมปุ่มยกเลิก)
-- [/] **AC 5:** (Backend) หากครูกดยกเลิก Slot แบบ Group Cancel ระบบต้องคืนเครดิตกลับเข้าบัญชีของนักเรียนทุกคนที่จองไว้ (`POST /api/makeup/slots/{slotId}/cancel` คืนเครดิตเข้า ledger ทุก booking อัตโนมัติใน transaction เดียวกัน รอทำปุ่มกดยกเลิกบน UI)
+- [/] **AC 5:** (Backend) หากครูกดยกเลิก Slot แบบ Group Cancel ระบบต้องคืนเครดิตกลับเข้าบัญชีของนักเรียนทุกคนที่จองไว้ (`POST /api/makeup/slots/{slotId}/cancel` และปุ่มในหน้า `/admin/makeup-slots` มีแล้ว; ยังต้องพิสูจน์ transaction/concurrency กับฐานข้อมูลจริง)
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:
 - API จัดการ Leave Requests (คำนวณประเภทลา advance/urgent/absence อัตโนมัติ)
@@ -217,7 +240,7 @@
 - หน้า "ลาและเรียนชดเชย" บน LINE LIFF รองรับทั้งแจ้งลา แนบไฟล์ ดูสิทธิ์ จองที่นั่ง และยกเลิกการจอง
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้างหน้า UI ใน Admin Panel สำหรับให้ครูเปิด Slot ชดเชยและกดยกเลิก Slot (Group Cancel)
+1. เพิ่ม component/integration/runtime evidence ให้หน้า Admin makeup slot และ group cancel
 2. เพิ่ม Background Worker จัดการเครดิตที่หมดอายุ (`status = expired`)
 
 ---
@@ -229,12 +252,12 @@
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (Admin Panel) มี UI ให้ครูเข้าไปสร้างและแก้ไขหัวข้อบทเรียน (`skill_topics`) พร้อมจัดเรียงลำดับได้ (`academics-page.jsx` แท็บทักษะ)
 - [x] **AC 2:** (Admin Panel) มี UI สำหรับให้ครูกรอกคะแนน (`score`) และพิมพ์คอมเมนต์ (`note`) ให้เด็กแต่ละคนในคลาสได้สะดวกรวดเร็ว (`academics-page.jsx` ตารางกรอกคะแนน)
-- [/] **AC 3:** (LINE LIFF) ผู้ปกครองสามารถเปิดดูการ์ดพลังของลูก พร้อมเห็นกราฟพัฒนาการและข้อความ Feedback จากครู (มี Endpoint `/api/parents/children/{childId}/scores` และ Card สรุปใน Dashboard แต่ยังไม่มีหน้ารวมกราฟ Radar Chart)
+- [/] **AC 3:** (LINE LIFF) ผู้ปกครองสามารถเปิดดูการ์ดพลังของลูก พร้อมเห็นกราฟพัฒนาการและข้อความ Feedback จากครู (มี Endpoint `/api/parents/children/{childId}/scores` และหน้า `/liff/scores/:childId` แบบ horizontal bar chart แล้ว; ยังไม่มี component/integration runtime evidence)
 - [ ] **AC 4:** (Backend) หากมีคะแนนมาจากการบ้าน (`homework_submissions`) ระบบสามารถนำคะแนนนั้นมาอัปเดตใน `skill_scores` ได้อัตโนมัติ (ยังไม่มี Trigger/Logic เชื่อม)
 - [ ] **AC 5:** (Frontend) หน้าโปรไฟล์เด็กมีการแสดงผล Streak Counter (นับวันมาเรียนต่อเนื่อง) และโชว์ Icon เหรียญตรา (Badges) ที่ปลดล็อคแล้ว (มีระบบ Badge ในฝั่ง Admin Layout แต่ในโปรไฟล์เด็กของ LIFF ยังไม่ได้นำไปแสดง)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้างหน้า `/liff/scores/:childId` ใน LINE LIFF พร้อมแสดง Radar Chart หรือ Bar Chart
+1. เพิ่ม component/integration evidence ให้หน้า `/liff/scores/:childId`
 2. เพิ่มตัวนับวันมาเรียนต่อเนื่อง (Streak Counter) ในหน้าโปรไฟล์เด็ก
 3. ทำ Logic คำนวณคะแนนเฉลี่ยจากการบ้านเข้า Skill Card อัตโนมัติ
 
@@ -246,13 +269,13 @@
 
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (Admin Panel) UI สำหรับครูในการสร้างการบ้าน เลือกคอร์ส พิมพ์โจทย์ แนบไฟล์ และกำหนดเวลาส่ง (`academics-page.jsx` แท็บการบ้าน, `/api/homeworks`)
-- [ ] **AC 2:** (LINE LIFF) UI สำหรับนักเรียน/ผู้ปกครอง เพื่อดูโจทย์การบ้าน และมีปุ่มเปิดกล้อง/เลือกรูปเพื่ออัปโหลดส่งงาน (API พร้อมแล้ว แต่หน้า LIFF ยังไม่มีหน้ารายการการบ้านและการส่งงาน)
+- [/] **AC 2:** (LINE LIFF) UI สำหรับนักเรียน/ผู้ปกครอง เพื่อดูโจทย์การบ้าน และมีปุ่มเลือกไฟล์เพื่ออัปโหลดส่งงาน (หน้า `/liff/homework/:childId` และ parent-owned submission endpoint มีแล้ว; ยังไม่มี component/integration runtime evidence)
 - [x] **AC 3:** (Admin Panel) UI สำหรับครูเพื่อดู List รายชื่อเด็กที่ส่ง/ยังไม่ส่ง และสามารถเปิดดูรูปที่เด็กส่ง พร้อมกรอกคะแนน/Feedback ได้ (`academics-page.jsx` ส่วนตรวจการบ้าน)
 - [/] **AC 4:** (LINE LIFF & Web) หน้าการ์ดของนักเรียน มีการแสดง Badge สถานะการบ้านอย่างชัดเจน (ใน LIFF Dashboard มี StatCard บอกจำนวนการบ้านค้างส่ง แต่ยังไม่มีหน้ารายการแยกย่อย)
 - [/] **AC 5:** (Backend/Worker) ระบบทวงงานล่วงหน้า 1 วันมี `HomeworkReminderNotificationJob` และ retry/idempotency แล้ว แต่ยังไม่มี trigger แจ้งเตือนทันทีตอนสร้างการบ้าน
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มหน้า `/liff/homework/:childId` ใน LINE LIFF ให้ผู้ปกครองดูโจทย์และอัปโหลดส่งภาพการบ้านได้
+1. เพิ่ม component/integration evidence ให้หน้า `/liff/homework/:childId` และ upload flow
 2. เชื่อมต่อ Push Notification เมื่อครูสร้างการบ้านใหม่
 3. เพิ่ม trigger แจ้งเตือนทันทีเมื่อสร้างการบ้าน และเก็บ runtime evidence ของ `due_at` reminder worker
 
@@ -266,7 +289,7 @@
 - [x] **AC 1:** (Admin Panel) หน้าจอ POS ให้พนักงานบันทึกการรับเงิน ระบุวิธีชำระ และอัปโหลดสลิป (`Front/src/pages/admin/finance-page.jsx`, `/api/payments`)
 - [/] **AC 2:** (Backend) API ตรวจสอบสลิป เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (`PaymentSlipVerificationService.cs` มี provider interface `ISlipVerificationProvider`, ตรวจสอบยอดเงิน slip กับยอดชำระ, ป้องกัน amount mismatch ด้วยสถานะ conflict, บันทึก slip metadata ลงฐานข้อมูล และมี endpoint `POST /api/payments/{id}/verify-slip` พร้อม unit tests; รอเชื่อม AI provider จริงใน production)
 - [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
-- [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (`finance-page.jsx` มีกราฟรายรับ, ตารางประวัติ, ยอดรวม และปุ่ม export CSV; API มี revenue report และ payment export)
+- [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (`finance-page.jsx` มีกราฟรายรับ, ตารางประวัติ, ยอดรวม และปุ่ม export CSV; API มี revenue report และ payment export; ยังรอยืนยันว่า payment status ใดนับเป็นรายรับ)
 - [x] **AC 5:** (Backend/Worker) ระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ผ่าน `QuotaLowNotificationJob` พร้อม notification log และ idempotency
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:
@@ -276,8 +299,8 @@
 - Service/Repository และ Unit Tests สำหรับการรับเงินและการตรวจสอบสลิป
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เชื่อม 3rd-party AI OCR Slip Provider ตัวจริงเข้ากับ `ISlipVerificationProvider`
-2. เพิ่มกราฟสรุปรายรับในหน้าการเงิน และเพิ่มปุ่ม Export CSV/Excel ในหน้าการเงิน
+1. เชื่อม 3rd-party AI OCR Slip Provider ตัวจริงเข้ากับ `ISlipVerificationProvider` หลัง discovery gate ครบ
+2. ยืนยัน payment status policy ก่อนสรุปตัวเลขรายรับ
 3. เพิ่ม runtime evidence และ business policy ว่าการเตือนโควต้า `<= 3` ควรส่งซ้ำเมื่อใด
 
 ---
@@ -287,16 +310,16 @@
 * **สถานะ:** 🔴 ต้องเร่งทำ
 
 #### รายการ Acceptance Criteria:
-- [/] **AC 1:** (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา (มีหน้าแรกเบื้องต้น `pages/index.jsx` และหน้าติดต่อ `contact-page.jsx` แต่ยังขาดหน้าผลงาน, หน้ารวมครู, และหน้าตารางคอร์ส)
-- [ ] **AC 2:** (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ (ยังไม่มีฟอร์มหน้าบ้าน)
-- [ ] **AC 3:** (Admin Panel) สร้างเมนู CMS ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้ (ยังไม่มีเมนู CMS)
-- [/] **AC 4:** (Backend) ใน `Front/docAPI/api-target.json` มี contract `POST /api/public/leads` และ schema `CreateLeadRequest` แล้ว แต่ยังไม่พบ endpoint implementation ใน `API` จากการค้น source รอบนี้ จึงยังไม่ถือว่ารับข้อมูลจริงได้
+- [/] **AC 1:** (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา (CMS SSG preview `/p/oasis-learning` มี section ครบตาม Objective; ยังไม่มี dynamic content/media runtime)
+- [/] **AC 2:** (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ (มี `/trial-class` และส่ง `instituteSlug` ไป `POST /api/public/leads`; ยังไม่มี admin follow-up/list/status evidence)
+- [/] **AC 3:** (Admin Panel) สร้างเมนู CMS ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้ (มี CMS routes `/content`, `/leads`, `/settings` และ local draft editor; ยังไม่มี CRUD API, auth/RBAC หรือ media storage)
+- [x] **AC 4:** (Backend) มี implementation ของ `POST /api/public/leads` พร้อม `CreateLeadRequest`, institute resolution, validation และ rate limit; ยังไม่มี runtime DB evidence และ duplicate policy
 - [x] **AC 5:** หน้าเว็บทั้งหมดรองรับ Responsive Design แสดงผลได้สวยงามทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์ (โค้ดใช้ Tailwind CSS และออกแบบ Responsive ทุกหน้า)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. Implement และทดสอบ endpoint `POST /api/public/leads` ให้บันทึก `Lead` จริง พร้อมกำหนด notification behavior
-2. พัฒนาหน้าเว็บฝั่ง Landing Page ให้ครบ 5 หน้าหลักตามบรีฟ
-3. สร้างหน้า CMS จัดการเนื้อหาหน้าเว็บใน Admin Panel
+1. เพิ่ม dynamic content CRUD, auth/RBAC และ media contract ของ CMS หลัง requirement พร้อม
+2. เพิ่ม API/UI integration และ runtime evidence ของ trial lead รวม admin follow-up/list/status
+3. ทำ responsive/render evidence ของ public preview ให้ครบตาม acceptance
 
 ---
 
@@ -310,12 +333,13 @@
 - [x] **AC 3:** (Frontend) พัฒนาหน้า LIFF App สำหรับผู้ปกครอง (`LineLiff` มีหน้า Dashboard, Attendance, Payments, Profile)
 - [ ] **AC 4:** (Admin Panel) สร้างหน้าจอให้ Admin สามารถเลือกห้องเรียนและพิมพ์ส่งข้อความแบบ Bulk Message หาผู้ปกครองทั้งคลาสได้ (ยังไม่มีหน้า Broadcast)
 - [ ] **AC 5:** (Backend) พัฒนา Webhook API เพื่อทำหน้าที่เป็น Chatbot จับ Keyword และตอบคำถามพื้นฐาน (ยังไม่มีตัวดัก Event Webhook)
-- [/] **AC 6:** (Database) ทุกข้อความที่ส่งออกไป ต้องถูกบันทึกลงตาราง `notifications` เพื่อทำ Audit Trail (ปัจจุบันส่งข้อความตรงผ่าน HttpClient แต่ยังไม่ได้ Write Record ลง Database)
+- [/] **AC 6:** (Database) ทุกข้อความที่ส่งออกไป ต้องถูกบันทึกลงตาราง `notifications` เพื่อทำ Audit Trail (attendance/payment และ background jobs ใช้ dispatcher/logging แล้ว; ยังต้อง audit flow อื่นและแก้ multi-instance race ของ idempotency)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มการบันทึก Log ลงตาราง `notifications` ทุกครั้งที่มีการส่ง LINE Push
-2. เพิ่มหน้า Broadcast ข้อความหาผู้ปกครองรายห้องใน Admin Panel
-3. จัดทำภาพต้นแบบ Rich Menu เพื่อนำไปติดตั้งใน LINE Official Account
+1. ตรวจทุก notification flow ที่ยังไม่ผ่าน dispatcher เดียวกัน และเพิ่ม integration evidence
+2. พิจารณา unique idempotency constraint หลังยืนยัน schema/migration policy
+3. เพิ่มหน้า Broadcast ข้อความหาผู้ปกครองรายห้องใน Admin Panel
+4. จัดทำภาพต้นแบบ Rich Menu เพื่อนำไปติดตั้งใน LINE Official Account
 
 ---
 
@@ -325,15 +349,15 @@
 
 #### รายการ Acceptance Criteria:
 - [x] **AC 1:** (Frontend) พัฒนาหน้า Dashboard สำหรับ Admin โดยมี Card สรุปตัวเลขรายวัน (มี Stat Card นักเรียน, การเข้าเรียน, คำร้องขอ และการเงินใน `Front/src/pages/admin/dashboard-page.jsx`)
-- [ ] **AC 2:** (Backend) สร้าง API สำหรับดึงข้อมูล Analytics เชิงลึก (Renewal Rate, Churn Risk) (ยังไม่มี API วิเคราะห์ความเสี่ยง)
-- [ ] **AC 3:** (Frontend) สร้างหน้ารายงานเฉพาะ (Reports) แสดงกราฟแนวโน้มรายได้ (Revenue Forecast) (ยังไม่มี)
+- [ ] **AC 2:** (Backend) สร้าง API สำหรับดึงข้อมูล Analytics เชิงลึก (Renewal Rate, Churn Risk) (CMS มี provisional state และระบุ source assumptions แล้ว แต่ยังไม่มีสูตร/API ที่ owner ยืนยัน)
+- [/] **AC 3:** (Frontend) สร้างหน้ารายงานเฉพาะ (Reports) แสดงกราฟแนวโน้มรายได้ (Revenue Forecast) (CMS `/operations` มี provisional state เท่านั้น; revenue report API เป็น actual payment grouping ไม่ใช่ forecast)
 - [ ] **AC 4:** (Frontend/Backend) สร้างรายงานสรุปชั่วโมงสอนของครูแต่ละคน (Teacher Timesheet) พร้อมปุ่ม Export เป็น Excel เพื่อนำไปทำ Payroll (ยังไม่มี)
 - [ ] **AC 5:** (Backend) พัฒนาระบบติดตาม Referral ผู้แนะนำนักเรียน (ยังไม่มี)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. สร้าง Endpoint ดึงสถิติภาพรวมแยกตามช่วงเวลา (วัน/สัปดาห์/เดือน)
-2. สร้างหน้าเมนู "รายงานและสถิติ" (Analytics Page) ใน Admin Panel
-3. เพิ่มรายงานชั่วโมงสอนครูจากตาราง `sessions` และ `attendances`
+1. ยืนยันสูตร, source tables, date window, timezone และ privacy rule ของ Analytics
+2. สร้าง API จากข้อมูลจริงหลังสูตรผ่าน และแยก revenue report ออกจาก forecast
+3. เพิ่มรายงานชั่วโมงสอนครูจากตาราง `sessions` และ `attendances` หลังยืนยัน column/export contract
 
 ---
 
@@ -342,17 +366,17 @@
 * **สถานะ:** 🔴 ต้องเร่งทำ
 
 #### รายการ Acceptance Criteria:
-- [ ] **AC 1:** (Admin Panel) มีหน้าต่างตั้งค่าปฏิทินวันหยุด (Holiday Calendar) ซึ่งส่งผลให้ไม่มีการแจ้งเตือนทวงงาน/เช็คชื่อในวันนั้น (ยังไม่มี)
+- [/] **AC 1:** (Admin Panel) มีหน้าต่างตั้งค่าปฏิทินวันหยุด (Holiday Calendar) ซึ่งส่งผลให้ไม่มีการแจ้งเตือนทวงงาน/เช็คชื่อในวันนั้น (CMS `/operations` มี provisional form; ยังไม่มี schema, worker suppression หรือ runtime evidence)
 - [/] **AC 2:** (Backend) Validation ป้องกันการจองห้องเรียนซ้ำซ้อน (Room Overlap) มี overlap query และ MySQL/TiDB named lock + transaction ใน `SessionRepository` แล้ว; ยังไม่มี integration/concurrency runtime evidence กับ database environment จริง
-- [/] **AC 3:** (Frontend/Backend) สร้าง UI สำหรับคลังเอกสารและอัปโหลดไฟล์การสอนไปยัง Storage (มี API File Upload เข้า Thai Data Cloud S3 แล้ว แต่ยังไม่มีหน้า FileManager กลาง)
-- [ ] **AC 4:** (Admin Panel) มีรายงานสรุปค่าตอบแทนครูรายเดือน (ยังไม่มี)
+- [/] **AC 3:** (Frontend/Backend) สร้าง UI สำหรับคลังเอกสารและอัปโหลดไฟล์การสอนไปยัง Storage (CMS `/operations` มี provisional file picker/empty state; ยังไม่มี list/upload/permission/error/signed-link contract)
+- [/] **AC 4:** (Admin Panel) มีรายงานสรุปค่าตอบแทนครูรายเดือน (CMS มี provisional period/table/rate/status preview; ยังไม่ยืนยันสูตรและ export source)
 - [x] **AC 5:** (Frontend/Backend) สร้างระบบขอ Consent PDPA พร้อมบันทึกประวัติ และฟังก์ชันขอ Export/ลบข้อมูล (`PdpaConsent` ถูกบันทึกตอนสมัครเรียนและสมัครสถาบัน, มีปุ่มลบบัญชีใน Settings)
 - [ ] **AC 6:** (DevOps) ตรวจสอบว่าระบบ Automated Backup ถูกเปิดใช้งานแล้วบนฐานข้อมูล (ยังไม่มีเอกสารยืนยัน Backup Schedule)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่ม Validation ตรวจสอบห้องเรียนซ้ำใน `SessionService.cs`
-2. สร้างระบบจัดการวันหยุดสถาบัน (Holiday Management)
-3. ตรวจสอบและตั้งเวลา Backup ฐานข้อมูล TiDB Cloud
+1. เพิ่ม integration/concurrency evidence ของ room overlap กับ database engine ที่ใช้จริง
+2. สร้างระบบจัดการวันหยุดสถาบันหลัง schema, timezone และ suppression policy ผ่าน
+3. ตรวจสอบและตั้งเวลา Backup ฐานข้อมูล TiDB Cloud จาก provider console/API
 
 ---
 
@@ -377,26 +401,27 @@
 ## 4. แผนปฏิบัติการที่ต้องปรับปรุงต่อ (Priority Action Plan)
 
 ### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
-1. **บันทึก Notification Log:** attendance/payment ผ่าน dispatcher เดียวกับ background jobs แล้ว; ยังมีข้อจำกัด multi-instance race เพราะ schema ไม่มี unique idempotency constraint
-3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
-4. **ย้าย Direct EF ออกจาก Legacy Controllers:** เสร็จแล้วสำหรับ `Parent`, `Institute`, `Teacher`, `User` และ `Auth`; controller audit ตาม scope เหลือ `0 matches`
+1. **ปิด P0 UI evidence:** ตรวจ route/render, responsive และ state evidence ของ Public Website, Trial-class, Finance, Make-up และ LIFF Homework/Make-up
+2. **ยืนยัน payment status policy:** ห้ามสรุป payment ทุก status เป็นรายรับจนกว่า owner จะยืนยันกติกา
+3. **ปิด notification evidence:** audit flow ที่ยังไม่ใช้ dispatcher และเก็บหลักฐาน multi-instance/idempotency ตาม schema ที่อนุมัติ
+4. **ย้าย Direct EF ออกจาก Legacy Controllers:** เสร็จแล้วตาม scope; controller audit เหลือ `0 matches`
 
 ### ระยะกลาง (P1: การปิด Loop ฟังก์ชันหลักให้ครบวงจร)
-1. **หน้ารายการการบ้านใน LIFF:** ให้ผู้ปกครอง/นักเรียนเปิดดูโจทย์และอัปโหลดส่งภาพการบ้านได้
-2. **หน้าแสดงการ์ดพลัง (Radar Chart) ใน LIFF:** แสดงผลลัพธ์พัฒนาการเด็กเป็นกราฟใยแมงมุม
-3. **UI สำหรับสร้าง/ยกเลิก Make-up Slot ใน Admin:** ให้ครูสามารถเปิด slot และยกเลิก slot ชดเชยได้จากหน้าเว็บ
-4. **เชื่อมต่อ AI OCR Slip Provider จริง:** ต่อ API ภายนอกเข้ากับ `ISlipVerificationProvider` สำหรับตรวจสลิปอัตโนมัติ
+1. **Runtime evidence ของ LIFF:** ทดสอบ homework upload, scores และ leave/make-up ด้วย response/ownership จริง
+2. **Runtime evidence ของ Make-up Admin:** ทดสอบ create/group cancel, credit return และ conflict กับ database จริง
+3. **CMS contract:** ยืนยัน content CRUD, auth/RBAC, media storage และ lead follow-up ก่อนเชื่อม production
+4. **เชื่อมต่อ AI OCR Slip Provider จริง:** ทำเฉพาะหลัง provider discovery gate ครบ
 
 ### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
-1. **ปุ่ม Export Excel/CSV ในหน้าการเงิน:** ต่อยอดจากหน้า Students ที่ทำเสร็จแล้ว
-2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** เพิ่ม runtime evidence และ business policy ว่าการเตือนควรส่งซ้ำเมื่อใด
-3. **Runtime Load-test evidence:** รัน `load-tests/attendance.js` กับ environment จริงและเก็บผล threshold
-4. **หน้า Public Website & CMS:** พัฒนาให้ครบ 5 หน้าหลักและระบบจัดการเนื้อหาสำหรับโปรโมทสถาบัน
+1. **Runtime Load-test evidence:** รัน `load-tests/attendance.js` กับ environment ที่อนุมัติและเก็บผล threshold
+2. **Backup/restore evidence:** ตรวจ schedule, retention และ restore drill จาก provider จริง
+3. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** เพิ่ม runtime evidence และ business policy ว่าการเตือนควรส่งซ้ำเมื่อใด
+4. **Analytics/Payroll/Operations:** ทำ production integration หลังสูตร, schema และ role policy ผ่าน
 
 ---
 
 ## 5. บทสรุปขั้นตอนปัจจุบัน (Current Stage)
 
-โครงการผ่านขั้นตอน **Foundational Setup** และ **Core CRUD** มาเรียบร้อยแล้ว ปัจจุบันกำลังอยู่ในช่วง **Cross-Platform Integration (Admin Panel + LINE LIFF + .NET API)**
+โครงการผ่านขั้นตอน **Foundational Setup**, **Core CRUD** และบางส่วนของ **Cross-Platform Integration** แล้ว ปัจจุบันอยู่ในช่วง **Evidence Reconciliation & Customer-flow Stabilization**: ปิด UI state/build evidence ที่มี code แล้ว และแยกงานที่ยังขาด contract, database runtime หรือ provider evidence ออกจาก implementation
 
-จุดที่ต้องให้ความสำคัญสูงสุดนับจากนี้คือ **"ความลื่นไหลของผู้ปกครองบน LINE LIFF"** และ **"ความแม่นยำในการตัดรอบโควต้าเรียน/การเงิน"** เพื่อให้สถาบันสามารถนำระบบไปทดลองใช้งานจริงกับนักเรียนกลุ่มแรก (Pilot Class) ได้อย่างมั่นใจและปลอดภัย.
+จุดที่ต้องให้ความสำคัญสูงสุดนับจากนี้คือ **"หลักฐานการใช้งานจริงของ customer flow"**, **"ความแม่นยำของ payment/credit state"** และ **"การไม่เดา contract ของ provider หรือ business rule"** เพื่อให้การทดลองใช้งาน Pilot Class อ้างอิงผลตรวจที่ทำซ้ำได้และไม่แสดงข้อมูลปลอม.

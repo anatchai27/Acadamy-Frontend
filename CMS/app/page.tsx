@@ -1,0 +1,13 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Icon } from "@/components/Icon";
+import { Shell } from "@/components/Shell";
+
+export default function OverviewPage() {
+  const router = useRouter();
+  return <Shell><header className="topbar"><div><span className="eyebrow">Sunday, September 13, 2026</span><h1>Good morning, Narin.</h1><p className="subtitle">Here is what is happening across your public website.</p></div><div className="profile"><div className="profile-copy"><strong>Narin S.</strong><br /><span className="subtitle">Administrator</span></div><div className="avatar">NS</div></div></header>
+    <section className="grid metrics"><div className="card"><span className="metric-label">Published sections</span><div className="metric-value">02</div><span className="trend">+ 1 this month</span></div><div className="card"><span className="metric-label">Draft sections</span><div className="metric-value">03</div><span className="trend" style={{ color: "#a15e25" }}>Needs review</span></div><div className="card"><span className="metric-label">New enquiries</span><div className="metric-value">24</div><span className="trend">+ 18.2% this week</span></div><div className="card"><span className="metric-label">Content health</span><div className="metric-value">78%</div><span className="trend">Good foundation</span></div></section>
+    <section className="grid dashboard-grid"><div className="card"><div className="card-heading"><h2>Enquiries this month</h2><button className="text-button" onClick={() => router.push("/leads")}>View inbox <Icon name="arrow" /></button></div><div className="bar-chart">{[48, 62, 40, 76, 55, 88, 67, 95, 58, 72, 84, 100].map((height, index) => <div className="bar-wrap" key={index}><div className={`bar ${index === 11 ? "current" : ""}`} style={{ height: `${height}%` }} /></div>)}</div><div className="bar-axis"><span>01 Sep</span><span>07 Sep</span><span>13 Sep</span><span>Today</span></div></div><div className="card"><div className="card-heading"><h2>Recent activity</h2><span className="eyebrow">Live</span></div><div className="activity"><div className="activity-item"><div className="activity-icon"><Icon name="edit" /></div><div>Hero banner updated<small>Website content</small></div><span className="activity-time">09:42</span></div><div className="activity-item"><div className="activity-icon"><Icon name="lead" /></div><div>New trial enquiry received<small>From public website</small></div><span className="activity-time">08:17</span></div><div className="activity-item"><div className="activity-icon"><Icon name="content" /></div><div>About section saved as draft<small>Needs review</small></div><span className="activity-time">Yesterday</span></div></div></div></section>
+  </Shell>;
+}
