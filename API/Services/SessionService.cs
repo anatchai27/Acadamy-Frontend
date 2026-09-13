@@ -33,12 +33,20 @@ public class SessionService(Repositories.ISessionRepository repository) : ISessi
         var course = await _repository.GetCourseByIdAsync(courseId, ct)
             ?? throw new SessionValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนหรือไม่มีสิทธิ์เข้าถึง");
 
+        if (request.DurationMin <= 0)
+            throw new SessionValidationException("INVALID_DURATION", "ระยะเวลาคาบเรียนต้องมากกว่า 0 นาที");
+
+        var roomId = request.RoomId?.Trim();
+        if (!string.IsNullOrWhiteSpace(roomId) && await _repository.HasRoomOverlapAsync(
+                instituteId, roomId, request.ScheduledAt, request.ScheduledAt.AddMinutes(request.DurationMin), ct))
+            throw new SessionValidationException("ROOM_OVERLAP", "ห้องเรียนมีคาบเรียนทับซ้อนในช่วงเวลานี้");
+
         var session = new Models.Session
         {
             CourseId = courseId,
             ScheduledAt = request.ScheduledAt,
             DurationMin = request.DurationMin,
-            RoomId = request.RoomId?.Trim(),
+            RoomId = roomId,
             Status = "scheduled"
         };
 

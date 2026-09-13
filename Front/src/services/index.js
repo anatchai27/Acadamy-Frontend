@@ -38,6 +38,7 @@ export {
   createPayment,
   getPayments,
 } from './finance-service';
+export { reportService, getRevenueReport, downloadPaymentCsv } from './report-service';
 export {
   teacherService,
   getTeachers,

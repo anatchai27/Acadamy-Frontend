@@ -40,7 +40,9 @@ public static class SessionEndpoints
             }
             catch (SessionValidationException ex)
             {
-                return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });
+                return ex.ErrorCode == "ROOM_OVERLAP"
+                    ? Results.Conflict(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message })
+                    : Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message });
             }
         });
 

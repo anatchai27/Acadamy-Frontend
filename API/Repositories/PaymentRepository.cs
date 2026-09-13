@@ -20,6 +20,9 @@ public interface IPaymentRepository
     Task<int> GetPaymentCountAsync(
         DateTime? startDate, DateTime? endDate, string? method,
         CancellationToken ct = default);
+    Task<List<Payment>> GetPaymentsForExportAsync(
+        DateTime? startDate, DateTime? endDate, string? method,
+        CancellationToken ct = default);
     Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default);
     Task SaveVerifiedSlipAsync(Payment payment, CancellationToken ct = default);
 }
@@ -129,6 +132,16 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
         return await query.CountAsync(ct);
     }
 
+    public async Task<List<Payment>> GetPaymentsForExportAsync(
+        DateTime? startDate, DateTime? endDate, string? method,
+        CancellationToken ct = default)
+    {
+        var query = BuildFilteredPaymentsQuery(startDate, endDate, method);
+        return await query
+            .OrderByDescending(p => p.PaidAt)
+            .ToListAsync(ct);
+    }
+
     public Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default) =>
         _context.Payments.FirstOrDefaultAsync(p => p.Id == paymentId, ct);
 
@@ -137,5 +150,25 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
         await using var transaction = await _context.Database.BeginTransactionAsync(ct);
         await _context.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+    }
+
+    private IQueryable<Payment> BuildFilteredPaymentsQuery(
+        DateTime? startDate, DateTime? endDate, string? method)
+    {
+        var query = _context.Payments
+            .Include(p => p.Enrollment)
+                .ThenInclude(e => e.Student)
+            .Include(p => p.Enrollment)
+                .ThenInclude(e => e.Course)
+            .AsQueryable();
+
+        if (startDate.HasValue)
+            query = query.Where(p => p.PaidAt >= startDate.Value);
+        if (endDate.HasValue)
+            query = query.Where(p => p.PaidAt <= endDate.Value);
+        if (!string.IsNullOrEmpty(method))
+            query = query.Where(p => p.Method == method);
+
+        return query;
     }
 }

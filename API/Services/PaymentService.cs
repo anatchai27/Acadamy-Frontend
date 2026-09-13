@@ -1,4 +1,6 @@
 using academy_API.DTOs;
+using System.Globalization;
+using System.Text;
 
 namespace academy_API.Services;
 
@@ -8,6 +10,9 @@ public interface IPaymentService
     Task<PaymentHistoryResponse> GetHistoryAsync(
         DateTime? startDate, DateTime? endDate, string? method,
         int page, int limit, CancellationToken ct = default);
+    Task<byte[]> ExportCsvAsync(
+        DateTime? startDate, DateTime? endDate, string? method,
+        CancellationToken ct = default);
 }
 
 public class PaymentService(
@@ -131,6 +136,34 @@ public class PaymentService(
                 new PaymentPagination(page, totalPages)
             )
         );
+    }
+
+    public async Task<byte[]> ExportCsvAsync(
+        DateTime? startDate, DateTime? endDate, string? method,
+        CancellationToken ct = default)
+    {
+        var payments = await _repository.GetPaymentsForExportAsync(startDate, endDate, method, ct);
+        var csv = new StringBuilder();
+        csv.AppendLine("invoice_no,student_name,course_name,amount,method,paid_at");
+        foreach (var payment in payments)
+        {
+            csv.Append(EscapeCsv(payment.InvoiceNo)).Append(',')
+                .Append(EscapeCsv(payment.Enrollment?.Student?.FullName)).Append(',')
+                .Append(EscapeCsv(payment.Enrollment?.Course?.Name)).Append(',')
+                .Append(payment.Amount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append(EscapeCsv(payment.Method)).Append(',')
+                .Append(payment.PaidAt.ToString("O", CultureInfo.InvariantCulture)).AppendLine();
+        }
+
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+    }
+
+    private static string EscapeCsv(string? value)
+    {
+        var text = value ?? string.Empty;
+        return text.Contains(',') || text.Contains('"') || text.Contains('\n')
+            ? $"\"{text.Replace("\"", "\"\"")}\""
+            : text;
     }
 }
 

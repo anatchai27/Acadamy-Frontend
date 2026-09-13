@@ -9,6 +9,7 @@ public interface ISessionRepository
 {
     Task<Course?> GetCourseByIdAsync(int courseId, CancellationToken ct = default);
     Task<Session> CreateAsync(Session session, CancellationToken ct = default);
+    Task<bool> HasRoomOverlapAsync(int instituteId, string roomId, DateTime start, DateTime end, CancellationToken ct = default);
     Task<List<Session>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<Session?> GetByIdAsync(int id, CancellationToken ct = default);
 }
@@ -27,6 +28,16 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
         _context.Sessions.Add(session);
         await _context.SaveChangesAsync(ct);
         return session;
+    }
+
+    public Task<bool> HasRoomOverlapAsync(int instituteId, string roomId, DateTime start, DateTime end, CancellationToken ct = default)
+    {
+        return _context.Sessions.AnyAsync(s =>
+            s.InstituteId == instituteId &&
+            s.RoomId == roomId &&
+            s.Status != "cancelled" &&
+            s.ScheduledAt < end &&
+            s.ScheduledAt.AddMinutes(s.DurationMin) > start, ct);
     }
 
     public async Task<List<Session>> GetByCourseIdAsync(int courseId, CancellationToken ct = default)

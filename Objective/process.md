@@ -32,12 +32,21 @@
 
 - API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `259 passed, 0 failed, 0 skipped`
+- Full API test suite: `266 passed, 0 failed, 0 skipped` หลังเพิ่ม Slice 6 tests
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
-- Front full suite: `76 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
+- Front full suite: `79 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
 - Controller ownership audit: direct EF/data access ลดลงจาก 1 controller file รวม 38 matches เหลือ `0` ใน `ParentEndpoints.cs` และ `0` ใน controllers ทั้งหมดตาม scope (เดิม audit รอบก่อน 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` ยังคง 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
+
+### หลักฐาน Slice 6: Payment/reporting และ operational gaps
+
+- เพิ่ม `GET /api/reports/revenue?from=...&to=...&group_by=day|month|year` ตาม target contract; service ดึง payment จริงผ่าน repository ที่มี tenant query filter และคืน `period`, `grossAmount`, `paymentCount` โดยไม่ใช้ mock data
+- เพิ่ม `GET /api/payments/export` สำหรับ CSV UTF-8 พร้อม BOM จากรายการ payment จริง และต่อปุ่ม export ในหน้า Finance
+- หน้า Finance แสดงกราฟแท่งรายรับตามวันจาก revenue API หลังเลือกช่วงวันที่ พร้อม loading/empty state
+- เพิ่ม room-overlap validation ใน `SessionRepository`/`SessionService`: ช่วงเวลาชนกันใน room เดียวกันของ tenant เดียวกันจะไม่สร้าง session และ endpoint คืน `409` พร้อม `ROOM_OVERLAP`; ระยะเวลาที่ไม่ถูกต้องคืน validation error
+- Focused evidence: revenue grouping test และ room-overlap service test; full API tests `266 passed / 0 failed / 0 skipped`; API build, Front build, LineLiff build และ contract validator ผ่าน (`Errors = 0`, warnings `141`)
+- ยังไม่ประกาศ live AI/OCR, holiday calendar, automated backup หรือ k6 performance เพราะยังไม่มี provider credential, business/schema contract หรือ runtime environment evidence ที่ตรวจได้จริง
 
 ### หลักฐาน Slice 1: Front legacy dashboard tests
 

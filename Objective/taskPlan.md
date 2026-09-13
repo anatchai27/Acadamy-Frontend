@@ -170,12 +170,13 @@
 
 ทำหลัง Slice 1-5 เสถียรแล้ว:
 
-- [ ] เชื่อม live AI/OCR provider ผ่าน `ISlipVerificationProvider` โดยมี timeout และ failure policy
-- [ ] เพิ่ม payment export และกราฟรายรับตาม requirement ที่ยืนยันแล้ว
-- [ ] เพิ่ม analytics/report API จากข้อมูลจริง ไม่ใช้ mock data
-- [ ] เพิ่ม holiday calendar และ room overlap validation
-- [ ] ตรวจ automated backup จาก provider/environment จริง
-- [ ] รัน k6 กับ environment จริงและเก็บผล `p95 < 2s`, `p99 < 3s`, checks `> 99%`
+- [/] เชื่อม live AI/OCR provider ผ่าน `ISlipVerificationProvider` โดยมี timeout และ failure policy; ยังไม่มี provider endpoint/credential ที่ยืนยันได้ จึงไม่สร้าง provider จำลอง
+- [x] เพิ่ม payment CSV export และกราฟรายรับจาก `payments` จริงตามช่วงวันที่
+- [x] เพิ่ม `GET /api/reports/revenue` ตาม target contract โดย group ได้ day/month/year และใช้ข้อมูลจริง
+- [x] เพิ่ม room overlap validation ตอนสร้าง session และตอบ `409 ROOM_OVERLAP`
+- [ ] เพิ่ม holiday calendar; ยังไม่มี requirement/schema/UI ที่ละเอียดพอให้ลงมือโดยไม่เดา
+- [ ] ตรวจ automated backup จาก provider/environment จริง; workspace ไม่มี runtime/provider evidence
+- [ ] รัน k6 กับ environment จริงและเก็บผล `p95 < 2s`, `p99 < 3s`, checks `> 99%`; script อย่างเดียวไม่ใช่ผลทดสอบ
 
 ## 4. งานที่ยังห้ามติ๊ก `[x]`
 
@@ -225,4 +226,4 @@ $hits.Count
 
 ## 7. Current next action
 
-ดำเนินการ **Slice 4: Implement public trial-class lead ตาม contract** แล้ว โดยมี API, schema change script, UI และหลักฐาน build/test/contract validator ตามที่ระบุไว้ด้านบน
+เก็บ runtime evidence สำหรับ live OCR provider, automated backup และ k6 จาก environment จริงก่อนติ๊ก `[x]`; ห้ามสรุปจาก interface, config หรือ script เพียงอย่างเดียว

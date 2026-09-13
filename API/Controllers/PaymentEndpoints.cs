@@ -56,6 +56,24 @@ public static class PaymentEndpoints
             return Results.Ok(result);
         });
 
+        group.MapGet("/export", async (
+            IPaymentService service,
+            string? start_date,
+            string? end_date,
+            string? method,
+            CancellationToken ct = default) =>
+        {
+            DateTime? startDate = null;
+            DateTime? endDate = null;
+            if (!string.IsNullOrEmpty(start_date) && DateTime.TryParse(start_date, out var sd))
+                startDate = sd.ToUniversalTime();
+            if (!string.IsNullOrEmpty(end_date) && DateTime.TryParse(end_date, out var ed))
+                endDate = ed.Date.AddDays(1).AddTicks(-1);
+
+            var csv = await service.ExportCsvAsync(startDate, endDate, method, ct);
+            return Results.File(csv, "text/csv; charset=utf-8", "payments.csv");
+        });
+
         group.MapPost("/{paymentId:long}/verify-slip", async (
             long paymentId,
             IPaymentSlipVerificationService service,

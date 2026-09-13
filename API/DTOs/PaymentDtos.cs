@@ -50,3 +50,9 @@ public record PaymentPagination(
     int CurrentPage,
     int TotalPages
 );
+
+public record RevenueReportRow(
+    string Period,
+    decimal GrossAmount,
+    int PaymentCount
+);

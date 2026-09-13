@@ -170,6 +170,23 @@ public class CourseServiceTests
         Assert.Equal("scheduled", captured!.Status);
     }
 
+    [Fact]
+    public async Task CreateSessionAsync_RoomOverlap_ThrowsConflictValidation()
+    {
+        var sessionRepoMock = CreateMockSessionRepo();
+        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Course { Id = 1, Name = "Math" });
+        sessionRepoMock.Setup(r => r.HasRoomOverlapAsync(1, "R1", It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var sut = new SessionService(sessionRepoMock.Object);
+        var ex = await Assert.ThrowsAsync<SessionValidationException>(() => sut.CreateAsync(
+            1, new CreateSessionRequest(DateTime.UtcNow, 60, " R1 "), 1));
+
+        Assert.Equal("ROOM_OVERLAP", ex.ErrorCode);
+        sessionRepoMock.Verify(r => r.CreateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     // 12
     [Fact]
     public async Task GetByCourseIdAsync_ReturnsSessionsList()

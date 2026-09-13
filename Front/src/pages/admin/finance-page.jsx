@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
-import { financeService, courseService, uploadService } from '../../services';
+import { financeService, courseService, uploadService, reportService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 
@@ -38,6 +38,9 @@ export function FinancePage({ path }) {
   const [payments, setPayments] = useState([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [courses, setCourses] = useState([]);
+  const [revenue, setRevenue] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [form, setForm] = useState({
     enrollmentId: '', amount: '', method: 'transfer', slipUrl: '',
@@ -66,10 +69,36 @@ export function FinancePage({ path }) {
       const res = await financeService.getPayments(params, { signal: getSignal() });
       const payload = res.data?.data || res.data || {};
       setPayments(payload.payments || (Array.isArray(payload) ? payload : []));
+      if (startDate && endDate) {
+        setReportLoading(true);
+        const report = await reportService.getRevenueReport({ from: startDate, to: endDate, group_by: 'day' }, { signal: getSignal() });
+        setRevenue(report.data?.data || report.data || []);
+      }
     } catch {
       showToast('ไม่สามารถโหลดข้อมูลการเงินได้', 'error');
     } finally {
       setPaymentLoading(false);
+      setReportLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { blob } = await reportService.downloadPaymentCsv({
+        ...(startDate ? { start_date: startDate } : {}),
+        ...(endDate ? { end_date: endDate } : {}),
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'payments.csv';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      showToast(error?.message || 'ส่งออก CSV ไม่สำเร็จ', 'error');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -255,6 +284,34 @@ export function FinancePage({ path }) {
             <Button variant="primary" size="md" onClick={handleDateFilter}>
               กรองข้อมูล
             </Button>
+            <Button variant="outline" size="md" onClick={handleExport} loading={exporting} disabled={exporting}>
+              ส่งออก CSV
+            </Button>
+          </div>
+
+          <div class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white'} mb-6 p-5`}>
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-zinc-900">กราฟรายรับรายวัน</h3>
+                <p class="text-xs text-zinc-500">แสดงจากข้อมูล payment จริงตามช่วงวันที่</p>
+              </div>
+              {reportLoading ? <span class="text-xs text-zinc-500">กำลังโหลด...</span> : null}
+            </div>
+            {revenue.length === 0 ? (
+              <p class="text-sm text-zinc-500">เลือกวันที่และกดกรองข้อมูลเพื่อแสดงกราฟ</p>
+            ) : (
+              <div class="space-y-3">
+                {revenue.map(row => {
+                  const max = Math.max(...revenue.map(item => Number(item.grossAmount) || 0), 1);
+                  const width = `${Math.max(3, ((Number(row.grossAmount) || 0) / max) * 100)}%`;
+                  return <div key={row.period} class="grid grid-cols-[5rem_1fr_auto] items-center gap-3 text-xs">
+                    <span class="text-zinc-500">{row.period}</span>
+                    <div class="h-3 rounded-full bg-zinc-100"><div class="h-3 rounded-full bg-oasis-primary" style={{ width }} /></div>
+                    <span class="font-semibold text-zinc-700">฿{Number(row.grossAmount).toLocaleString()}</span>
+                  </div>;
+                })}
+              </div>
+            )}
           </div>
 
           <DataTable
