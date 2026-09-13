@@ -3154,8 +3154,9 @@
       },
       "CreateLeadRequest": {
         "type": "object",
-        "required": ["contactName", "phone"],
+        "required": ["instituteSlug", "contactName", "phone"],
         "properties": {
+          "instituteSlug": { "type": "string", "maxLength": 64 },
           "contactName": { "type": "string" },
           "phone": { "type": "string" },
           "email": { "type": "string", "format": "email", "nullable": true },

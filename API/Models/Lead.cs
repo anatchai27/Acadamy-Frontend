@@ -7,6 +7,7 @@ public class Lead : IMultiTenantEntity
     public string FullName { get; set; } = null!;
     public string Phone { get; set; } = null!;
     public string? Email { get; set; }
+    public string? StudentName { get; set; }
     public string? Grade { get; set; }
     public string? InterestedSubjects { get; set; }
     public string? Source { get; set; }

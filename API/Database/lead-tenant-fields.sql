@@ -1,0 +1,2 @@
+ALTER TABLE leads
+    ADD COLUMN student_name VARCHAR(255) NULL;

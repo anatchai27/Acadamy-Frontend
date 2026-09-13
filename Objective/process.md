@@ -32,11 +32,11 @@
 
 - API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `256 passed, 0 failed, 0 skipped`
+- Full API test suite: `259 passed, 0 failed, 0 skipped`
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
 - Front full suite: `76 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
-- Controller ownership audit: direct EF/data access ลดลงเหลือ 1 controller file รวม 38 matches (จากเดิม 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` เหลือ 0
+- Controller ownership audit: direct EF/data access ลดลงจาก 1 controller file รวม 38 matches เหลือ `0` ใน `ParentEndpoints.cs` และ `0` ใน controllers ทั้งหมดตาม scope (เดิม audit รอบก่อน 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` ยังคง 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
 ### หลักฐาน Slice 1: Front legacy dashboard tests
@@ -56,6 +56,26 @@
 - ข้อความ notification ถูกย้ายมาไว้ใน `NotificationMessageFactory` โดยคงเนื้อหา LINE เดิม และ dispatcher เป็นจุดเดียวที่สร้าง pending record, ส่ง provider, mark `sent` หรือ mark `retrying/failed`
 - Focused notification/attendance/payment tests: `27 passed / 0 failed`; full API tests: `256 passed / 0 failed / 0 skipped`; API build และ test build ผ่าน
 - ข้อจำกัดที่ยืนยันจาก schema/code: `notifications` ยังไม่มี unique idempotency column/constraint ดังนั้นการกัน race ระหว่างหลาย API instances ยังเป็น application-level check และอาจสร้าง duplicate pending rows ได้เมื่อ concurrent ก่อน `FindByIdempotencyKeyAsync` เห็นข้อมูลเดียวกัน
+
+### หลักฐาน Slice 3: Parent repository/service boundary
+
+- ก่อนแก้: `ParentEndpoints.cs` มี direct EF/data access `38 matches` จาก `TutoringDbContext`, EF async queries และ `SaveChangesAsync`
+- หลังแก้: `ParentEndpoints.cs` มี direct EF/data access `0 matches`; audit controllers ทั้งหมดตาม patterns เดิมได้ `0 matches`
+- เพิ่ม `ParentRepository` สำหรับ query/persistence และ `ParentService` สำหรับ parent resolution, profile update, dashboard mapping และ child ownership checks
+- ย้าย bind-line, dashboard, profile, attendance, payments, scores, homework, leave requests และ sessions ออกจาก controller โดยคง route/response shape และ authorization behavior เดิม
+- เพิ่ม `ParentServiceTests` ครอบคลุม own child, foreign child, profile mapping และ profile update
+- Validation: focused parent tests `3 passed`; full API tests `259 passed / 0 failed / 0 skipped`; API build/test build ผ่าน; contract validator `Errors = 0`, warnings `141`
+
+### หลักฐาน Slice 4: Public trial-class lead
+
+- Contract เดิมไม่มีวิธีระบุ tenant และ schema `institutes.slug` มีอยู่จริง จึงเพิ่ม `instituteSlug` เป็น required request field เพื่อ resolve active institute โดยไม่ใช้ default institute ID
+- `CreateLeadRequest` รองรับ `instituteSlug`, `contactName`, `phone`, `email`, `studentName`, `courseInterest` และ `message` ตาม target contract; เพิ่ม `leads.student_name` ใน `API/Database/lead-tenant-fields.sql` เพราะ schema เดิมไม่มี field นี้
+- เพิ่ม `PublicLeadEndpoints`, `LeadService` และ `LeadRepository` สำหรับ validation, active-institute lookup และ persistence; endpoint เป็น public และไม่รับ/เปิดข้อมูล tenant จากค่าอื่นนอก slug
+- เพิ่ม fixed-window rate limit `10 requests/IP/minute` ที่ `POST /api/public/leads`; invalid input และ unknown institute ถูกปฏิเสธก่อนสร้าง lead
+- เพิ่มหน้า `Front/src/pages/trial-class-page.jsx` ที่ route `/trial-class` และ service สำหรับเรียก endpoint; Front build ผ่าน
+- Notification ยังไม่ถูกผูกกับ lead creation เพราะ contract/code ที่ตรวจไม่มี admin LINE recipient ที่เชื่อมกับ institute อย่างยืนยันได้ การบันทึก lead จึงไม่ล้มเหลวเพราะ notification
+- Focused lead tests `3 passed`; full API tests `262 passed / 0 failed / 0 skipped`; API build ผ่าน; Front build ผ่าน; contract validator `Errors = 0`, warnings `141`
+- ยังไม่มี runtime evidence กับฐานข้อมูลจริง และยังไม่ประกาศ duplicate/abuse business rule นอกเหนือจาก rate limit เพราะ requirement ไม่ได้กำหนดกติกา duplicate ที่ตรวจได้
 
 ---
 
@@ -336,7 +356,7 @@
 ### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
 1. **บันทึก Notification Log:** attendance/payment ผ่าน dispatcher เดียวกับ background jobs แล้ว; ยังมีข้อจำกัด multi-instance race เพราะ schema ไม่มี unique idempotency constraint
 3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
-4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 1 ไฟล์ที่เหลือ (`Parent`) ให้เข้า Repository/Service Layer โดย `Institute`, `Teacher`, `User` และ `Auth` แยกชั้นแล้ว
+4. **ย้าย Direct EF ออกจาก Legacy Controllers:** เสร็จแล้วสำหรับ `Parent`, `Institute`, `Teacher`, `User` และ `Auth`; controller audit ตาม scope เหลือ `0 matches`
 
 ### ระยะกลาง (P1: การปิด Loop ฟังก์ชันหลักให้ครบวงจร)
 1. **หน้ารายการการบ้านใน LIFF:** ให้ผู้ปกครอง/นักเรียนเปิดดูโจทย์และอัปโหลดส่งภาพการบ้านได้

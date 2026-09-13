@@ -62,6 +62,7 @@ public class TutoringDbContext(
             entity.ToTable("institutes");
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
+            entity.Property(e => e.Slug).HasMaxLength(64).HasColumnName("slug");
             entity.Property(e => e.LogoUrl).HasMaxLength(1000).HasColumnName("logo_url");
             entity.Property(e => e.ContactPhone).HasMaxLength(50).HasColumnName("contact_phone");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
@@ -912,6 +913,7 @@ public class TutoringDbContext(
             entity.Property(e => e.FullName).HasMaxLength(255).HasColumnName("full_name");
             entity.Property(e => e.Phone).HasMaxLength(50).HasColumnName("phone");
             entity.Property(e => e.Email).HasMaxLength(255).HasColumnName("email");
+            entity.Property(e => e.StudentName).HasMaxLength(255).HasColumnName("student_name");
             entity.Property(e => e.Grade).HasMaxLength(50).HasColumnName("grade");
             entity.Property(e => e.InterestedSubjects).HasMaxLength(500).HasColumnName("interested_subjects");
             entity.Property(e => e.Source).HasMaxLength(50).HasColumnName("source");

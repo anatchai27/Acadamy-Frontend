@@ -14,6 +14,7 @@ using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,8 +87,23 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("public-leads", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Register application services
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ILeadRepository, LeadRepository>();
+builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInstituteRepository, InstituteRepository>();
 builder.Services.AddScoped<IInstituteService, InstituteService>();
@@ -129,6 +145,8 @@ builder.Services.AddScoped<IHomeworkRepository, HomeworkRepository>();
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
 builder.Services.AddScoped<ISkillScoreRepository, SkillScoreRepository>();
 builder.Services.AddScoped<ISkillScoreService, SkillScoreService>();
+builder.Services.AddScoped<IParentRepository, ParentRepository>();
+builder.Services.AddScoped<IParentService, ParentService>();
 builder.Services.AddScoped<IMakeupRepository, MakeupRepository>();
 builder.Services.AddScoped<IMakeupService, MakeupService>();
 builder.Services.AddScoped<IBackgroundNotificationRepository, BackgroundNotificationRepository>();
@@ -184,6 +202,7 @@ if (app.Environment.IsDevelopment())
 
 // Enable CORS
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 
 // Register custom middlewares
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -212,6 +231,7 @@ app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
 app.MapFileUploadEndpoints();
 app.MapParentEndpoints();
+app.MapPublicLeadEndpoints();
 
 // Database connection test endpoint
 app.MapGet("/api/v1/test-connection", (IDbConnectionValidator validator) =>

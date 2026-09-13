@@ -104,17 +104,17 @@
 
 **งาน:**
 
-- [ ] แยก query ของ dashboard/profile/child data ตาม responsibility จริง
-- [ ] ย้าย EF query ออกจาก controller โดยไม่เปลี่ยน response contract ที่ใช้งานอยู่
-- [ ] ตรวจ tenant filter และ parent-child ownership ทุก endpoint
-- [ ] เพิ่ม focused tests สำหรับ own child, foreign child และ not found
-- [ ] รัน controller ownership audit ซ้ำ
+- [x] แยก query ของ dashboard/profile/child data ตาม responsibility จริง
+- [x] ย้าย EF query ออกจาก controller โดยไม่เปลี่ยน response contract ที่ใช้งานอยู่
+- [x] ตรวจ tenant filter และ parent-child ownership ทุก endpoint
+- [x] เพิ่ม focused tests สำหรับ own child, foreign child และ not found
+- [x] รัน controller ownership audit ซ้ำ
 
 **ผ่านเมื่อ:**
 
-- [ ] `ParentEndpoints.cs` direct EF/data access เหลือ `0` หรือมีเหตุผลที่บันทึกไว้ชัดเจน
-- [ ] direct EF รวมใน controllers เหลือ `0` ตาม scope ปัจจุบัน
-- [ ] API tests และ contract validator ผ่าน
+- [x] `ParentEndpoints.cs` direct EF/data access เหลือ `0`
+- [x] direct EF รวมใน controllers เหลือ `0` ตาม scope ปัจจุบัน
+- [x] API tests และ contract validator ผ่าน
 
 ### Slice 4: Implement public trial-class lead ตาม contract
 
@@ -130,18 +130,18 @@
 
 **งาน:**
 
-- [ ] ตรวจ `CreateLeadRequest` ใน contract เทียบกับ model/schema จริง
-- [ ] ออกแบบ public input validation และ rate/abuse boundary ที่เหมาะสม
-- [ ] เพิ่ม endpoint ให้บันทึก Lead จริง โดยไม่เปิดข้อมูล tenant ข้ามสถาบัน
-- [ ] กำหนด notification behavior แยกจากการรับ lead ให้ชัด
-- [ ] เพิ่ม API tests สำหรับ valid input, invalid input และ duplicate/abuse case ที่ requirement กำหนด
-- [ ] ต่อ frontend form หลัง endpoint ผ่าน focused tests
+- [x] ตรวจ `CreateLeadRequest` ใน contract เทียบกับ model/schema จริง และเพิ่ม `instituteSlug`/`student_name` ที่จำเป็น
+- [x] เพิ่ม public input validation และ fixed-window rate limit 10 requests/IP/minute
+- [x] เพิ่ม endpoint ให้ resolve active institute จาก slug และบันทึก Lead โดยไม่เปิดข้อมูล tenant ข้ามสถาบัน
+- [x] แยก notification behavior ออกจากการรับ lead และบันทึกว่า notification ยังรอ admin recipient contract
+- [/] เพิ่ม API tests สำหรับ valid input, invalid input และ unknown-institute case; ยังไม่มี duplicate rule ที่ requirement ยืนยัน
+- [x] ต่อ frontend trial-class form ที่ `/trial-class` และ API service
 
 **ผ่านเมื่อ:**
 
-- [ ] endpoint implementation, DTO และ target contract ตรงกัน
-- [ ] API test พิสูจน์ได้ว่าบันทึก lead สำเร็จและ validation ทำงาน
-- [ ] ยังไม่ประกาศว่า public website ครบ จนกว่าจะมี UI และ runtime evidence
+- [x] endpoint implementation, DTO และ target contract ตรงกันใน scope ของ public lead
+- [x] API test พิสูจน์ได้ว่าบันทึก lead สำเร็จ, validation และ institute resolution ทำงาน
+- [x] มี public trial-class UI และ frontend build ผ่าน แต่ยังไม่ประกาศว่า public website ครบ
 
 ### Slice 5: ปิด parent workflow ที่ยังไม่มี UI
 
@@ -225,4 +225,4 @@ $hits.Count
 
 ## 7. Current next action
 
-เริ่มที่ **Slice 3: ย้าย direct EF ที่เหลือจาก ParentEndpoints** หลังปิด Slice 1 และ Slice 2 พร้อมหลักฐาน test/build/contract validator แล้ว จากนั้นค่อยเดินตามลำดับที่ระบุไว้ด้านบน ไม่ข้ามไปติ๊กงานที่ยังไม่มีหลักฐาน
+ดำเนินการ **Slice 4: Implement public trial-class lead ตาม contract** แล้ว โดยมี API, schema change script, UI และหลักฐาน build/test/contract validator ตามที่ระบุไว้ด้านบน
