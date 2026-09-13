@@ -129,6 +129,15 @@ builder.Services.AddScoped<ISkillScoreRepository, SkillScoreRepository>();
 builder.Services.AddScoped<ISkillScoreService, SkillScoreService>();
 builder.Services.AddScoped<IMakeupRepository, MakeupRepository>();
 builder.Services.AddScoped<IMakeupService, MakeupService>();
+builder.Services.AddScoped<IBackgroundNotificationRepository, BackgroundNotificationRepository>();
+builder.Services.AddScoped<IBackgroundNotificationDispatcher, BackgroundNotificationDispatcher>();
+builder.Services.AddScoped<LateAttendanceNotificationJob>();
+builder.Services.AddScoped<HomeworkReminderNotificationJob>();
+builder.Services.AddScoped<QuotaLowNotificationJob>();
+builder.Services.AddSingleton(new BackgroundNotificationOptions());
+builder.Services.AddHostedService<LateAttendanceNotificationHostedService>();
+builder.Services.AddHostedService<HomeworkReminderNotificationHostedService>();
+builder.Services.AddHostedService<QuotaLowNotificationHostedService>();
 
 builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService>(client =>
 {

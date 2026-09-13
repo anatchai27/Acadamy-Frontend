@@ -10,7 +10,7 @@
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `237 passed / 0 failed / 0 skipped`
+- Full API tests ล่าสุด: `241 passed / 0 failed / 0 skipped`
 - Controller ที่ยังมี direct EF/data access: `4 files / 77 matches`
   - `AuthEndpoints.cs`
   - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
@@ -202,30 +202,46 @@
 
 แยก worker ตาม trigger ไม่ทำ worker ก้อนเดียว:
 
-- [ ] late attendance หลังเริ่มเรียน 20 นาที
-- [ ] homework reminder ก่อน due 24 ชั่วโมง
-- [ ] quota low เมื่อเหลือไม่เกิน 3
-- [ ] notification log ทุกการส่ง
-- [ ] idempotency กันส่งซ้ำ
-- [ ] tests สำหรับ retry และ duplicate execution
+- [x] late attendance หลังเริ่มเรียน 20 นาที (`LateAttendanceNotificationJob`)
+- [x] homework reminder ก่อน due 24 ชั่วโมง (`HomeworkReminderNotificationJob`)
+- [x] quota low เมื่อเหลือไม่เกิน 3 (`QuotaLowNotificationJob`)
+- [/] notification log ทุกการส่ง: background jobs log แล้ว; attendance/payment flow เดิมยังต้อง refactor เข้า dispatcher
+- [x] idempotency กันส่งซ้ำด้วย deterministic key ใน notification payload
+- [x] tests สำหรับ retry และ duplicate execution (`BackgroundNotificationTests` `4/4`)
+
+**หลักฐาน Slice I รอบนี้:**
+
+- Hosted worker แยก 3 service และแต่ละตัวเรียก `RunOnceAsync` ของ job เฉพาะ trigger
+- `notifications` บันทึกสถานะ `pending`, `retrying`, `sent`, `failed`, retry count และ error message
+- duplicate execution ที่พบ notification สถานะ `sent` จะไม่ส่ง LINE ซ้ำ
+- retry สูงสุด 3 ครั้ง และ worker จับ exception เพื่อไม่ให้ host หยุดทำงาน
+- idempotency ปัจจุบันใช้ payload key เพราะ schema ที่ยืนยันยังไม่มี unique `idempotency_key` column; multi-instance race ต้องปิดด้วย schema migration ในรอบถัดไป
 
 ### Slice J: Admin inactivity timeout / CI / load test
 
-- [ ] Admin inactivity timeout 30 นาทีใน frontend + token policy ที่สอดคล้อง
-- [ ] CI build API, Front และ LineLiff
-- [ ] CI รัน focused/full tests
-- [ ] k6 attendance load test พร้อม threshold ที่ระบุ
+- [x] Admin inactivity timeout 30 นาทีใน frontend + token/cookie policy ที่สอดคล้อง
+- [x] CI build API, Front และ LineLiff (`.github/workflows/ci.yml`)
+- [/] CI รัน focused/full tests: API/full และ Front focused ผ่าน; Front full มี legacy `dashboard-page.test.jsx` ล้มเหลว 30 กรณี
+- [x] k6 attendance load test พร้อม threshold ที่ระบุ (`load-tests/attendance.js`)
+
+**หลักฐาน Slice J รอบนี้:**
+
+- Admin inactivity timer ใช้ activity events และ auto-logout เมื่อไม่มี activity 30 นาที
+- JWT access token และ auth cookie ใช้ `Jwt:ExpiryInMinutes = 30`; มี focused timeout test `2/2`
+- CI แยก API, Front และ LineLiff jobs พร้อม restore/install, build และ test commands
+- k6 ใช้ 100 VUs เป็นเวลา 30 วินาที พร้อม thresholds `p95 < 2s`, `p99 < 3s`, checks `> 99%`
+- k6 ต้องรันกับ environment จริงที่กำหนด `BASE_URL`, `AUTH_TOKEN`, `SESSION_ID` และ `QR_TOKEN`/`QR_TOKENS`
 
 ## Definition of Done ของแผนนี้
 
-- [ ] ทุก slice มี issue/file scope ชัดเจน
-- [ ] ทุก slice มี focused tests และ command ที่รันซ้ำได้
-- [ ] `api-target.json` ตรงกับ DTO/route ของ implementation ที่ประกาศว่า implemented
-- [ ] `validate-api-contract.ps1` รายงาน `Errors = 0`
-- [ ] API build ผ่าน
-- [ ] Full API tests ผ่าน โดยรายงานจำนวน pass/fail/skip
-- [ ] Controller boundary audit มีตัวเลขก่อน/หลัง
-- [ ] `Objective/process.md` อัปเดตจากหลักฐานหลังจบรอบ
+ - [/] ทุก slice มี issue/file scope ชัดเจน (Slice J มี scope แล้ว; ยังไม่มี issue tracker reference กลาง)
+ - [/] ทุก slice มี focused tests และ command ที่รันซ้ำได้ (Front full suite ยังมี legacy failures)
+ - [x] `api-target.json` ตรงกับ DTO/route ของ implementation ที่ประกาศว่า implemented
+ - [x] `validate-api-contract.ps1` รายงาน `Errors = 0`
+ - [x] API build ผ่าน
+ - [x] Full API tests ผ่าน โดยรายงานจำนวน pass/fail/skip (`241/0/0`)
+ - [x] Controller boundary audit มีตัวเลขก่อน/หลัง (`101` เหลือ `77`)
+ - [x] `Objective/process.md` อัปเดตจากหลักฐานหลังจบรอบ
 
 ## Commands หลัก
 
@@ -262,5 +278,5 @@
 6. ~~Slice G: student CSV export~~ (เสร็จสมบูรณ์; XLSX รอระยะถัดไป)
 7. ~~Slice H: payment slip verification~~ (เสร็จสมบูรณ์; รอต่อ live AI provider)
 8. Slice E: legacy controller boundary 4 ไฟล์ที่เหลือ (`Teacher`, `User`, `Auth`, `Parent`)
-9. Slice I: background jobs (late attendance, homework reminder, quota low)
+9. Slice I: background jobs (core workers done; existing attendance/payment notification logging remains)
 10. Slice J: admin inactivity timeout / CI / load test

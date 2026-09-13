@@ -39,7 +39,7 @@ public static class AuthEndpoints
                 HttpOnly = true,
                 Secure = false,
                 SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddHours(1),
+                Expires = GetAuthCookieExpiry(httpContext.RequestServices.GetRequiredService<IConfiguration>()),
                 Path = "/"
             });
 
@@ -135,7 +135,7 @@ public static class AuthEndpoints
                     HttpOnly = true,
                     Secure = false,
                     SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Expires = GetAuthCookieExpiry(config),
                     Path = "/"
                 });
 
@@ -267,7 +267,7 @@ public static class AuthEndpoints
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.UtcNow.AddHours(1),
+                    Expires = GetAuthCookieExpiry(httpContext.RequestServices.GetRequiredService<IConfiguration>()),
                     Path = "/"
                 });
 
@@ -291,6 +291,12 @@ public static class AuthEndpoints
         {
             return Results.Problem("เกิดข้อผิดพลาดในการลงทะเบียนสถาบัน กรุณาลองใหม่อีกครั้ง", statusCode: 500);
         }
+    }
+
+    private static DateTimeOffset GetAuthCookieExpiry(IConfiguration configuration)
+    {
+        var expiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "30");
+        return DateTimeOffset.UtcNow.AddMinutes(expiryMinutes);
     }
 }
 

@@ -7,6 +7,7 @@ import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
 import { HiOutlineCube, HiOutlineSparkles } from 'react-icons/hi2';
 import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, BellIcon } from '../components/ui/icons';
+import { startAdminInactivityTimer } from '../services/admin-session-timeout';
 const menuGroups = [{
   label: 'ข้อมูลหลัก',
   items: [{
@@ -111,6 +112,19 @@ export const AdminLayout = ({
   useEffect(() => {
     unlockBadge('first_login');
   }, []);
+
+  useEffect(() => {
+    const role = state.userProfile?.role || state.user?.role;
+    if (!state.isAuthenticated || role !== 'admin') return undefined;
+
+    const expireSession = () => {
+      clearAuthStorage();
+      dispatch({ type: 'CLEAR_USER' });
+      route('/login?reason=session-expired', true);
+      logout().catch(() => {});
+    };
+    return startAdminInactivityTimer({ onTimeout: expireSession });
+  }, [state.isAuthenticated, state.userProfile?.role, state.user?.role]);
   useEffect(() => {
     return currentPath ? (() => {
       const key = 'page_' + currentPath.replace(/\//g, '_');

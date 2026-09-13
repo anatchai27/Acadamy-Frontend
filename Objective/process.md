@@ -26,13 +26,16 @@
 
 - **ผลประเมินจากหลักฐานที่ตรวจ:** อยู่ในขั้น **Feature Integration & Stabilization**
 - **ส่วนที่ทำได้ดีแล้ว:** สถาปัตยกรรม Multi-tenant, ระบบล็อกอิน/สิทธิ์, การจัดการนักเรียนและผู้ปกครอง, การสแกนเช็คชื่อและ checkout พร้อมบันทึกผู้รับ/audit log, ระบบส่งออกข้อมูลนักเรียนเป็น CSV และบัตรนักเรียน PDF, ระบบรับชำระเงินและออกใบเสร็จ PDF จริง, ระบบตรวจสอบสลิป, ระบบแจ้งลาและจองเรียนชดเชยบน LINE LIFF พร้อมแนบไฟล์หลักฐาน
-- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** ระบบ Background Workers/Cron (แจ้งเตือนมาสาย/ทวงงาน/เตือนโควต้า), หน้ารายงาน Analytics และหน้า Public Website/CMS
+- **ส่วนที่ยังต้องพัฒนาต่อเร่งด่วน:** notification logging ให้ครอบคลุม flow เดิมทั้งหมด, แก้ Front legacy dashboard tests, runtime load-test evidence, หน้ารายงาน Analytics และหน้า Public Website/CMS
 
 ### หลักฐาน validation ล่าสุด
 
 - API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `237 passed, 0 failed, 0 skipped`
+- Full API test suite: `241 passed, 0 failed, 0 skipped`
+- Front build: ผ่าน (`npm.cmd run build`)
+- LineLiff build: ผ่าน (`npm.cmd run build`)
+- Front focused inactivity test: `2 passed, 0 failed`; Front full suite: `44 passed, 30 failed` ใน `dashboard-page.test.jsx`
 - Controller ownership audit: direct EF/data access ลดลงเหลือ 4 controller files รวม 77 matches (จากเดิม 7 files / 101 matches)
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
@@ -74,7 +77,7 @@
 - [x] **AC 3:** สร้างฟังก์ชัน "ลืมรหัสผ่าน" ที่รองรับการส่งผ่านอีเมล (`/api/users/forget-password`, `/api/users/reset-password`, Smtp settings)
 - [x] **AC 4:** Middleware/Guard ของ API ต้องตรวจสอบ `role` ก่อนอนุญาตให้เข้าถึง Endpoint ต่างๆ (`TenantMiddleware.cs`, `RequireAuthorization()`)
 - [x] **AC 5:** พิสูจน์ได้ว่ารหัสผ่านใน Database (ตาราง `users`) ถูกเข้ารหัสด้วย bcrypt (`BCrypt.Net-Next` ใน `UserService`, `AuthEndpoints`)
-- [ ] **AC 6:** ระบบมีการตั้งเวลา Timeout 30 นาทีสำหรับผู้ใช้งานระดับ Admin (ยังไม่มี Inactivity Timer ในฝั่ง Client และ Token Expiry ฝั่ง Admin ยังเป็นค่าคงที่ 60 นาที)
+- [x] **AC 6:** ระบบมีการตั้งเวลา Timeout 30 นาทีสำหรับผู้ใช้งานระดับ Admin (`admin-session-timeout.js`, AdminLayout auto-logout และ JWT/cookie expiry 30 นาที)
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:
 - JWT Bearer authentication พร้อม `institute_id` claim สำหรับ Multi-tenancy
@@ -124,13 +127,13 @@
 - [x] **AC 2:** มี UI ให้ครูสามารถกดเช็คชื่อแบบ Manual ได้ (เผื่อเด็กลืมบัตร) พร้อมระบุสถานะ มา/สาย/ลา/ขาด (แท็บ "รายชื่อวันนี้" ใน `attendance-page.jsx`)
 - [x] **AC 3:** ระบบสามารถหักโควต้าคงเหลือของนักเรียนได้อัตโนมัติเมื่อเช็คชื่อสำเร็จ (`AttendanceService.ScanCheckinWithTransactionAsync` หัก `sessionsRemaining` ทันที)
 - [x] **AC 4:** มีช่องให้บันทึกข้อมูลว่า "ผู้ที่มารับกลับ" คือใครในตอน Check-out (`POST /api/attendance/{id}/checkout` รับ `pickedUpBy`, `pickupAuthorizationId`, บันทึก `AuditLog` ใน transaction เดียวกัน และหน้า UI มี modal เลือกผู้รับเด็กที่ active พร้อมแสดงเวลา/ผู้บันทึก)
-- [ ] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (ยังไม่มี Background Service / Worker)
+- [x] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (`LateAttendanceNotificationJob` แยกเป็น hosted worker)
 - [x] **AC 6:** ทันทีที่ Check-in / Check-out สำเร็จ ต้องมีข้อความ Push ยิงเข้า LINE ผู้ปกครอง (`LineNotificationService.SendAttendanceNotificationAsync`)
 - [ ] **AC 7:** แอปสแกนรองรับโหมด Offline เก็บข้อมูลลง Cache และส่งกลับ Server เมื่อมีเน็ต (ยังไม่มี Service Worker หรือ IndexedDB Sync)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
 1. เพิ่มกล้องสแกนโหมดสลับ "สแกนเข้า (Check-in)" และ "สแกนออก (Check-out)" โดยตรงจาก QR
-2. เพิ่ม Background Worker เช็คเวลาเรียนเพื่อยิงแจ้งเตือนเด็กที่ยังไม่มาหลังเริ่มเรียน 20 นาที
+2. เพิ่ม runtime evidence ของ worker เช็คเวลาเรียนหลังเริ่มเรียน 20 นาที
 3. ทำ Offline Queue ด้วย LocalStorage/IndexedDB ในหน้าสแกน
 
 ---
@@ -186,12 +189,12 @@
 - [ ] **AC 2:** (LINE LIFF) UI สำหรับนักเรียน/ผู้ปกครอง เพื่อดูโจทย์การบ้าน และมีปุ่มเปิดกล้อง/เลือกรูปเพื่ออัปโหลดส่งงาน (API พร้อมแล้ว แต่หน้า LIFF ยังไม่มีหน้ารายการการบ้านและการส่งงาน)
 - [x] **AC 3:** (Admin Panel) UI สำหรับครูเพื่อดู List รายชื่อเด็กที่ส่ง/ยังไม่ส่ง และสามารถเปิดดูรูปที่เด็กส่ง พร้อมกรอกคะแนน/Feedback ได้ (`academics-page.jsx` ส่วนตรวจการบ้าน)
 - [/] **AC 4:** (LINE LIFF & Web) หน้าการ์ดของนักเรียน มีการแสดง Badge สถานะการบ้านอย่างชัดเจน (ใน LIFF Dashboard มี StatCard บอกจำนวนการบ้านค้างส่ง แต่ยังไม่มีหน้ารายการแยกย่อย)
-- [ ] **AC 5:** (Backend/Worker) ทดสอบระบบยิง LINE อัตโนมัติเมื่อสั่งงาน และระบบทวงงานล่วงหน้า 1 วันได้สำเร็จ (ยังไม่มี Scheduler รัน Cron Job ทวงงาน)
+- [/] **AC 5:** (Backend/Worker) ระบบทวงงานล่วงหน้า 1 วันมี `HomeworkReminderNotificationJob` และ retry/idempotency แล้ว แต่ยังไม่มี trigger แจ้งเตือนทันทีตอนสร้างการบ้าน
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
 1. เพิ่มหน้า `/liff/homework/:childId` ใน LINE LIFF ให้ผู้ปกครองดูโจทย์และอัปโหลดส่งภาพการบ้านได้
 2. เชื่อมต่อ Push Notification เมื่อครูสร้างการบ้านใหม่
-3. พัฒนา Background Service สำหรับตรวจเช็ค `due_at` เพื่อส่งข้อความเตือนก่อนครบกำหนด 24 ชม.
+3. เพิ่ม trigger แจ้งเตือนทันทีเมื่อสร้างการบ้าน และเก็บ runtime evidence ของ `due_at` reminder worker
 
 ---
 
@@ -204,7 +207,7 @@
 - [/] **AC 2:** (Backend) API ตรวจสอบสลิป เพื่อดึงข้อมูลยอดเงินและเทียบกับระบบ (`PaymentSlipVerificationService.cs` มี provider interface `ISlipVerificationProvider`, ตรวจสอบยอดเงิน slip กับยอดชำระ, ป้องกัน amount mismatch ด้วยสถานะ conflict, บันทึก slip metadata ลงฐานข้อมูล และมี endpoint `POST /api/payments/{id}/verify-slip` พร้อม unit tests; รอเชื่อม AI provider จริงใน production)
 - [x] **AC 3:** (Backend) ระบบสร้างไฟล์ PDF ใบเสร็จรับเงินจริงด้วย `ReceiptPdfService`, upload ผ่าน `IFileStorageService` และส่ง URL จริงเข้า LINE
 - [/] **AC 4:** (Admin Panel) มีหน้า Dashboard แสดงรายงานรายได้ และมีปุ่ม Export เป็น Excel/CSV (หน้า `finance-page.jsx` มีตารางประวัติและยอดรวม แต่ยังไม่มีกราฟรายวัน/เดือน/ปี และยังไม่มีปุ่ม Export)
-- [ ] **AC 5:** (Backend/Worker) ทดสอบระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ให้ทำงานได้อย่างถูกต้อง (ยังไม่มี Background Worker ตรวจสอบ)
+- [x] **AC 5:** (Backend/Worker) ระบบแจ้งเตือนอัตโนมัติเมื่อโควต้าเด็กเหลือน้อย (<= 3 ครั้ง) ผ่าน `QuotaLowNotificationJob` พร้อม notification log และ idempotency
 
 #### สิ่งที่ทำเสร็จแล้วในโค้ด:
 - API บันทึกการรับเงิน POS และคำนวณยอดชำระสะสมใน Enrollment
@@ -215,7 +218,7 @@
 #### สิ่งที่ต้องปรับปรุงต่อ:
 1. เชื่อม 3rd-party AI OCR Slip Provider ตัวจริงเข้ากับ `ISlipVerificationProvider`
 2. เพิ่มกราฟสรุปรายรับในหน้าการเงิน และเพิ่มปุ่ม Export CSV/Excel ในหน้าการเงิน
-3. พัฒนา Background Worker ตรวจสอบโควต้าคงเหลือ `<= 3` เพื่อยิงเสนอคอร์สใหม่เข้า LINE
+3. เพิ่ม runtime evidence และ business policy ว่าการเตือนโควต้า `<= 3` ควรส่งซ้ำเมื่อใด
 
 ---
 
@@ -298,11 +301,11 @@
 * **สถานะ:** 🟡 กำลังพัฒนา
 
 #### รายการ Acceptance Criteria:
-- [/] **AC 1:** (DevOps) ตั้งค่า CI/CD Pipeline และ Deploy Frontend บน Vercel พร้อมบังคับใช้ HTTPS (มีขั้นตอนใน `deploy/by_step_deploy.md` แต่ยังไม่มี GitHub Actions อัตโนมัติ)
+- [x] **AC 1:** (DevOps) มี GitHub Actions สำหรับ build/test API, Front และ LineLiff (`.github/workflows/ci.yml`); deploy workflow เดิมยังแยกอยู่
 - [x] **AC 2:** (Database) ตั้งค่าฐานข้อมูล TiDB Cloud (MySQL Compatible) พร้อม Multi-Tenant Isolation และ Connection Monitoring (`/api/health`, `/api/v1/test-connection`)
-- [/] **AC 3:** (Backend) เขียน Utility สำหรับการเข้ารหัสรหัสผ่าน และระบบ Auth Session Timeout (มี BCrypt เข้ารหัสเรียบร้อย แต่ขาด 30 นาที Inactivity Session Timeout)
+- [x] **AC 3:** (Backend/Frontend) มี BCrypt, Admin inactivity timeout 30 นาที และ access token/auth cookie expiry 30 นาที
 - [x] **AC 4:** (Backend) สร้าง Algorithm ระบบ Rotating QR Code ที่ฝั่ง Client สร้าง Token ที่หมดอายุใน 60 วินาทีได้ (`/api/students/{id}/qr` กำหนดอายุและรีเฟรชทุก 60 วินาที)
-- [ ] **AC 5:** (QA) ทำการ Load Test จำลอง 100 Concurrent users ยิง API เช็คชื่อ ให้ผ่านเกณฑ์ < 2 วินาที (ยังไม่มี Test Script k6 หรือ JMeter)
+- [/] **AC 5:** (QA) มี k6 script จำลอง 100 concurrent users ยิง `/api/attendance/scan` พร้อม threshold p95 < 2 วินาทีและ p99 < 3 วินาที แต่ยังไม่มีผล runtime load test จาก environment จริง
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
 1. สร้าง GitHub Actions Workflow สำหรับ Auto-build และ Test ทุกครั้งที่ Commit
@@ -315,7 +318,7 @@
 
 ### ระยะเร่งด่วน (P0: ความสมบูรณ์ของการใช้งานจริง & ความปลอดภัย)
 1. **ระบบ Auto-Logout 30 นาทีสำหรับ Admin:** ป้องกันความเสี่ยงตามข้อกำหนดความปลอดภัย NFR-S-06
-2. **บันทึก Notification Log:** จัดเก็บข้อความ LINE ทุกฉบับที่ส่งออกลงฐานข้อมูลตาราง `notifications`
+2. **บันทึก Notification Log:** background jobs บันทึกครบแล้ว; ต้อง refactor attendance/payment notification flow เดิมให้ผ่าน dispatcher เดียวกัน
 3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
 4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 4 ไฟล์ที่เหลือ (`Teacher`, `User`, `Auth`, `Parent`) ให้เข้า Repository/Service Layer โดย `Institute` แยกชั้นแล้ว
 
@@ -327,7 +330,7 @@
 
 ### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
 1. **ปุ่ม Export Excel/CSV ในหน้าการเงิน:** ต่อยอดจากหน้า Students ที่ทำเสร็จแล้ว
-2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** พัฒนา Background Worker ยิงเตือนผู้ปกครองอัตโนมัติเพื่อต่อคอร์ส
+2. **ระบบแจ้งเตือนโควต้าใกล้หมด (<= 3 ครั้ง):** เพิ่ม runtime evidence และ business policy ว่าการเตือนควรส่งซ้ำเมื่อใด
 3. **CI/CD Pipeline และ Load Test Script:** ตรวจสอบประสิทธิภาพของ API ก่อนเปิดใช้งานจริง
 4. **หน้า Public Website & CMS:** พัฒนาให้ครบ 5 หน้าหลักและระบบจัดการเนื้อหาสำหรับโปรโมทสถาบัน
 

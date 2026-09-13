@@ -15,7 +15,7 @@ public class TokenServiceTests
             { "Jwt:Key", key ?? "ThisIsASuperSecretKeyForJWTSigningThatMustBeAtLeast32CharactersLong!" },
             { "Jwt:Issuer", issuer ?? "academy-api" },
             { "Jwt:Audience", audience ?? "academy-api-client" },
-            { "Jwt:ExpiryInMinutes", expiry ?? "60" }
+            { "Jwt:ExpiryInMinutes", expiry ?? "30" }
         };
 
         return new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
@@ -166,13 +166,13 @@ public class TokenServiceTests
 
     // 13
     [Fact]
-    public void GenerateToken_MissingExpiry_UsesDefault60()
+    public void GenerateToken_MissingExpiry_UsesDefault30()
     {
-        var config = CreateConfig(expiry: null);
+        var config = CreateConfigWithout("Jwt:ExpiryInMinutes");
         var service = new TokenService(config);
         var jwt = ParseToken(service.GenerateToken(CreateTestUser()));
 
-        var expectedExpiry = DateTime.UtcNow.AddMinutes(60);
+        var expectedExpiry = DateTime.UtcNow.AddMinutes(30);
         Assert.True(Math.Abs((expectedExpiry - jwt.ValidTo).TotalSeconds) < 5);
     }
 

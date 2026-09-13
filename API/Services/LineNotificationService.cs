@@ -7,6 +7,18 @@ public class LineNotificationService(HttpClient httpClient) : ILineNotificationS
 {
     private readonly HttpClient _httpClient = httpClient;
 
+    public async Task SendTextMessageAsync(string lineUserId, string message, CancellationToken ct = default)
+    {
+        var payload = new
+        {
+            to = lineUserId,
+            messages = new[] { new { type = "text", text = message } }
+        };
+
+        using var response = await _httpClient.PostAsJsonAsync("https://api.line.me/v2/bot/message/push", payload, ct);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task SendAttendanceNotificationAsync(
         string lineUserId,
         string studentName,

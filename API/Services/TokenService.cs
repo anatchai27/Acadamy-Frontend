@@ -18,7 +18,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured.");
         var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured.");
-        var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
+        var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "30");
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
