@@ -1,202 +1,220 @@
 # Execution Plan รอบใหม่
 
 > ปรับแผน: 13 กันยายน 2026
-> หลักการ: ทำทีละ slice, อ้างอิง code/schema/test ที่ตรวจได้จริง และห้ามติ๊กงานจากการมี route, DTO หรือ schema อย่างเดียว
+> หลักการ: ทำทีละ slice, ใช้หลักฐานจาก source/schema/test/runtime เท่านั้น และแยก “มีโค้ด” ออกจาก “พิสูจน์ว่าใช้งานจริง”
 
-## 1. Baseline ที่ยืนยันแล้ว
+## 1. กติกาหลัก
+
+1. อ่าน endpoint, contract, DTO, service, repository, UI, schema และ test ที่เกี่ยวข้องก่อนแก้
+2. ถ้า contract ยังไม่กำหนด business rule ให้หยุดที่ discovery และบันทึกคำถาม ห้ามเดา default
+3. Controller ทำเฉพาะ mapping, authorization boundary และ HTTP response
+4. Service คุม validation, business rule และ state transition
+5. Repository คุม query, persistence และ transaction
+6. ทุก flow ที่แตะข้อมูล tenant ต้องพิสูจน์ `institute_id` และ ownership
+7. เพิ่ม test อย่างน้อย success, validation และ forbidden/conflict ตามความเสี่ยง
+8. รัน focused test ก่อน full suite
+9. ปิด slice ต้องรัน build ที่เกี่ยวข้องและ contract validator
+10. `[/]` ใช้เมื่อมี code evidence แต่ยังไม่มี runtime/integration evidence; `[x]` ใช้เมื่อ acceptance ใน scope ถูกพิสูจน์ตามหลักฐานที่กำหนดแล้ว
+
+## 2. Baseline ที่ยืนยันแล้ว
 
 ### Validation ล่าสุด
 
-- API contract validator: `92 current operations`, `96 target operations`
-- Validator result: `88 implemented`, `4 partial`, `4 new`, `0 errors`, `141 warnings`
-- API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API tests: `254 passed / 0 failed / 0 skipped`
+- API build: ผ่านด้วย output `API/bin/Slice6Validation`
+- Full API tests: `266 passed / 0 failed / 0 skipped`
+- Front tests: `79 passed / 0 failed / 0 skipped`
 - Front build: ผ่าน
 - LineLiff build: ผ่าน
-- Front full tests: `46 passed / 30 failed`; ทั้ง 30 failures อยู่ใน `dashboard-page.test.jsx`
-- Front inactivity focused test: `2 passed / 0 failed`
+- API contract validator: `Errors = 0`, `Warnings = 141`
+- Contract validator แสดง `92 current operations`, `97 target operations`; ตัวเลขนี้ต้องตรวจซ้ำหลังปรับสถานะ target ให้ตรง source
+- Controller direct EF/data access audit: `0` ตาม scope ปัจจุบัน
 
-### Architecture และ schema
+### หลักฐาน Slice ที่ปิดแล้ว
 
-- Controller direct EF/data access: `38 matches` ใน `ParentEndpoints.cs` ไฟล์เดียว
-- `MakeupEndpoints.cs` ใช้ service/repository แล้ว และไม่อยู่ในผล direct EF audit ล่าสุด
-- Schema export: `Objective/results-2026-09-12-220648.csv`
-- Schema export มี `38 tables / 420 columns`
-- `leave_request_attachments` มีอยู่จริงใน schema และมี 10 columns
-- `makeup_slots.institute_id` มีอยู่จริงใน schema
-- `makeup_credits.status`, `used_at`, `expired_at` มีอยู่จริงใน schema
-- `POST /api/public/leads` มีใน `Front/docAPI/api-target.json` แต่ยังไม่พบ implementation ใน `API` จากการค้น source ล่าสุด
+- Slice 1: Front dashboard legacy tests ผ่านโดยไม่ลบหรือ skip test
+- Slice 2: attendance/payment ผ่าน notification dispatcher และมี idempotency key; schema ยังไม่มี unique idempotency constraint จึงยังมี multi-instance race risk
+- Slice 3: ย้าย direct EF ออกจาก `ParentEndpoints.cs` และ controller scope เหลือ `0 matches`
+- Slice 4: public lead endpoint, rate limit, institute resolution, trial-class UI และ tests มีแล้ว; duplicate rule และ admin recipient ยังไม่ยืนยัน
+- Slice 5: makeup slot UI, LIFF homework submission และ skill score page มีแล้ว; ยังไม่มี component/integration runtime tests
+- Slice 6 ส่วนที่ทำแล้ว: revenue report API, payment CSV export, Finance revenue chart และ room-overlap validation
 
-## 2. กติกาก่อนเริ่มแต่ละ slice
+### หลักฐาน schema/runtime ที่ยังไม่มี
 
-1. อ่าน endpoint, DTO, service, repository, UI และ schema ที่เกี่ยวข้องก่อนแก้
-2. ถ้า contract เปลี่ยน ให้แก้ DTO/contract ก่อน implementation
-3. Controller ทำเฉพาะ request mapping, authorization boundary และ HTTP response
-4. Service คุม business rule และ state transition
-5. Repository คุม query, persistence และ transaction
-6. เพิ่ม test อย่างน้อย success, validation และ forbidden/conflict ตามความเสี่ยง
-7. รัน focused test ก่อน full suite
-8. รัน API build, frontend build และ contract validator เมื่อปิด slice
-9. อัปเดต `Objective/process.md` เฉพาะสิ่งที่มีหลักฐานใหม่
-10. ถ้ายังไม่มี runtime evidence ให้ใช้สถานะ `[/]` ไม่ใช้ `[x]`
+- ไม่มี production DB integration evidence ใน workspace
+- ไม่มี live OCR provider endpoint/credential/payload contract ที่ยืนยันได้
+- ไม่มี holiday schema/business rule ที่ครบ
+- ไม่มี backup schedule/provider evidence
+- ไม่มี k6 result จาก environment จริง
 
-## 3. แผนรอบใหม่ตามลำดับความเสี่ยง
+## 3. แผนใหม่ตามลำดับความเสี่ยง
 
-### Slice 1: ปิด Front legacy dashboard tests
+### Phase 0: Reconcile evidence และ contract
 
-**เหตุผล:** เป็น test failure ที่ยืนยันได้ 30 กรณี และทำให้ Front full suite ยังไม่ผ่าน
-
-**ขอบเขต:**
-
-- `Front/src/pages/admin/dashboard-page.jsx`
-- `Front/src/pages/admin/__tests__/dashboard-page.test.jsx`
-- components ที่ dashboard ใช้จริง
+**เป้าหมาย:** ทำให้เอกสาร, target contract และ source ไม่ขัดกัน ก่อนเพิ่ม feature ใหม่
 
 **งาน:**
 
-- [x] อ่าน failure ทั้ง 30 กรณีและแยกว่า test เก่ากับ implementation regression
-- [x] ตรวจแล้วว่า implementation ปัจจุบันตรง requirement จึงไม่แก้ production dashboard
-- [x] แก้ test เฉพาะกรณีที่ assertion ผูกกับ UI เก่าซึ่งไม่ใช่ behavior ปัจจุบัน
-- [x] เพิ่ม/ปรับ mock ให้ไม่ทำให้ Preact object ถูก freeze หรือ mutate ไม่ได้
+- [ ] รัน contract validator จาก source ล่าสุดและเก็บตัวเลข current/target ใหม่
+- [ ] ตรวจ target operations ที่ยังเป็น `new` หรือ `partial` ทีละรายการกับ implementation จริง
+- [ ] เพิ่ม/แก้ `x-implementation-status`, security และ role declaration ใน contract เฉพาะรายการที่มีหลักฐานจาก source
+- [ ] ตรวจ `process.md` รายการที่ยังเขียนว่า “ยังไม่มี” แต่มี implementation แล้ว เช่น revenue report, room overlap และ notification logging
+- [ ] ทำตาราง gap แยก `code gap`, `contract gap`, `schema gap`, `runtime evidence gap`
 
-**ผ่านเมื่อ:**
+**ผ่านเมื่อ:** เอกสารไม่อ้างตัวเลขเก่า และทุกสถานะมี source/test/runtime reference ที่เปิดอ่านซ้ำได้
 
-- [x] Front full suite ผ่าน หรือมี failure ที่อธิบายได้และบันทึกเป็น known gap
-- [x] Front build ผ่าน
-- [ ] ไม่มีการลบ test เพียงเพื่อให้ตัวเลขผ่าน
+### Phase 1: Payment/reporting hardening
 
-### Slice 2: รวม notification logging ให้ครบ flow หลัก
-
-**เหตุผล:** background jobs มี dispatcher และ log แล้ว แต่ attendance/payment flow เดิมยังเรียก LINE service โดยตรง
+**สถานะ:** `[/]` มี implementation และ unit tests แล้ว แต่ยังไม่มี DB integration/runtime evidence
 
 **ขอบเขต:**
 
-- `API/Services/AttendanceService.cs`
+- `API/Controllers/PaymentEndpoints.cs`
+- `API/Controllers/ReportEndpoints.cs`
 - `API/Services/PaymentService.cs`
-- `API/Services/BackgroundNotificationService.cs`
-- `API/Repositories/BackgroundNotificationRepository.cs`
-- tests ที่เกี่ยวข้องกับ notification, attendance และ payment
+- `API/Services/RevenueReportService.cs`
+- `API/Repositories/PaymentRepository.cs`
+- `Front/src/pages/admin/finance-page.jsx`
+- `Front/src/services/report-service.js`
 
 **งาน:**
 
-- [x] ระบุทุกจุดที่เรียก `SendAttendanceNotificationAsync` และ `SendPaymentNotificationAsync`
-- [x] กำหนด notification type และ deterministic idempotency key ต่อ flow
-- [x] ให้ attendance/payment ผ่าน dispatcher ที่เขียน `notifications`
-- [x] รักษา transaction boundary เดิมของ attendance checkout และ payment
-- [x] เพิ่ม tests สำหรับ success, provider failure, retry และ duplicate execution
-- [x] ตรวจ multi-instance race และบันทึกข้อจำกัดจาก schema ที่ไม่มี unique idempotency column
+- [x] Revenue report จากข้อมูล payment จริง รองรับ day/month/year
+- [x] Payment CSV export จากข้อมูลจริง พร้อม tenant filter
+- [x] Finance chart, loading และ empty state
+- [x] ตรวจช่วงวันที่, invalid `group_by`, CSV escaping และ locale-independent period format
+- [ ] เพิ่ม integration test กับ relational provider สำหรับ query filter, navigation และ date boundary
+- [ ] ทดสอบ authorization ของ report ให้ admin ผ่านและ role อื่นถูกปฏิเสธ
+- [ ] ตัดสินใจจาก requirement ว่ารายงานต้องรวม payment status ใดบ้าง ห้ามสมมติว่า payment ทุก status คือรายรับ
 
-**ผ่านเมื่อ:**
+**ผ่านเมื่อ:** contract, response shape, authorization, date boundary, tenant isolation และ export behavior มี test ที่รันซ้ำได้
 
-- [x] ทุก flow ที่ประกาศว่า log ได้ มี record ใน `notifications` จาก code path เดียวกัน
-- [x] failed delivery มีสถานะและ retry behavior ที่ตรวจได้
-- [x] focused tests และ full API tests ผ่าน
+### Phase 2: Room booking concurrency
 
-### Slice 3: ย้าย direct EF ที่เหลือจาก ParentEndpoints
-
-**เหตุผล:** audit ล่าสุดเหลือ `ParentEndpoints.cs` 38 matches เป็น boundary gap เดียวที่ยืนยันได้
-
-**ขอบเขต:**
-
-- `API/Controllers/ParentEndpoints.cs`
-- service/repository/DTO ที่จำเป็น
-- tests ของ parent dashboard, profile และ child data access
+**สถานะ:** `[/]` มี overlap query และ `409 ROOM_OVERLAP` แล้ว แต่ยังไม่พิสูจน์ concurrent request ใน DB จริง
 
 **งาน:**
 
-- [x] แยก query ของ dashboard/profile/child data ตาม responsibility จริง
-- [x] ย้าย EF query ออกจาก controller โดยไม่เปลี่ยน response contract ที่ใช้งานอยู่
-- [x] ตรวจ tenant filter และ parent-child ownership ทุก endpoint
-- [x] เพิ่ม focused tests สำหรับ own child, foreign child และ not found
-- [x] รัน controller ownership audit ซ้ำ
+- [x] ตรวจช่วงเวลาทับซ้อนที่ room เดียวกันใน tenant เดียวกัน
+- [x] ปฏิเสธ duration ที่ไม่ถูกต้อง
+- [x] เพิ่ม unit test กรณี overlap และไม่สร้าง session
+- [ ] ตรวจว่า `sessions` หรือ `room_bookings` เป็น source of truth ของการจองห้องตาม schema/runtime จริง
+- [ ] ออกแบบ transaction/locking หรือ database constraint ที่ป้องกัน concurrent insert ได้จริง
+- [ ] เพิ่ม integration/concurrency test กับ engine ที่ใช้จริง
+- [ ] ตรวจ cancellation/status ว่ารายการ cancelled ไม่ block ห้อง แต่ status อื่นต้อง block ตาม requirement
 
-**ผ่านเมื่อ:**
+**ผ่านเมื่อ:** ไม่เกิด overbooking จาก request พร้อมกัน และ rule ของ status/tenant มีหลักฐานจาก test หรือ runtime
 
-- [x] `ParentEndpoints.cs` direct EF/data access เหลือ `0`
-- [x] direct EF รวมใน controllers เหลือ `0` ตาม scope ปัจจุบัน
-- [x] API tests และ contract validator ผ่าน
+### Phase 3: Live slip verification provider
 
-### Slice 4: Implement public trial-class lead ตาม contract
+**สถานะ:** `[ ]` ยังไม่มีข้อมูลที่พอ implement โดยไม่เดา
 
-**เหตุผล:** target contract มี `POST /api/public/leads` แต่ source API ยังไม่พบ implementation
+**ต้องได้ก่อนเริ่ม implementation:**
 
-**ขอบเขต:**
+- provider ที่เลือกและเอกสาร API จริง
+- authentication/secret source และ environment ที่ใช้ทดสอบ
+- request/response payload, amount/reference semantics และ error codes
+- timeout, retry, circuit-breaker และ failure policy ที่ผู้มีอำนาจยืนยัน
+- กติกาการเก็บ raw payload และข้อมูลส่วนบุคคล
 
-- `Front/docAPI/api-target.json`
-- `API/Models/Lead.cs`
-- `API/Data/TutoringDbContext.cs`
-- public endpoint/service/repository ที่ต้องเพิ่ม
-- frontend public trial-class form เมื่อ backend พร้อม
+**งานหลังมีข้อมูลครบ:**
+
+- [ ] สร้าง provider adapter หลัง `ISlipVerificationProvider` โดยไม่ผูก provider กับ domain service
+- [ ] กำหนด timeout และ cancellation behavior
+- [ ] แยก provider unavailable, invalid slip, amount mismatch และ duplicate verification
+- [ ] เพิ่ม contract tests ด้วย payload ที่ provider อนุญาตให้ใช้
+- [ ] ต่อ DI/config เฉพาะ environment และปิดการใช้งานเมื่อ config ไม่ครบ
+- [ ] เก็บ runtime evidence โดยไม่ log secret หรือ raw PII เกิน policy
+
+**ห้ามทำ:** สร้าง fake OCR provider หรือเดา endpoint/payload เพื่อให้ test ผ่าน
+
+### Phase 4: Holiday calendar และ notification suppression
+
+**สถานะ:** `[ ]` requirement และ schema ยังไม่ครบ
+
+**Discovery ก่อนเขียน code:**
+
+- [ ] ยืนยัน holiday เป็นระดับ institute หรือ global
+- [ ] ยืนยัน timezone, recurring holiday, effective date และการแก้ไขย้อนหลัง
+- [ ] ระบุ worker/notification ทุกตัวที่ต้อง suppress ในวันหยุด
+- [ ] ยืนยันสิทธิ์ admin/staff และ audit requirement
+- [ ] ยืนยัน schema/migration และ retention policy
+
+**Implementation หลัง requirement ผ่าน:**
+
+- [ ] เพิ่ม model/repository/service/endpoint ตาม contract ที่ยืนยัน
+- [ ] เพิ่ม admin UI พร้อม loading, empty, validation และ audit state
+- [ ] เพิ่ม tests สำหรับ holiday, timezone boundary, worker suppression และ tenant isolation
+- [ ] ทดสอบกับ worker runtime จริงก่อนติ๊ก `[x]`
+
+### Phase 5: Reports & analytics ที่ยังเป็น requirement gap
+
+**สถานะ:** `[/]` revenue report มีแล้ว แต่ analytics เชิงลึกยังไม่มี definition ครบ
+
+**งาน discovery:**
+
+- [ ] นิยาม Renewal Rate, Churn Risk และ Revenue Forecast เป็นสูตรที่ผู้ใช้ยืนยัน
+- [ ] ระบุ source tables, date window, timezone, missing data และ privacy rule
+- [ ] ยืนยันว่ารายงาน Teacher Timesheet ใช้ `sessions`, `attendances` หรือทั้งสองอย่าง
+- [ ] ยืนยันรูปแบบ export: CSV หรือ XLSX และ column contract
+- [ ] ตัด Referral ออกจาก scope จนกว่าจะมี attribution rule และ schema ที่ยืนยัน
+
+**Implementation หลังนิยามผ่าน:**
+
+- [ ] เพิ่ม report service/repository ที่ query ข้อมูลจริงเท่านั้น
+- [ ] เพิ่ม API contract และ authorization role
+- [ ] เพิ่ม admin reports UI และ chart ที่มี loading/empty/error state
+- [ ] เพิ่ม tests สูตรคำนวณ, timezone, tenant isolation และ export
+
+### Phase 6: Backup และ production operational evidence
+
+**สถานะ:** `[ ]` เป็นงานตรวจ environment ไม่ใช่งานเดาจาก config ใน repo
 
 **งาน:**
 
-- [x] ตรวจ `CreateLeadRequest` ใน contract เทียบกับ model/schema จริง และเพิ่ม `instituteSlug`/`student_name` ที่จำเป็น
-- [x] เพิ่ม public input validation และ fixed-window rate limit 10 requests/IP/minute
-- [x] เพิ่ม endpoint ให้ resolve active institute จาก slug และบันทึก Lead โดยไม่เปิดข้อมูล tenant ข้ามสถาบัน
-- [x] แยก notification behavior ออกจากการรับ lead และบันทึกว่า notification ยังรอ admin recipient contract
-- [/] เพิ่ม API tests สำหรับ valid input, invalid input และ unknown-institute case; ยังไม่มี duplicate rule ที่ requirement ยืนยัน
-- [x] ต่อ frontend trial-class form ที่ `/trial-class` และ API service
+- [ ] ระบุ provider/database account/environment ที่จะตรวจ
+- [ ] ตรวจ backup schedule, retention, encryption, region และ access policy จาก provider console/API
+- [ ] ตรวจ restore point และทำ restore drill ใน environment ที่ปลอดภัย
+- [ ] บันทึก timestamp, command/result และผู้ตรวจใน evidence artifact โดยไม่เก็บ secret
+- [ ] แก้ deployment/config เฉพาะเมื่อพบ gap ที่ยืนยันได้
 
-**ผ่านเมื่อ:**
+**ผ่านเมื่อ:** มีหลักฐาน backup สำเร็จและ restore ได้จริง ไม่ใช่มีเพียง script หรือ setting file
 
-- [x] endpoint implementation, DTO และ target contract ตรงกันใน scope ของ public lead
-- [x] API test พิสูจน์ได้ว่าบันทึก lead สำเร็จ, validation และ institute resolution ทำงาน
-- [x] มี public trial-class UI และ frontend build ผ่าน แต่ยังไม่ประกาศว่า public website ครบ
+### Phase 7: k6 performance evidence
 
-### Slice 5: ปิด parent workflow ที่ยังไม่มี UI
+**สถานะ:** `[/]` มี script แต่ยังไม่มีผล runtime
 
-**เหตุผล:** backend หลักมีแล้ว แต่ UI ยังไม่ครบตาม acceptance criteria
+**งาน:**
 
-**ลำดับย่อย:**
+- [ ] ยืนยัน environment URL, test account, seed data และ rate limit policy
+- [ ] ยืนยันว่า test ไม่ยิง production โดยไม่ได้รับอนุญาต
+- [ ] รัน baseline และเก็บ raw result/summary
+- [ ] ตรวจ `p95 < 2s`, `p99 < 3s`, checks `> 99%` ตาม requirement
+- [ ] วิเคราะห์ bottleneck และแก้เฉพาะสาเหตุที่วัดได้
+- [ ] รันซ้ำหลังแก้และเก็บผลเปรียบเทียบ
 
-1. Admin UI สร้างและยกเลิก make-up slot
-2. LIFF homework list และ upload submission
-3. LIFF skill score detail พร้อม chart ที่เลือกใช้จริง
+**ผ่านเมื่อ:** มีผล k6 จาก environment จริงพร้อม timestamp, version, scenario และ threshold result
 
-**งานร่วม:**
+## 4. งานที่ห้ามติ๊ก `[x]`
 
-- [x] ตรวจ API response กับ UI state ก่อนทำหน้าใหม่ และเติม parent submission API ที่ขาดจริง
-- [x] แสดง loading, empty, error และ permission/ownership state ในทั้ง 3 flow
-- [/] เพิ่ม focused frontend tests: makeup service `3 passed`; ยังไม่มี component test สำหรับ LIFF pages
-- [/] ทดสอบ tenant/parent ownership ผ่าน service/API boundary tests; ยังไม่มี runtime integration test กับ DB จริง
-
-**ผ่านเมื่อ:**
-
-- [x] แต่ละ flow มีหน้าใช้งานจริงต่อกับ API จริง
-- [x] มี success/error/loading/empty evidence จาก code path และ focused tests
-- [x] Front และ LineLiff build ผ่าน
-
-### Slice 6: Payment/reporting และ operational gaps
-
-ทำหลัง Slice 1-5 เสถียรแล้ว:
-
-- [/] เชื่อม live AI/OCR provider ผ่าน `ISlipVerificationProvider` โดยมี timeout และ failure policy; ยังไม่มี provider endpoint/credential ที่ยืนยันได้ จึงไม่สร้าง provider จำลอง
-- [x] เพิ่ม payment CSV export และกราฟรายรับจาก `payments` จริงตามช่วงวันที่
-- [x] เพิ่ม `GET /api/reports/revenue` ตาม target contract โดย group ได้ day/month/year และใช้ข้อมูลจริง
-- [x] เพิ่ม room overlap validation ตอนสร้าง session และตอบ `409 ROOM_OVERLAP`
-- [ ] เพิ่ม holiday calendar; ยังไม่มี requirement/schema/UI ที่ละเอียดพอให้ลงมือโดยไม่เดา
-- [ ] ตรวจ automated backup จาก provider/environment จริง; workspace ไม่มี runtime/provider evidence
-- [ ] รัน k6 กับ environment จริงและเก็บผล `p95 < 2s`, `p99 < 3s`, checks `> 99%`; script อย่างเดียวไม่ใช่ผลทดสอบ
-
-## 4. งานที่ยังห้ามติ๊ก `[x]`
-
-- ห้ามนับ route ใน `api-target.json` เป็น implementation
-- ห้ามนับ schema เป็นหลักฐานว่า workflow ผ่าน
-- ห้ามนับ hosted worker เป็น runtime evidence จนกว่าจะมีผลการรันที่ตรวจสอบได้
+- ห้ามนับ route, DTO หรือ schema เป็น implementation/workflow evidence
+- ห้ามนับ unit test ที่ mock provider/database เป็น production runtime evidence
+- ห้ามประกาศ live OCR โดยไม่มี provider contract และ credential ที่ตรวจได้
+- ห้ามประกาศ backup จากไฟล์ config หรือ hosted worker โดยไม่มี provider/restore evidence
 - ห้ามนับ k6 script เป็นผล load test
-- ห้ามปิด Front test gap ด้วยการลบหรือ skip test โดยไม่มีเหตุผลทาง requirement
-- ห้ามประกาศ public lead ว่าพร้อมจนมี endpoint implementation และ test
+- ห้ามสร้าง holiday/analytics/referral rule จากการเดา
+- ห้ามลบหรือ skip test เพื่อให้ตัวเลขผ่าน
 
-## 5. Definition of Done รอบนี้
+## 5. Definition of Done ต่อ Slice
 
-- [ ] Slice มี scope ไฟล์และ acceptance ที่ตรวจได้
+- [ ] มี scope file, contract และ acceptance ที่ตรวจได้
 - [ ] มี focused tests และ command ที่รันซ้ำได้
-- [ ] API contract validator: `Errors = 0`
+- [ ] มี success, validation และ forbidden/conflict evidence ตามความเสี่ยง
 - [ ] API build ผ่าน
 - [ ] Full API tests ผ่าน พร้อมจำนวน pass/fail/skip
-- [ ] Front และ LineLiff build ผ่านเมื่อ slice แตะ frontend
-- [ ] Controller audit มีตัวเลขก่อน/หลัง
-- [ ] `process.md` อัปเดตจากหลักฐานหลังปิด slice
+- [ ] Front/LineLiff build ผ่านเมื่อ slice แตะ frontend
+- [ ] Contract validator `Errors = 0`
+- [ ] Controller audit ไม่เพิ่ม direct EF/data access
+- [ ] `process.md` อัปเดตด้วยหลักฐานใหม่เท่านั้น
 
 ## 6. Commands หลัก
 
@@ -224,6 +242,6 @@ $hits = Get-ChildItem '.\API\Controllers\*.cs' | ForEach-Object { Select-String 
 $hits.Count
 ```
 
-## 7. Current next action
+## 7. Next Action
 
-เก็บ runtime evidence สำหรับ live OCR provider, automated backup และ k6 จาก environment จริงก่อนติ๊ก `[x]`; ห้ามสรุปจาก interface, config หรือ script เพียงอย่างเดียว
+เริ่ม **Phase 0: Reconcile evidence และ contract** ก่อนเพิ่ม feature ใหม่ โดยเฉพาะการแก้ตัวเลข baseline ที่เก่า, ตรวจ target operations ที่ยังระบุ `new/partial` และแยก code evidence ออกจาก runtime evidence ให้เรียบร้อย
