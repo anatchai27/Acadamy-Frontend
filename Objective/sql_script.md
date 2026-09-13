@@ -474,3 +474,67 @@ CSV รอบใหม่ยืนยัน schema แล้ว จึงสา�
 | File manager | ไม่พบ `file_assets` | storage/object permission | ห้ามสร้าง URL ที่ไม่มี object จริง |
 
 เอกสารนี้เป็น verification/runbook แบบ read-only. ก่อนเพิ่ม DDL ให้เก็บผล `information_schema`, `SHOW CREATE TABLE`, backup และ owner decision ไว้เป็นหลักฐานก่อนเสมอ
+
+## 12. Tools สำหรับจัดการ mapping
+
+### สถานะ tools ในเครื่องปัจจุบัน
+
+- `dotnet ef`: ไม่มีติดตั้ง
+- `mysql`: ไม่มีติดตั้ง
+- `mariadb`: ไม่มีติดตั้ง
+- EF migration folder: ยังไม่มี
+- API มี `TutoringDbContext` และใช้ MySQL/TiDB provider ได้ แต่ไม่ควรใช้แอปเป็นตัวรัน DDL production โดยอัตโนมัติ
+
+### เครื่องมือที่แนะนำ
+
+1. **TiDB Cloud SQL Editor**: แนะนำที่สุดสำหรับ schema ที่อยู่บน TiDB Cloud เพราะใช้ connection/permission ของ database โดยตรงและเก็บ query result เป็น evidence ได้
+2. **DBeaver + MySQL driver**: เหมาะสำหรับทีมที่ต้องดู ER/table/index และรัน SQL แบบมี transaction review
+3. **MySQL Shell/Client**: เหมาะสำหรับ CI/runbook เมื่อเครื่องมี `mysql` client และ secret มาจาก environment variable
+4. **`dotnet-ef`**: ใช้เมื่อทีมตัดสินใจให้ EF migrations เป็น source of truth; ปัจจุบัน repository ยังไม่มี migrations จึงยังไม่ควรสร้าง migration เดา schema
+
+### ขั้นตอนที่ปลอดภัยสำหรับ `homework_skill_topics`
+
+1. เปิด SQL Editor/DBeaver ด้วย account ที่มีสิทธิ์เฉพาะ database เป้าหมาย
+2. รันข้อ 1-2 ของเอกสารนี้และเก็บ `SHOW CREATE TABLE`/metadata ก่อน
+3. ตรวจว่าตารางยังไม่มีจริง:
+
+```sql
+SELECT TABLE_NAME
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'homework_skill_topics';
+```
+
+4. ถ้า query ว่าง ให้รัน DDL ในข้อ 7.2 หลัง backup/approval เท่านั้น
+5. ตรวจจำนวน homework/topic ก่อนสร้าง mapping rows:
+
+```sql
+SELECT h.id AS homework_id, h.title, h.course_id,
+       st.id AS topic_id, st.name AS topic_name
+FROM homeworks AS h
+JOIN skill_topics AS st ON st.course_id = h.course_id
+WHERE h.id = :homework_id
+ORDER BY st.order_index;
+```
+
+6. เติม mapping ผ่าน Admin UI หรือ API `PUT /api/homeworks/{homeworkId}/skill-topics`; ห้าม insert ด้วย `course_id` แทน `topic_id`
+7. ตรวจ mapping หลังบันทึก:
+
+```sql
+SELECT hst.id, hst.institute_id, hst.homework_id,
+       hst.topic_id, h.title, st.name AS topic_name
+FROM homework_skill_topics AS hst
+JOIN homeworks AS h ON h.id = hst.homework_id
+JOIN skill_topics AS st ON st.id = hst.topic_id
+WHERE hst.homework_id = :homework_id
+ORDER BY st.order_index;
+```
+
+### ไม่ควรทำ
+
+- ไม่ใส่ password ใน command line, SQL file หรือ commit
+- ไม่ใช้ credential ที่อยู่ใน `appsettings.json` เป็น production secret
+- ไม่รัน DDL จากเครื่อง developer โดยไม่มี backup/evidence
+- ไม่ใช้ `dotnet ef database update` จนกว่าจะมี migrations ที่ review แล้ว
+
+> **Security action:** พบ connection credential ใน config ที่อ่านได้ระหว่างตรวจโปรเจกต์ ควร rotate credential นั้นทันที และย้าย connection string ไป secret/environment variable ก่อนใช้ SQL tool ใดๆ

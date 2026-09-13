@@ -93,6 +93,9 @@ function HomeworkTab({ courseId }) {
   const [submitting, setSubmitting] = useState(false);
   const [expandedHw, setExpandedHw] = useState(null);
   const [submissions, setSubmissions] = useState({});
+  const [skillTopics, setSkillTopics] = useState([]);
+  const [homeworkMappings, setHomeworkMappings] = useState({});
+  const [mappingSaving, setMappingSaving] = useState(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -116,6 +119,16 @@ function HomeworkTab({ courseId }) {
   };
 
   useEffect(() => { fetchHomeworks(); }, [courseId]);
+
+  useEffect(() => {
+    if (!courseId) return;
+    skillScoreService.getSkillTopics(courseId)
+      .then((res) => {
+        const payload = res.data?.data || res.data || {};
+        setSkillTopics(payload.topics || []);
+      })
+      .catch(() => setSkillTopics([]));
+  }, [courseId]);
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -161,6 +174,15 @@ function HomeworkTab({ courseId }) {
       return;
     }
     setExpandedHw(hwId);
+    if (!homeworkMappings[hwId]) {
+      try {
+        const mappingRes = await homeworkService.getSkillMapping(hwId);
+        const mappingPayload = mappingRes.data?.data || mappingRes.data || {};
+        setHomeworkMappings((prev) => ({ ...prev, [hwId]: mappingPayload.topicIds || [] }));
+      } catch {
+        showToast('ไม่สามารถโหลด skill mapping ได้', 'error');
+      }
+    }
     if (!submissions[hwId]) {
       try {
         const res = await homeworkService.getSubmissions(hwId);
@@ -170,6 +192,18 @@ function HomeworkTab({ courseId }) {
           [hwId]: payload.submissions || (Array.isArray(payload) ? payload : []),
         }));
       } catch { /* silent */ }
+    }
+  };
+
+  const saveSkillMapping = async (homeworkId) => {
+    setMappingSaving(homeworkId);
+    try {
+      await homeworkService.setSkillMapping(homeworkId, homeworkMappings[homeworkId] || []);
+      showToast('บันทึก skill mapping สำเร็จ', 'success');
+    } catch (err) {
+      showToast(err?.data?.message || 'บันทึก skill mapping ไม่สำเร็จ', 'error');
+    } finally {
+      setMappingSaving(null);
     }
   };
 
@@ -280,9 +314,19 @@ function HomeworkTab({ courseId }) {
             </span>
           </button>
 
-          {expandedHw === hw.id && (
-            <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
-              <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
+           {expandedHw === hw.id && (
+             <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
+               <div class="mb-5 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                 <div class="flex items-center justify-between gap-3">
+                   <div><p class="text-sm font-semibold text-slate-800">Skill topics ของการบ้าน</p><p class="mt-1 text-xs text-slate-500">คะแนนที่ตรวจจะอัปเดตไปยัง topic ที่เลือก</p></div>
+                   <Button variant="primary" size="sm" loading={mappingSaving === hw.id} disabled={mappingSaving === hw.id} onClick={() => saveSkillMapping(hw.id)}>บันทึก</Button>
+                 </div>
+                 <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                   {skillTopics.map((topic) => <label key={topic.id} class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={(homeworkMappings[hw.id] || []).includes(topic.id)} onChange={(event) => setHomeworkMappings((prev) => ({ ...prev, [hw.id]: event.target.checked ? [...(prev[hw.id] || []), topic.id] : (prev[hw.id] || []).filter((id) => id !== topic.id) }))} />{topic.name}</label>)}
+                   {skillTopics.length === 0 && <p class="text-xs text-slate-500">คอร์สนี้ยังไม่มี skill topic</p>}
+                 </div>
+               </div>
+               <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
             </div>
           )}
         </div>

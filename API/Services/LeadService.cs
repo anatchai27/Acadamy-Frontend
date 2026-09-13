@@ -8,6 +8,8 @@ namespace academy_API.Services;
 public interface ILeadService
 {
     Task<CreateLeadResponse> CreateAsync(CreateLeadRequest request, CancellationToken ct = default);
+    Task<LeadListResponse> ListAsync(string? status, string? search, CancellationToken ct = default);
+    Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, CancellationToken ct = default);
 }
 
 public sealed class LeadService(ILeadRepository repository) : ILeadService
@@ -58,6 +60,22 @@ public sealed class LeadService(ILeadRepository repository) : ILeadService
 
         var created = await repository.CreateAsync(lead, ct);
         return new CreateLeadResponse(created.Id, "created");
+    }
+
+    public async Task<LeadListResponse> ListAsync(string? status, string? search, CancellationToken ct = default) =>
+        new("success", await repository.ListAsync(status, search, ct));
+
+    public async Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, CancellationToken ct = default)
+    {
+        var allowed = new[] { "new", "contacted", "qualified", "converted", "lost" };
+        if (!allowed.Contains(request.Status, StringComparer.OrdinalIgnoreCase))
+            throw new LeadValidationException("STATUS_INVALID", "Lead status is invalid.");
+        var lead = await repository.GetByIdAsync(id, ct)
+            ?? throw new LeadValidationException("LEAD_NOT_FOUND", "Lead was not found.");
+        lead.Status = request.Status.Trim().ToLowerInvariant();
+        lead.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
+        lead.AssignedTo = request.AssignedTo;
+        await repository.UpdateAsync(lead, ct);
     }
 
     private static string Required(string? value, string code) =>

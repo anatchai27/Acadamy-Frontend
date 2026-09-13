@@ -16,9 +16,15 @@ export const gradeSubmission = (submissionId, payload) => {
   return api.put(`/homeworks/submissions/${submissionId}/grade`, payload);
 }
 
+export const getSkillMapping = homeworkId => api.get(`/homeworks/${homeworkId}/skill-topics`);
+
+export const setSkillMapping = (homeworkId, topicIds) => api.put(`/homeworks/${homeworkId}/skill-topics`, { topicIds });
+
 export const homeworkService = {
   getHomeworks,
   createHomework,
   getSubmissions,
   gradeSubmission,
+  getSkillMapping,
+  setSkillMapping,
 };

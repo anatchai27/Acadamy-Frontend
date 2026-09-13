@@ -27,6 +27,33 @@ public static class PublicLeadEndpoints
         .WithOpenApi()
         .RequireRateLimiting("public-leads");
 
+        var admin = app.MapGroup("/api/leads")
+            .WithTags("Leads")
+            .WithOpenApi()
+            .RequireAuthorization();
+
+        admin.MapGet("", async (string? status, string? search, ILeadService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            return Results.Ok(await service.ListAsync(status, search, ct));
+        });
+
+        admin.MapPut("/{id:long}/follow-up", async (long id, UpdateLeadFollowUpRequest request, ILeadService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            try
+            {
+                await service.UpdateFollowUpAsync(id, request, ct);
+                return Results.Ok(new { Status = "success" });
+            }
+            catch (LeadValidationException ex)
+            {
+                return ex.Code == "LEAD_NOT_FOUND"
+                    ? Results.NotFound(new { Status = "error", ErrorCode = ex.Code, Message = ex.Message })
+                    : Results.BadRequest(new { Status = "error", ErrorCode = ex.Code, Message = ex.Message });
+            }
+        });
+
         return app;
     }
 }

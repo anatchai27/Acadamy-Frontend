@@ -6,6 +6,8 @@ import {
   createHomework,
   getSubmissions,
   gradeSubmission,
+  getSkillMapping,
+  setSkillMapping,
 } from '../homework-service';
 
 vi.mock('../api', () => ({
@@ -72,12 +74,28 @@ describe('Homework Service', () => {
     });
   });
 
+  describe('skill mapping', () => {
+    it('loads mapped topics for a homework', async () => {
+      api.get.mockResolvedValue({ data: {}, status: 200 });
+      await getSkillMapping(12);
+      expect(api.get).toHaveBeenCalledWith('/homeworks/12/skill-topics');
+    });
+
+    it('saves mapped topic ids for a homework', async () => {
+      api.put.mockResolvedValue({ data: {}, status: 200 });
+      await setSkillMapping(12, [3, 4]);
+      expect(api.put).toHaveBeenCalledWith('/homeworks/12/skill-topics', { topicIds: [3, 4] });
+    });
+  });
+
   describe('homeworkService object', () => {
-    it('exposes 5 functions (no updateHomework)', () => {
+    it('exposes homework and skill mapping functions', () => {
       expect(homeworkService.getHomeworks).toBe(getHomeworks);
       expect(homeworkService.createHomework).toBe(createHomework);
       expect(homeworkService.getSubmissions).toBe(getSubmissions);
       expect(homeworkService.gradeSubmission).toBe(gradeSubmission);
+      expect(homeworkService.getSkillMapping).toBe(getSkillMapping);
+      expect(homeworkService.setSkillMapping).toBe(setSkillMapping);
       expect(homeworkService).not.toHaveProperty('updateHomework');
     });
   });

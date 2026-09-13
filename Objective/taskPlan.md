@@ -105,7 +105,7 @@
 - [x] ส่งไฟล์จาก LIFF
 - [x] แสดง submitted status, score และ feedback
 - [x] แจ้งเตือนก่อนกำหนดส่งจากข้อมูลจริง: worker ใช้ `due_at`, `submitted_at` และ idempotency key
-- [/] เชื่อม score เข้า skill score: เพิ่ม EF model/official mapping และ mapping management API แล้ว เหลือ migration/runtime data
+- [/] เชื่อม score เข้า skill score: เพิ่ม EF model, official mapping, mapping API และ Admin UI แล้ว เหลือ migration/runtime data
 
 เกณฑ์จบ: ผู้ปกครองเห็นโจทย์ ส่งงาน และเห็นผลตรวจในหน้าเดียว
 
@@ -141,7 +141,7 @@
 - [x] Responsive pages
 - [x] Trial class form
 - [x] `POST /api/public/leads` พร้อม validation/rate limit
-- [ ] Lead list และ follow-up status สำหรับแอดมิน
+- [/] Lead list และ follow-up status สำหรับแอดมิน: API พร้อมแล้ว เหลือ CMS admin UI
 
 เกณฑ์จบ: ลูกค้าเห็นเว็บไซต์และส่ง lead เข้า API จริงได้
 

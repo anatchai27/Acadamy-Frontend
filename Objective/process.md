@@ -210,6 +210,7 @@ Pop-Location
 - Score-to-skill ยังเป็น partial จนกว่าจะรัน migration/DDL ตาม official SQL และมี mapping rows จริง รวมถึง endpoint/UI สำหรับกำหนด topic ให้ homework
 - เพิ่ม mapping API สำหรับกำหนด topic ให้ homework: `GET/PUT /api/homeworks/{homeworkId}/skill-topics`; API ตรวจว่า topic อยู่ course เดียวกันก่อนบันทึก
 - Grade flow ใช้ mapping API/table จริงเพื่อ update `skill_scores`; ไม่ fallback ไปใช้ `course_id`
+- เพิ่ม Admin homework mapping UI: ครูเลือก skill topics ของ course, โหลด mapping เดิม และบันทึกผ่าน `GET/PUT /api/homeworks/{id}/skill-topics`; Front tests `89 passed / 0 failed / 0 skipped`, Front build ผ่าน
 - API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม mapping endpoints
 - P15 release validation ล่าสุด: API tests `279 passed / 0 failed / 0 skipped`, Front tests `87 passed / 0 failed / 0 skipped`, LineLiff tests `4 passed / 0 failed / 0 skipped`; API/Front/LineLiff/CMS build ผ่าน
 - Official SQL mapping review: `homeworks` ไม่มี `topic_id`/homework-skill mapping, และ CSV ไม่พบ `holidays`/`file_assets`; จึงยังไม่ implement score auto-map, holiday worker หรือ file manager แบบเดา schema
@@ -227,6 +228,8 @@ Pop-Location
 - P6 ตรวจแล้ว: CMS build ผ่าน, public preview/trial class และ `POST /api/public/leads` ใช้งานตาม contract ที่มี; content editor ยังเก็บ local draft ตาม integration boundary ที่ระบุในหน้า
 - P5/P6 validation: API tests `279 passed / 0 failed / 0 skipped`, LineLiff tests `4 passed / 0 failed / 0 skipped`, LineLiff build และ CMS build ผ่าน
 - P7 ตรวจ CMS Operations แล้วนำข้อมูล payroll ตัวอย่าง hardcode ออก เหลือ empty state จนกว่าจะมี payroll API/formula contract; revenue report เดิมยังอ่านจาก API จริง
+- Lead management API เพิ่มแล้ว: admin-only `GET /api/leads?status=&search=` และ `PUT /api/leads/{id}/follow-up` รองรับ status, note, assigned user โดยใช้ tenant filter จาก EF model
+- API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม lead list/follow-up
 - P8 source check ยืนยัน route authorization/role, tenant query filter, bcrypt password hash, QR expiry/rotation และ rate limiting มีอยู่แล้ว; ยังไม่มี deploy/load/database runtime evidence
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
