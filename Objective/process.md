@@ -205,6 +205,12 @@ Pop-Location
 - หลังปิด offline conflict UI คะแนนส่งจริงขยับเป็น `39/67 = 58%`
 - Homework reminder verified: `HomeworkReminderNotificationJob` ใช้ `DueAt` window 23-24 ชั่วโมง, ตัดรายการที่มี `SubmittedAt` และใช้ key `homework_reminder:{homeworkId}:{studentId}:{dueAt}` กันแจ้งซ้ำ
 - หลังยืนยัน homework reminder คะแนนส่งจริงขยับเป็น `40/67 = 60%`; ยังไม่ปิด score-to-skill เพราะ official schema ไม่มี mapping key
+- Official mapping implementation เพิ่ม `HomeworkSkillTopic` และ EF mapping ตาราง `homework_skill_topics` พร้อม unique `(institute_id, homework_id, topic_id)`; ตอน grade จะ update `skill_scores` เฉพาะ mapping ที่มีอยู่ ไม่ใช้ `course_id` เดา topic
+- API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม mapping model/grade propagation
+- Score-to-skill ยังเป็น partial จนกว่าจะรัน migration/DDL ตาม official SQL และมี mapping rows จริง รวมถึง endpoint/UI สำหรับกำหนด topic ให้ homework
+- เพิ่ม mapping API สำหรับกำหนด topic ให้ homework: `GET/PUT /api/homeworks/{homeworkId}/skill-topics`; API ตรวจว่า topic อยู่ course เดียวกันก่อนบันทึก
+- Grade flow ใช้ mapping API/table จริงเพื่อ update `skill_scores`; ไม่ fallback ไปใช้ `course_id`
+- API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม mapping endpoints
 - P15 release validation ล่าสุด: API tests `279 passed / 0 failed / 0 skipped`, Front tests `87 passed / 0 failed / 0 skipped`, LineLiff tests `4 passed / 0 failed / 0 skipped`; API/Front/LineLiff/CMS build ผ่าน
 - Official SQL mapping review: `homeworks` ไม่มี `topic_id`/homework-skill mapping, และ CSV ไม่พบ `holidays`/`file_assets`; จึงยังไม่ implement score auto-map, holiday worker หรือ file manager แบบเดา schema
 - Mapping ที่ทำได้แล้วใช้ official columns: `homework_submissions.homework_id/student_id`, `submitted_at`, `score`, `feedback`, `skill_scores.topic_id`, attendance unique `(session_id, student_id)` และ `student_pickup_authorizations.id`

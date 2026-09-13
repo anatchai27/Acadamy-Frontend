@@ -247,6 +247,9 @@ public record SkillTopicItem(
     int OrderIndex
 );
 
+public record HomeworkSkillMappingRequest(List<int> TopicIds);
+public record HomeworkSkillMappingResponse(string Status, int HomeworkId, List<int> TopicIds);
+
 public record EnrollmentListResponse(
     string Status,
     EnrollmentListData Data

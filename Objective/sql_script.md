@@ -242,6 +242,28 @@ WHERE h.due_at <= UTC_TIMESTAMP()
 
 ### 7.2 Homework -> Skill Score mapping
 
+Official mapping addition approved for implementation: use a many-to-many table `homework_skill_topics`; do not overload `homeworks.course_id` as a topic key.
+
+```sql
+-- Run only after checking information_schema and recording a backup.
+CREATE TABLE homework_skill_topics (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    institute_id INT NOT NULL,
+    homework_id INT NOT NULL,
+    topic_id INT NOT NULL,
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_homework_skill_topics_institute FOREIGN KEY (institute_id) REFERENCES institutes(id),
+    CONSTRAINT fk_homework_skill_topics_homework FOREIGN KEY (homework_id) REFERENCES homeworks(id) ON DELETE CASCADE,
+    CONSTRAINT fk_homework_skill_topics_topic FOREIGN KEY (topic_id) REFERENCES skill_topics(id),
+    UNIQUE KEY uq_homework_skill_topic (institute_id, homework_id, topic_id),
+    KEY idx_homework_skill_topics_homework (homework_id),
+    KEY idx_homework_skill_topics_topic (topic_id)
+);
+```
+
+The API must populate this table explicitly before grading. Grade updates the mapped student's `skill_scores`; without a mapping row, homework grading does not guess a topic.
+
 ```sql
 SELECT h.id AS homework_id, h.course_id,
        st.id AS skill_topic_id, st.name AS skill_topic_name

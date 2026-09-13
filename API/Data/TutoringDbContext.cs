@@ -36,6 +36,7 @@ public class TutoringDbContext(
     public DbSet<HomeworkSubmission> HomeworkSubmissions => Set<HomeworkSubmission>();
     public DbSet<SkillTopic> SkillTopics => Set<SkillTopic>();
     public DbSet<SkillScore> SkillScores => Set<SkillScore>();
+    public DbSet<HomeworkSkillTopic> HomeworkSkillTopics => Set<HomeworkSkillTopic>();
     public DbSet<MakeupSlot> MakeupSlots => Set<MakeupSlot>();
     public DbSet<MakeupCredit> MakeupCredits => Set<MakeupCredit>();
       public DbSet<MakeupBooking> MakeupBookings => Set<MakeupBooking>();
@@ -597,6 +598,22 @@ public class TutoringDbContext(
             entity.HasIndex(e => e.CourseId);
         });
 
+        modelBuilder.Entity<HomeworkSkillTopic>(entity =>
+        {
+            entity.ToTable("homework_skill_topics");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.HomeworkId).HasColumnName("homework_id");
+            entity.Property(e => e.TopicId).HasColumnName("topic_id");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.HasOne(e => e.Institute).WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Homework).WithMany().HasForeignKey(e => e.HomeworkId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Topic).WithMany().HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.InstituteId, e.HomeworkId, e.TopicId }).IsUnique();
+            entity.HasIndex(e => e.HomeworkId);
+            entity.HasIndex(e => e.TopicId);
+        });
+
         modelBuilder.Entity<SkillScore>(entity =>
         {
             entity.ToTable("skill_scores");
@@ -1125,6 +1142,7 @@ public class TutoringDbContext(
         modelBuilder.Entity<Homework>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<HomeworkSubmission>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<SkillScore>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<HomeworkSkillTopic>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Enrollment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
       modelBuilder.Entity<MakeupSlot>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<MakeupCredit>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

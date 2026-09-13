@@ -105,7 +105,7 @@
 - [x] ส่งไฟล์จาก LIFF
 - [x] แสดง submitted status, score และ feedback
 - [x] แจ้งเตือนก่อนกำหนดส่งจากข้อมูลจริง: worker ใช้ `due_at`, `submitted_at` และ idempotency key
-- [/] เชื่อม score เข้า skill score: รอ official mapping ระหว่าง `homeworks` กับ `skill_topics`
+- [/] เชื่อม score เข้า skill score: เพิ่ม EF model/official mapping และ mapping management API แล้ว เหลือ migration/runtime data
 
 เกณฑ์จบ: ผู้ปกครองเห็นโจทย์ ส่งงาน และเห็นผลตรวจในหน้าเดียว
 
@@ -116,7 +116,7 @@
 - [x] ครูสร้าง skill topic
 - [x] ครูกรอก score/note
 - [x] ผู้ปกครองดู score และ feedback ใน LIFF
-- [/] รวม score จาก homework: schema official ยังไม่มี `homeworks.topic_id` หรือ mapping table
+- [/] รวม score จาก homework: grade จะ update mapped `skill_scores`; เหลือ populate mapping และ runtime verification
 - [/] เพิ่ม streak และ badge จากข้อมูลจริง: model/schema มีแล้ว แต่ยังต้องกำหนด event และ badge criteria
 
 เกณฑ์จบ: คะแนนทักษะของเด็กแสดงจาก API จริงและติดตามพัฒนาการได้

@@ -78,6 +78,25 @@ public static class HomeworkEndpoints
             }
         });
 
+        group.MapGet("/{homeworkId:int}/skill-topics", async (
+            int homeworkId,
+            IHomeworkService service,
+            CancellationToken ct) =>
+        {
+            try { return Results.Ok(await service.GetSkillMappingAsync(homeworkId, ct)); }
+            catch (HomeworkValidationException ex) { return Results.NotFound(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
+        });
+
+        group.MapPut("/{homeworkId:int}/skill-topics", async (
+            int homeworkId,
+            HomeworkSkillMappingRequest request,
+            IHomeworkService service,
+            CancellationToken ct) =>
+        {
+            try { return Results.Ok(await service.SetSkillMappingAsync(homeworkId, request, ct)); }
+            catch (HomeworkValidationException ex) { return Results.BadRequest(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }); }
+        });
+
         return app;
     }
 }

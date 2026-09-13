@@ -8,6 +8,8 @@ public interface IHomeworkService
     Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);
     Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, CancellationToken ct = default);
+    Task<HomeworkSkillMappingResponse> GetSkillMappingAsync(int homeworkId, CancellationToken ct = default);
+    Task<HomeworkSkillMappingResponse> SetSkillMappingAsync(int homeworkId, HomeworkSkillMappingRequest request, CancellationToken ct = default);
 }
 
 public class HomeworkService(Repositories.IHomeworkRepository repository) : IHomeworkService
@@ -61,6 +63,16 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
         await _repository.UpdateSubmissionGradeAsync(submission, ct);
 
         return new GradeSubmissionResponse("success", "ให้คะแนนสำเร็จ");
+    }
+
+    public Task<HomeworkSkillMappingResponse> GetSkillMappingAsync(int homeworkId, CancellationToken ct = default) =>
+        _repository.GetSkillMappingAsync(homeworkId, ct);
+
+    public Task<HomeworkSkillMappingResponse> SetSkillMappingAsync(int homeworkId, HomeworkSkillMappingRequest request, CancellationToken ct = default)
+    {
+        if (request.TopicIds is null || request.TopicIds.Distinct().Count() != request.TopicIds.Count)
+            throw new HomeworkValidationException("INVALID_TOPIC_MAPPING", "รายการ skill topic ซ้ำกันหรือไม่ถูกต้อง");
+        return _repository.SetSkillMappingAsync(homeworkId, request.TopicIds.Distinct().ToList(), ct);
     }
 }
 
