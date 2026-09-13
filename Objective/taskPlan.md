@@ -249,9 +249,24 @@ C:\Project\Acadamy-Frontend\skills\skills.md
 
 ### P1-01 Operations UI + API
 
-สถานะเริ่มต้น: `[ ]`
+สถานะ: `[/]` มี provisional UI และ code/schema evidence บางส่วน แต่ยังไม่มี Operations API contract ที่ยืนยันแล้ว
 
 รวม Holiday Calendar, File Manager, Teacher Payroll และ Broadcast แต่ละรายการเริ่มได้เมื่อมี contract ของ endpoint, role, schema และ state ที่ตรวจได้
+
+หลักฐานรอบ discovery:
+
+- CMS `/operations` มี provisional panels สำหรับ Holiday Calendar, File Manager, Teacher Payroll และ Broadcast พร้อม gate state; ยังไม่ส่ง mutation ไป production
+- Schema มี `teacher_payroll_periods` และ API มี `TeacherPayrollPeriod` model พร้อม tenant query filter แต่ยังไม่มี service, endpoint, DTO หรือ export contract
+- Existing file upload API รองรับ logo, payment slip, homework, submission และ photo เท่านั้น; ยังไม่มี teaching-material library contract
+- มี room-overlap validation ใน session flow แล้ว แต่ยังไม่ใช่ Holiday Calendar, File Manager, Payroll หรือ Broadcast implementation
+
+ช่องว่างที่ยืนยันแล้ว:
+
+- Holiday ยังไม่มี holiday schema, endpoint และกติกาว่าวันหยุด suppress worker ใดบ้าง
+- File Manager ยังไม่มี material model, tenant-scoped list/upload/delete endpoint, permission rule หรือ signed-link expiry policy
+- Payroll ยังไม่ยืนยัน source ของ actual hours, status transition, role/ownership และ export format
+- Broadcast ยังไม่มี recipient resolution, class/course scope, consent policy, notification audit หรือ send endpoint
+- ยังไม่มี focused API/service/UI tests สำหรับ Operations mutation flow
 
 งานร่วม:
 
@@ -292,6 +307,29 @@ C:\Project\Acadamy-Frontend\skills\skills.md
 
 ห้ามแสดงตัวเลข analytics ที่ไม่มี source หรือสูตรที่ owner ยืนยัน
 
+### P1-03 Contract Closure & Acceptance Evidence
+
+สถานะ: `[ ]`
+
+งานนี้เป็น prerequisite สำหรับการเริ่ม implementation production ของ P1-01 และ P1-02 ไม่ใช่การสร้าง mock API หรือเติม business rule จากการเดา
+
+งาน:
+
+- [ ] ระบุ owner และ decision record สำหรับ payment status ที่นับเป็นรายรับ
+- [ ] ยืนยันสูตร Renewal Rate, Churn Risk และ Revenue Forecast รวม denominator, date window, timezone และ missing-data rule
+- [ ] ยืนยัน source และวิธีนับ actual hours ของ Teacher Timesheet รวม export format และสถานะ payroll
+- [ ] ยืนยัน Holiday schema, worker suppression matrix, File Manager storage/permission contract และ Broadcast recipient/consent/audit contract
+- [ ] ยืนยัน role, tenant boundary, ownership rule, validation error และ response shape ของทุก endpoint ที่จะสร้าง
+- [ ] ระบุ runtime/integration environment ที่ใช้พิสูจน์ database, storage, notification และ report flow
+- [ ] อัปเดต P1-01 และ P1-02 ให้ชี้ไปยัง decision evidence ล่าสุดก่อนเริ่ม implementation
+
+ปิด task เมื่อ:
+
+- [ ] มี decision record ที่ตรวจสอบย้อนกลับได้สำหรับทุก business rule ที่เป็น blocker
+- [ ] มี contract map ครบ request, response, error, role, ownership และ tenant boundary
+- [ ] มี test plan สำหรับ success, failure, forbidden, empty, tenant isolation และ export/mutation ตามความเสี่ยง
+- [ ] ไม่มี provisional UI หรือ assumption ถูกนำเสนอเป็น production data
+
 ## 7. วิธีทำงานต่อ Slice
 
 ทุก slice ใช้ลำดับเดียวกัน:
@@ -308,4 +346,4 @@ C:\Project\Acadamy-Frontend\skills\skills.md
 
 ## 8. Next Action
 
-P0-01 ผ่านแล้ว; `P0-02 Finance UI + API` ยังติด owner payment-status policy และ `P0-03 Leave & Make-up Admin UI + API` ยังรอ production/runtime และ concurrency evidence. ห้ามเริ่มงาน P1 หรือ deferred จนกว่า P0 ทั้งหมดจะผ่าน Definition of Done.
+ P0-01 ผ่านแล้ว; `P0-02 Finance UI + API` ยังติด owner payment-status policy และ `P0-03 Leave & Make-up Admin UI + API` ยังรอ production/runtime และ concurrency evidence. P1-01 และ P1-02 ถูกบันทึกเป็น discovery/provisional เท่านั้น โดยมี `P1-03 Contract Closure & Acceptance Evidence` เป็น prerequisite ก่อน implementation. ห้ามเริ่มงาน P1 หรือ deferred จนกว่า P0 ทั้งหมดจะผ่าน Definition of Done.

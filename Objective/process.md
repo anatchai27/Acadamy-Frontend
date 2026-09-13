@@ -167,6 +167,17 @@
 - Front build ผ่าน (`npm.cmd run build`); CMS build ผ่าน (`npm.cmd run build`) และรายงาน `/p/oasis-learning` เป็น SSG output
 - สถานะ P0-05: `[/]`; ยังไม่มี content read API/CRUD, CMS auth/RBAC, media upload, lead list/status/follow-up contract หรือ production runtime evidence จึงไม่ประกาศ CMS acceptance ผ่าน
 
+### หลักฐาน P1-01: Operations UI + API discovery (13 กันยายน 2026)
+
+- ตรวจ `CMS/app/operations/page.tsx`, Objective Operations requirements, schema CSV, `TeacherPayrollPeriod`, file upload endpoints และ API registration เทียบกับ task board
+- CMS `/operations` มี provisional UI สำหรับ Holiday Calendar, File Manager, Teacher Payroll และ Broadcast พร้อม loading/empty/validation-like gate states; draft holiday ถูกเก็บใน local UI เท่านั้น และ Broadcast ยังคง disable การส่งจริง
+- Schema มีตาราง `teacher_payroll_periods` พร้อม `institute_id`, `teacher_id`, period, total hours, hourly rate, total amount และ status; API มี model และ global tenant query filter แต่ยังไม่มี endpoint/service/DTO/test สำหรับ payroll
+- Existing file upload service มี upload flow สำหรับ resource อื่น แต่ยังไม่มี teaching-material list, upload ownership, delete หรือ signed-link expiry contract
+- Objective ระบุ Holiday Calendar ว่าต้องมีผลต่อ attendance/homework workers แต่ยังไม่มี holiday schema, suppression matrix หรือ endpoint ที่ยืนยันได้
+- Broadcast ยังไม่มี recipient resolution, class/course scope, consent enforcement, notification audit หรือ send mutation contract
+- Room-overlap validation ที่มีอยู่เป็นหลักฐานของ session scheduling เท่านั้น ไม่ถือเป็น Operations UI/API slice ที่เหลือ
+- สถานะ P1-01: `[/]`; ยังไม่ปิด task และไม่เพิ่ม implementation จนกว่า role, tenant/ownership, schema, endpoint/response, worker/notification policy และ focused tests จะได้รับการยืนยัน
+
 ### หลักฐาน P1-02: Reports + Analytics UI + API discovery (13 กันยายน 2026)
 
 - ตรวจ `API/Controllers/ReportEndpoints.cs`, `API/Services/RevenueReportService.cs`, `Front/src/pages/admin/finance-page.jsx`, report service และ focused tests เทียบกับ task board
