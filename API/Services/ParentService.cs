@@ -16,6 +16,7 @@ public interface IParentService
     Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default);
+    Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, CancellationToken ct = default);
     Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default);
@@ -84,6 +85,7 @@ public sealed class ParentService(IParentRepository repository) : IParentService
     public Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default) => _repository.GetPaymentsAsync(studentId, ct);
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) => _repository.GetScoresAsync(studentId, ct);
     public Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default) => _repository.GetHomeworkAsync(studentId, ct);
+    public Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default) => _repository.GetProgressAsync(studentId, ct);
     public Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default) => _repository.GetLeaveRequestsAsync(studentId, ct);
     public Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, CancellationToken ct = default) => _repository.GetSessionsAsync(studentId, DateTime.UtcNow.AddDays(-7), ct);
     public Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default) => _repository.CreateOrGetHomeworkSubmissionAsync(userId, studentId, homeworkId, ct);
@@ -121,4 +123,6 @@ public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string S
 public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl);
 public record ParentSkillScoreItem(string CourseName, string TopicName, decimal Score, string Note);
 public record ParentHomeworkItem(long Id, long HomeworkId, string CourseName, string Title, string Description, DateTime DueAt, string FileUrl, long? SubmissionId, DateTime? SubmittedAt, decimal? Score, string Feedback);
+public record ParentProgressResponse(int CurrentStreak, int LongestStreak, List<ParentBadgeItem> Badges);
+public record ParentBadgeItem(int Id, string BadgeKey, string Name, string? Description, string? IconUrl, DateTime AwardedAt);
 public record ParentLeaveRequestItem(long Id, string CourseName, string Reason, string Type, string Status, DateTime CreatedAt);

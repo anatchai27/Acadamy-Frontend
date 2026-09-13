@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using System.Text.Json;
 using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
@@ -9,7 +10,7 @@ public interface ILeadService
 {
     Task<CreateLeadResponse> CreateAsync(CreateLeadRequest request, CancellationToken ct = default);
     Task<LeadListResponse> ListAsync(string? status, string? search, CancellationToken ct = default);
-    Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, CancellationToken ct = default);
+    Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, int? actorId, CancellationToken ct = default);
     Task<PublicContentResponse> ListContentAsync(CancellationToken ct = default);
     Task<PublicContentItem> UpsertContentAsync(long? id, UpsertPublicContentRequest request, CancellationToken ct = default);
 }
@@ -67,17 +68,31 @@ public sealed class LeadService(ILeadRepository repository) : ILeadService
     public async Task<LeadListResponse> ListAsync(string? status, string? search, CancellationToken ct = default) =>
         new("success", await repository.ListAsync(status, search, ct));
 
-    public async Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, CancellationToken ct = default)
+    public async Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, int? actorId, CancellationToken ct = default)
     {
         var allowed = new[] { "new", "contacted", "qualified", "converted", "lost" };
         if (!allowed.Contains(request.Status, StringComparer.OrdinalIgnoreCase))
             throw new LeadValidationException("STATUS_INVALID", "Lead status is invalid.");
         var lead = await repository.GetByIdAsync(id, ct)
             ?? throw new LeadValidationException("LEAD_NOT_FOUND", "Lead was not found.");
+        var before = new { lead.Status, lead.Notes, lead.AssignedTo };
+        if (request.AssignedTo.HasValue && !await repository.UserBelongsToTenantAsync(request.AssignedTo.Value, ct))
+            throw new LeadValidationException("ASSIGNEE_INVALID", "Assigned user is not in this institute.");
         lead.Status = request.Status.Trim().ToLowerInvariant();
         lead.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         lead.AssignedTo = request.AssignedTo;
-        await repository.UpdateAsync(lead, ct);
+        var audit = new AuditLog
+        {
+            InstituteId = lead.InstituteId,
+            UserId = actorId,
+            Action = "lead_follow_up",
+            EntityType = "Lead",
+            EntityId = lead.Id.ToString(),
+            BeforeJson = JsonSerializer.Serialize(before),
+            AfterJson = JsonSerializer.Serialize(new { lead.Status, lead.Notes, lead.AssignedTo }),
+            CreatedAt = DateTime.UtcNow
+        };
+        await repository.UpdateAsync(lead, audit, ct);
     }
 
     public async Task<PublicContentResponse> ListContentAsync(CancellationToken ct = default) =>

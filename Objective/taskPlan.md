@@ -1,264 +1,155 @@
-# Task Plan: Academy Delivery 15P
+# Task Plan: AC Closure Sprint
 
-> อ้างอิง requirement: `Objective/ProjectObj.md`  
-> สถานะล่าสุด: **41 / 67 AC = 61% แบบส่งจริง**  
-> วิธีทำงาน: ทำ flow ที่ผู้ใช้จับต้องได้ก่อน, ไม่ทำ mock แทน API จริง และไม่เพิ่ม schema/feature ที่ไม่มี contract
+> Scope only: the 10 targets requested in this sprint.  
+> Baseline: **41/67 AC = 61%**.  
+> Target: close full ACs, not subtasks; no score increase without end-to-end evidence.
 
-## เกณฑ์สถานะ
+## Closure Rules
 
-- `[x]` flow ครบ มี source และผ่าน test/build หรือมีหลักฐานการใช้งาน
-- `[/]` มีบางส่วน แต่ยังส่งเป็น flow เต็มไม่ได้
-- `[ ]` ยังไม่เริ่มหรือยังไม่มีหลักฐานพอ
+- `[x]` only when API, UI, data, and relevant runtime/test evidence are complete
+- `[/]` when code exists but migration, credentials, owner rule, or runtime evidence is missing
+- `[ ]` when implementation is not complete
+- No mock data counts as production data
+- No formula is invented outside the stated ProjectObj rules
 
-## แผน 15P
+## 1. Homework -> Skill Score Runtime
 
-### P1: Baseline และ Scope Lock
+Status: `[/]`
 
-สถานะ: `[x]`
+- [x] `homework_skill_topics` EF model and official SQL mapping
+- [x] Admin GET/PUT topic mapping API and UI
+- [x] Grade flow propagates score/feedback to mapped `skill_scores`
+- [ ] Run DDL in test DB
+- [ ] Insert real mapping row
+- [ ] Run grade -> skill score runtime verification
 
-- [x] อ่าน AC ทั้ง 67 ข้อจาก `ProjectObj.md`
-- [x] แยกงานที่ส่งจริงออกจากงาน draft/งานเสริม
-- [x] ล็อก contract หลักของ attendance, error, role และ tenant
-- [x] กำหนดคะแนนล่าสุด `39/67 = 58%`
+Done when: a real graded submission changes the mapped student's skill score.
 
-เกณฑ์จบ: ทุกงานถัดไปอ้าง requirement และไม่ขยาย scope เอง
+## 2. Streak Service and Progress API
 
-### P2: Authentication และ RBAC
+Status: `[ ]`
 
-สถานะ: `[x]`
+- [ ] Use attendance `present/late` as a daily streak event
+- [ ] Same student/date is idempotent
+- [ ] Missing day resets current streak and preserves longest streak
+- [x] Expose current/longest streak and awarded badges via parent progress API
+- [ ] Add cross-tenant/child ownership tests
 
-- [x] Login/logout และ password reset
-- [x] bcrypt password hashing
-- [x] Role guard สำหรับ admin/teacher/parent/student
-- [x] Session timeout และ route authorization
-- [x] LINE parent binding flow
+Done when: progress is calculated from real attendance records.
 
-เกณฑ์จบ: ผู้ใช้ login ได้และทำได้เฉพาะ action ตาม role/tenant
+## 3. Badge Criteria and Award
 
-### P3: Student Registration
+Status: `[ ]`
 
-สถานะ: `[x]`
+- [ ] Define three criteria from existing data: attendance streak, homework submitted, skill score threshold
+- [ ] Award from server-side service, not UI
+- [ ] Use existing unique `(institute_id, student_id, badge_id)` to prevent duplicates
+- [ ] Return awardedAt and badge metadata
+- [ ] Test criteria, replay, and tenant boundary
 
-- [x] เพิ่ม/แก้ไข/ค้นหานักเรียน
-- [x] รูป, medical info, QR และ student card
-- [x] เพิ่มผู้ปกครองในฟอร์มเดียว
-- [x] เพิ่ม pickup authorization ในฟอร์มเดียว
-- [x] Export CSV
+Done when: a qualifying real event creates one durable student badge.
 
-เกณฑ์จบ: แอดมินเพิ่มนักเรียนพร้อมผู้ปกครองและผู้รับเด็กได้จาก flow เดียว
+## 4. LIFF Streak/Badge Progress
 
-### P4: QR Attendance Core
+Status: `[/]`
 
-สถานะ: `[/]`
+- [x] LIFF already displays homework/score data
+- [ ] Display streak API data
+- [ ] Display awarded badges API data
+- [ ] Empty state for no streak/badge
+- [ ] Verify selected parent child ownership
 
-- [x] Scan QR และ manual attendance
-- [x] Validate session, tenant, quota และ duplicate
-- [x] Atomic quota update ใน transaction
-- [x] Checkout แบบ list-assisted พร้อม pickup authorization
-- [x] Error mapping และกัน double click
-- [ ] QR checkout โดยตรง ถ้า owner ยืนยันว่าจำเป็น
+Done when: parent sees only the selected child's real progress.
 
-เกณฑ์จบ: ครูเช็คเข้า/ออกได้และ attendance/quota ไม่ซ้ำ
+## 5. CMS Publish Runtime
 
-### P5: Attendance Notification และ Offline
+Status: `[/]`
 
-สถานะ: `[/]`
+- [x] Tenant-scoped content API
+- [x] CMS editor API client
+- [ ] Configure real admin auth token
+- [ ] Save draft through API
+- [ ] Publish through `isActive`
+- [ ] Verify public preview reads the published API content
 
-- [x] Check-in/checkout dispatcher
-- [x] Late worker 20 นาที และ suppress cancelled/completed
-- [x] Notification status `sent/skipped/failed`
-- [x] Offline queue พร้อม attempts/error/expiry/sync lock
-- [x] แสดง queue conflict ในหน้าครูให้ครบ
-- [ ] ทดสอบ LINE/device runtime จริง
+Done when: CMS edit -> publish -> public preview works without local draft as source.
 
-เกณฑ์จบ: ผู้ใช้รู้ว่ารายการถูกส่ง, รอ sync หรือผิดพลาด และไม่มี notification ซ้ำแบบง่าย
+## 6. Public CMS Dynamic Fetch
 
-### P6: Leave Request
+Status: `[/]`
 
-สถานะ: `[x]`
+- [x] Static public preview and trial flow
+- [ ] Fetch public content by institute slug from API
+- [ ] Fallback only when API explicitly has no published content
+- [ ] Preserve SEO metadata and responsive layout
+- [ ] Test unknown slug and unpublished content
 
-- [x] ผู้ปกครองแจ้งลา
-- [x] แนบไฟล์
-- [x] ครูอนุมัติ/ปฏิเสธ
-- [x] สร้าง makeup credit หลังอนุมัติ
+Done when: public page displays published database content.
 
-เกณฑ์จบ: แจ้งลาและอนุมัติได้โดยไม่แก้ฐานข้อมูลเอง
+## 7. Reports Daily Dashboard
 
-### P7: Make-up Booking
+Status: `[/]`
 
-สถานะ: `[x]`
+- [x] Revenue report API exists
+- [ ] Daily attendance present/late/absent/leave cards
+- [ ] Daily payment total from `payments`
+- [ ] Date range and institute filter
+- [ ] Empty/zero state with no fake numbers
 
-- [x] ครูสร้าง slot
-- [x] ผู้ปกครองดู credit และจอง slot
-- [x] กัน slot เต็ม/credit หมด/booking ซ้ำ
-- [x] ยกเลิก booking และคืน credit
-- [x] Group cancel คืน credit ทุก booking ที่ active
+Done when: admin dashboard values can be traced to database rows.
 
-เกณฑ์จบ: leave ถึง booking makeup ได้ครบตั้งแต่ต้นจนจบ
+## 8. Teacher Timesheet
 
-### P8: Homework
+Status: `[ ]`
 
-สถานะ: `[/]`
+- [ ] Use owner-approved source: sessions + attendance
+- [ ] Calculate teacher/date/session/hours rows
+- [ ] Date range filter
+- [ ] CSV export
+- [ ] Tests for cancelled session and duplicate attendance
 
-- [x] ครูสร้างการบ้าน
-- [x] ผู้ปกครองดูโจทย์
-- [x] ส่งไฟล์จาก LIFF
-- [x] แสดง submitted status, score และ feedback
-- [x] แจ้งเตือนก่อนกำหนดส่งจากข้อมูลจริง: worker ใช้ `due_at`, `submitted_at` และ idempotency key
-- [/] เชื่อม score เข้า skill score: เพิ่ม EF model, official mapping, mapping API และ Admin UI แล้ว เหลือ migration/runtime data
+Done when: payroll input is traceable to approved sessions/attendance.
 
-เกณฑ์จบ: ผู้ปกครองเห็นโจทย์ ส่งงาน และเห็นผลตรวจในหน้าเดียว
+## 9. Revenue Forecast
 
-### P9: Skill Card และ Progress
+Status: `[ ]`
 
-สถานะ: `[/]`
+- [ ] Use active enrollment/quota expiry as the forecast source
+- [ ] Document formula and timezone
+- [ ] Return current period and next period values
+- [ ] Add empty/insufficient-data state
+- [ ] Test date boundaries and tenant isolation
 
-- [x] ครูสร้าง skill topic
-- [x] ครูกรอก score/note
-- [x] ผู้ปกครองดู score และ feedback ใน LIFF
-- [/] รวม score จาก homework: grade จะ update mapped `skill_scores`; เหลือ populate mapping และ runtime verification
-- [/] เพิ่ม streak และ badge จากข้อมูลจริง: model/schema มีแล้ว แต่ยังต้องกำหนด event และ badge criteria
+Done when: forecast formula is visible and reproducible from database rows.
 
-เกณฑ์จบ: คะแนนทักษะของเด็กแสดงจาก API จริงและติดตามพัฒนาการได้
+## 10. Smoke Journey and Owner Acceptance
 
-### P10: Payment และ Billing
+Status: `[/]`
 
-สถานะ: `[/]`
+- [x] API/Front/LineLiff/CMS automated tests/build pass
+- [ ] Homework -> mapping -> grade -> skill score runtime smoke
+- [ ] Attendance -> notification -> checkout smoke
+- [ ] CMS -> publish -> public preview smoke
+- [ ] Parent -> streak/badge LIFF smoke
+- [ ] Owner signs the 10 target ACs and records known gaps
 
-- [x] รับ payment และอัปโหลด slip
-- [x] ออก receipt PDF
-- [x] Revenue report และ CSV export
-- [x] Payment notification dispatcher
-- [ ] เชื่อม slip provider จริงเมื่อมี contract/credentials
+Done when: all target journeys pass on a real test environment and owner signs evidence.
 
-เกณฑ์จบ: แอดมินบันทึก ตรวจ และออกหลักฐานการเงินได้
+## Required Inputs
 
-### P11: Public Website และ Trial Lead
+- Test DB credentials and approval to run the official `homework_skill_topics` DDL
+- Real CMS admin auth configuration
+- Owner confirmation of streak/badge criteria
+- Owner confirmation of timesheet/forecast formula
 
-สถานะ: `[/]`
-
-- [x] Public institute preview
-- [x] Responsive pages
-- [x] Trial class form
-- [x] `POST /api/public/leads` พร้อม validation/rate limit
-- [x] Lead list และ follow-up status สำหรับแอดมิน: API และ Front admin UI พร้อมแล้ว
-
-เกณฑ์จบ: ลูกค้าเห็นเว็บไซต์และส่ง lead เข้า API จริงได้
-
-### P12: CMS Content และ Media
-
-สถานะ: `[/]`
-
-- [x] Local draft editor ไม่แสดงข้อมูลปลอม
-- [x] Preview public content
-- [/] Content CRUD API: API และ CMS client พร้อมแล้ว เหลือ configure admin auth token และ publish runtime
-- [ ] Media upload/storage
-- [ ] Tenant/permission/signed-link policy
-
-เกณฑ์จบ: แอดมินแก้ content แล้ว publish ไป public page ผ่าน API จริง
-
-### P13: LINE Integration
-
-สถานะ: `[/]`
-
-- [x] Parent LINE binding
-- [x] Push ผ่าน notification dispatcher
-- [x] LIFF dashboard/homework/score/leave flows
-- [ ] Rich Menu พร้อม URL และ provider config จริง
-- [ ] Broadcast กลุ่มพร้อม recipient/consent/audit
-- [ ] Webhook และ retry evidence
-
-เกณฑ์จบ: ผู้ปกครองเข้า LIFF จาก LINE และรับข้อความจาก flow จริง
-
-### P14: Reports และ Operations
-
-สถานะ: `[/]`
-
-- [x] Revenue report จาก API
-- [ ] Renewal rate/churn risk/forecast พร้อมสูตรที่ owner ยืนยัน
-- [ ] Teacher timesheet/export
-- [/] Holiday calendar ที่ worker ใช้จริง: official CSV ยังไม่พบตาราง `holidays`
-- [/] File manager แบบ tenant-scoped: official CSV ยังไม่พบตาราง `file_assets`
-- [ ] Payroll จาก actual hours/rate ที่อนุมัติ
-- [ ] Backup schedule/checklist
-
-เกณฑ์จบ: รายงานที่ส่งให้ owner มีสูตร, source และช่วงเวลาอ้างอิงชัดเจน
-
-### P15: Release Acceptance
-
-สถานะ: `[/]`
-
-- [x] API full tests ผ่าน
-- [x] Front/LineLiff/CMS build ผ่าน
-- [x] ไม่มี mock data ใน flow ที่ประกาศว่าส่งได้
-- [x] Release validation ล่าสุดรัน API/Front/LineLiff/CMS แล้ว
-- [ ] Run smoke test ตาม user journey จริง
-- [ ] ตรวจ database metadata กับ test DB
-- [ ] ทดสอบ device/LINE provider จริง
-- [ ] owner sign-off รายการ AC ที่เหลือ
-
-เกณฑ์จบ: ส่งมอบได้โดยมีรายการ known gaps และ owner ยอมรับอย่างชัดเจน
-
-## ลำดับลงมือรอบถัดไป
-
-1. ปิด P5 offline conflict UI และ late notification sample
-2. ปิด P8 homework reminder หรือเชื่อม score เข้า P9
-3. ปิด P9 score จาก homework
-4. ปิด P11 lead list ถ้ามี admin endpoint พร้อม
-5. ทำ P13 Rich Menu เมื่อมี LINE provider config
-6. ทำ P14 reports/operations เฉพาะสูตรที่ owner อนุมัติ
-7. ปิด P15 smoke test และ owner acceptance
-
-## คำสั่งตรวจสอบ
+## Validation Commands
 
 ```powershell
+dotnet ef migrations list --project .\API\academy-API.csproj
 dotnet test .\API\academy-API.Tests\academy-API.Tests.csproj
 dotnet build .\API\academy-API.csproj
 
-Push-Location .\Front
-npm.cmd test -- --run
-npm.cmd run build
-Pop-Location
-
-Push-Location .\LineLiff
-npm.cmd test -- --run
-npm.cmd run build
-Pop-Location
-
-Push-Location .\CMS
-npm.cmd run build
-Pop-Location
+Push-Location .\Front; npm.cmd test -- --run; npm.cmd run build; Pop-Location
+Push-Location .\LineLiff; npm.cmd test -- --run; npm.cmd run build; Pop-Location
+Push-Location .\CMS; npm.cmd run build; Pop-Location
 ```
-
-## Definition of Done
-
-P หนึ่งข้อจะปิดได้เมื่อ:
-
-- Flow ตาม `ProjectObj.md` ใช้ได้ตั้งแต่ต้นจนจบ
-- API/UI ใช้ route และ field ตรงกัน
-- มี validation, loading, empty และ error state
-- ผ่าน test/build ที่เกี่ยวข้อง
-- ไม่ใช้ mock data แทนข้อมูลจริง
-- ผู้ใช้ทำงานได้โดยไม่ต้องแก้ database เอง
-- อัปเดตคะแนนใน `Objective/process.md`
-
-## Official SQL Mapping Blockers
-
-อ้างอิง `Objective/sql_script.md`, `Objective/erProjec.md` และ schema CSV ล่าสุด ห้ามแก้ด้วยการเดา mapping:
-
-| งาน | สิ่งที่ official schema มี | สิ่งที่ยังขาด | วิธีปลดล็อก |
-|---|---|---|---|
-| Homework -> Skill Score | `homeworks.course_id`, `skill_topics.course_id`, `skill_scores.topic_id` | ไม่มี `homeworks.topic_id` หรือ homework-skill mapping table | Owner เลือก `topic_id` ใน homework หรืออนุมัติ mapping table |
-| Holiday worker | `sessions`, `notifications` | ไม่พบ `holidays` | Owner ยืนยัน source วันหยุดหรืออนุมัติ table |
-| File manager | upload flow และ URL บาง entity | ไม่พบ `file_assets` official | Owner ยืนยัน storage table/provider และ signed-link policy |
-| LINE Rich Menu/Broadcast | `users.line_user_id`, `notifications` | ไม่มี provider contract/recipient consent/audit rule ครบ | ให้ LINE channel config และ broadcast contract |
-| Payroll | มี `teachers.hourly_rate`, payroll model | ยังไม่มี approved actual-hours source/period rule | Owner ยืนยันสูตรและ source ของเวลาสอน |
-
-สิ่งที่ห้ามทำเพื่อปิด task แบบหลอก:
-
-- ห้ามใช้ `course_id` เป็น `topic_id` แทน mapping ของ homework
-- ห้ามสร้างวันหยุดจาก hardcode ใน worker
-- ห้ามสร้าง file URL โดยไม่มี storage object และ permission policy
-- ห้ามแสดง payroll/analytics ตัวอย่างเป็นข้อมูลจริง
-
-เมื่อมี mapping/contract แล้ว ให้เพิ่ม model + EF `HasColumnName`/relation ให้ตรง official schema ก่อนเขียน service/query และเพิ่ม test ที่พิสูจน์ tenant กับ ownership ทุกครั้ง

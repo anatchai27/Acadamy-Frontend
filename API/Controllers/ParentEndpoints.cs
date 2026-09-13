@@ -21,6 +21,7 @@ public static class ParentEndpoints
         group.MapGet("/children/{childId:int}/payments", GetChildPayments).RequireAuthorization();
         group.MapGet("/children/{childId:int}/scores", GetChildScores).RequireAuthorization();
         group.MapGet("/children/{childId:int}/homework", GetChildHomework).RequireAuthorization();
+        group.MapGet("/children/{childId:int}/progress", GetChildProgress).RequireAuthorization();
         group.MapPost("/children/{childId:int}/homework/{homeworkId:int}/submission", CreateChildHomeworkSubmission).RequireAuthorization();
         group.MapGet("/children/{childId:int}/leave-requests", GetChildLeaveRequests).RequireAuthorization();
         group.MapGet("/children/{childId:int}/sessions", GetChildSessions).RequireAuthorization();
@@ -176,6 +177,12 @@ public static class ParentEndpoints
                 dueAt = h.DueAt.ToString("yyyy-MM-dd")
             })
         });
+    }
+
+    private static async Task<IResult> GetChildProgress(int childId, HttpContext httpContext, IParentService service, CancellationToken ct)
+    {
+        if (!await OwnsChild(httpContext, childId, service, ct)) return ParentForbidden(httpContext);
+        return Results.Ok(new { status = "success", data = await service.GetProgressAsync(childId, ct) });
     }
 
     private static async Task<IResult> GetChildLeaveRequests(int childId, HttpContext httpContext, IParentService service, CancellationToken ct)

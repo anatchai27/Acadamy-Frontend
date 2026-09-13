@@ -43,7 +43,9 @@ public static class PublicLeadEndpoints
             if (!context.User.IsInRole("admin")) return Results.Forbid();
             try
             {
-                await service.UpdateFollowUpAsync(id, request, ct);
+                var actorClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var actorId = int.TryParse(actorClaim, out var parsedActorId) ? parsedActorId : (int?)null;
+                await service.UpdateFollowUpAsync(id, request, actorId, ct);
                 return Results.Ok(new { Status = "success" });
             }
             catch (LeadValidationException ex)

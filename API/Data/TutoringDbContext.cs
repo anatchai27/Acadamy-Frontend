@@ -847,7 +847,7 @@ public class TutoringDbContext(
                   entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
                   entity.HasOne(e => e.Institute).WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
-                  entity.HasOne(e => e.LeaveRequest).WithMany().HasForeignKey(e => e.LeaveRequestId).OnDelete(DeleteBehavior.Cascade);
+                  entity.HasOne(e => e.LeaveRequest).WithMany(e => e.Attachments).HasForeignKey(e => e.LeaveRequestId).OnDelete(DeleteBehavior.Cascade);
                   entity.HasOne(e => e.UploadedByUser).WithMany().HasForeignKey(e => e.UploadedBy).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
 
                   entity.HasIndex(e => new { e.InstituteId, e.LeaveRequestId }).HasDatabaseName("idx_leave_attachment_request");

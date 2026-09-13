@@ -12,7 +12,8 @@ public interface ILeadRepository
     Task<Lead> CreateAsync(Lead lead, CancellationToken ct = default);
     Task<List<LeadListItem>> ListAsync(string? status, string? search, CancellationToken ct = default);
     Task<Lead?> GetByIdAsync(long id, CancellationToken ct = default);
-    Task UpdateAsync(Lead lead, CancellationToken ct = default);
+    Task UpdateAsync(Lead lead, AuditLog audit, CancellationToken ct = default);
+    Task<bool> UserBelongsToTenantAsync(int userId, CancellationToken ct = default);
     Task<List<PublicContentItem>> ListContentAsync(CancellationToken ct = default);
     Task<PublicWebsiteContent> UpsertContentAsync(long? id, UpsertPublicContentRequest request, CancellationToken ct = default);
 }
@@ -49,11 +50,15 @@ public sealed class LeadRepository(TutoringDbContext context) : ILeadRepository
 
     public Task<Lead?> GetByIdAsync(long id, CancellationToken ct = default) => _context.Leads.FirstOrDefaultAsync(x => x.Id == id, ct);
 
-    public async Task UpdateAsync(Lead lead, CancellationToken ct = default)
+    public async Task UpdateAsync(Lead lead, AuditLog audit, CancellationToken ct = default)
     {
         lead.UpdatedAt = DateTime.UtcNow;
+        _context.AuditLogs.Add(audit);
         await _context.SaveChangesAsync(ct);
     }
+
+    public Task<bool> UserBelongsToTenantAsync(int userId, CancellationToken ct = default) =>
+        _context.Users.AnyAsync(x => x.Id == userId, ct);
 
     public async Task<List<PublicContentItem>> ListContentAsync(CancellationToken ct = default) =>
         await _context.PublicWebsiteContents.AsNoTracking().OrderBy(x => x.SortOrder)

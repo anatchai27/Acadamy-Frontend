@@ -479,11 +479,16 @@ CSV รอบใหม่ยืนยัน schema แล้ว จึงสา�
 
 ### สถานะ tools ในเครื่องปัจจุบัน
 
-- `dotnet ef`: ไม่มีติดตั้ง
+- `dotnet ef`: ติดตั้งแล้ว version `9.0.8`; ยังไม่มี migrations ใน repository
 - `mysql`: ไม่มีติดตั้ง
 - `mariadb`: ไม่มีติดตั้ง
 - EF migration folder: ยังไม่มี
 - API มี `TutoringDbContext` และใช้ MySQL/TiDB provider ได้ แต่ไม่ควรใช้แอปเป็นตัวรัน DDL production โดยอัตโนมัติ
+- แก้ EF relation `leave_request_attachments.leave_request_id` ให้ผูกกับ `LeaveRequest.Attachments` โดยตรง; ไม่สร้าง shadow FK `LeaveRequestId1` แล้ว
+- Front/LineLiff/CMS มี Prettier แล้ว พร้อม `format`/`format:check` scripts
+- Front/LineLiff ใช้ Vite + Vitest อยู่แล้ว; CMS ใช้ Next.js + TypeScript
+- API client ใช้ `fetch` wrapper ของโปรเจกต์; ยังไม่เพิ่ม Axios เพราะจะซ้ำ architecture เดิม
+- State ใช้ Preact hooks/AppContext; ยังไม่เพิ่ม Zustand
 
 ### เครื่องมือที่แนะนำ
 
@@ -491,6 +496,24 @@ CSV รอบใหม่ยืนยัน schema แล้ว จึงสา�
 2. **DBeaver + MySQL driver**: เหมาะสำหรับทีมที่ต้องดู ER/table/index และรัน SQL แบบมี transaction review
 3. **MySQL Shell/Client**: เหมาะสำหรับ CI/runbook เมื่อเครื่องมี `mysql` client และ secret มาจาก environment variable
 4. **`dotnet-ef`**: ใช้เมื่อทีมตัดสินใจให้ EF migrations เป็น source of truth; ปัจจุบัน repository ยังไม่มี migrations จึงยังไม่ควรสร้าง migration เดา schema
+
+### ติดตั้ง tools เมื่อ environment พร้อม
+
+```powershell
+# ติดตั้ง EF CLI ที่ใช้กับ API net9
+dotnet tool install --global dotnet-ef --version 9.0.8
+
+# ตรวจ migration ที่มีอยู่ก่อนสร้างใหม่
+dotnet ef migrations list --project .\API\academy-API.csproj
+
+# Front browser smoke test (ติดตั้งใน workspace ที่จะทำ E2E เท่านั้น)
+Push-Location .\Front
+npm.cmd install --save-dev @playwright/test
+npx playwright install chromium
+Pop-Location
+```
+
+สำหรับ DB GUI ให้ใช้ TiDB Cloud SQL Editor หรือ DBeaver + MySQL driver ตาม policy ของทีม; เครื่องปัจจุบันยังไม่มี `mysql`/`mariadb` CLI และไม่ควร bypass ด้วยการเอา password จาก config ไปใส่ command line
 
 ### ขั้นตอนที่ปลอดภัยสำหรับ `homework_skill_topics`
 
@@ -538,3 +561,17 @@ ORDER BY st.order_index;
 - ไม่ใช้ `dotnet ef database update` จนกว่าจะมี migrations ที่ review แล้ว
 
 > **Security action:** พบ connection credential ใน config ที่อ่านได้ระหว่างตรวจโปรเจกต์ ควร rotate credential นั้นทันที และย้าย connection string ไป secret/environment variable ก่อนใช้ SQL tool ใดๆ
+
+### ผล format baseline
+
+- Front: พบ style issues เดิมประมาณ `98 files`
+- LineLiff: พบ style issues เดิม `19 files`
+- CMS: พบ style issues เดิม `14 files`
+- ยังไม่รัน `prettier --write` ทั้ง repo เพราะจะสร้าง diff จำนวนมากและเปลี่ยน formatting ของงานเดิมโดยไม่เกี่ยวกับ feature
+- ให้ format เฉพาะไฟล์ที่แก้ใหม่/แก้ไขใน PR แล้วค่อยยกระดับ `format:check` เป็น CI gate
+
+### EF mapping verification ล่าสุด
+
+- `dotnet ef migrations list --project .\API\academy-API.csproj`: ต่อ TiDB ได้, ไม่พบ migration ใน repository
+- EF model validation: ไม่พบ warning shadow FK หลังแก้ `LeaveRequestAttachment`
+- ห้าม apply migration อัตโนมัติจากผลตรวจนี้ เพราะ database ใช้ schema/runbook SQL เป็นหลักฐานปัจจุบัน

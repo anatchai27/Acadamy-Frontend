@@ -231,11 +231,22 @@ Pop-Location
 - Lead management API เพิ่มแล้ว: admin-only `GET /api/leads?status=&search=` และ `PUT /api/leads/{id}/follow-up` รองรับ status, note, assigned user โดยใช้ tenant filter จาก EF model
 - API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม lead list/follow-up
 - Lead UI ปิดแล้ว: `/admin/leads` รองรับค้นหา/filter status และ follow-up note/status ผ่าน API จริง; Front tests `89 passed / 0 failed / 0 skipped`, Front build ผ่าน
+- Lead follow-up เพิ่ม assigned user selector จาก users API และ API ตรวจ assignee อยู่ tenant เดียวกันก่อนบันทึก
+- หลังเพิ่ม lead assignment: API tests `279 passed / 0 failed / 0 skipped`, Front tests `89 passed / 0 failed / 0 skipped`, Front build ผ่าน
+- Lead follow-up เพิ่ม audit transaction ใน `audit_logs` โดยเก็บ actor, before/after status, note และ assignee; API tests `279 passed / 0 failed / 0 skipped`
+- AC closure sprint เริ่ม T2/T3: เพิ่ม `GET /api/parents/children/{childId}/progress` คืน current/longest streak และ awarded badges จาก official tables พร้อม child ownership guard; API tests `279 passed / 0 failed / 0 skipped`
+- ยังไม่เพิ่มคะแนนจาก T2/T3 เพราะยังไม่มี server-side streak updater/criteria award และยังไม่ได้เชื่อม LIFF runtime display
 - หลังปิด Lead list + follow-up คะแนนส่งจริงขยับเป็น `41/67 = 61%`
 - CMS content API เพิ่มแล้ว: admin-only `GET /api/website-content` และ `PUT /api/website-content/{id?}` รองรับ draft/publish fields จาก `public_website_contents` แบบ tenant-scoped; CMS client/auth ยังต้องเชื่อมต่อก่อนนับเป็น AC เต็ม
 - API tests `279 passed / 0 failed / 0 skipped` หลังเพิ่ม website content API
 - CMS content editor เชื่อม `NEXT_PUBLIC_API_URL` และใช้ `academy-cms-admin-token` จาก local storage แบบไม่ฝัง secret; เมื่อไม่มี token จะแจ้ง boundary และ fallback local draft ไม่แสดงว่าบันทึก production สำเร็จ
 - CMS build ผ่าน Next.js `15.5.25`, routes `10/10`
+- Seven-task release sweep ผ่านครบ: API tests `279 passed`, API build `0 warnings/0 errors`, Front tests `89 passed`, Front build ผ่าน, LineLiff tests `4 passed`, LineLiff build ผ่าน และ CMS build/routes `10/10` ผ่าน
+- Tooling check: ติดตั้ง `dotnet-ef 9.0.8` สำเร็จสำหรับ API net9; ตรวจแล้ว repository ยังไม่มี EF migrations, `mysql`/`mariadb`, Docker หรือ Playwright จึงยังไม่รัน DDL/database/device smoke จากเครื่องนี้
+- แก้ EF shadow FK `LeaveRequestId1`: `LeaveRequestAttachment` ผูก `WithMany(e => e.Attachments)` กับ `LeaveRequest` แล้ว; `dotnet ef migrations list` ต่อ TiDB ได้โดยไม่มี model warning และไม่พบ migrations
+- หลังแก้ mapping API tests `279 passed / 0 failed / 0 skipped`, API build `0 warnings / 0 errors`
+- เพิ่ม Prettier `3.9.6` ให้ Front, LineLiff และ CMS พร้อม `.prettierrc.json`, `.prettierignore` และ `format:check`; baseline เดิมยังไม่ผ่าน (Front `98`, LineLiff `19`, CMS `14` files) จึงยังไม่ format ทั้ง repo แบบ destructive
+- ยืนยัน stack ตามของจริง: Front/LineLiff ใช้ Preact + Vite + Vitest, CMS ใช้ Next.js/React, API client ใช้ fetch wrapper; ไม่เพิ่ม Axios/Zustand/Babel ซ้ำโดยไม่มีเหตุผล
 - P8 source check ยืนยัน route authorization/role, tenant query filter, bcrypt password hash, QR expiry/rotation และ rate limiting มีอยู่แล้ว; ยังไม่มี deploy/load/database runtime evidence
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก

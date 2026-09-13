@@ -1,298 +1,297 @@
-📐 TiwHub Master Architecture Blueprint & Execution Plan (Refined v2.0)
+# Academy Product Epics
 
-Document Type: Master System Architecture & Engineering Execution Blueprint
+> Source of truth: `Objective/ProjectObj.md`  
+> Delivery status: **41 / 67 AC = 61%**  
+> Delivery target: close the remaining user journeys without inventing schema, provider behavior, or business formulas.
 
-Target: Product Owners, Engineering Leads, Full-Stack Engineers, DBAs, QA Leads
+## 1. Product Scope
 
-Stack Alignment: TiDB (Distributed SQL) + C# .NET 9.0 + Preact / React (LINE LIFF Compatible)
+Academy is a multi-tenant tutoring platform with:
 
-🎯 1. Executive Summary & Peer Review Action Plan
+- Admin/teacher operations for students, courses, attendance, leave, makeup, homework, finance, leads, and reports
+- Parent/student LINE LIFF for attendance, homework, scores, leave, makeup, payment, and progress
+- Public website/trial lead capture
+- CMS and operations tools for institute staff
 
-เอกสารฉบับนี้เป็นการยกระดับสเปกสถาปัตยกรรม TiwHub ตามผลการ Peer Review เชิงลึก เพื่อแก้ปัญหาจุดเปราะบางทางวิศวกรรมซอฟต์แวร์ก่อนลงมือพัฒนาใน Sprint โดยมีเป้าหมายหลัก 6 ด้าน:
+## 2. Stack Reality
 
-Re-calibration of Estimates & Buffers: ปรับเพิ่ม Buffer 30–50% สำหรับ P0/P1 Tasks และแยกประเภทงาน Implementation, Unit/Integration Test, และ Load Test ออกจากกันอย่างชัดเจน
+- API: C# .NET 9, Minimal APIs, EF Core, MySQL/TiDB provider
+- Admin web: Preact, Vite, Vitest, fetch API wrapper
+- LIFF: Preact, Vite, LINE LIFF SDK, Vitest
+- CMS: Next.js 15, React 19, TypeScript
+- Database: TiDB/MySQL-compatible schema, official SQL runbook in `Objective/sql_script.md`
+- Formatting: Prettier configured for Front, LineLiff, and CMS
+- Migration inspection: `dotnet-ef 9.0.8`; repository currently has no EF migrations
 
-Current vs Target Gap Analysis: ระบุสถานะโค้ดปัจจุบันใน Repository เทียบกับ Target Architecture เพื่อป้องกันการเขียนโค้ดซ้ำซ้อน (Duplicate Effort)
+## 3. Epic Map
 
-Global Non-Functional Requirements (NFRs): กำหนด SLA, Latency Threshold, Security Enforcement, และ Observability Standards
+```text
+E1 Foundation/RBAC/Tenant
+ ├── E2 Student & Parent
+ ├── E3 Attendance & Pickup
+ ├── E4 Leave & Makeup
+ ├── E5 Homework & Skill Progress
+ ├── E6 Payment & Billing
+ ├── E7 Public Website & Leads
+ ├── E8 CMS Content
+ ├── E9 LINE/Notification
+ └── E10 Reports & Operations
+       └── E11 Release Smoke/Acceptance
+              └── E12 Production Readiness
+```
 
-Testing Strategy Matrix: กำหนดกลยุทธ์การทดสอบแยกตามประเภท (Unit, Integration, Concurrency Load Test, Security IDOR Audit)
+## E1: Foundation, Authentication, RBAC, Tenant
 
-Epic Dependency Mapping: วางลำดับขั้นตอนการขึ้นระบบ (Deployment Sequence) เพื่อบริหารความเสี่ยงข้าม Feature
+Status: **Complete for current acceptance scope**
 
-Security & Authorization Compliance Gates: กำหนด Gatekeeper Checklists ก่อน Merge Pull Request ทุกครั้ง
+- Login/logout/password reset
+- bcrypt password hashing
+- Role and route authorization
+- Tenant query filters
+- Admin inactivity timeout
+- EF mapping review and SQL verification runbook
+- Audit log foundation
 
-🛡️ 2. Global Non-Functional Requirements (NFRs) & SLAs
+Remaining hardening:
 
-มิติ (Domain)
+- Formal policy names for every endpoint
+- Production database metadata evidence
+- Secret rotation and environment-only connection strings
 
-ตัวชี้วัด / มาตรฐาน (Metric / Standard)
+## E2: Student, Parent, Pickup
 
-เกณฑ์ที่ต้องผ่าน (Acceptance SLA)
+Status: **Complete: 7/7 acceptance items**
 
-Latency SLA (P99)
+- Student CRUD/search/export
+- Profile photo and medical information
+- Student QR and PDF card
+- Parent information in registration flow
+- Pickup authorization in registration flow
+- Pickup validation during checkout
 
-Attendance QR Scan API (POST /api/attendances/scan)
+Evidence:
 
-$< 300\text{ ms}$ (under 100 req/sec concurrent load)
+- Front tests: `89 passed`
+- API tests: `279 passed`
+- Front build passed
 
-Latency SLA (P95)
+## E3: Attendance, Quota, Checkout
 
-Standard Read/Write APIs
+Status: **Partial: 4/7 acceptance items**
 
-$< 150\text{ ms}$
+Complete:
 
-System Availability
+- QR scan and manual attendance
+- Session/tenant/quota/duplicate validation
+- Atomic quota update
+- List-assisted checkout with pickup authorization
+- Error mapping and double-submit protection
+- Offline queue conflict UI
 
-Multi-Tenant Platform Uptime
+Remaining:
 
-$\ge 99.9\%$
+- Direct QR checkout only if owner confirms it is required
+- LINE/device runtime evidence
+- Test database concurrency evidence
 
-Tenant Isolation
+## E4: Leave and Makeup
 
-Data Boundary Cross-Leakage
+Status: **Complete: 5/5 acceptance items**
 
-ZERO Tolerance (0%) (Fail-Closed Enforcement)
+- Leave request and attachments
+- Teacher approve/reject
+- Credit creation
+- Makeup slot and booking
+- Booking cancellation and group cancel credit restoration
 
-Concurrency Safety
+## E5: Homework, Skill, Progress
 
-Wallet Deduct / Seat Booking Overdraft
+Status: **Partial**
 
-0 Double-Spends Allowed (Pessimistic DB Locks)
+Complete:
 
-Message Queue SLA
+- Homework create, view, submit, grade, score, feedback
+- Homework reminder worker based on `due_at` and `submitted_at`
+- Official `homework_skill_topics` model/SQL/EF mapping
+- Mapping API and Admin UI
+- Grade propagation to mapped `skill_scores`
 
-LINE Push Notification Queue Delay
+Remaining:
 
-$< 5\text{ seconds}$ delivery latency
+- Run mapping DDL in test database
+- Insert real mapping rows
+- Runtime grade-to-skill verification
+- Streak event/reset policy
+- Badge criteria and award service
+- LIFF streak/badge progress display
 
-Observability
+Mapping rule:
 
-Structured Logging & Tracing
+- Never use `course_id` as `topic_id`
+- Never select the first topic automatically
+- Use `homework_skill_topics` only after migration and explicit mapping
 
-Serilog JSON + TraceId Header propagation
+## E6: Payment and Billing
 
-🗺️ 3. Epic Dependency Map & Rollout Roadmap
+Status: **Partial: 3/5 acceptance items**
 
-การขึ้นระบบต้องเรียงลำดับความเชื่อมโยง (Dependencies) ดังนี้:
+- Payment recording
+- Slip upload
+- Receipt PDF
+- Revenue report/export
+- Quota/payment notifications
 
-[Epic 1: Platform Foundation & Tenant Isolation]
-       │
-       ├─────────────────────────────────────────┐
-       ▼                                         ▼
-[Epic 2: Flexible Course & Wallet Engine]   [Epic 3: Daily Operations & Gate Attendance]
-       │                                         │
-       ├─────────────────────────────────────────┤
-       ▼                                         ▼
-[Epic 4: Parent & Student Digital Experience]    [Epic 5: Academics & Skill Analytics]
-       │
-       ▼
-[Epic 6: Public Acquisition & School Operations]
+Remaining:
 
+- Real slip verification provider
+- Provider status/retry evidence
+- Owner-approved billing formula/runtime evidence
 
-🔍 4. Current State vs Target State Gap Analysis
+## E7: Public Website and Lead Acquisition
 
-จากการ Audit โค้ดใน Repository ปัจจุบันเทียบกับเป้าหมายระบบ พบ Gap ที่ต้องดำเนินการ Refactor ดังนี้:
+Status: **Partial**
 
-Feature / Module
+- Public institute preview
+- Responsive public pages
+- Trial class form
+- Rate-limited `POST /api/public/leads`
+- Admin lead list/search/filter
+- Lead follow-up status, notes, assignee
+- Lead audit trail in `audit_logs`
 
-โค้ดที่มีอยู่แล้วใน Repo (Current State)
+Remaining:
 
-สิ่งที่ขาด / ต้องปรับปรุง (Target Architecture Gap)
+- Lead assignment UI runtime with real users
+- Follow-up dashboard metrics
 
-Action Plan
+## E8: CMS Content
 
-Feature 1.1 (Tenant Filter)
+Status: **Partial**
 
-มี ITenantProvider และ EF Core HasQueryFilter บางส่วน
+- `public_website_contents` EF model
+- Tenant-scoped admin content API
+- CMS editor API client
+- Draft/publish fields
+- Local fallback that clearly reports missing API/auth
 
-ตารางลูกบางส่วน (attendances, payments) ยังใช้ Deep Navigation Filter ซึ่งเกิด N+1 Query
+Remaining:
 
-Denormalize institute_id ลงทุกตารางลูก และใส่ Single-Level HasQueryFilter
+- Configure CMS admin token in real environment
+- Verify save -> public preview with real content
+- Active version/rollback rule
+- Media storage and signed-link contract
 
-Feature 1.3 (RBAC)
+## E9: LINE and Notifications
 
-มี .RequireAuthorization() ที่ Endpoint
+Status: **Partial**
 
-ขาด Policy-Based Role Checks (RequireAdminRole, RequireStaffRole)
+- Parent LINE binding
+- LIFF dashboard/homework/score/leave flows
+- Notification dispatcher
+- Check-in/checkout notification status
+- Late worker with cancelled/completed suppression
+- Retry/idempotency basics
 
-เติม Custom Policy Handlers และกั้น Controller ด้วย Role Claims
+Blocked until credentials/contract:
 
-Feature 2.3 (Billing & Invoicing)
+- Rich Menu ID and URL setup
+- Broadcast recipient/consent policy
+- Webhook signature verification
+- Provider retry/runtime evidence
 
-มี PaymentEndpoints และ InvoiceNo
+## E10: Reports and Operations
 
-ยังขาด Distributed Lock กันเลขบิลซ้ำตอนยิงพร้อมกัน
+Status: **Partial**
 
-เติม Redis Lock / Sequential Incrementor Service
+- Revenue report from API
+- Operations UI with no fake payroll data
+- CMS operations empty states for unavailable formulas
 
-Feature 3.1 (QR Attendance)
+Needs owner-approved formulas:
 
-มี AttendanceEndpoints
+- Renewal rate
+- Churn risk
+- Revenue forecast
+- Teacher timesheet source and timezone
+- Payroll period/rate calculation
+- Holiday source for workers
+- File manager storage policy
 
-การหักเงินยังไม่มี SELECT ... FOR UPDATE และยังยิง LINE แบบ Synchronous
+## E11: Release Smoke and Acceptance
 
-เติม Pessimistic Lock และแยกยิง LINE ออกไปที่ Queue Table
+Status: **Partial**
 
-Feature 5.1 (Skill Card)
+Automated validation currently passes:
 
-มี SkillScoreEndpoints
+- API tests: `279 passed`
+- Front tests: `89 passed`
+- LineLiff tests: `4 passed`
+- API build: `0 warnings / 0 errors`
+- Front build: passed
+- LineLiff build: passed
+- CMS build: passed, routes `10/10`
 
-บันทึกคะแนนได้ทีละคน ยังทำ Batch Upsert ไม่ได้
+Remaining smoke journeys:
 
-ปรับ API เป็น POST /api/skill-scores/batch รับ Array
+- Login -> student -> pickup -> checkout
+- Session -> scan -> quota -> notification
+- Leave -> approve -> makeup -> group cancel
+- Homework -> submit -> grade -> skill mapping
+- Trial lead -> admin follow-up -> audit
+- CMS draft -> publish -> public preview
 
-🧪 5. Testing & Quality Assurance Strategy
+## E12: Production Readiness
 
-5.1 Testing Hierarchy & Coverage Requirements
+Status: **Not complete**
 
-[Layer 4: Load & Stress Test]     --> Concurrency Spikes (k6 / Vegeta - 100 req/sec)
-       ▲
-[Layer 3: E2E & Security Audit]  --> IDOR Boundary / Cross-Tenant Leaks
-       ▲
-[Layer 2: Integration Test]      --> TestServer + Real TiDB Test Database
-       ▲
-[Layer 1: Unit Test]             --> xUnit + Moq (Business & Validation Rules)
+- Test database schema evidence
+- DDL/migration review and backup
+- LINE/provider credentials and device test
+- Browser E2E tool installation
+- k6/load test environment
+- Secret rotation
+- Owner sign-off and rollback plan
 
+## 4. Delivery Gates
 
-5.2 Key Test Scenarios & Acceptance Criteria
+Every epic can be marked complete only when:
 
-Concurrency Load Test (QR Gate Check-in):
+- API/UI flow works end-to-end
+- Tenant and role boundaries are enforced
+- Loading, empty, validation, and error states exist
+- Relevant tests/build pass
+- No mock data is presented as real data
+- SQL mapping matches `Objective/sql_script.md`
+- Known external blockers are documented
 
-Tool: k6
+## 5. Current Next Actions
 
-Scenario: ยิง 100 Concurrent Requests ในเสี้ยววินาทีเดียวกันที่ POST /api/attendances/scan เพื่อสแกนเด็กคนเดียวกัน
+1. Run `homework_skill_topics` DDL in a test database and create one real mapping row
+2. Run grade -> skill score runtime smoke
+3. Get owner decision for streak/badge event and criteria rules
+4. Configure CMS admin token and verify publish preview
+5. Install browser smoke tool and execute E11 journeys
+6. Obtain LINE credentials before implementing Rich Menu/Broadcast
+7. Get report/payroll formulas before implementing analytics/timesheet
 
-Expected Result: หักโควต้าหรือ Wallet เพียง 1 ครั้งสิทธิ์ สภาพระบบไม่เกิด Deadlock หรือ Negative Balance
+## 6. Tool Commands
 
-Cross-Tenant Security Audit Test:
+```powershell
+dotnet ef migrations list --project .\API\academy-API.csproj
+dotnet test .\API\academy-API.Tests\academy-API.Tests.csproj
+dotnet build .\API\academy-API.csproj
 
-Tool: xUnit Integration Test
+Push-Location .\Front
+npm.cmd test -- --run
+npm.cmd run build
+Pop-Location
 
-Scenario: ใช้ JWT Token สถาบัน A ยิงดึงข้อมูล StudentId ของสถาบัน B
+Push-Location .\LineLiff
+npm.cmd test -- --run
+npm.cmd run build
+Pop-Location
 
-Expected Result: ต้องได้รับการตอบกลับ 403 Forbidden หรือ 404 Not Found เท่านั้น
-
-🔒 6. Security & Authorization Compliance Checklist (Pre-PR Gate)
-
-พูลขอความร่วมมือจากทีมพัฒนาในการทำ Self-Check ตาม Checklist นี้ก่อนเปิด Pull Request (PR) ทุกครั้ง:
-
-[ ] Tenant Isolation: ทุก SQL Query หรือ ORM Model มีการจำกัดขอบเขตด้วย institute_id
-
-[ ] Role Protection: Endpoint มีการระบุ Policy ชัดเจน (เช่น .RequireAuthorization("RequireAdminRole")) ไม่ใช่แค่ .RequireAuthorization() ลอยๆ
-
-[ ] No Naked Raw Queries: ห้ามเขียน Raw SQL โดยไม่มี Parameterization (ป้องกัน SQL Injection 100%)
-
-[ ] Audit Trail Columns: มีการบันทึก created_by, updated_by, และ deleted_at (กรณี Soft Delete)
-
-[ ] Idempotency Header: API ที่มีการเปลี่ยน State (POST/PUT/DELETE) รองรับ X-Idempotency-Key
-
-📊 7. Re-Calibrated Technical Tasks & Buffer Estimates
-
-ปรับเพิ่ม Buffer เวลา 30–50% สำหรับงานระดับ P0/P1 และแยกประเภทงานทดสอบออกเป็น Task อิสระ
-
-🚀 EPIC 1: Foundation & Isolation
-
-[BE-001] [P0] Implement ITenantProvider Service & Middleware Validation (3.0 hrs)
-
-[BE-002] [P0] Configure Global Query Filters in TutoringDbContext (4.0 hrs)
-
-[DB-001] [P0] TiDB Composite Indexing & Denormalization Migration (2.5 hrs)
-
-[BE-005] [P0] Policy-Based Authorization Handlers & Role Enforcement (4.5 hrs)
-
-[QA-001] [P0] Cross-Tenant IDOR Integration & Security Tests (4.0 hrs)
-
-🚀 EPIC 2: Flexible Course & Wallet Engine
-
-[BE-008] [P0] Polymorphic Course Validation & FluentValidation Rules (5.5 hrs)
-
-[BE-009] [P0] Atomic Credit Wallet Mutation with Pessimistic DB Locking (6.0 hrs)
-
-[BE-010] [P0] Sequential Invoice Number Generator with Redis Lock (4.5 hrs)
-
-[QA-002] [P0] Race Condition Unit & Integration Test for Credit Wallet (4.0 hrs)
-
-🚀 EPIC 3: High-Throughput Daily Operations
-
-[BE-014] [P0] Attendance Scan Router API with Idempotency Guard (7.0 hrs)
-
-[BE-016] [P0] Decouple LINE Messaging via notifications Queue Table (4.5 hrs)
-
-[BE-017] [P0] Asynchronous Notification Worker (IHostedService) (5.5 hrs)
-
-[QA-003] [P0] Concurrency Load Test (k6) for Gate Attendance Scanning (5.0 hrs)
-
-🚀 EPIC 4: Parent & Student Digital Experience
-
-[FE-010] [P0] Integrate LINE LIFF SDK in Preact/React App (4.0 hrs)
-
-[BE-021] [P0] Implement Parent Line Binding API (POST /api/parents/bind-line) (4.0 hrs)
-
-[BE-024] [P1] Multi-Child Dashboard Aggregation API (4.5 hrs)
-
-🚀 EPIC 5: Academics & Gamification
-
-[BE-025] [P1] Implement Batch Skill Scoring API (POST /api/skill-scores/batch) (4.5 hrs)
-
-[FE-014] [P1] Build Radar Chart Component using Recharts (4.5 hrs)
-
-[BE-026] [P1] Digital Homework Assignment & Review Engine APIs (5.5 hrs)
-
-🚀 EPIC 6: Public Acquisition & School Operations
-
-[BE-030] [P1] Room Overlap Validation Engine with Time Boundaries (4.0 hrs)
-
-[BE-031] [P1] Teacher Payroll Calculation Engine API (5.0 hrs)
-
-[FE-021] [P1] Room Allocation Calendar & Teacher Payroll Report UI (5.5 hrs)
-
-⏱️ Summary Estimate Comparison
-
-Category
-
-Original Estimate
-
-Re-Calibrated Estimate (with Buffers & Tests)
-
-Variance
-
-Core Architecture & Foundation
-
-9.0 hrs
-
-18.0 hrs
-
-+100% (Added Security Tests & Refactoring)
-
-Course & Wallet Financial Engine
-
-10.5 hrs
-
-20.0 hrs
-
-+90.4% (Added Race Condition Tests & Redis Lock)
-
-Gate Attendance & Operations
-
-24.5 hrs
-
-38.0 hrs
-
-+55.1% (Added k6 Concurrency Tests & Error Handling)
-
-Parent Gateway & Academics
-
-20.0 hrs
-
-32.0 hrs
-
-+60.0% (Added Batch API & Integration Adjustments)
-
-TOTAL DEV & TEST HOURS
-
-64.0 hrs
-
-108.0 hrs
-
-+68.75% (Real-World Production Buffer)
+Push-Location .\CMS
+npm.cmd run build
+Pop-Location
+```

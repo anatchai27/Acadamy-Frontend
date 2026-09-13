@@ -20,6 +20,7 @@ public interface IParentRepository
     Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default);
+    Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default);
     Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, DateTime from, CancellationToken ct = default);
     Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default);
@@ -168,7 +169,18 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                     .OrderByDescending(s => s.CreatedAt)
                     .Select(s => s.Feedback ?? string.Empty)
                     .FirstOrDefault() ?? string.Empty))
+             .ToListAsync(ct);
+
+    public async Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default)
+    {
+        var streak = await _context.StreakCounters.FirstOrDefaultAsync(x => x.StudentId == studentId && x.StreakType == "attendance", ct);
+        var badges = await _context.StudentBadges
+            .Where(x => x.StudentId == studentId)
+            .OrderByDescending(x => x.AwardedAt)
+            .Select(x => new ParentBadgeItem(x.BadgeId, x.Badge.BadgeKey, x.Badge.Name, x.Badge.Description, x.Badge.IconUrl, x.AwardedAt))
             .ToListAsync(ct);
+        return new ParentProgressResponse(streak?.CurrentCount ?? 0, streak?.LongestCount ?? 0, badges);
+    }
 
     public Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default) =>
         _context.LeaveRequests
