@@ -54,6 +54,16 @@ public static class PublicLeadEndpoints
             }
         });
 
+        var content = app.MapGroup("/api/website-content").WithTags("WebsiteContent").WithOpenApi().RequireAuthorization();
+        content.MapGet("", async (ILeadService service, HttpContext context, CancellationToken ct) =>
+            context.User.IsInRole("admin") ? Results.Ok(await service.ListContentAsync(ct)) : Results.Forbid());
+        content.MapPut("/{id:long?}", async (long? id, UpsertPublicContentRequest request, ILeadService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            try { return Results.Ok(await service.UpsertContentAsync(id, request, ct)); }
+            catch (LeadValidationException ex) { return Results.BadRequest(new { Status = "error", ErrorCode = ex.Code, Message = ex.Message }); }
+        });
+
         return app;
     }
 }

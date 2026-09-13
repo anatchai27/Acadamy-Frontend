@@ -39,6 +39,11 @@ const menuGroups = [{
     icon: AttendanceIcon,
     roles: ['admin', 'teacher']
   }, {
+    path: '/admin/leads',
+    label: 'ผู้สนใจทดลองเรียน',
+    icon: RequestIcon,
+    roles: ['admin']
+  }, {
     path: '/admin/makeup-slots',
     label: 'เรียนชดเชย',
     icon: RequestIcon,

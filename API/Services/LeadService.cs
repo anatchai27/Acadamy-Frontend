@@ -10,6 +10,8 @@ public interface ILeadService
     Task<CreateLeadResponse> CreateAsync(CreateLeadRequest request, CancellationToken ct = default);
     Task<LeadListResponse> ListAsync(string? status, string? search, CancellationToken ct = default);
     Task UpdateFollowUpAsync(long id, UpdateLeadFollowUpRequest request, CancellationToken ct = default);
+    Task<PublicContentResponse> ListContentAsync(CancellationToken ct = default);
+    Task<PublicContentItem> UpsertContentAsync(long? id, UpsertPublicContentRequest request, CancellationToken ct = default);
 }
 
 public sealed class LeadService(ILeadRepository repository) : ILeadService
@@ -76,6 +78,17 @@ public sealed class LeadService(ILeadRepository repository) : ILeadService
         lead.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         lead.AssignedTo = request.AssignedTo;
         await repository.UpdateAsync(lead, ct);
+    }
+
+    public async Task<PublicContentResponse> ListContentAsync(CancellationToken ct = default) =>
+        new("success", await repository.ListContentAsync(ct));
+
+    public async Task<PublicContentItem> UpsertContentAsync(long? id, UpsertPublicContentRequest request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.SectionKey) || string.IsNullOrWhiteSpace(request.ContentType))
+            throw new LeadValidationException("CONTENT_REQUIRED", "SectionKey and ContentType are required.");
+        var saved = await repository.UpsertContentAsync(id, request, ct);
+        return new PublicContentItem(saved.Id, saved.SectionKey, saved.ContentType, saved.ContentValue, saved.Metadata, saved.SortOrder, saved.IsActive, saved.UpdatedAt);
     }
 
     private static string Required(string? value, string code) =>

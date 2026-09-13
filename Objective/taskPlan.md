@@ -1,7 +1,7 @@
 # Task Plan: Academy Delivery 15P
 
 > อ้างอิง requirement: `Objective/ProjectObj.md`  
-> สถานะล่าสุด: **40 / 67 AC = 60% แบบส่งจริง**  
+> สถานะล่าสุด: **41 / 67 AC = 61% แบบส่งจริง**  
 > วิธีทำงาน: ทำ flow ที่ผู้ใช้จับต้องได้ก่อน, ไม่ทำ mock แทน API จริง และไม่เพิ่ม schema/feature ที่ไม่มี contract
 
 ## เกณฑ์สถานะ
@@ -141,7 +141,7 @@
 - [x] Responsive pages
 - [x] Trial class form
 - [x] `POST /api/public/leads` พร้อม validation/rate limit
-- [/] Lead list และ follow-up status สำหรับแอดมิน: API พร้อมแล้ว เหลือ CMS admin UI
+- [x] Lead list และ follow-up status สำหรับแอดมิน: API และ Front admin UI พร้อมแล้ว
 
 เกณฑ์จบ: ลูกค้าเห็นเว็บไซต์และส่ง lead เข้า API จริงได้
 
@@ -151,7 +151,7 @@
 
 - [x] Local draft editor ไม่แสดงข้อมูลปลอม
 - [x] Preview public content
-- [ ] Content CRUD API
+- [/] Content CRUD API: API และ CMS client พร้อมแล้ว เหลือ configure admin auth token และ publish runtime
 - [ ] Media upload/storage
 - [ ] Tenant/permission/signed-link policy
 

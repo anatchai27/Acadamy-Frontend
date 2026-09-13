@@ -61,16 +61,16 @@
 | 5. Skill Card | 2 | 5 | 40% | คะแนนจากการบ้าน, streak, badge |
 | 6. Homework | 4 | 5 | 80% | runtime LIFF และ score-to-skill mapping |
 | 7. Payment & Billing | 3 | 5 | 60% | provider ตรวจสลิปจริง, runtime report policy |
-| 8. Public Website & CMS | 2 | 5 | 40% | CMS CRUD/media และ lead follow-up |
+| 8. Public Website & CMS | 3 | 5 | 60% | CMS CRUD/media |
 | 9. LINE Integration | 2 | 6 | 33% | Rich Menu, broadcast, webhook และ audit ที่เหลือ |
 | 10. Reports & Analytics | 1 | 5 | 20% | analytics สูตรจริง, forecast, timesheet, referral |
 | 11. Operations & Compliance | 2 | 6 | 33% | holiday, file manager, payroll, backup |
 | 12. Architecture & NFR | 2 | 5 | 40% | deploy/ฐานข้อมูลตาม SRS และ load test |
-| **รวม** | **40** | **67** | **60%** | **27 AC ยังไม่ครบสำหรับส่งจริง** |
+| **รวม** | **41** | **67** | **61%** | **26 AC ยังไม่ครบสำหรับส่งจริง** |
 
 ### สรุปเปอร์เซ็นต์
 
-**ความคืบหน้าแบบส่งงานที่จับต้องได้: `40 / 67 = 60%`**
+**ความคืบหน้าแบบส่งงานที่จับต้องได้: `41 / 67 = 61%`**
 
 ตัวเลขนี้ไม่นับ build/test เป็น feature เพิ่มเอง และไม่นับงานที่มีแค่ UI draft เป็นงานเสร็จ ถือเป็นคะแนนจาก Acceptance Criteria ของ `ProjectObj.md` เท่านั้น
 
@@ -230,6 +230,12 @@ Pop-Location
 - P7 ตรวจ CMS Operations แล้วนำข้อมูล payroll ตัวอย่าง hardcode ออก เหลือ empty state จนกว่าจะมี payroll API/formula contract; revenue report เดิมยังอ่านจาก API จริง
 - Lead management API เพิ่มแล้ว: admin-only `GET /api/leads?status=&search=` และ `PUT /api/leads/{id}/follow-up` รองรับ status, note, assigned user โดยใช้ tenant filter จาก EF model
 - API tests `279 passed / 0 failed / 0 skipped`; API build `0 warnings / 0 errors` หลังเพิ่ม lead list/follow-up
+- Lead UI ปิดแล้ว: `/admin/leads` รองรับค้นหา/filter status และ follow-up note/status ผ่าน API จริง; Front tests `89 passed / 0 failed / 0 skipped`, Front build ผ่าน
+- หลังปิด Lead list + follow-up คะแนนส่งจริงขยับเป็น `41/67 = 61%`
+- CMS content API เพิ่มแล้ว: admin-only `GET /api/website-content` และ `PUT /api/website-content/{id?}` รองรับ draft/publish fields จาก `public_website_contents` แบบ tenant-scoped; CMS client/auth ยังต้องเชื่อมต่อก่อนนับเป็น AC เต็ม
+- API tests `279 passed / 0 failed / 0 skipped` หลังเพิ่ม website content API
+- CMS content editor เชื่อม `NEXT_PUBLIC_API_URL` และใช้ `academy-cms-admin-token` จาก local storage แบบไม่ฝัง secret; เมื่อไม่มี token จะแจ้ง boundary และ fallback local draft ไม่แสดงว่าบันทึก production สำเร็จ
+- CMS build ผ่าน Next.js `15.5.25`, routes `10/10`
 - P8 source check ยืนยัน route authorization/role, tenant query filter, bcrypt password hash, QR expiry/rotation และ rate limiting มีอยู่แล้ว; ยังไม่มี deploy/load/database runtime evidence
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
