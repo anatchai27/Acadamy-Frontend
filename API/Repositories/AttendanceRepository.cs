@@ -18,6 +18,8 @@ public interface IAttendanceRepository
     Task<List<Parent>> GetParentsWithLineAsync(int studentId, CancellationToken ct = default);
     Task ScanCheckinWithTransactionAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task ManualCheckinWithTransactionAsync(int studentId, int sessionId, string status, CancellationToken ct = default);
+    Task<long?> GetAttendanceIdAsync(int studentId, int sessionId, CancellationToken ct = default);
+    Task<int?> GetSessionsRemainingAsync(int studentId, int sessionId, CancellationToken ct = default);
     Task<Attendance?> GetForCheckoutAsync(long attendanceId, CancellationToken ct = default);
     Task<StudentPickupAuthorization?> GetPickupAuthorizationAsync(long authorizationId, int studentId, CancellationToken ct = default);
     Task SaveCheckoutAsync(Attendance attendance, AuditLog auditLog, CancellationToken ct = default);
@@ -31,7 +33,8 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
     public Task<Attendance?> GetForCheckoutAsync(long attendanceId, CancellationToken ct = default) =>
         _context.Attendances
             .Include(a => a.Student)
-            .FirstOrDefaultAsync(a => a.Id == attendanceId, ct);
+            .FirstOrDefaultAsync(a => a.Id == attendanceId
+                && (_context.TenantInstituteId == 0 || a.InstituteId == _context.TenantInstituteId), ct);
 
     public Task<StudentPickupAuthorization?> GetPickupAuthorizationAsync(long authorizationId, int studentId, CancellationToken ct = default) =>
         _context.StudentPickupAuthorizations.FirstOrDefaultAsync(a =>
@@ -56,6 +59,7 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
     public async Task<Student?> ValidateQrTokenAsync(string qrToken, CancellationToken ct = default)
     {
         return await _context.Students.FirstOrDefaultAsync(s => s.QrToken == qrToken
+            && (_context.TenantInstituteId == 0 || s.InstituteId == _context.TenantInstituteId)
             && s.DeletedAt == null
             && (s.QrTokenExpiresAt == null || s.QrTokenExpiresAt > DateTime.UtcNow), ct);
     }
@@ -64,6 +68,27 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
     {
         return await _context.Attendances.AnyAsync(a =>
             a.StudentId == studentId && a.SessionId == sessionId, ct);
+    }
+
+    public Task<long?> GetAttendanceIdAsync(int studentId, int sessionId, CancellationToken ct = default) =>
+        _context.Attendances
+            .Where(a => a.StudentId == studentId && a.SessionId == sessionId)
+            .Select(a => (long?)a.Id)
+            .FirstOrDefaultAsync(ct);
+
+    public async Task<int?> GetSessionsRemainingAsync(int studentId, int sessionId, CancellationToken ct = default)
+    {
+        var courseId = await _context.Sessions
+            .Where(s => s.Id == sessionId)
+            .Select(s => (int?)s.CourseId)
+            .FirstOrDefaultAsync(ct);
+        if (!courseId.HasValue)
+            return null;
+
+        return await _context.Enrollments
+            .Where(e => e.StudentId == studentId && e.CourseId == courseId.Value)
+            .Select(e => (int?)e.SessionsRemaining)
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<Attendance> RecordCheckinAsync(int studentId, int sessionId, CancellationToken ct = default)
@@ -140,7 +165,8 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
     {
         return await _context.Sessions
             .Include(s => s.Course)
-            .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+            .FirstOrDefaultAsync(s => s.Id == sessionId
+                && (_context.TenantInstituteId == 0 || s.InstituteId == _context.TenantInstituteId), ct);
     }
 
     public async Task<List<Parent>> GetParentsWithLineAsync(int studentId, CancellationToken ct = default)
@@ -157,22 +183,22 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
+            var session = await _context.Sessions
+                .Include(s => s.Course)
+                .FirstOrDefaultAsync(s => s.Id == sessionId
+                    && (_context.TenantInstituteId == 0 || s.InstituteId == _context.TenantInstituteId), ct);
+            if (session is null)
+                throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
+
             var attendance = new Attendance
             {
                 StudentId = studentId,
                 SessionId = sessionId,
                 Status = "present",
                 CheckinAt = DateTime.UtcNow,
-                InstituteId = await _context.Sessions
-                    .Where(s => s.Id == sessionId)
-                    .Select(s => s.InstituteId)
-                    .FirstAsync(ct)
+                InstituteId = session.InstituteId
             };
             _context.Attendances.Add(attendance);
-
-            var session = await _context.Sessions
-                .Include(s => s.Course)
-                .FirstAsync(s => s.Id == sessionId, ct);
 
             var studentBelongsToSessionTenant = await _context.Students
                 .AnyAsync(s => s.Id == studentId && s.InstituteId == session.InstituteId && s.DeletedAt == null, ct);

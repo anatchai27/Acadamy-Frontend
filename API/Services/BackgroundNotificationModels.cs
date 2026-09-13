@@ -30,6 +30,13 @@ public static class NotificationMessageFactory
         $"เรียนคุณ{parentName}\n" +
         "บุตรหลานของท่านได้เช็คชื่อเข้าเรียนเรียบร้อยแล้ว";
 
+    public static string AttendanceCheckout(
+        string studentName,
+        string parentName,
+        string pickedUpBy,
+        string checkoutTime) =>
+        $"แจ้งเตือนการรับกลับ\n\nนักเรียน: {studentName}\nผู้รับ: {pickedUpBy}\nเวลา: {checkoutTime}\n\nเรียนคุณ{parentName}";
+
     public static string PaymentReceived(
         string parentName,
         string studentName,

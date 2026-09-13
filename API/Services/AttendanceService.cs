@@ -22,6 +22,9 @@ public class AttendanceService(
 
     public async Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(request.QrToken) || request.SessionId <= 0)
+            throw new AttendanceValidationException("INVALID_QR", "QR Token หรือ session ไม่ถูกต้อง");
+
         var student = await _repository.ValidateQrTokenAsync(request.QrToken, ct);
         if (student is null)
             throw new AttendanceValidationException("INVALID_QR", "QR Token ไม่ถูกต้องหรือหมดอายุแล้ว");
@@ -31,6 +34,8 @@ public class AttendanceService(
             throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
 
         var session = await _repository.GetSessionByIdAsync(request.SessionId, ct);
+        if (session is not null && (session.Status == "cancelled" || session.Status == "completed"))
+            throw new AttendanceValidationException("SESSION_NOT_FOUND", "session นี้ไม่เปิดให้เช็คชื่อ");
         var courseType = session?.Course.CourseType;
 
         var billingMethod = courseType switch
@@ -49,7 +54,14 @@ public class AttendanceService(
             _ => "หักจำนวนคาบเรียน"
         };
 
-        await _repository.ScanCheckinWithTransactionAsync(student.Id, request.SessionId, ct);
+        try
+        {
+            await _repository.ScanCheckinWithTransactionAsync(student.Id, request.SessionId, ct);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("uq_attendance_session_student", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
+        }
 
         var checkinTime = DateTime.UtcNow;
         var parents = await _repository.GetParentsWithLineAsync(student.Id, CancellationToken.None);
@@ -74,10 +86,11 @@ public class AttendanceService(
                 CancellationToken.None);
         }
 
-        var remaining = 0;
+        var remaining = await _repository.GetSessionsRemainingAsync(student.Id, request.SessionId, ct) ?? 0;
+        var attendanceId = await _repository.GetAttendanceIdAsync(student.Id, request.SessionId, ct);
 
         return new ScanAttendanceResponse("success", "เช็คชื่อเข้าเรียนสำเร็จ",
-            new ScanAttendanceData(student.Id, student.FullName, "present", DateTime.UtcNow, remaining, billingMethod, billingDesc));
+            new ScanAttendanceData(student.Id, student.FullName, "present", checkinTime, remaining, billingMethod, billingDesc, attendanceId, request.SessionId, null, "queued"));
     }
 
     public async Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default)
@@ -86,14 +99,20 @@ public class AttendanceService(
         if (!validStatuses.Contains(request.Status))
             throw new AttendanceValidationException("INVALID_STATUS", "สถานะไม่ถูกต้อง (ค่าที่ใช้ได้: present, late, absent, leave)");
 
+        var session = await _repository.GetSessionByIdAsync(request.SessionId, ct);
+        if (session is not null && (session.Status == "cancelled" || session.Status == "completed"))
+            throw new AttendanceValidationException("SESSION_NOT_FOUND", "session นี้ไม่เปิดให้เช็คชื่อ");
+
         var isDuplicate = await _repository.IsDuplicateScanAsync(request.StudentId, request.SessionId, ct);
         if (isDuplicate)
             throw new AttendanceValidationException("DUPLICATE_SCAN", "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว");
 
         await _repository.ManualCheckinWithTransactionAsync(request.StudentId, request.SessionId, request.Status, ct);
 
+        var attendanceId = await _repository.GetAttendanceIdAsync(request.StudentId, request.SessionId, ct) ?? 0;
+
         return new ManualAttendanceResponse("success", "บันทึกสถานะการเข้าเรียนสำเร็จ",
-            new ManualAttendanceData(0, request.Status));
+            new ManualAttendanceData(attendanceId, request.Status));
     }
 
     public async Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default)
@@ -165,6 +184,26 @@ public class AttendanceService(
         };
         await _repository.SaveCheckoutAsync(attendance, audit, ct);
 
+        var notificationStatus = "skipped";
+        var studentName = attendance.Student?.FullName ?? $"นักเรียน #{attendance.StudentId}";
+        var parents = await _repository.GetParentsWithLineAsync(attendance.StudentId, CancellationToken.None) ?? [];
+        foreach (var parent in parents)
+        {
+            if (parent.UserId is null || string.IsNullOrWhiteSpace(parent.LineUserId))
+                continue;
+
+            var result = await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
+                parent.UserId.Value,
+                attendance.InstituteId,
+                parent.LineUserId,
+                studentName,
+                parent.FullName,
+                NotificationMessageFactory.AttendanceCheckout(studentName, parent.FullName, pickedUpBy, attendance.CheckoutAt.Value.ToString("O")),
+                "attendance_checkout",
+                $"attendance_checkout:{attendance.Id}:{parent.Id}"), CancellationToken.None);
+            notificationStatus = result.Sent ? "sent" : result.Skipped ? "skipped" : "failed";
+        }
+
         return new CheckoutAttendanceResponse(
             attendance.Id,
             attendance.SessionId,
@@ -174,7 +213,8 @@ public class AttendanceService(
             attendance.CheckoutAt.Value,
             attendance.PickedUpBy,
             attendance.PickupAuthorizationId,
-            new AuditLogResponse(audit.Id, audit.UserId, audit.Action, audit.EntityType, audit.EntityId, audit.AfterJson, audit.CreatedAt));
+            new AuditLogResponse(audit.Id, audit.UserId, audit.Action, audit.EntityType, audit.EntityId, audit.AfterJson, audit.CreatedAt),
+            notificationStatus);
     }
 
     public async Task<AuditLogResponse?> GetCheckoutAuditAsync(long attendanceId, CancellationToken ct = default)

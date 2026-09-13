@@ -7,6 +7,9 @@ import { useDesignTheme } from '../../hooks/useDesignTheme';
 
 export function AttendancePage({ path }) {
   const [mode, setMode] = useState('scan');
+  const [scannerMode, setScannerMode] = useState('check-in');
+  const [pendingScan, setPendingScan] = useState(null);
+  const [offline, setOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine);
   const [recentScans, setRecentScans] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,16 +37,41 @@ export function AttendancePage({ path }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleScan = async (qrData) => {
-    const name = qrData;
-    const status = 'present';
-    setRecentScans((prev) => [...prev, { qrData, name, status, time: new Date().toLocaleTimeString('th-TH') }]);
+  useEffect(() => {
+    const handleOnline = () => {
+      setOffline(false);
+      attendanceService.syncPendingAttendance().catch(() => {});
+    };
+    const handleOffline = () => setOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleScan = (qrData) => {
+    if (!sessionId) {
+      showToast('กรุณาเลือก session ก่อนสแกน', 'error');
+      return;
+    }
+    setPendingScan({ qrToken: qrData, sessionId: Number(sessionId) });
+  };
+
+  const confirmScan = async () => {
+    if (!pendingScan) return;
+    const qrData = pendingScan.qrToken;
+    setPendingScan(null);
     try {
-      await attendanceService.submitScanAttendance({ qrData });
-      showToast('เช็คชื่อ ' + name + ' สำเร็จ', 'success');
+      const response = await attendanceService.scanAttendance(pendingScan);
+      const queued = response.offlineQueued;
+      setRecentScans((prev) => [{ qrData, name: response.data?.data?.studentName || qrData, status: queued ? 'pending' : 'present', time: new Date().toLocaleTimeString('th-TH') }, ...prev]);
+      showToast(queued ? 'บันทึกไว้ในคิวออฟไลน์แล้ว จะซิงค์เมื่อออนไลน์' : 'เช็คชื่อสำเร็จ', queued ? 'warning' : 'success');
     } catch (err) {
-      const msg = err?.data?.message || err?.data?.error || 'สแกนไม่สำเร็จ กรุณาลองใหม่';
-      showToast(msg, 'error');
+      const code = err?.data?.errorCode || err?.data?.ErrorCode;
+      const messages = { DUPLICATE_SCAN: 'นักเรียนเช็คชื่อแล้ว', INVALID_QR: 'QR ไม่ถูกต้องหรือหมดอายุ', NO_QUOTA: 'โควต้าไม่เพียงพอ', SESSION_NOT_FOUND: 'ไม่พบ session นี้' };
+      showToast(messages[code] || err?.data?.message || 'สแกนไม่สำเร็จ กรุณาลองใหม่', 'error');
     }
   };
 
@@ -138,7 +166,7 @@ export function AttendancePage({ path }) {
       </div>
 
       <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
-        <button
+           <button
           type="button"
           onClick={() => setMode('scan')}
           class={'px-5 py-2 text-sm font-medium rounded-lg transition-all ' + (isNeo ? 'neo-btn ' : '') + (mode === 'scan' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700')}
@@ -154,10 +182,27 @@ export function AttendancePage({ path }) {
         </button>
       </div>
 
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        {['check-in', 'check-out'].map(value => (
+          <button type="button" key={value} onClick={() => { setScannerMode(value); setPendingScan(null); }} class={`rounded-lg px-4 py-2 text-sm font-semibold ${scannerMode === value ? 'bg-oasis-primary text-white' : 'bg-zinc-100 text-zinc-600'}`}>
+            {value === 'check-in' ? 'เช็คเข้า' : 'เช็คออก'}
+          </button>
+        ))}
+        {offline && <span class="rounded-lg bg-oasis-warning-light px-3 py-2 text-xs font-semibold text-zinc-700">ออฟไลน์: รายการใหม่จะเข้าคิว</span>}
+      </div>
+
       {mode === 'scan' ? (
         <BentoGrid>
           <div class="lg:col-span-3">
-            <ScannerCamera onScan={handleScan} onError={handleScanError} />
+            {scannerMode === 'check-in' ? <ScannerCamera active={!pendingScan} onScan={handleScan} onError={handleScanError} /> : (
+              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
+                <p class="text-sm font-semibold text-zinc-800">เลือกนักเรียนที่เช็คเข้าแล้วเพื่อบันทึกการรับกลับ</p>
+                <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                  {students.filter(student => student.checkinAt && !student.checkoutAt).map(student => <button type="button" key={student.attendanceId} onClick={() => openPickupPanel(student)} class="rounded-xl border border-zinc-200 bg-white p-3 text-left hover:border-oasis-primary"><span class="block text-sm font-semibold">{student.fullName}</span><span class="text-xs text-zinc-500">{new Date(student.checkinAt).toLocaleTimeString('th-TH')}</span></button>)}
+                </div>
+              </div>
+            )}
+            {pendingScan && <div class="mt-4 flex items-center justify-between rounded-xl border border-oasis-primary/20 bg-white p-4 shadow-sm"><div><p class="text-xs text-zinc-500">ยืนยัน QR</p><p class="mt-1 max-w-[16rem] truncate text-sm font-semibold text-zinc-900">{pendingScan.qrToken}</p><p class="mt-1 text-xs text-zinc-500">ขั้นตอนสุดท้ายก่อนบันทึก</p></div><div class="flex gap-2"><button type="button" onClick={() => setPendingScan(null)} class="rounded-lg px-3 py-2 text-sm text-zinc-500">ยกเลิก</button><button type="button" onClick={confirmScan} class="rounded-lg bg-oasis-primary px-4 py-2 text-sm font-semibold text-white">ยืนยันเช็คเข้า</button></div></div>}
           </div>
 
           <div class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} max-h-[600px] overflow-y-auto`}>

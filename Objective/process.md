@@ -292,18 +292,19 @@
 * **สถานะ:** 🟡 กำลังพัฒนา
 
 #### รายการ Acceptance Criteria:
-- [/] **AC 1:** สร้างหน้าเว็บเปิดกล้องมือถือให้ครูสแกน QR Code เพื่อ Check-in และ Check-out ได้ (`attendance-page.jsx` มีกล้องสแกนด้วย `jsQR` สำหรับ Check-in และมีปุ่ม Checkout พร้อมเลือกผู้มารับ)
+- [/] **AC 1:** สร้างหน้าเว็บเปิดกล้องมือถือให้ครูสแกน QR Code เพื่อ Check-in และ Check-out ได้ (`attendance-page.jsx` มี `jsQR`, mode `check-in`/`check-out`, scan confirmation และ checkout จากรายชื่อนักเรียนที่เช็คเข้าแล้ว; QR checkout endpoint โดยตรงยังไม่ถูกเพิ่ม)
 - [x] **AC 2:** มี UI ให้ครูสามารถกดเช็คชื่อแบบ Manual ได้ (เผื่อเด็กลืมบัตร) พร้อมระบุสถานะ มา/สาย/ลา/ขาด (แท็บ "รายชื่อวันนี้" ใน `attendance-page.jsx`)
-- [x] **AC 3:** ระบบสามารถหักโควต้าคงเหลือของนักเรียนได้อัตโนมัติเมื่อเช็คชื่อสำเร็จ (`AttendanceService.ScanCheckinWithTransactionAsync` หัก `sessionsRemaining` ทันที)
+- [/] **AC 3:** ระบบสามารถหักโควต้าคงเหลือของนักเรียนได้อัตโนมัติเมื่อเช็คชื่อสำเร็จ (`ScanCheckinWithTransactionAsync` ทำ transaction/no-quota/unique-boundary และ response อ่าน quota คงเหลือ; ยังไม่มี DB concurrency runtime evidence)
 - [x] **AC 4:** มีช่องให้บันทึกข้อมูลว่า "ผู้ที่มารับกลับ" คือใครในตอน Check-out (`POST /api/attendance/{id}/checkout` รับ `pickedUpBy`, `pickupAuthorizationId`, บันทึก `AuditLog` ใน transaction เดียวกัน และหน้า UI มี modal เลือกผู้รับเด็กที่ active พร้อมแสดงเวลา/ผู้บันทึก)
-- [x] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (`LateAttendanceNotificationJob` แยกเป็น hosted worker)
-- [x] **AC 6:** ทันทีที่ Check-in / Check-out สำเร็จ ต้องมีข้อความ Push ยิงเข้า LINE ผู้ปกครอง (`LineNotificationService.SendAttendanceNotificationAsync`)
-- [ ] **AC 7:** แอปสแกนรองรับโหมด Offline เก็บข้อมูลลง Cache และส่งกลับ Server เมื่อมีเน็ต (ยังไม่มี Service Worker หรือ IndexedDB Sync)
+- [/] **AC 5:** มีระบบ Background Job คอยเช็ค หากผ่านไป 20 นาทีจากเวลาเริ่มเรียนแล้วเด็กยังไม่สแกน ให้ระบบแจ้งเตือน (`LateAttendanceNotificationJob` เป็น hosted worker; ยังไม่มี staging runtime evidence)
+- [/] **AC 6:** ทันทีที่ Check-in / Check-out สำเร็จ ต้องมีข้อความ Push ยิงเข้า LINE ผู้ปกครอง (check-in/checkout ใช้ `IBackgroundNotificationDispatcher`; ยังไม่มี LINE provider runtime evidence และ notification unique database constraint)
+- [/] **AC 7:** แอปสแกนรองรับโหมด Offline เก็บข้อมูลลง Cache และส่งกลับ Server เมื่อมีเน็ต (`attendance-offline-queue.js` ใช้ IndexedDB, expiry/idempotency/replay handling; ยังไม่มี Service Worker และ real-device evidence)
 
 #### สิ่งที่ต้องปรับปรุงต่อ:
-1. เพิ่มกล้องสแกนโหมดสลับ "สแกนเข้า (Check-in)" และ "สแกนออก (Check-out)" โดยตรงจาก QR
-2. เพิ่ม runtime evidence ของ worker เช็คเวลาเรียนหลังเริ่มเรียน 20 นาที
-3. ทำ Offline Queue ด้วย LocalStorage/IndexedDB ในหน้าสแกน
+1. เพิ่ม endpoint/contract สำหรับ QR checkout โดยตรง และทดสอบ Android Chrome/iOS Safari
+2. เพิ่ม runtime evidence ของ worker เช็คเวลาเรียนหลังเริ่มเรียน 20 นาที และ LINE provider success/failure/retry
+3. ตรวจ metadata ฐานข้อมูลจริงก่อนเพิ่ม notification idempotency unique constraint และรัน concurrent transaction test
+4. รัน offline network-transition test จริง และ k6 load test 100 concurrent users พร้อมบันทึกผลใน `process.md`
 
 ---
 
