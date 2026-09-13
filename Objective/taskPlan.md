@@ -10,9 +10,8 @@
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `252 passed / 0 failed / 0 skipped`
-- Controller ที่ยังมี direct EF/data access: `2 files / 47 matches`
-  - `AuthEndpoints.cs`
+- Full API tests ล่าสุด: `254 passed / 0 failed / 0 skipped`
+- Controller ที่ยังมี direct EF/data access: `1 file / 38 matches`
   - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
   - `ParentEndpoints.cs`
 
@@ -159,13 +158,13 @@
 - [x] `InstituteEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
 - [x] `TeacherEndpoints.cs`: แยกเป็น service/repository, focused tests `6/6`, direct EF `0`
 - [x] `UserEndpoints.cs`: แยกเป็น service/repository, focused tests `5/5`, direct EF `0`
-- [ ] `AuthEndpoints.cs`
+- [x] `AuthEndpoints.cs`: แยก refresh/register persistence เข้า service/repository, focused tests `7/7`, direct EF `0`
 - [ ] `ParentEndpoints.cs`
 - [ ] `MakeupEndpoints.cs` ownership query
 
 **Definition of Done ของ architecture รอบนี้:**
 
-- [/] controller direct EF matches ลดจาก `101` เหลือ `47` หลังปิด FileUpload + Institute + Teacher + User; เป้าหมาย scope ทั้งหมดคือ `0`
+- [/] controller direct EF matches ลดจาก `101` เหลือ `38` หลังปิด FileUpload + Institute + Teacher + User + Auth; เป้าหมาย scope ทั้งหมดคือ `0`
 - [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
 - [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
 
@@ -275,6 +274,6 @@
 5. ~~Slice F: student card PDF~~ (เสร็จสมบูรณ์)
 6. ~~Slice G: student CSV export~~ (เสร็จสมบูรณ์; XLSX รอระยะถัดไป)
 7. ~~Slice H: payment slip verification~~ (เสร็จสมบูรณ์; รอต่อ live AI provider)
-8. Slice E: legacy controller boundary 2 ไฟล์ที่เหลือ (`Auth`, `Parent`)
+8. Slice E: legacy controller boundary 1 ไฟล์ที่เหลือ (`Parent`)
 9. Slice I: background jobs (core workers done; existing attendance/payment notification logging remains)
 10. Slice J: admin inactivity timeout / CI / load test

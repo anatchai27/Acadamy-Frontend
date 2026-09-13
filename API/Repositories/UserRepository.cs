@@ -38,6 +38,11 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public Task<User?> GetActiveUserForRefreshAsync(int id, CancellationToken cancellationToken = default) =>
+        _context.Users
+            .Include(u => u.Institute)
+            .FirstOrDefaultAsync(u => u.Id == id && u.Institute != null && u.Institute.IsActive, cancellationToken);
+
     public Task<User?> GetByEmailOrPhoneAsync(string email, string? phone, CancellationToken cancellationToken = default) =>
         _context.Users.FirstOrDefaultAsync(u => u.Email == email || (phone != null && u.Phone == phone), cancellationToken);
 

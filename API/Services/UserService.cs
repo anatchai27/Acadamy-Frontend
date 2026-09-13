@@ -28,6 +28,9 @@ public class UserService(
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _repository.GetByIdAsync(id, ct);
 
+    public Task<User?> GetActiveUserForRefreshAsync(int id, CancellationToken ct = default)
+        => _repository.GetActiveUserForRefreshAsync(id, ct);
+
     public async Task<User> CreateStaffAsync(CreateStaffRequest request, int instituteId, CancellationToken ct = default)
     {
         var email = request.Email?.Trim().ToLowerInvariant();

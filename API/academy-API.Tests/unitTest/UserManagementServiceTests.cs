@@ -102,4 +102,53 @@ public class UserManagementServiceTests
         Assert.Equal("PDPA_REQUIRED", exception.Code);
         repository.Verify(r => r.RegisterAsync(It.IsAny<Institute?>(), It.IsAny<User>(), It.IsAny<PdpaConsent>(), It.IsAny<Teacher?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task GetActiveUserForRefreshAsync_ActiveInstitute_ReturnsUser()
+    {
+        var repository = new Mock<IUserRepository>();
+        var user = new User { Id = 9, InstituteId = 4, Email = "admin@example.com" };
+        repository.Setup(r => r.GetActiveUserForRefreshAsync(9, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var sut = CreateSut(repository);
+
+        var result = await sut.GetActiveUserForRefreshAsync(9);
+
+        Assert.Same(user, result);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_AdminWithInstitute_PersistsThroughRepository()
+    {
+        var repository = new Mock<IUserRepository>();
+        repository.Setup(r => r.GetByEmailOrPhoneAsync("admin@example.com", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        repository.Setup(r => r.RegisterAsync(It.IsAny<Institute>(), It.IsAny<User>(), It.IsAny<PdpaConsent>(), It.IsAny<Teacher>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Institute institute, User user, PdpaConsent _, Teacher teacher, CancellationToken _) =>
+            {
+                institute.Id = 20;
+                user.Id = 21;
+                user.InstituteId = 20;
+                return (institute, user);
+            });
+        var sut = CreateSut(repository);
+
+        var result = await sut.RegisterAsync(new RegisterUserRequest
+        {
+            Email = "admin@example.com",
+            Password = "secret",
+            Role = UserRole.admin,
+            AcceptPdpa = true,
+            Institute = new InstituteInfo { Name = "Academy" },
+            Admin = new AdminInfo { FullName = "Admin" }
+        }, "127.0.0.1");
+
+        Assert.Equal(21, result.User.Id);
+        Assert.Equal(20, result.Institute!.Id);
+        repository.Verify(r => r.RegisterAsync(
+            It.Is<Institute>(i => i.Name == "Academy"),
+            It.Is<User>(u => u.Role == UserRole.admin),
+            It.Is<PdpaConsent>(c => c.IsAccepted == true && c.IpAddress == "127.0.0.1"),
+            It.Is<Teacher>(t => t.FullName == "Admin"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

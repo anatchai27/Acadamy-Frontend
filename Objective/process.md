@@ -32,11 +32,11 @@
 
 - API contract validator: `92` current operations, `96` target operations, `Errors = 0` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `252 passed, 0 failed, 0 skipped`
+- Full API test suite: `254 passed, 0 failed, 0 skipped`
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
 - Front focused inactivity test: `2 passed, 0 failed`; Front full suite: `44 passed, 30 failed` ใน `dashboard-page.test.jsx`
-- Controller ownership audit: direct EF/data access ลดลงเหลือ 2 controller files รวม 47 matches (จากเดิม 7 files / 101 matches); `TeacherEndpoints.cs` และ `UserEndpoints.cs` เหลือ 0
+- Controller ownership audit: direct EF/data access ลดลงเหลือ 1 controller file รวม 38 matches (จากเดิม 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` เหลือ 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
 ---
@@ -320,7 +320,7 @@
 1. **ระบบ Auto-Logout 30 นาทีสำหรับ Admin:** ป้องกันความเสี่ยงตามข้อกำหนดความปลอดภัย NFR-S-06
 2. **บันทึก Notification Log:** background jobs บันทึกครบแล้ว; ต้อง refactor attendance/payment notification flow เดิมให้ผ่าน dispatcher เดียวกัน
 3. **ดึงตารางเรียนจริงขึ้น Dashboard LIFF:** นำตารางเรียนของวันปัจจุบันจาก API แทนที่ mock data ในหน้า Dashboard
-4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 2 ไฟล์ที่เหลือ (`Auth`, `Parent`) ให้เข้า Repository/Service Layer โดย `Institute`, `Teacher` และ `User` แยกชั้นแล้ว
+4. **ย้าย Direct EF ออกจาก Legacy Controllers:** จัดการ 1 ไฟล์ที่เหลือ (`Parent`) ให้เข้า Repository/Service Layer โดย `Institute`, `Teacher`, `User` และ `Auth` แยกชั้นแล้ว
 
 ### ระยะกลาง (P1: การปิด Loop ฟังก์ชันหลักให้ครบวงจร)
 1. **หน้ารายการการบ้านใน LIFF:** ให้ผู้ปกครอง/นักเรียนเปิดดูโจทย์และอัปโหลดส่งภาพการบ้านได้

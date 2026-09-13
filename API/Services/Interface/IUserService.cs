@@ -8,6 +8,7 @@ public interface IUserService
     Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<User>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default);
     Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<User?> GetActiveUserForRefreshAsync(int id, CancellationToken cancellationToken = default);
     Task<User> CreateStaffAsync(CreateStaffRequest request, int instituteId, CancellationToken cancellationToken = default);
     Task<(User User, Institute? Institute)> RegisterAsync(RegisterUserRequest request, string? ipAddress, CancellationToken cancellationToken = default);
     Task<User> CreateAsync(User user, CancellationToken cancellationToken = default);
