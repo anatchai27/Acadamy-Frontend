@@ -91,6 +91,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInstituteRepository, InstituteRepository>();
 builder.Services.AddScoped<IInstituteService, InstituteService>();
+builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();

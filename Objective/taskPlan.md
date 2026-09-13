@@ -10,12 +10,11 @@
 - Latest schema export: `Objective/results-2026-09-12-220648.csv`
 - Contract validator: `Objective/validate-api-contract.ps1`
 - API build ล่าสุดที่ผ่าน: `API/bin/DodValidation`
-- Full API tests ล่าสุด: `241 passed / 0 failed / 0 skipped`
-- Controller ที่ยังมี direct EF/data access: `4 files / 77 matches`
+- Full API tests ล่าสุด: `247 passed / 0 failed / 0 skipped`
+- Controller ที่ยังมี direct EF/data access: `3 files / 63 matches`
   - `AuthEndpoints.cs`
   - `MakeupEndpoints.cs` เฉพาะ ownership guard ที่ยังอยู่หน้า route
   - `ParentEndpoints.cs`
-  - `TeacherEndpoints.cs`
   - `UserEndpoints.cs`
 
 ## กติกาการทำงานทุก slice
@@ -159,7 +158,7 @@
 
 - [x] `FileUploadEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
 - [x] `InstituteEndpoints.cs`: แยกเป็น service/repository, focused tests `4/4`, direct EF `0`
-- [ ] `TeacherEndpoints.cs`
+- [x] `TeacherEndpoints.cs`: แยกเป็น service/repository, focused tests `6/6`, direct EF `0`
 - [ ] `UserEndpoints.cs`
 - [ ] `AuthEndpoints.cs`
 - [ ] `ParentEndpoints.cs`
@@ -167,7 +166,7 @@
 
 **Definition of Done ของ architecture รอบนี้:**
 
-- [/] controller direct EF matches ลดจาก `101` เหลือ `77` หลังปิด FileUpload + Institute; เป้าหมาย scope ทั้งหมดคือ `0`
+- [/] controller direct EF matches ลดจาก `101` เหลือ `63` หลังปิด FileUpload + Institute + Teacher; เป้าหมาย scope ทั้งหมดคือ `0`
 - [ ] ไม่มี controller เริ่ม transaction หรือเรียก `SaveChanges`
 - [ ] ทุก endpoint ใน scope มี service/repository ownership ชัดเจน
 
