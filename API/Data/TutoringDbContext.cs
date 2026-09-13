@@ -716,6 +716,7 @@ public class TutoringDbContext(
                   entity.Property(e => e.SlotId).HasColumnName("slot_id");
                   entity.Property(e => e.StudentId).HasColumnName("student_id");
                   entity.Property(e => e.CreditId).HasColumnName("credit_id");
+                  entity.Property(e => e.IdempotencyKey).HasMaxLength(255).HasColumnName("idempotency_key");
                   entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
                   entity.Property(e => e.ActiveMarker).HasColumnName("active_marker").IsRequired(false);
                   entity.Property(e => e.BookedAt).HasColumnName("booked_at");
@@ -735,6 +736,8 @@ public class TutoringDbContext(
                           .IsUnique().HasDatabaseName("uq_makeup_booking_slot_student");
                   entity.HasIndex(e => new { e.CreditId, e.ActiveMarker })
                           .IsUnique().HasDatabaseName("uq_makeup_booking_credit");
+                  entity.HasIndex(e => new { e.InstituteId, e.IdempotencyKey })
+                          .IsUnique().HasDatabaseName("uq_makeup_booking_idempotency");
                   entity.HasIndex(e => new { e.InstituteId, e.SlotId, e.Status }).HasDatabaseName("idx_makeup_booking_tenant_slot");
                   entity.HasIndex(e => new { e.StudentId, e.Status }).HasDatabaseName("idx_makeup_booking_student_status");
             });

@@ -166,6 +166,45 @@ public class MakeupServiceTests
     }
 
     [Fact]
+    public async Task CreateBookingWithIdempotencyKey_ReplaysExistingBooking()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.ParentOwnsStudentAsync(7, 1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repository.Setup(x => x.GetBookingByIdempotencyKeyAsync("retry-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MakeupBooking
+            {
+                Id = 31,
+                SlotId = 10,
+                StudentId = 1,
+                CreditId = 20,
+                Status = "reserved"
+            });
+        var sut = new MakeupService(repository.Object);
+
+        var result = await sut.CreateBookingForUserAsync(
+            new CreateMakeupBookingRequest(10, 1, 20), 7, true, "retry-1", CancellationToken.None);
+
+        Assert.Equal(31, result.Id);
+        repository.Verify(x => x.CreateBookingAsync(
+            It.IsAny<MakeupSlot>(), It.IsAny<MakeupCredit>(), It.IsAny<MakeupBooking>(), It.IsAny<int?>(), It.IsAny<CancellationToken>(), It.IsAny<string?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBookingWithIdempotencyKey_RejectsDifferentOperation()
+    {
+        var repository = new Mock<IMakeupRepository>();
+        repository.Setup(x => x.ParentOwnsStudentAsync(7, 1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repository.Setup(x => x.GetBookingByIdempotencyKeyAsync("retry-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MakeupBooking { Id = 31, SlotId = 10, StudentId = 1, CreditId = 20, Status = "reserved" });
+        var sut = new MakeupService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<MakeupValidationException>(() => sut.CreateBookingForUserAsync(
+            new CreateMakeupBookingRequest(11, 1, 20), 7, true, "retry-1", CancellationToken.None));
+
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", exception.Code);
+    }
+
+    [Fact]
     public async Task MarkNoShow_ReservedBooking_ConsumesCredit()
     {
         // Arrange

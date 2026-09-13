@@ -12,12 +12,14 @@ public interface IMakeupRepository
     Task<MakeupSlot?> GetSlotAsync(int slotId, CancellationToken ct);
     Task<MakeupCredit?> GetCreditAsync(long creditId, CancellationToken ct);
     Task<MakeupBooking?> GetBookingAsync(long bookingId, CancellationToken ct);
+    Task<MakeupBooking?> GetBookingByIdempotencyKeyAsync(string key, CancellationToken ct);
     Task<List<MakeupBookingListItem>> ListBookingsAsync(int studentId, CancellationToken ct);
     Task<bool> ParentOwnsStudentAsync(int userId, int studentId, CancellationToken ct);
     Task<bool> ParentOwnsBookingAsync(int userId, long bookingId, CancellationToken ct);
     Task<int?> GetTeacherInstituteIdAsync(int teacherId, CancellationToken ct);
     Task<MakeupSlot> CreateSlotAsync(MakeupSlot slot, CancellationToken ct);
     Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct);
+    Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct, string? idempotencyKey);
     Task CancelSlotAsync(MakeupSlot slot, IReadOnlyCollection<MakeupBooking> bookings, IReadOnlyCollection<MakeupCredit> credits, int? actorId, CancellationToken ct);
     Task CancelSlotAsync(int slotId, int? actorId, CancellationToken ct);
     Task CancelBookingAsync(MakeupBooking booking, MakeupCredit credit, MakeupSlot? slot, int? actorId, CancellationToken ct);
@@ -51,6 +53,9 @@ public sealed class MakeupRepository(TutoringDbContext db) : IMakeupRepository
 
     public Task<MakeupBooking?> GetBookingAsync(long bookingId, CancellationToken ct) =>
         db.MakeupBookings.FirstOrDefaultAsync(x => x.Id == bookingId, ct);
+
+    public Task<MakeupBooking?> GetBookingByIdempotencyKeyAsync(string key, CancellationToken ct) =>
+        db.MakeupBookings.FirstOrDefaultAsync(x => x.IdempotencyKey == key, ct);
 
     public Task<List<MakeupBookingListItem>> ListBookingsAsync(int studentId, CancellationToken ct) =>
         (from booking in db.MakeupBookings.AsNoTracking()
@@ -88,11 +93,31 @@ public sealed class MakeupRepository(TutoringDbContext db) : IMakeupRepository
         return slot;
     }
 
-    public async Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct)
+    public Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct) =>
+        CreateBookingAsync(slot, credit, booking, actorId, ct, null);
+
+    public async Task<MakeupBooking> CreateBookingAsync(MakeupSlot slot, MakeupCredit credit, MakeupBooking booking, int? actorId, CancellationToken ct, string? idempotencyKey)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        credit.Status = "reserved";
-        slot.BookedCount++;
+
+        // The preflight checks in the service are useful for a fast response, but
+        // the database update is the final authority under concurrent requests.
+        db.Entry(slot).State = EntityState.Detached;
+        db.Entry(credit).State = EntityState.Detached;
+        var now = DateTime.UtcNow;
+        var slotUpdated = await db.MakeupSlots
+            .Where(x => x.Id == slot.Id && x.ScheduledAt > now && x.BookedCount < x.Capacity)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.BookedCount, x => x.BookedCount + 1), ct);
+        if (slotUpdated != 1)
+            throw new MakeupConcurrencyException("SLOT_UNAVAILABLE", "Make-up slot is full or has already started.");
+
+        var creditUpdated = await db.MakeupCredits
+            .Where(x => x.Id == credit.Id && x.Status == "available" && x.ExpiresAt > now)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, "reserved"), ct);
+        if (creditUpdated != 1)
+            throw new MakeupConcurrencyException("CREDIT_UNAVAILABLE", "Credit is no longer available.");
+
+        booking.IdempotencyKey = idempotencyKey;
         db.MakeupBookings.Add(booking);
         AddTransaction(credit, "reserve", -1, "makeup_booking", null, "Credit reserved for make-up booking", actorId);
         await db.SaveChangesAsync(ct);
@@ -174,4 +199,9 @@ public sealed class MakeupRepository(TutoringDbContext db) : IMakeupRepository
             CreatedBy = actorId,
             CreatedAt = DateTime.UtcNow
         });
+}
+
+public sealed class MakeupConcurrencyException(string code, string message) : Exception(message)
+{
+    public string Code { get; } = code;
 }

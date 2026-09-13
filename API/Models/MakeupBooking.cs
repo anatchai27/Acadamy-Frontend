@@ -7,6 +7,7 @@ public class MakeupBooking : IMultiTenantEntity
     public int SlotId { get; set; }
     public int StudentId { get; set; }
     public long CreditId { get; set; }
+    public string? IdempotencyKey { get; set; }
     public string Status { get; set; } = null!;
     public byte? ActiveMarker { get; set; }
     public DateTime BookedAt { get; set; }

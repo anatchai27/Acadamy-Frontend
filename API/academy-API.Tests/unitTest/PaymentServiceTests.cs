@@ -31,6 +31,8 @@ public class PaymentServiceTests
             InvoiceNo = invoiceNo,
             Amount = amount,
             Method = method,
+            Status = PaymentStatus.Succeeded,
+            NetAmount = amount,
             SlipUrl = "https://slip.example.com/slip.png",
             PaidAt = new DateTime(2026, 6, 14, 14, 30, 0, DateTimeKind.Utc),
             CreatedAt = new DateTime(2026, 6, 14, 14, 30, 0, DateTimeKind.Utc),
@@ -253,6 +255,36 @@ public class PaymentServiceTests
         await sut.GetHistoryAsync(null, null, null, 3, 10);
 
         repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, 3, 10, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExportCsvAsync_ReturnsUtf8BomHeaderAndEscapedPaymentFields()
+    {
+        var repoMock = CreateMockRepo();
+        var payment = MakePayment(
+            1,
+            "INV-202606-0001",
+            "สมชาย, \"รักเรียน\"",
+            "คณิตศาสตร์\nระดับ 1",
+            1200m,
+            "transfer");
+        payment.Status = PaymentStatus.Pending;
+        payment.NetAmount = 1150m;
+        repoMock
+            .Setup(r => r.GetPaymentsForExportAsync(null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([payment]);
+
+        var sut = CreateSut(repoMock);
+
+        var bytes = await sut.ExportCsvAsync(null, null, null);
+        var csv = System.Text.Encoding.UTF8.GetString(bytes);
+
+        Assert.Equal(0xEF, bytes[0]);
+        Assert.Equal(0xBB, bytes[1]);
+        Assert.Equal(0xBF, bytes[2]);
+        Assert.Contains("invoice_no,student_name,course_name,amount,net_amount,method,status,paid_at" + Environment.NewLine, csv);
+        Assert.Contains("INV-202606-0001,\"สมชาย, \"\"รักเรียน\"\"\",\"คณิตศาสตร์\nระดับ 1\",1200,1150,transfer,pending,", csv);
+        repoMock.Verify(r => r.GetPaymentsForExportAsync(null, null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 7

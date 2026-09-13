@@ -21,6 +21,13 @@ jobs:
         run: dotnet build API/academy-API.csproj --no-restore --configuration Release
       - name: Run API tests
         run: dotnet test API/academy-API.Tests/academy-API.Tests.csproj --no-restore --configuration Release --logger "trx;LogFileName=api-tests.trx"
+      - name: Upload API test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-evidence
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
 
   front:
     runs-on: ubuntu-latest
@@ -59,5 +66,7 @@ jobs:
           cache-dependency-path: LineLiff/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Run LIFF tests
+        run: npm test
       - name: Build LINE LIFF
         run: npm run build

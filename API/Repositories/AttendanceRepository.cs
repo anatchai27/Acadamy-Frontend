@@ -29,11 +29,15 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
     private readonly TutoringDbContext _context = context;
 
     public Task<Attendance?> GetForCheckoutAsync(long attendanceId, CancellationToken ct = default) =>
-        _context.Attendances.FirstOrDefaultAsync(a => a.Id == attendanceId, ct);
+        _context.Attendances
+            .Include(a => a.Student)
+            .FirstOrDefaultAsync(a => a.Id == attendanceId, ct);
 
     public Task<StudentPickupAuthorization?> GetPickupAuthorizationAsync(long authorizationId, int studentId, CancellationToken ct = default) =>
         _context.StudentPickupAuthorizations.FirstOrDefaultAsync(a =>
-            a.Id == authorizationId && a.StudentId == studentId && a.IsActive && a.RevokedAt == null, ct);
+            a.Id == authorizationId && a.StudentId == studentId && a.IsActive && a.RevokedAt == null
+            && (a.ValidFrom == null || a.ValidFrom <= DateTime.UtcNow)
+            && (a.ValidUntil == null || a.ValidUntil >= DateTime.UtcNow), ct);
 
     public async Task SaveCheckoutAsync(Attendance attendance, AuditLog auditLog, CancellationToken ct = default)
     {
@@ -51,7 +55,9 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
 
     public async Task<Student?> ValidateQrTokenAsync(string qrToken, CancellationToken ct = default)
     {
-        return await _context.Students.FirstOrDefaultAsync(s => s.QrToken == qrToken, ct);
+        return await _context.Students.FirstOrDefaultAsync(s => s.QrToken == qrToken
+            && s.DeletedAt == null
+            && (s.QrTokenExpiresAt == null || s.QrTokenExpiresAt > DateTime.UtcNow), ct);
     }
 
     public async Task<bool> IsDuplicateScanAsync(int studentId, int sessionId, CancellationToken ct = default)
@@ -168,6 +174,11 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                 .Include(s => s.Course)
                 .FirstAsync(s => s.Id == sessionId, ct);
 
+            var studentBelongsToSessionTenant = await _context.Students
+                .AnyAsync(s => s.Id == studentId && s.InstituteId == session.InstituteId && s.DeletedAt == null, ct);
+            if (!studentBelongsToSessionTenant)
+                throw new AttendanceValidationException("FORBIDDEN", "นักเรียนไม่ได้อยู่ในสถาบันเดียวกับ session นี้");
+
             switch (session.Course.CourseType)
             {
                 case "group":
@@ -177,6 +188,8 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                     var activeEnrollments = await _context.Enrollments
                         .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
                         .ToListAsync(ct);
+                    if (activeEnrollments.Count == 0)
+                        throw new AttendanceValidationException("NO_QUOTA", "โควต้าคงเหลือไม่เพียงพอ");
                     foreach (var enrollment in activeEnrollments)
                         enrollment.SessionsRemaining--;
                     break;
@@ -253,12 +266,18 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
             };
             _context.Attendances.Add(attendance);
 
+            var session = await _context.Sessions
+                .Include(s => s.Course)
+                .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+            var studentBelongsToSessionTenant = session is not null && await _context.Students
+                .AnyAsync(s => s.Id == studentId && s.InstituteId == session.InstituteId && s.DeletedAt == null, ct);
+            if (session is null)
+                throw new AttendanceValidationException("SESSION_NOT_FOUND", "ไม่พบ session ที่ระบุ");
+            if (!studentBelongsToSessionTenant)
+                throw new AttendanceValidationException("FORBIDDEN", "นักเรียนไม่ได้อยู่ในสถาบันเดียวกับ session นี้");
+
             if (status == "present" || status == "late")
             {
-                var session = await _context.Sessions
-                    .Include(s => s.Course)
-                    .FirstAsync(s => s.Id == sessionId, ct);
-
                 switch (session.Course.CourseType)
                 {
                     case "group":
@@ -268,6 +287,8 @@ public class AttendanceRepository(TutoringDbContext context) : IAttendanceReposi
                         var activeEnrollments = await _context.Enrollments
                             .Where(e => e.StudentId == studentId && e.CourseId == session.CourseId && e.SessionsRemaining > 0)
                             .ToListAsync(ct);
+                        if (activeEnrollments.Count == 0)
+                            throw new AttendanceValidationException("NO_QUOTA", "โควต้าคงเหลือไม่เพียงพอ");
                         foreach (var enrollment in activeEnrollments)
                             enrollment.SessionsRemaining--;
                         break;

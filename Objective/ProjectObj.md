@@ -532,12 +532,24 @@ TITLE: เว็บไซต์สาธารณะเพื่อการป�
 3. Lead Capture: ฟอร์ม "ทดลองเรียน" (FR-WEB-08) เมื่อมีคนกรอกข้อมูลสำเร็จ ต้องมีการแจ้งเตือน (Notification) ไปยัง Admin Dashboard หรือ LINE ของเจ้าของสถาบัน
 
 [ACCEPTANCE CRITERIA (AC)]
-[ ] 1. (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา
-[ ] 2. (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ
-[ ] 3. (Admin Panel) สร้างเมนู CMS (Content Management System) ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้
-[ ] 4. (Backend) สร้าง API สำหรับรับข้อมูลจากฟอร์ม Trial Class และบันทึกลงระบบพร้อมแจ้งเตือน Admin
-[ ] 5. หน้าเว็บทั้งหมดรองรับ Responsive Design (NFR-U-04) แสดงผลได้สวยงามทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์
+[/] 1. (Frontend) พัฒนาหน้า Public Website จำนวน 5 หน้าหลัก: หน้าแรก, ผลงานนักเรียน, แนะนำครู, ตารางคอร์ส/ราคา, ติดต่อเรา
+[/] 2. (Frontend) สร้างฟอร์ม "ลงทะเบียนทดลองเรียน" ที่หน้าเว็บ
+[/] 3. (Admin Panel) สร้างเมนู CMS (Content Management System) ให้แอดมินสามารถอัปโหลดรูป แบนเนอร์ และพิมพ์แก้ไขข้อความผลงานนักเรียนได้
+[/] 4. (Backend) สร้าง API สำหรับรับข้อมูลจากฟอร์ม Trial Class และบันทึกลงระบบพร้อมแจ้งเตือน Admin
+[x] 5. หน้าเว็บทั้งหมดรองรับ Responsive Design (NFR-U-04) แสดงผลได้สวยงามทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์
 ================================================================================
+
+### สถานะจากหลักฐานล่าสุด (13 กันยายน 2026)
+
+- Public preview อยู่ที่ `CMS/app/p/[slug]/page.tsx` และ generate เป็น SSG ที่ `/p/oasis-learning` มี section สำหรับ stories, teachers, courses/pricing และ contact
+- Public content ใช้ typed source เดียวใน `CMS/lib/content.ts` พร้อม `getPublicInstitute(slug)`; metadata มี canonical, Open Graph และ JSON-LD ของสถาบัน
+- มี 404 state สำหรับ slug ที่ไม่มีใน source และมี responsive public layout ใน CMS
+- Trial Class ใช้ `POST /api/public/leads` เดิม พร้อม `instituteSlug`, validation, active institute resolution และ rate limit; ไม่มี endpoint ซ้ำ
+- CMS `/content` มี local draft editor, safe parsing, discard draft และ preview link แต่ยังไม่ใช่ persistence production
+- ยังไม่มี dynamic content read/CRUD API, CMS authentication/RBAC, media storage, lead list/status/follow-up หรือ production runtime evidence
+- รายละเอียดงานต่อและ dependency อยู่ที่ `Objective/taskPlan.md`; รายงาน validation ล่าสุดอยู่ที่ `Objective/process.md`
+
+> การทำเครื่องหมาย `[/]` หมายถึงมี code/build evidence บางส่วนแล้ว แต่ยังไม่ผ่าน acceptance เต็มข้อ ไม่ถือว่า production-ready
 
 ```อ้างอิงจากเอกสาร **SRS_Tutoring_Management_System.docx** อย่างเคร่งครัด นี่คือรายละเอียดของหมวดที่ 9 **"ระบบ LINE Integration"** (อ้างอิงจากหัวข้อ 3.9) ครับ
 

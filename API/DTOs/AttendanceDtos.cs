@@ -2,7 +2,8 @@ namespace academy_API.DTOs;
 
 public record ScanAttendanceRequest(
     string QrToken,
-    int SessionId
+    int SessionId,
+    string? IdempotencyKey = null
 );
 
 public record ScanAttendanceResponse(
@@ -18,7 +19,11 @@ public record ScanAttendanceData(
     DateTime CheckinAt,
     int? SessionsRemaining,
     string? BillingMethod,
-    string? BillingDescription
+    string? BillingDescription,
+    long? AttendanceId = null,
+    int? SessionId = null,
+    DateTime? CheckoutAt = null,
+    string NotificationStatus = "pending"
 );
 
 public record AttendanceErrorResponse(
@@ -44,7 +49,8 @@ public record CheckoutAttendanceResponse(
     DateTime CheckoutAt,
     string PickedUpBy,
     long? PickupAuthorizationId,
-    AuditLogResponse? Audit = null
+    AuditLogResponse? Audit = null,
+    string NotificationStatus = "pending"
 );
 
 public record ManualAttendanceResponse(

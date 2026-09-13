@@ -11,7 +11,7 @@ public static class AttendanceEndpoints
         var group = app.MapGroup("/api/attendance")
             .WithTags("Attendance")
             .WithOpenApi()
-            .RequireAuthorization();
+            .RequireAuthorization(policy => policy.RequireRole("admin", "teacher"));
 
         group.MapGet("/daily", async (
             IAttendanceService service,
@@ -43,7 +43,11 @@ public static class AttendanceEndpoints
         {
             try
             {
-                var result = await service.ScanAsync(request, ct);
+                var idempotencyKey = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+                var effectiveRequest = string.IsNullOrWhiteSpace(idempotencyKey)
+                    ? request
+                    : request with { IdempotencyKey = idempotencyKey };
+                var result = await service.ScanAsync(effectiveRequest, ct);
                 return Results.Ok(result);
             }
             catch (AttendanceValidationException ex)

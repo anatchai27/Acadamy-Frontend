@@ -1,4 +1,5 @@
 using academy_API.DTOs;
+using academy_API.Models;
 using System.Globalization;
 using System.Text;
 
@@ -46,6 +47,8 @@ public class PaymentService(
             InvoiceNo = invoiceNo,
             Amount = request.Amount,
             Method = request.Method,
+            Status = request.Method == "transfer" ? PaymentStatus.Pending : PaymentStatus.Succeeded,
+            NetAmount = request.Amount,
             SlipUrl = request.SlipUrl?.Trim(),
             PaidAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
@@ -123,6 +126,7 @@ public class PaymentService(
             p.Enrollment?.Course?.Name,
             p.Amount,
             p.Method,
+            p.Status ?? PaymentStatus.Pending,
             p.PaidAt,
             p.SlipUrl,
             $"{receiptBaseUrl}/{p.InvoiceNo}.pdf"
@@ -144,14 +148,16 @@ public class PaymentService(
     {
         var payments = await _repository.GetPaymentsForExportAsync(startDate, endDate, method, ct);
         var csv = new StringBuilder();
-        csv.AppendLine("invoice_no,student_name,course_name,amount,method,paid_at");
+        csv.AppendLine("invoice_no,student_name,course_name,amount,net_amount,method,status,paid_at");
         foreach (var payment in payments)
         {
             csv.Append(EscapeCsv(payment.InvoiceNo)).Append(',')
                 .Append(EscapeCsv(payment.Enrollment?.Student?.FullName)).Append(',')
                 .Append(EscapeCsv(payment.Enrollment?.Course?.Name)).Append(',')
                 .Append(payment.Amount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append((payment.NetAmount ?? payment.Amount).ToString(CultureInfo.InvariantCulture)).Append(',')
                 .Append(EscapeCsv(payment.Method)).Append(',')
+                .Append(EscapeCsv(payment.Status ?? PaymentStatus.Pending)).Append(',')
                 .Append(payment.PaidAt.ToString("O", CultureInfo.InvariantCulture)).AppendLine();
         }
 

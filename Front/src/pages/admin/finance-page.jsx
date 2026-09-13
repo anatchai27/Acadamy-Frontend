@@ -22,6 +22,7 @@ const paymentColumns = [
     align: 'right',
     render: (value) => <span class="font-semibold">฿{Number(value).toLocaleString()}</span>,
   },
+  { key: 'status', label: 'สถานะ' },
   { key: 'method', label: 'ช่องทาง', align: 'center' },
   {
     key: 'invoiceNo',
@@ -39,6 +40,8 @@ export function FinancePage({ path }) {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [revenue, setRevenue] = useState([]);
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [revenueLoaded, setRevenueLoaded] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -61,6 +64,10 @@ export function FinancePage({ path }) {
   }, []);
 
   const fetchPayments = async () => {
+    if (startDate && endDate && startDate > endDate) {
+      showToast('วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด', 'error');
+      return;
+    }
     setPaymentLoading(true);
     try {
       const params = {};
@@ -68,12 +75,16 @@ export function FinancePage({ path }) {
       if (endDate) params.end_date = endDate;
       const res = await financeService.getPayments(params, { signal: getSignal() });
       const payload = res.data?.data || res.data || {};
-      setPayments(payload.payments || (Array.isArray(payload) ? payload : []));
-      if (startDate && endDate) {
+       setPayments(payload.payments || (Array.isArray(payload) ? payload : []));
+       if (startDate && endDate) {
         setReportLoading(true);
         const report = await reportService.getRevenueReport({ from: startDate, to: endDate, group_by: 'day' }, { signal: getSignal() });
-        setRevenue(report.data?.data || report.data || []);
-      }
+         const revenuePayload = report.data?.data || report.data || [];
+          const rows = Array.isArray(revenuePayload) ? revenuePayload : revenuePayload.rows || [];
+          setRevenue(rows);
+          setRevenueTotal(rows.reduce((total, row) => total + (Number(row.grossAmount) || 0), 0));
+          setRevenueLoaded(true);
+       }
     } catch {
       showToast('ไม่สามารถโหลดข้อมูลการเงินได้', 'error');
     } finally {
@@ -126,7 +137,7 @@ export function FinancePage({ path }) {
         slipUrl: undefined,
       };
       const res = await financeService.createPayment(payload);
-      const paymentId = res.data?.data?.id || res.data?.id;
+       const paymentId = res.data?.data?.paymentId || res.data?.paymentId;
       const invoiceNo = res.data?.data?.invoiceNo || res.data?.invoiceNo || `INV-${Date.now()}`;
 
       if (slipFile && paymentId) {
@@ -295,10 +306,13 @@ export function FinancePage({ path }) {
                 <h3 class="font-semibold text-zinc-900">กราฟรายรับรายวัน</h3>
                 <p class="text-xs text-zinc-500">แสดงจากข้อมูล payment จริงตามช่วงวันที่</p>
               </div>
-              {reportLoading ? <span class="text-xs text-zinc-500">กำลังโหลด...</span> : null}
+              <div class="text-right">
+                {reportLoading ? <span class="block text-xs text-zinc-500">กำลังโหลด...</span> : null}
+                <span class="text-sm font-semibold text-zinc-800">รวม ฿{revenueTotal.toLocaleString()}</span>
+              </div>
             </div>
             {revenue.length === 0 ? (
-              <p class="text-sm text-zinc-500">เลือกวันที่และกดกรองข้อมูลเพื่อแสดงกราฟ</p>
+              <p class="text-sm text-zinc-500">{revenueLoaded ? 'ไม่พบรายรับที่สำเร็จในช่วงวันที่เลือก' : 'เลือกวันที่และกดกรองข้อมูลเพื่อแสดงกราฟ'}</p>
             ) : (
               <div class="space-y-3">
                 {revenue.map(row => {

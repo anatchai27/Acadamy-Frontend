@@ -44,13 +44,8 @@ public static class PaymentEndpoints
             int limit = 20,
             CancellationToken ct = default) =>
         {
-            DateTime? startDate = null;
-            DateTime? endDate = null;
-
-            if (!string.IsNullOrEmpty(start_date) && DateTime.TryParse(start_date, out var sd))
-                startDate = sd.ToUniversalTime();
-            if (!string.IsNullOrEmpty(end_date) && DateTime.TryParse(end_date, out var ed))
-                endDate = ed.Date.AddDays(1).AddTicks(-1);
+            if (!TryParseDateRange(start_date, end_date, out var startDate, out var endDate, out var error))
+                return Results.BadRequest(new { error });
 
             var result = await service.GetHistoryAsync(startDate, endDate, method, page, limit, ct);
             return Results.Ok(result);
@@ -63,12 +58,8 @@ public static class PaymentEndpoints
             string? method,
             CancellationToken ct = default) =>
         {
-            DateTime? startDate = null;
-            DateTime? endDate = null;
-            if (!string.IsNullOrEmpty(start_date) && DateTime.TryParse(start_date, out var sd))
-                startDate = sd.ToUniversalTime();
-            if (!string.IsNullOrEmpty(end_date) && DateTime.TryParse(end_date, out var ed))
-                endDate = ed.Date.AddDays(1).AddTicks(-1);
+            if (!TryParseDateRange(start_date, end_date, out var startDate, out var endDate, out var error))
+                return Results.BadRequest(new { error });
 
             var csv = await service.ExportCsvAsync(startDate, endDate, method, ct);
             return Results.File(csv, "text/csv; charset=utf-8", "payments.csv");
@@ -91,5 +82,45 @@ public static class PaymentEndpoints
         });
 
         return app;
+    }
+
+    private static bool TryParseDateRange(
+        string? startText,
+        string? endText,
+        out DateTime? startDate,
+        out DateTime? endDate,
+        out string? error)
+    {
+        startDate = null;
+        endDate = null;
+        error = null;
+        DateTime parsedStart = default;
+        DateTime parsedEnd = default;
+
+        if (!string.IsNullOrWhiteSpace(startText) && !DateTime.TryParse(startText, out parsedStart))
+        {
+            error = "start_date must be a valid date.";
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(endText) && !DateTime.TryParse(endText, out parsedEnd))
+        {
+            error = "end_date must be a valid date.";
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(startText))
+            startDate = parsedStart.Date.ToUniversalTime();
+
+        if (!string.IsNullOrWhiteSpace(endText))
+            endDate = parsedEnd.Date.AddDays(1).AddTicks(-1).ToUniversalTime();
+
+        if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+        {
+            error = "start_date must be on or before end_date.";
+            return false;
+        }
+
+        return true;
     }
 }

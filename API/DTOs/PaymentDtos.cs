@@ -37,6 +37,7 @@ public record PaymentHistoryItem(
     string? CourseName,
     decimal Amount,
     string Method,
+    string Status,
     DateTime PaidAt,
     string? SlipUrl,
     string? ReceiptPdfUrl

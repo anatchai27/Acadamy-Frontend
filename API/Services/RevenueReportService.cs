@@ -1,4 +1,5 @@
 using academy_API.DTOs;
+using academy_API.Models;
 using academy_API.Repositories;
 using System.Globalization;
 
@@ -15,9 +16,13 @@ public sealed class RevenueReportService(IPaymentRepository repository) : IReven
     {
         var payments = await repository.GetPaymentsForExportAsync(from, to.Date.AddDays(1).AddTicks(-1), null, ct);
         return payments
+            .Where(payment => payment.Status == PaymentStatus.Succeeded)
             .GroupBy(payment => FormatPeriod(payment.PaidAt, groupBy))
             .OrderBy(group => group.Key)
-            .Select(group => new RevenueReportRow(group.Key, group.Sum(payment => payment.Amount), group.Count()))
+            .Select(group => new RevenueReportRow(
+                group.Key,
+                group.Sum(payment => payment.NetAmount ?? payment.Amount),
+                group.Count()))
             .ToList();
     }
 

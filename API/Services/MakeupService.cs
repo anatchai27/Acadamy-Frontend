@@ -12,6 +12,7 @@ public interface IMakeupService
     Task<MakeupSlotResponse> CreateSlotAsync(CreateMakeupSlotRequest request, CancellationToken ct);
     Task<MakeupBookingResponse> CreateBookingAsync(CreateMakeupBookingRequest request, int? actorId, CancellationToken ct);
     Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, CancellationToken ct);
+    Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, string? idempotencyKey, CancellationToken ct);
     Task CancelSlotAsync(int slotId, int? actorId, CancellationToken ct);
     Task CancelBookingAsync(long bookingId, int? actorId, int? userId, bool isParent, CancellationToken ct);
     Task<MakeupBookingResponse> MarkNoShowAsync(long bookingId, int? actorId, CancellationToken ct);
@@ -86,10 +87,52 @@ public sealed class MakeupService(IMakeupRepository repository) : IMakeupService
     }
 
     public async Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, CancellationToken ct)
+        => await CreateBookingForUserAsync(request, userId, isParent, null, ct);
+
+    public async Task<MakeupBookingResponse> CreateBookingForUserAsync(CreateMakeupBookingRequest request, int? userId, bool isParent, string? idempotencyKey, CancellationToken ct)
     {
         if (isParent && (!userId.HasValue || !await _repository.ParentOwnsStudentAsync(userId.Value, request.StudentId, ct)))
             throw new MakeupValidationException("FORBIDDEN", "You cannot create a booking for this student.");
-        return await CreateBookingAsync(request, userId, ct);
+
+        if (!string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            if (idempotencyKey.Length > 255)
+                throw new MakeupValidationException("INVALID_IDEMPOTENCY_KEY", "Idempotency-Key must be at most 255 characters.");
+
+            var previous = await _repository.GetBookingByIdempotencyKeyAsync(idempotencyKey, ct);
+            if (previous is not null)
+            {
+                if (previous.SlotId != request.SlotId || previous.StudentId != request.StudentId || previous.CreditId != request.CreditId)
+                    throw new MakeupValidationException("IDEMPOTENCY_KEY_REUSED", "Idempotency-Key was already used for another booking.");
+                return ToBookingResponse(previous);
+            }
+        }
+
+        return await CreateBookingAsync(request, userId, idempotencyKey, ct);
+    }
+
+    private async Task<MakeupBookingResponse> CreateBookingAsync(CreateMakeupBookingRequest request, int? actorId, string? idempotencyKey, CancellationToken ct)
+    {
+        var slot = await _repository.GetSlotAsync(request.SlotId, ct);
+        var credit = await _repository.GetCreditAsync(request.CreditId, ct);
+        if (slot is null || credit is null) throw new MakeupValidationException("NOT_FOUND", "Slot or credit not found.");
+        if (credit.StudentId != request.StudentId) throw new MakeupValidationException("CREDIT_STUDENT_MISMATCH", "Credit does not belong to the student.");
+        if (credit.Status != "available" || credit.ExpiresAt <= DateTime.UtcNow) throw new MakeupValidationException("CREDIT_UNAVAILABLE", "Credit is not available.");
+        if (slot.ScheduledAt <= DateTime.UtcNow || slot.BookedCount >= slot.Capacity) throw new MakeupValidationException("SLOT_UNAVAILABLE", "Make-up slot is full or has already started.");
+
+        var booking = await _repository.CreateBookingAsync(slot, credit, new MakeupBooking
+        {
+            InstituteId = credit.InstituteId,
+            SlotId = slot.Id,
+            StudentId = request.StudentId,
+            CreditId = credit.Id,
+            Status = "reserved",
+            ActiveMarker = 1,
+            BookedAt = DateTime.UtcNow,
+            CreatedBy = actorId,
+            UpdatedAt = DateTime.UtcNow
+        }, actorId, ct, idempotencyKey);
+        return ToBookingResponse(booking);
     }
 
     public async Task CancelSlotAsync(int slotId, int? actorId, CancellationToken ct)

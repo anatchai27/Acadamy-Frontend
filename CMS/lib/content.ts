@@ -7,6 +7,40 @@ export type ContentSection = {
   status: "Published" | "Draft";
 };
 
+export type PublicTeacher = {
+  name: string;
+  role: string;
+  bio: string;
+  initials: string;
+};
+
+export type PublicCourse = {
+  name: string;
+  subject: string;
+  sessions: number;
+  price: string;
+  detail: string;
+};
+
+export type PublicStory = {
+  title: string;
+  detail: string;
+  color: string;
+};
+
+export type PublicInstitute = {
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  phone: string;
+  lineId: string;
+  address: string;
+  teachers: PublicTeacher[];
+  courses: PublicCourse[];
+  stories: PublicStory[];
+};
+
 export const defaultSections: ContentSection[] = [
   { key: "hero_banner", label: "Hero banner", description: "First impression and primary CTA", title: "Learn with confidence.", body: "A calm, focused learning space where every student can make visible progress.", status: "Published" },
   { key: "about_us", label: "About the academy", description: "Mission and teaching approach", title: "Built around real progress", body: "Tell families what makes your teachers, curriculum and learning environment different.", status: "Draft" },
@@ -15,7 +49,7 @@ export const defaultSections: ContentSection[] = [
   { key: "contact", label: "Contact", description: "Location and enquiry details", title: "Start a conversation", body: "Give prospective families a clear way to reach the academy.", status: "Published" },
 ];
 
-export const publicInstitute = {
+export const publicInstitute: PublicInstitute = {
   slug: "oasis-learning",
   name: "Oasis Learning Academy",
   tagline: "A calmer way to make real progress.",
@@ -39,3 +73,7 @@ export const publicInstitute = {
     { title: "A better homework rhythm", detail: "A family routine story", color: "#dbe9fa" },
   ],
 };
+
+export function getPublicInstitute(slug: string) {
+  return slug === publicInstitute.slug ? publicInstitute : null;
+}

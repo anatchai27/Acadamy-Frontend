@@ -23,7 +23,7 @@ public static class MakeupEndpoints
             await Execute(async () => { await service.CancelSlotAsync(slotId, ActorId(context), ct); return new { status = "cancelled" }; }, Results.Ok))
             .RequireAuthorization(policy => policy.RequireRole("admin", "teacher"));
         group.MapPost("/bookings", async (CreateMakeupBookingRequest request, IMakeupService service, HttpContext context, CancellationToken ct) =>
-            await Execute(() => service.CreateBookingForUserAsync(request, ActorId(context), context.User.IsInRole("parent"), ct), result => Results.Created("/api/makeup/bookings", result)));
+            await Execute(() => service.CreateBookingForUserAsync(request, ActorId(context), context.User.IsInRole("parent"), context.Request.Headers["Idempotency-Key"].FirstOrDefault(), ct), result => Results.Created("/api/makeup/bookings", result)));
         group.MapDelete("/bookings/{bookingId:long}", async (long bookingId, IMakeupService service, HttpContext context, CancellationToken ct) =>
             await Execute(async () => { await service.CancelBookingAsync(bookingId, ActorId(context), ActorId(context), context.User.IsInRole("parent"), ct); return Results.NoContent(); }, result => result));
         group.MapPost("/bookings/{bookingId:long}/no-show", async (long bookingId, IMakeupService service, HttpContext context, CancellationToken ct) =>
@@ -37,6 +37,8 @@ public static class MakeupEndpoints
         try { return success(await action()); }
         catch (MakeupValidationException ex) when (ex.Code == "NOT_FOUND") { return Results.NotFound(new { error = ex.Message }); }
         catch (MakeupValidationException ex) when (ex.Code is "INVALID_STATE" or "CREDIT_UNAVAILABLE" or "SLOT_UNAVAILABLE") { return Results.Conflict(new { error = ex.Message }); }
+        catch (academy_API.Repositories.MakeupConcurrencyException ex) { return Results.Conflict(new { error = ex.Message, code = ex.Code }); }
+        catch (MakeupValidationException ex) when (ex.Code is "IDEMPOTENCY_KEY_REUSED" or "INVALID_IDEMPOTENCY_KEY") { return Results.Conflict(new { error = ex.Message, code = ex.Code }); }
         catch (MakeupValidationException ex) when (ex.Code == "FORBIDDEN") { return Results.Forbid(); }
         catch (MakeupValidationException ex) { return Results.BadRequest(new { error = ex.Message, code = ex.Code }); }
     }

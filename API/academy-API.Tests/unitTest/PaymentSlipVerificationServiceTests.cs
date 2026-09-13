@@ -8,7 +8,7 @@ namespace academy_API.Tests.unitTest;
 public class PaymentSlipVerificationServiceTests
 {
     [Fact]
-    public async Task VerifyAsync_MatchingAmount_MarksPaymentVerified()
+    public async Task VerifyAsync_MatchingAmount_MarksPaymentSucceeded()
     {
         // Arrange
         var repository = new Mock<IPaymentRepository>();
@@ -24,7 +24,7 @@ public class PaymentSlipVerificationServiceTests
 
         // Assert
         Assert.True(result.Verified);
-        Assert.Equal("verified", payment.Status);
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
         Assert.Equal(1200m, payment.SlipAmount);
         Assert.Equal("REF-5", payment.SlipTransRef);
         Assert.Equal(99, payment.VerifiedBy);

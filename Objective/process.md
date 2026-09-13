@@ -32,10 +32,10 @@
 
 - API contract validator: `92` current operations, `98` target operations, `Errors = 0`, `Warnings = 142` (`Objective/validate-api-contract.ps1`)
 - API build: ผ่านด้วย output `API/bin/DodValidation`
-- Full API test suite: `268 passed, 0 failed, 0 skipped` หลังเพิ่ม Phase 1 integration/authorization tests
+- Full API test suite: `277 passed, 0 failed, 0 skipped` หลังเพิ่ม Make-up idempotency/concurrency boundary tests
 - Front build: ผ่าน (`npm.cmd run build`)
 - LineLiff build: ผ่าน (`npm.cmd run build`)
-- Front full suite: `79 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
+- Front full suite: `87 passed, 0 failed, 0 skipped`; `dashboard-page.test.jsx`: `30 passed, 0 failed`
 - Controller ownership audit: direct EF/data access ลดลงจาก 1 controller file รวม 38 matches เหลือ `0` ใน `ParentEndpoints.cs` และ `0` ใน controllers ทั้งหมดตาม scope (เดิม audit รอบก่อน 7 files / 101 matches); `TeacherEndpoints.cs`, `UserEndpoints.cs` และ `AuthEndpoints.cs` ยังคง 0
 - Schema evidence: `Objective/results-2026-09-12-220648.csv` (ยืนยันตาราง `leave_request_attachments` เรียบร้อย)
 
@@ -72,6 +72,16 @@
 - เพิ่ม room-overlap validation ใน `SessionRepository`/`SessionService`: ช่วงเวลาชนกันใน room เดียวกันของ tenant เดียวกันจะไม่สร้าง session และ endpoint คืน `409` พร้อม `ROOM_OVERLAP`; ระยะเวลาที่ไม่ถูกต้องคืน validation error
 - Focused evidence: revenue grouping, relational payment filter/navigation/date-boundary และ report authorization tests `3 passed / 0 failed`; full API tests `268 passed / 0 failed / 0 skipped`; contract validator รอบนี้ `Errors = 0`, warnings `142`
 - ยังไม่ประกาศ live AI/OCR, holiday calendar, automated backup หรือ k6 performance เพราะยังไม่มี provider credential, business/schema contract หรือ runtime environment evidence ที่ตรวจได้จริง
+
+### หลักฐาน P0-02: Finance payment status policy (13 กันยายน 2026)
+
+- บันทึก decision record ที่ `Objective/finance-payment-status-policy.md` โดยกำหนด `pending`, `succeeded`, `failed`, `cancelled`, `partially_refunded` และ `refunded` เป็น payment lifecycle
+- Revenue นับเฉพาะ `succeeded`; ใช้ `NetAmount` เมื่อมีค่า และ fallback เป็น `Amount`
+- แยก slip verification ออกจาก payment lifecycle โดยใช้ `VerifiedAt`, `VerifiedBy`, `VerificationProvider`, `VerificationPayload`, `SlipAmount`, `SlipTransRef` และ `SlipVerifiedAt` ที่มีอยู่แล้ว
+- Payment creation กำหนด `cash`/`credit_card` เป็น `succeeded` และ `transfer` เป็น `pending`; slip verification ที่ผ่านเปลี่ยนสถานะเป็น `succeeded` ไม่ใช้ `verified` เป็น payment status
+- Payment history response และ CSV เพิ่ม lifecycle status; CSV ยังคงเป็น full payment ledger export ไม่ใช่ revenue-only export
+- เพิ่ม revenue focused test สำหรับการตัด `pending` และการใช้ `NetAmount`; focused API tests ผ่าน `17 passed / 0 failed`; Front full tests ผ่าน `87 passed / 0 failed`
+- ยังไม่ปิด P0-02 เพราะยังขาด payment CSV response test โดยตรง และ production database/runtime evidence; invalid date contract และ payment form `paymentId` mapping ถูกแก้และทดสอบในรอบล่าสุด
 
 ### หลักฐาน Slice 1: Front legacy dashboard tests
 
@@ -187,6 +197,17 @@
 - ยังไม่มี API หรือสูตรที่ยืนยันสำหรับ Renewal Rate, Churn Risk และ Revenue Forecast; CMS `/operations` แสดง definition-gate state โดยไม่แสดงตัวเลขปลอม
 - ยังไม่มี Teacher Timesheet API/service/DTO/export contract; Objective อ้าง `sessions` และ `attendances` แต่ยังไม่เลือก source และกติกานับชั่วโมง
 - สถานะ P1-02: `[/]`; ปิดไม่ได้จนกว่าจะยืนยัน payment status policy, สูตร analytics, date window/timezone/privacy rule, timesheet source/export และเพิ่ม focused tests ตาม contract
+
+### หลักฐานรอบแก้ไข: Make-up concurrency และ Finance contract hardening (13 กันยายน 2026)
+
+- `POST /api/makeup/bookings` รองรับ `Idempotency-Key`; เมื่อ key เดิมถูกใช้กับ operation เดิมจะ replay booking เดิม และถ้าใช้กับ payload อื่นจะคืน `409` พร้อม `IDEMPOTENCY_KEY_REUSED`
+- `MakeupRepository.CreateBookingAsync` เปลี่ยนจากการเพิ่ม `BookedCount` ใน entity ที่อ่านมา เป็น atomic `UPDATE ... WHERE booked_count < capacity` และ atomic credit reservation ภายใน transaction เดียวกัน เพื่อป้องกัน oversubscription จาก concurrent request
+- เพิ่ม `MakeupBooking.IdempotencyKey`, unique index `(institute_id, idempotency_key)` ใน EF model และ deployment SQL ที่ `API/Database/makeup-idempotency.sql`; SQL ยังต้อง apply บน database environment จริง
+- เพิ่ม focused Make-up tests สำหรับ idempotency replay/key mismatch; ล่าสุด `17 passed / 0 failed`; focused API รวม Finance/Make-up/authorization `31 passed / 0 failed`
+- Finance endpoint ไม่กลืน malformed `start_date`/`end_date` อีกต่อไป แต่คืน `400`; ปฏิเสธ range ที่ start หลัง end และคง revenue policy เฉพาะ `succeeded` กับ `NetAmount` ตาม decision record
+- แก้ Finance UI ให้ map `CreatePaymentData.paymentId` ตาม response จริง และแสดง empty revenue state แยกจากสถานะยังไม่ได้ค้นหา; Front test `87 passed / 0 failed` และ Front build ผ่าน
+- ยังไม่มี MySQL concurrency integration run, production DB/runtime evidence, payment CSV response test โดยตรง, LIFF component runner, feature-flag service หรือ OpenTelemetry backend evidence จึงยังไม่ปิด P0 acceptance จาก static/unit evidence เพียงอย่างเดียว
+- ระยะ 1 เพิ่ม payment CSV response test โดยตรงใน `PaymentServiceTests`, เพิ่ม Vitest + Testing Library runner ให้ `LineLiff`, เพิ่ม `API/Database/verify-makeup-idempotency.ps1` สำหรับตรวจ `idempotency_key` column กับ unique index บน MySQL/TiDB จริง และปรับ CI ให้รัน LIFF tests/build กับเก็บ API TRX artifact; ยังไม่มีการนับ staging/production evidence จาก local run
 
 ---
 
@@ -476,6 +497,16 @@
 2. **Runtime evidence ของ Make-up Admin:** ทดสอบ create/group cancel, credit return และ conflict กับ database จริง
 3. **CMS contract:** ยืนยัน content CRUD, auth/RBAC, media storage และ lead follow-up ก่อนเชื่อม production
 4. **เชื่อมต่อ AI OCR Slip Provider จริง:** ทำเฉพาะหลัง provider discovery gate ครบ
+
+### หลักฐานรอบ implement Public Website + CMS (13 กันยายน 2026)
+
+- รวม public content เป็น typed source เดียวใน `CMS/lib/content.ts` และเพิ่ม `getPublicInstitute(slug)` เพื่อไม่ให้ route มี lookup logic กระจายหลายจุด
+- ปรับ `CMS/app/p/[slug]/page.tsx` ให้ใช้ source เดียวทั้ง page และ metadata พร้อม canonical path, Open Graph และ JSON-LD ของสถาบัน
+- เพิ่ม `CMS/app/p/[slug]/not-found.tsx` สำหรับ public slug ที่ไม่พบ แทนการแสดงหน้าเปล่าหรือข้อมูล fallback ที่เดาเอง
+- ปรับ `CMS/app/content/page.tsx` ให้ตรวจ shape ของ local draft ก่อนโหลด, ลบ draft ที่ผิดรูปแบบ และมี `Discard local draft` กับลิงก์ไป public preview
+- Validation: `Push-Location .\CMS; npm.cmd run build; Pop-Location` ผ่าน, Next static generation `10/10` routes และ `/p/oasis-learning` เป็น SSG output
+- พบ warning เดิมจาก Autoprefixer เรื่อง `align-items: end`; ไม่กระทบ build แต่ควรเปลี่ยนเป็น `flex-end` ในงาน cleanup CSS รอบถัดไป
+- สถานะยังเป็น `[/]`: การเปลี่ยนแปลงนี้เป็น static/source-hardening และ local draft UX เท่านั้น ยังไม่มี content read/CRUD API, CMS auth/RBAC, media storage หรือ production runtime evidence
 
 ### ระยะเตรียมขึ้นระบบจริง (P2: ความพร้อมด้าน DevOps และความพึงพอใจ)
 1. **Runtime Load-test evidence:** รัน `load-tests/attendance.js` กับ environment ที่อนุมัติและเก็บผล threshold

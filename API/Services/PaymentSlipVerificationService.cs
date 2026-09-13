@@ -1,5 +1,6 @@
 using System.Text.Json;
 using academy_API.DTOs;
+using academy_API.Models;
 using academy_API.Repositories;
 
 namespace academy_API.Services;
@@ -19,7 +20,7 @@ public sealed class PaymentSlipVerificationService(
             ?? throw new PaymentValidationException("PAYMENT_NOT_FOUND", "ไม่พบรายการชำระเงิน");
         if (string.IsNullOrWhiteSpace(payment.SlipUrl))
             throw new PaymentValidationException("SLIP_NOT_FOUND", "รายการชำระเงินยังไม่มีสลิป");
-        if (payment.Status == "verified")
+        if (payment.Status == PaymentStatus.Succeeded)
             throw new PaymentValidationException("ALREADY_VERIFIED", "รายการชำระเงินนี้ถูกตรวจสอบแล้ว");
 
         var result = await provider.VerifyAsync(payment.SlipUrl, ct);
@@ -28,7 +29,7 @@ public sealed class PaymentSlipVerificationService(
         if (!result.Amount.HasValue || Math.Abs(result.Amount.Value - payment.Amount) > 0.01m)
             throw new PaymentValidationException("AMOUNT_MISMATCH", "ยอดในสลิปไม่ตรงกับยอดชำระเงิน");
 
-        payment.Status = "verified";
+        payment.Status = PaymentStatus.Succeeded;
         payment.VerifiedAt = DateTime.UtcNow;
         payment.VerifiedBy = actorId;
         payment.VerificationProvider = result.Provider;
