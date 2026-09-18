@@ -169,16 +169,16 @@ Definition of Done: นักเรียน/ผู้ปกครองเล�
 สถานะ: `[/]`
 
 - [x] หน้า scores โหลดข้อมูลจาก `getChildScores`
+- [x] ต่อ `getChildProgress` กับ `GET /api/parents/children/{childId}/progress`
 - [x] มี loading, error และ empty state
 - [x] แสดงคะแนนรายหัวข้อเป็น progress bar
-- [/] Requirement ระบุ Radar Chart แต่ implementation ปัจจุบันยังเป็น progress bar และยังไม่มี Recharts/Chart.js ใน dependencies
-- [/] Feedback จากครูยังไม่แสดงเป็น inbox ตาม Requirement หาก API ส่ง field มา ต้องออกแบบส่วนแสดงผลให้ครบ
-- [ ] เพิ่ม Radar Chart จาก `skill_scores` โดยมี fallback เมื่อข้อมูลไม่ครบ
-- [ ] เพิ่ม Feedback Inbox พร้อมวันที่/ผู้ให้ feedback ถ้า contract รองรับ
-- [ ] เชื่อม streak/badge จาก progress API และทำ empty state
-- [ ] ตรวจ selected child ownership ก่อนโหลดคะแนน
+- [x] เพิ่ม Radar Chart จาก `skill_scores` ด้วย SVG โดยไม่เพิ่ม dependency หนัก
+- [x] เพิ่ม Feedback Inbox จาก field `note` ของ score API
+- [x] แสดง streak/badge จาก progress API พร้อม empty state
+- [x] ส่ง `childId` ที่เลือกเข้า scores/progress endpoint ซึ่ง Backend ตรวจ ownership ด้วย `OwnsChild`
+- [/] ทดสอบข้อมูลจริงที่มีหลายหัวข้อ/Badge และตรวจการแสดงผลบนมือถือ
 
-อ้างอิง: `LineLiff/src/pages/scores.jsx`, `LineLiff/src/services/parent-service.js`, `Front/src/pages/admin/academics-page.jsx`
+อ้างอิง: `LineLiff/src/pages/scores.jsx`, `LineLiff/src/pages/scores.test.jsx`, `LineLiff/src/services/parent-service.js`, `API/Controllers/ParentEndpoints.cs`, `Front/src/pages/admin/academics-page.jsx`
 
 Definition of Done: Parent เห็นกราฟพัฒนาการ, feedback, streak และ badge ของลูกที่เลือกจากข้อมูลจริงเท่านั้น
 
@@ -187,14 +187,15 @@ Definition of Done: Parent เห็นกราฟพัฒนาการ, fee
 สถานะ: `[/]`
 
 - [x] มี route และเรียก `getChildPayments`
+- [x] Parent API คืน `id`, `invoiceNo`, `amount`, `status` และ `receiptPdfUrl` สำหรับแต่ละรายการ
 - [x] มี loading และ empty state
 - [x] แสดงยอดเงินและสถานะรายการ
-- [/] error ถูกกลืนด้วย `catch(() => {})` ทำให้ผู้ใช้ไม่รู้ว่า API ล้มเหลว
-- [ ] เพิ่ม error state และ retry
-- [ ] เพิ่มปุ่มดู/ดาวน์โหลดใบเสร็จ PDF ตาม Requirement
-- [/] ตรวจ format field วันที่, amount และ status ให้ตรง API contract ไม่ใช้ fallback ที่เดาเอง
+- [x] เพิ่ม error state และปุ่ม retry เมื่อ API ล้มเหลว
+- [x] เพิ่มปุ่มเปิดใบเสร็จ PDF จาก `receiptPdfUrl` ที่ API คืนให้
+- [x] normalize field วันที่, amount, status และ receipt URL ก่อน render
+- [/] ทดสอบเปิดไฟล์ PDF จริงบนมือถือและตรวจ permission/CORS ของ storage
 
-อ้างอิง: `LineLiff/src/pages/payments.jsx`
+อ้างอิง: `LineLiff/src/pages/payments.jsx`, `LineLiff/src/pages/payments.test.jsx`, `LineLiff/src/services/parent-service.js`, `API/Controllers/ParentEndpoints.cs`, `API/Repositories/ParentRepository.cs`, `API/Services/ParentService.cs`
 
 ### 11. Public Website และ Trial Lead
 
@@ -302,11 +303,13 @@ Pop-Location
 
 ## ผลตรวจล่าสุด
 
-- LineLiff tests: `8 passed / 0 failed`
+- LineLiff tests: `11 passed / 0 failed`
 - API tests: `279 passed / 0 failed / 0 skipped`
 - LineLiff production build: ผ่าน
 - Dashboard ดึง summary จาก `/api/parents/me/dashboard` และดึงตารางจาก `/api/parents/children/{childId}/sessions`
 - Dashboard ไม่แสดงตารางเรียนตัวอย่างเมื่อ child sessions API คืนรายการว่าง
 - Dashboard ไม่ยอมใช้ active child ที่ไม่มีอยู่ในรายการจาก parent API
 - Homework แยก pending/submitted, ใช้ camera input และบีบอัดไฟล์ก่อนเรียก upload API
+- Scores เรียก `/scores` และ `/progress`, แสดง Radar Chart, feedback, streak และ badges จากข้อมูล API
+- Payment History เรียก child payment API, แสดง error/retry และเปิด receipt PDF จาก `receiptPdfUrl`
 - ยังไม่ได้ปิด runtime smoke บน LIFF จริง, device camera หรือ API test environment

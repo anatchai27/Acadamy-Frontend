@@ -124,7 +124,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 p.Enrollment.Course.Name,
                 p.Amount,
                 p.PaidAt,
-                p.SlipUrl ?? string.Empty))
+                p.SlipUrl ?? string.Empty,
+                $"https://storage.tiwhub.com/receipts/{p.InvoiceNo}.pdf"))
             .ToListAsync(ct);
 
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) =>

@@ -146,11 +146,14 @@ public static class ParentEndpoints
             status = "success",
             data = payments.Select(p => new
             {
+                p.Id,
                 p.InvoiceNo,
                 description = p.CourseName,
                 date = p.PaidAt.ToString("yyyy-MM-dd"),
                 amount = p.Amount,
-                status = "paid"
+                method = "",
+                status = "paid",
+                receiptPdfUrl = p.ReceiptPdfUrl
             })
         });
     }

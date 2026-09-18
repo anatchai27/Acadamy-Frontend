@@ -20,6 +20,10 @@ export const getChildScores = childId => {
   return api.get(`/parents/children/${childId}/scores`);
 }
 
+export const getChildProgress = childId => {
+  return api.get(`/parents/children/${childId}/progress`);
+}
+
 export const getChildHomework = childId => {
   return api.get(`/parents/children/${childId}/homework`);
 }

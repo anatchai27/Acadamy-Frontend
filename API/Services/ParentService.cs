@@ -120,7 +120,7 @@ public record ChildSummary(int Id, string FullName, string Grade, int InstituteI
 public record UpdateParentProfileRequest(string? FullName, string? Phone, string? Email);
 public record ParentSessionItem(int Id, int CourseId, string CourseName, DateTime ScheduledAt, int DurationMin, string? RoomId, string Status);
 public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string Status, DateTime CheckinAt, DateTime CheckoutAt);
-public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl);
+public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl, string ReceiptPdfUrl);
 public record ParentSkillScoreItem(string CourseName, string TopicName, decimal Score, string Note);
 public record ParentHomeworkItem(long Id, long HomeworkId, string CourseName, string Title, string Description, DateTime DueAt, string FileUrl, long? SubmissionId, DateTime? SubmittedAt, decimal? Score, string Feedback);
 public record ParentProgressResponse(int CurrentStreak, int LongestStreak, List<ParentBadgeItem> Badges);
