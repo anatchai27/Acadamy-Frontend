@@ -2,42 +2,51 @@ import { route } from 'preact-router';
 import { useEffect, useState } from 'preact/hooks';
 import { HiOutlineChartBar, HiOutlineCheckCircle, HiOutlineClipboardDocumentCheck, HiOutlineClock } from 'react-icons/hi2';
 import { useLiffContext } from '../store/LiffContext';
-import { getParentDashboard } from '../services/parent-service';
+import { getChildSessions, getParentDashboard } from '../services/parent-service';
 import { ChildSwitcher } from '../components/child-switcher';
 import { LiffLayout } from '../components/liff-layout';
 
-const fallbackSchedule = [
-  {
-    time: '09:00',
-    endTime: '10:30',
-    title: 'คณิตศาสตร์',
-    subtitle: 'สมการและการแก้โจทย์',
-    status: 'เรียนเสร็จแล้ว',
-    tone: 'indigo',
-  },
-  {
-    time: '10:45',
-    endTime: '12:00',
-    title: 'วิทยาศาสตร์',
-    subtitle: 'ระบบสุริยะ',
-    status: 'กำลังเรียน',
-    tone: 'sage',
-    active: true,
-  },
-  {
-    time: '13:00',
-    endTime: '14:30',
-    title: 'ภาษาอังกฤษ',
-    subtitle: 'Conversation Practice',
-    status: 'กำลังจะเริ่ม',
-    tone: 'gold',
-  },
-];
+export const getDashboardSchedule = dashboard => (
+  Array.isArray(dashboard?.todaySchedule) ? dashboard.todaySchedule : []
+);
+
+export const resolveActiveChildId = (children, activeChildId) => {
+  const allowedChildren = Array.isArray(children) ? children : [];
+  return allowedChildren.some(child => child.id === activeChildId)
+    ? activeChildId
+    : allowedChildren[0]?.id || null;
+};
+
+export const getTodaySchedule = (sessions, now = new Date()) => {
+  if (!Array.isArray(sessions)) return [];
+  const today = new Date(now);
+  return sessions
+    .filter(session => {
+      const scheduledAt = new Date(session.scheduledAt || session.ScheduledAt);
+      return scheduledAt.toDateString() === today.toDateString();
+    })
+    .map(session => {
+      const scheduledAt = new Date(session.scheduledAt || session.ScheduledAt);
+      const durationMin = Number(session.durationMin ?? session.DurationMin ?? 0);
+      const endAt = new Date(scheduledAt.getTime() + durationMin * 60 * 1000);
+      return {
+        time: scheduledAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        endTime: durationMin > 0 ? endAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '',
+        title: session.courseName || session.CourseName || 'คาบเรียน',
+        subtitle: session.roomId || session.RoomId ? `ห้อง ${session.roomId || session.RoomId}` : 'ตารางเรียน',
+        status: session.status || session.Status || 'scheduled',
+        tone: 'sage',
+        active: (session.status || session.Status) === 'in_progress',
+      };
+    });
+};
 
 export const DashboardPage = () => {
   const { state, dispatch } = useLiffContext();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [scheduleError, setScheduleError] = useState('');
 
   useEffect(() => {
     if (!state.parentToken) {
@@ -45,25 +54,58 @@ export const DashboardPage = () => {
       return;
     }
 
+    let active = true;
+    setLoading(true);
+    setError('');
+
     getParentDashboard()
       .then((res) => {
+        if (!active) return;
         const dashboard = res.data?.data || res.data;
-        setData(dashboard);
+        setData({ ...dashboard, todaySchedule: [] });
 
-        if (dashboard?.children) {
-          dispatch({ type: 'SET_CHILDREN', payload: dashboard.children });
+        const children = Array.isArray(dashboard?.children) ? dashboard.children : [];
+        dispatch({ type: 'SET_CHILDREN', payload: children });
 
-          if (!state.activeChildId && dashboard.children.length > 0) {
-            dispatch({
-              type: 'SET_ACTIVE_CHILD',
-              payload: dashboard.children[0].id,
-            });
-          }
+        const resolvedActiveChildId = resolveActiveChildId(children, state.activeChildId);
+        if (resolvedActiveChildId !== state.activeChildId) {
+          dispatch({
+            type: 'SET_ACTIVE_CHILD',
+            payload: resolvedActiveChildId,
+          });
         }
       })
-      .catch(() => route('/liff/login', true))
-      .finally(() => setLoading(false));
+      .catch((apiError) => {
+        if (!active) return;
+        setError(apiError?.message || 'โหลดข้อมูลหน้าหลักไม่สำเร็จ');
+      })
+      .finally(() => active && setLoading(false));
+
+    return () => { active = false; };
   }, [state.parentToken]);
+
+  useEffect(() => {
+    if (!state.parentToken || !state.activeChildId) return;
+
+    let active = true;
+    setScheduleError('');
+    getChildSessions(state.activeChildId)
+      .then((res) => {
+        if (!active) return;
+        const sessions = res.data?.data || res.data || [];
+        setData(previous => ({
+          ...(previous || {}),
+          todaySchedule: getTodaySchedule(sessions),
+        }));
+      })
+      .catch((apiError) => {
+        if (!active) return;
+        setScheduleError(apiError?.message || 'โหลดตารางเรียนไม่สำเร็จ');
+        setData(previous => ({ ...(previous || {}), todaySchedule: [] }));
+      });
+
+    return () => { active = false; };
+  }, [state.parentToken, state.activeChildId]);
 
   const activeChild = state.children.find(
     (child) => child.id === state.activeChildId,
@@ -79,9 +121,25 @@ export const DashboardPage = () => {
     );
   }
 
-  const schedule = data?.todaySchedule?.length
-    ? data.todaySchedule
-    : fallbackSchedule;
+  if (error) {
+    return (
+      <LiffLayout>
+        <div class="flex min-h-[70vh] flex-col items-center justify-center text-center">
+          <p class="text-lg font-bold text-ink-900">โหลดข้อมูลไม่สำเร็จ</p>
+          <p class="mt-2 text-sm text-ink-500">{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            class="mt-5 min-h-11 rounded-2xl bg-sage-600 px-5 text-sm font-bold text-white"
+          >
+            ลองใหม่
+          </button>
+        </div>
+      </LiffLayout>
+    );
+  }
+
+  const schedule = getDashboardSchedule(data);
 
   return (
     <LiffLayout>
@@ -156,9 +214,13 @@ export const DashboardPage = () => {
               </div>
 
               <div class="rounded-card border border-white/80 bg-white/75 p-4 shadow-soft backdrop-blur-xl">
-                {schedule.map((item, index) => (
+                {scheduleError ? (
+                  <p class="py-6 text-center text-sm text-red-600">{scheduleError}</p>
+                ) : schedule.length > 0 ? schedule.map((item, index) => (
                   <TimelineItem key={`${item.title}-${index}`} {...item} />
-                ))}
+                )) : (
+                  <p class="py-6 text-center text-sm text-ink-500">วันนี้ยังไม่มีตารางเรียน</p>
+                )}
               </div>
             </section>
 
@@ -167,7 +229,7 @@ export const DashboardPage = () => {
                 <h2 class="text-lg font-bold text-ink-900">ภาพรวมการเรียน</h2>
                 <button
                   type="button"
-                  onClick={() => route('/liff/attendance')}
+                  onClick={() => route(`/liff/attendance/${activeChild.id}`)}
                   class="text-sm font-semibold text-sage-600"
                 >
                   ดูทั้งหมด
