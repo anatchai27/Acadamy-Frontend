@@ -12,6 +12,7 @@ public interface IFileUploadService
     Task<FileUploadResponse> UploadHomeworkSubmissionAsync(int instituteId, int submissionId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadStudentPhotoAsync(int instituteId, int studentId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadTeacherPhotoAsync(int instituteId, int teacherId, IFormFile file, CancellationToken ct);
+    Task<FileUploadResponse> UploadWebsiteMediaAsync(int instituteId, IFormFile file, CancellationToken ct);
 }
 
 public sealed class FileUploadService(IFileUploadRepository repository, IFileStorageService storage) : IFileUploadService
@@ -72,6 +73,13 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
         await repository.SaveAsync(ct);
         return url;
         }, ct);
+    }
+
+    public async Task<FileUploadResponse> UploadWebsiteMediaAsync(int instituteId, IFormFile file, CancellationToken ct)
+    {
+        ValidateFile(file, 5, true);
+        if (!await repository.InstituteExistsAsync(instituteId, ct)) throw new FileUploadValidationException("NOT_FOUND", "Institute not found.");
+        return await UploadAsync(file, 5, true, $"website-media/institute_{instituteId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "media", Task.FromResult, ct);
     }
 
     private async Task<FileUploadResponse> UploadAsync(IFormFile file, int maxMb, bool imageOnly, string keyPrefix, string fileType, Func<string, Task<string>> afterUpload, CancellationToken ct)

@@ -8,10 +8,15 @@ import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser } from 'react-icons/hi2';
 
+export const getStudentEmptyMessage = (loadError, search) => loadError
+  ? { title: loadError, description: 'ตรวจการเชื่อมต่อ API แล้วลองใหม่' }
+  : { title: 'ไม่พบข้อมูลนักเรียน', description: search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีนักเรียนในสถาบัน' };
+
 export function StudentsPage({ path }) {
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 0, totalItems: 0, hasNext: false });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
   const debounceRef = useRef(null);
@@ -21,6 +26,7 @@ export function StudentsPage({ path }) {
 
   const fetchStudents = async (page = 1, query = '') => {
     setLoading(true);
+    setLoadError('');
     try {
       const params = { page, limit: 20 };
       if (query.trim()) params.search = query.trim();
@@ -28,7 +34,9 @@ export function StudentsPage({ path }) {
       const payload = res.data?.data || res.data || {};
       setStudents(payload.students || []);
       setPagination(payload.pagination || { currentPage: 1, totalPages: 0, totalItems: 0, hasNext: false });
-    } catch {
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      setLoadError('ไม่สามารถโหลดข้อมูลนักเรียนได้');
       showToast('ไม่สามารถโหลดข้อมูลนักเรียนได้', 'error');
       setStudents([]);
     } finally {
@@ -212,9 +220,11 @@ export function StudentsPage({ path }) {
       <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100">
         <HiOutlineUserGroup class="h-8 w-8 text-zinc-300" />
       </div>
-      <h3 class="mb-1 text-sm font-semibold text-zinc-700">ไม่พบข้อมูลนักเรียน</h3>
-      <p class="mb-4 text-xs text-zinc-400">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีนักเรียนในสถาบัน'}</p>
-      {!search && (
+      <h3 class="mb-1 text-sm font-semibold text-zinc-700">{getStudentEmptyMessage(loadError, search).title}</h3>
+      <p class="mb-4 text-xs text-zinc-400">{getStudentEmptyMessage(loadError, search).description}</p>
+      {loadError ? (
+        <Button variant="outline" size="md" onClick={() => fetchStudents(1, search)}>ลองโหลดใหม่</Button>
+      ) : !search && (
         <Button variant="primary" size="md" onClick={() => route('/admin/students/add')}>
           + เพิ่มนักเรียนคนแรก
         </Button>

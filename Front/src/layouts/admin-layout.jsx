@@ -24,7 +24,7 @@ const menuGroups = [{
     path: '/admin/teachers',
     label: 'ครูผู้สอน',
     icon: TeacherIcon,
-    roles: ['admin']
+     roles: ['admin']
   }, {
     path: '/admin/courses',
     label: 'คอร์สเรียน',
@@ -42,7 +42,7 @@ const menuGroups = [{
     path: '/admin/leads',
     label: 'ผู้สนใจทดลองเรียน',
     icon: RequestIcon,
-    roles: ['admin']
+     roles: ['admin']
   }, {
     path: '/admin/makeup-slots',
     label: 'เรียนชดเชย',
@@ -65,7 +65,7 @@ const menuGroups = [{
     path: '/admin/finance',
     label: 'การเงิน',
     icon: FinanceIcon,
-    roles: ['admin']
+    roles: ['admin', 'staff']
   }, {
     path: '/admin/products',
     label: 'สินค้า',
@@ -167,9 +167,9 @@ export const AdminLayout = ({
   };
   const profile = state.userProfile;
   const displayName = profile?.profile?.fullName || profile?.fullName || profile?.email || state.user?.email || state.user?.userId || 'admin';
-  const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : profile?.role === 'teacher' ? 'ผู้สอน' : 'สมาชิก';
+   const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : profile?.role === 'teacher' ? 'ผู้สอน' : profile?.role === 'staff' ? 'พนักงาน' : 'สมาชิก';
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
-  const userRole = profile?.role || 'admin';
+  const userRole = profile?.role || state.user?.role || 'unknown';
   const filteredGroups = menuGroups.map(group => ({
     ...group,
     items: group.items.filter(item => item.roles.includes(userRole))

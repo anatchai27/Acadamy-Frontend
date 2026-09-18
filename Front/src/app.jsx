@@ -5,25 +5,25 @@ import { TrialClassPage } from './pages/trial-class-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
 import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage, MakeupSlotsPage, LeadsPage } from './pages/admin';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
-import { requireAuth } from './components/require-auth';
+import { requireAuth, RoleForbidden } from './components/require-auth';
 import './app.css';
 
-const AdminDashboard = requireAuth(DashboardPage);
-const AdminStudents = requireAuth(StudentsPage);
-const AdminStudentControll = requireAuth(StudentControll);
-const AdminStudentProfile = requireAuth(StudentProfilePage);
-const AdminTeachers = requireAuth(TeachersPage);
-const AdminCourses = requireAuth(CoursesPage);
-const AdminSessions = requireAuth(SessionsPage);
-const AdminAttendance = requireAuth(AttendancePage);
-const AdminRequests = requireAuth(RequestsPage);
-const AdminAcademics = requireAuth(AcademicsPage);
-const AdminFinance = requireAuth(FinancePage);
-const AdminUsers = requireAuth(UsersPage);
-const AdminSettings = requireAuth(SettingsPage);
-const AdminProducts = requireAuth(ProductsPage);
-const AdminMakeupSlots = requireAuth(MakeupSlotsPage);
-const AdminLeads = requireAuth(LeadsPage);
+const AdminDashboard = requireAuth(DashboardPage, ['admin', 'teacher', 'staff']);
+const AdminStudents = requireAuth(StudentsPage, ['admin', 'teacher', 'staff']);
+const AdminStudentControll = requireAuth(StudentControll, ['admin', 'teacher', 'staff']);
+const AdminStudentProfile = requireAuth(StudentProfilePage, ['admin', 'teacher', 'staff']);
+const AdminTeachers = requireAuth(TeachersPage, ['admin']);
+const AdminCourses = requireAuth(CoursesPage, ['admin', 'teacher']);
+const AdminSessions = requireAuth(SessionsPage, ['admin', 'teacher']);
+const AdminAttendance = requireAuth(AttendancePage, ['admin', 'teacher']);
+const AdminRequests = requireAuth(RequestsPage, ['admin', 'teacher']);
+const AdminAcademics = requireAuth(AcademicsPage, ['admin', 'teacher']);
+const AdminFinance = requireAuth(FinancePage, ['admin', 'staff']);
+const AdminUsers = requireAuth(UsersPage, ['admin']);
+const AdminSettings = requireAuth(SettingsPage, ['admin']);
+const AdminProducts = requireAuth(ProductsPage, ['admin', 'staff']);
+const AdminMakeupSlots = requireAuth(MakeupSlotsPage, ['admin', 'teacher']);
+const AdminLeads = requireAuth(LeadsPage, ['admin']);
 
 export function App() {
   return (
@@ -37,6 +37,7 @@ export function App() {
         <ForgotPasswordPage path="/forgot-password" />
         <ContactPage path="/contact" />
         <TrialClassPage path="/trial-class" />
+        <RoleForbidden path="/forbidden" />
         <AdminDashboard path="/admin/dashboard" />
         <AdminStudents path="/admin/students" />
         <AdminStudentControll path="/admin/students/add" />

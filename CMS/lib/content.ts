@@ -4,6 +4,7 @@ export type ContentSection = {
   description: string;
   title: string;
   body: string;
+  mediaUrl?: string;
   status: "Published" | "Draft";
 };
 
@@ -36,6 +37,7 @@ export type PublicInstitute = {
   phone: string;
   lineId: string;
   address: string;
+  heroImageUrl?: string;
   teachers: PublicTeacher[];
   courses: PublicCourse[];
   stories: PublicStory[];
@@ -76,4 +78,35 @@ export const publicInstitute: PublicInstitute = {
 
 export function getPublicInstitute(slug: string) {
   return slug === publicInstitute.slug ? publicInstitute : null;
+}
+
+export function parsePublishedArray<T>(value: string | null | undefined): T[] | null {
+  if (!value?.trim().startsWith("[")) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed as T[] : null;
+  } catch {
+    return null;
+  }
+}
+
+export function applyPublishedContent(institute: PublicInstitute, items: Array<{ sectionKey: string; contentValue?: string | null; metadata?: string | null }>) {
+  const sections = new Map(items.map((item) => {
+    let metadata: { title?: string; description?: string; mediaUrl?: string } = {};
+    try { metadata = item.metadata ? JSON.parse(item.metadata) : {}; } catch { /* ignore malformed optional metadata */ }
+    return [item.sectionKey, { body: item.contentValue || "", title: metadata.title || "", description: metadata.description || "", mediaUrl: metadata.mediaUrl }] as const;
+  }));
+  const hero = sections.get("hero_banner");
+  const teachers = parsePublishedArray<PublicTeacher>(sections.get("teachers")?.body)?.filter(item => item.name && item.role && item.bio && item.initials);
+  const courses = parsePublishedArray<PublicCourse>(sections.get("courses")?.body)?.filter(item => item.name && item.subject && item.detail && item.price);
+  const stories = parsePublishedArray<PublicStory>(sections.get("portfolio")?.body)?.filter(item => item.title && item.detail && item.color);
+  return {
+    ...institute,
+    tagline: hero?.title || institute.tagline,
+    description: hero?.body || institute.description,
+    heroImageUrl: hero?.mediaUrl || undefined,
+    ...(teachers?.length ? { teachers } : {}),
+    ...(courses?.length ? { courses } : {}),
+    ...(stories?.length ? { stories } : {}),
+  };
 }

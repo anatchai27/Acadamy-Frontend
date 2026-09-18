@@ -30,11 +30,13 @@
 - [x] หน้าหลังบ้านใช้ `requireAuth` และ `AdminLayout`
 - [x] มี login, register, forgot password และ session timeout
 - [x] มี shared component สำหรับ Button, Input, Card, Table, DatePicker, Upload, Toast และ Confirm Dialog
-- [/] ตรวจสิทธิ์ระดับ role ต่อ route/menu ให้ครบ ไม่ใช่แค่ตรวจว่าล็อกอินแล้ว
+- [x] ตรวจสิทธิ์ระดับ role ต่อ route/menu ด้วย `requireAuth(Component, allowedRoles)`
+- [x] route ที่ไม่มีสิทธิ์แสดง `/forbidden` และไม่ render page component
+- [x] AdminLayout ซ่อนเมนูตาม role และ fallback role เป็น `unknown` แบบ deny-by-default
 - [/] ตรวจทุก mutation ให้มี loading, disabled กันกดซ้ำ และ success/error message
-- [ ] เพิ่ม test matrix ว่า Admin, Staff และ Teacher เห็น/ทำ action ได้ตรงตาม Requirement
+- [/] เพิ่ม unit test สำหรับ role normalization/allow-deny; ยังต้องทำ browser matrix ครบทุก route
 
-อ้างอิง: `Front/src/app.jsx`, `Front/src/components/require-auth.jsx`, `Front/src/layouts/admin-layout.jsx`, `Front/src/components/ui/`
+อ้างอิง: `Front/src/app.jsx`, `Front/src/components/require-auth.jsx`, `Front/src/components/require-auth.test.jsx`, `Front/src/layouts/admin-layout.jsx`, `Front/src/components/ui/`
 
 Definition of Done: user แต่ละ role เข้าได้เฉพาะเมนูของตัวเอง และทุก action สำคัญมีผลลัพธ์ที่ผู้ใช้เข้าใจได้
 
@@ -49,9 +51,12 @@ Definition of Done: user แต่ละ role เข้าได้เฉพา�
 - [x] ดู student profile และสร้าง/ดาวน์โหลด student card ตาม flow ที่มีอยู่
 - [x] Export รายชื่อนักเรียนเป็น CSV
 - [ ] เพิ่ม XLSX export หากยังเป็น requirement จริง
-- [/] ตรวจ empty state และ error state ของทุกตารางกับข้อมูล tenant ที่ไม่มีรายการ
+- [x] Student list มี empty state แยกกรณีค้นหาไม่พบ/สถาบันยังไม่มีข้อมูล
+- [x] Student list มี API error state และปุ่ม retry
+- [x] Student profile มี error state และปุ่ม retry เมื่อโหลดข้อมูลไม่สำเร็จ
+- [/] ตรวจ runtime กับข้อมูล tenant ที่ไม่มีรายการบน environment จริง
 
-อ้างอิง: `Front/src/pages/admin/students-page.jsx`, `Front/src/pages/admin/student-add-page.jsx`, `Front/src/pages/admin/student-profile-page.jsx`, `Front/src/services/student-service.js`
+อ้างอิง: `Front/src/pages/admin/students-page.jsx`, `Front/src/pages/admin/__tests__/students-page.test.jsx`, `Front/src/pages/admin/student-add-page.jsx`, `Front/src/pages/admin/student-profile-page.jsx`, `Front/src/services/student-service.js`
 
 Definition of Done: พนักงานสร้างนักเรียนหนึ่งคนพร้อมผู้ปกครอง/ผู้รับเด็ก แล้วค้นหาและดูข้อมูลต่อได้จาก API จริง
 
@@ -206,13 +211,16 @@ Definition of Done: Parent เห็นกราฟพัฒนาการ, fee
 - [x] unknown slug แสดง not found
 - [x] Trial form ส่ง `POST /api/public/leads`
 - [x] มีหน้า CMS สำหรับทดสอบ lead submission
-- [/] public page อ่านข้อมูลจาก `CMS/lib/content.ts` แบบ static ไม่ได้อ่าน published content จาก API
-- [/] course/teacher/story/contact จึงยังเป็นข้อมูล source ใน code ไม่ใช่ข้อมูลที่ Admin แก้แล้วเห็นบน public page
-- [ ] fetch public content ตาม institute slug จาก API
-- [ ] เพิ่ม fallback เฉพาะกรณี API ยืนยันว่าไม่มี published content
-- [ ] ทดสอบ unknown slug, unpublished content และ API failure
+- [x] เพิ่ม public endpoint `GET /api/public/website-content/{slug}` ที่คืนเฉพาะ `isActive=true`
+- [x] public page fetch published content ตาม institute slug และ overlay hero title/body จาก API
+- [x] fallback ใช้ static source เฉพาะกรณีไม่มี API URL หรือ API คืนรายการ published ว่าง
+- [x] รองรับ `contentValue` แบบ JSON array สำหรับ teachers, courses และ portfolio/stories
+- [x] public parser validate shape ก่อนแทนที่ source ตั้งต้น; JSON ผิดหรือข้อมูลไม่ครบจะไม่ทำให้ public page พัง
+- [/] CMS editor ยังเป็น textarea; ต้องทำ form builder แยกเมื่อ SA ต้องการแก้หลายรายการแบบไม่เขียน JSON
+- [x] unknown slug ยังแสดง not found และ public endpoint ไม่เปิด draft content
+- [/] ทดสอบ public fetch กับ database จริง, unpublished content และ API failure บน environment deploy
 
-อ้างอิง: `CMS/app/p/[slug]/page.tsx`, `CMS/lib/content.ts`, `CMS/app/trial-class/page.tsx`, `CMS/lib/api.ts`
+อ้างอิง: `API/Controllers/PublicLeadEndpoints.cs`, `CMS/app/p/[slug]/page.tsx`, `CMS/lib/content.ts`, `CMS/lib/api.ts`, `CMS/app/trial-class/page.tsx`
 
 Definition of Done: Admin publish แล้ว public URL แสดงข้อมูลจากฐานข้อมูลเดียวกัน โดยยังคง SEO และ 404 behavior
 
@@ -224,14 +232,20 @@ Definition of Done: Admin publish แล้ว public URL แสดงข้อ�
 - [x] มี API client สำหรับ list/save `/api/website-content`
 - [x] มี Bearer token จาก `academy-cms-admin-token`
 - [x] มี local draft fallback เมื่อ API/token ยังไม่พร้อม
-- [/] localStorage fallback ยังทำให้ผู้ใช้เข้าใจผิดว่า save production แล้ว ต้องแสดงสถานะให้เด่นและไม่ถือเป็น publish จริง
-- [/] ยังไม่มี media upload/storage สำหรับ banner, story และ teacher photo
-- [x] มีหน้า lead submit test
-- [ ] ทำ lead inbox/list จาก API
-- [ ] เพิ่มเปลี่ยนสถานะ New -> Contacted -> Trial -> Enrolled
+- [x] localStorage fallback แสดงสถานะ `Draft saved locally` ชัดเจน และไม่รายงานว่า publish ผ่าน API
+- [x] เพิ่ม `POST /api/uploads/website-media` ใช้ storage เดิม, tenant context เดิม และจำกัดรูปไม่เกิน 5MB
+- [x] CMS content editor อัปโหลด media แล้วเก็บ URL ใน `hero_banner` metadata ก่อน Save draft
+- [x] Public page แสดง hero media URL เมื่อ content ถูก publish
+- [/] story/teacher media ยังต้องทำ content schema แยก หากต้องการผูก media หลายรายการต่อ section
+- [x] มี API client สำหรับ `GET /api/leads` พร้อม filter status/search
+- [x] หน้า Leads เป็น inbox/kanban แยก New, Contacted, Qualified, Converted, Lost
+- [x] เปลี่ยน status และ notes ผ่าน `PUT /api/leads/{id}/follow-up`
+- [x] แสดง token/permission error และปุ่ม refresh/retry
+- [/] สถานะ Backend ใช้ `qualified/converted` แทนคำใน Requirement เดิม `Trial/Enrolled` ต้องยืนยันศัพท์กับ SA
 - [ ] เพิ่ม auth/RBAC สำหรับ CMS admin แบบไม่พึ่ง token ที่กรอกใน localStorage อย่างเดียว
+- [x] CMS Overview โหลด published/draft sections และ new leads จาก API จริง พร้อม loading/error state
 
-อ้างอิง: `CMS/app/content/page.tsx`, `CMS/lib/api.ts`, `CMS/app/leads/page.tsx`, `CMS/app/page.tsx`
+อ้างอิง: `CMS/app/page.tsx`, `CMS/app/content/page.tsx`, `CMS/lib/api.ts`, `CMS/app/leads/page.tsx`, `API/Controllers/PublicLeadEndpoints.cs`, `API/Services/LeadService.cs`
 
 Definition of Done: Admin แก้ draft, publish, อัปโหลด media และติดตาม lead ได้จาก CMS โดยข้อมูลไม่หายเมื่อเปลี่ยน browser/device
 
@@ -241,14 +255,16 @@ Definition of Done: Admin แก้ draft, publish, อัปโหลด media 
 
 - [x] Admin dashboard route และ revenue report UI มีอยู่
 - [x] Finance page แสดง payment/revenue ตามช่วงวันที่และ export CSV
-- [/] Daily dashboard ยังไม่ครบ card attendance present/late/absent/leave ตาม Requirement
+- [x] Daily dashboard ดึง attendance ของวันที่เลือกจาก API และแสดง present/late/absent/leave ใน summary
+- [x] Daily dashboard ดึงรายได้ของวันที่เลือกจาก revenue API ไม่ใช้ตัวเลขปลอม
+- [x] เพิ่ม date filter และ error/zero state สำหรับข้อมูลรายวัน
+- [x] Owner dashboard ไม่แสดง fake recent activities หรือ fake top-course numbers เมื่อยังไม่มี API
 - [/] ยังไม่มี retention/churn, renewal rate, trial conversion, referral, NPS และ forecast ที่ผูกกับข้อมูลจริงครบ
-- [ ] เพิ่ม date range/institute filter ให้ report ที่เกี่ยวข้อง
-- [ ] เพิ่ม empty/zero state ที่ห้ามใช้ตัวเลขปลอม
+- [/] date filter รอบนี้เป็นรายวันของ Dashboard; report เชิงช่วงวันที่อื่นยังต้องทบทวนแยก
 - [ ] ทำ teacher timesheet จาก sessions + attendance และ export CSV
 - [ ] ยืนยันสูตร Revenue Forecast กับ Owner ก่อนทำ UI
 
-อ้างอิง: `Front/src/pages/admin/dashboard-page.jsx`, `Front/src/pages/admin/finance-page.jsx`, `Front/src/services/report-service.js`, `API/Services/RevenueReportService.cs`
+อ้างอิง: `Front/src/components/dashboard/dashboard-overview.jsx`, `Front/src/components/dashboard/dashboard-overview.test.jsx`, `Front/src/pages/admin/dashboard-page.jsx`, `Front/src/pages/admin/finance-page.jsx`, `Front/src/services/report-service.js`, `API/Services/RevenueReportService.cs`, `API/Controllers/AttendanceEndpoints.cs`
 
 ### 14. Validation ก่อนปิด Task
 
@@ -312,4 +328,21 @@ Pop-Location
 - Homework แยก pending/submitted, ใช้ camera input และบีบอัดไฟล์ก่อนเรียก upload API
 - Scores เรียก `/scores` และ `/progress`, แสดง Radar Chart, feedback, streak และ badges จากข้อมูล API
 - Payment History เรียก child payment API, แสดง error/retry และเปิด receipt PDF จาก `receiptPdfUrl`
+- Public CMS มี `GET /api/public/website-content/{slug}` และหน้า `/p/[slug]` อ่าน published hero content จาก API
+- API build: ผ่าน `0 warnings / 0 errors`
+- API tests: `279 passed / 0 failed / 0 skipped`
+- CMS build: ผ่านด้วย Next.js `15.5.25`, static routes `10/10`
+- Front tests: `64 passed / 0 failed`
+- Front build: ผ่านหลังเพิ่ม daily Dashboard metrics
+- Front tests หลังเพิ่ม role guardและลบ mock dashboard data: `64 passed / 0 failed`
+- Front build ผ่านหลังเพิ่ม route/menu permission guard และ real-data empty states
+- Front tests หลังเพิ่ม Student empty/error/retry states: `66 passed / 0 failed`
+- Front build ผ่านหลังเพิ่ม Student error recovery
+- CMS Lead Inbox build: ผ่าน, route `/leads` ใช้ API list/follow-up จริง
+- CMS Overview build: ผ่าน, route `/` ใช้ Content/Lead API จริงพร้อม loading/error state
+- CMS build หลังเพิ่ม website media upload: ผ่าน
+- API build หลังเพิ่ม website media endpoint: ผ่าน `0 warnings / 0 errors`
+- API tests หลังเพิ่ม website media endpoint: `279 passed / 0 failed / 0 skipped`
+- CMS build หลังเพิ่ม JSON parser สำหรับ teachers/courses/stories: ผ่าน
+- API tests หลังเพิ่ม public content/lead integration: `279 passed / 0 failed / 0 skipped`
 - ยังไม่ได้ปิด runtime smoke บน LIFF จริง, device camera หรือ API test environment

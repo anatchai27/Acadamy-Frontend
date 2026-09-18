@@ -1,5 +1,7 @@
 using academy_API.DTOs;
+using academy_API.Data;
 using academy_API.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Controllers;
 
@@ -7,6 +9,35 @@ public static class PublicLeadEndpoints
 {
     public static IEndpointRouteBuilder MapPublicLeadEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/public/website-content/{slug}", async (string slug, TutoringDbContext db, CancellationToken ct) =>
+        {
+            var institute = await db.Institutes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.IsActive && x.Slug == slug, ct);
+            if (institute is null) return Results.NotFound(new { status = "not_found" });
+
+            var items = await db.PublicWebsiteContents
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(x => x.InstituteId == institute.Id && x.IsActive)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new
+                {
+                    x.SectionKey,
+                    x.ContentType,
+                    x.ContentValue,
+                    x.Metadata,
+                    x.SortOrder,
+                    x.UpdatedAt
+                })
+                .ToListAsync(ct);
+
+            return Results.Ok(new { status = "success", institute = new { institute.Id, institute.Name, institute.Slug }, items });
+        })
+        .WithTags("Public")
+        .WithName("GetPublicWebsiteContent")
+        .WithOpenApi();
+
         app.MapPost("/api/public/leads", async (CreateLeadRequest request, ILeadService service, CancellationToken ct) =>
         {
             try

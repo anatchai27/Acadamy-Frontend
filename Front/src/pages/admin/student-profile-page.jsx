@@ -39,19 +39,21 @@ export const StudentProfilePage = ({ path, id }) => {
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
 
-  useEffect(() => {
+  const loadStudent = () => {
     if (!id) return;
     setLoading(true);
+    setError('');
     studentService.getStudentById(id, { signal: getSignal() })
       .then(({ data }) => setStudent(data?.data || data))
       .catch((err) => {
-        if (err?.status === 404) {
-          setError('ไม่พบข้อมูลนักเรียน');
-        } else {
-          setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-        }
+        if (err?.name === 'AbortError') return;
+        setError(err?.status === 404 ? 'ไม่พบข้อมูลนักเรียน' : 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStudent();
   }, [id]);
 
   const handleGenerateQR = async () => {
@@ -107,7 +109,7 @@ export const StudentProfilePage = ({ path, id }) => {
             <HiOutlineUserMinus class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">{error}</h3>
-          <Button variant="outline" size="md" onClick={handleBack}>กลับไปหน้านักเรียน</Button>
+          <div class="flex justify-center gap-2"><Button variant="outline" size="md" onClick={loadStudent}>ลองโหลดใหม่</Button><Button variant="outline" size="md" onClick={handleBack}>กลับไปหน้านักเรียน</Button></div>
         </div>
       </AdminLayout>
     );

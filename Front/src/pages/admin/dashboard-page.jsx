@@ -1,32 +1,16 @@
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DashboardOverviewWidget } from '../../components/dashboard/dashboard-overview';
 import { PlayfulGreeting } from '../../components/dashboard/playful-greeting';
-import { BentoGrid, BentoCell, BadgeSticker, unlockBadge } from '../../components/ui';
+import { BentoGrid, BentoCell, unlockBadge } from '../../components/ui';
 import { route } from 'preact-router';
 import { useEffect } from 'preact/hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlineUserPlus, HiOutlineBookOpen, HiOutlineCheckCircle, HiOutlineCog6Tooth, HiOutlineChartBar } from 'react-icons/hi2';
-
-const recentActivities = [
-  { text: 'ผู้ใช้ใหม่ลงทะเบียน: john@example.com', time: '5 นาทีที่แล้ว', icon: HiOutlineUserPlus, color: 'primary' },
-  { text: 'คอร์ส "JavaScript Basics" ถูกเปิดสอน', time: '1 ชั่วโมงที่แล้ว', icon: HiOutlineBookOpen, color: 'success' },
-  { text: 'ผู้เรียน 5 คนเรียนจบคอร์ส "React 101"', time: '2 ชั่วโมงที่แล้ว', icon: HiOutlineCheckCircle, color: 'accent' },
-  { text: 'อัปเดตระบบชำระเงินสำเร็จ', time: '3 ชั่วโมงที่แล้ว', icon: HiOutlineCog6Tooth, color: 'danger' },
-  { text: 'มีการเพิ่มคอร์ส "Python Advanced"', time: '5 ชั่วโมงที่แล้ว', icon: HiOutlineBookOpen, color: 'success' },
-];
-
-const colorIconBgMap = {
-  primary: 'bg-oasis-primary/5',
-  success: 'bg-oasis-success/5',
-  accent: 'bg-oasis-warning/5',
-  danger: 'bg-oasis-danger/5',
-};
+import { HiOutlineUserPlus, HiOutlineBookOpen, HiOutlineChartBar } from 'react-icons/hi2';
 
 const colorTextMap = {
   primary: 'text-oasis-primary',
   success: 'text-oasis-success',
   accent: 'text-oasis-warning',
-  danger: 'text-oasis-danger',
 };
 
 export function DashboardPage({ path }) {
@@ -55,44 +39,15 @@ export function DashboardPage({ path }) {
               ดูทั้งหมด
             </button>
           </div>
-          <div class="p-6 space-y-0">
-            {recentActivities.map((activity, i) => (
-              <div
-                key={activity.text}
-                class={`flex items-start gap-4 py-3 ${
-                  isNeo
-                    ? i < recentActivities.length - 1 ? 'border-b-2 border-black' : ''
-                    : i < recentActivities.length - 1 ? 'border-b border-zinc-100' : ''
-                }`}
-              >
-                <div class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorIconBgMap[activity.color]}`}>
-                  <activity.icon class={`h-4 w-4 ${colorTextMap[activity.color]}`} />
-                </div>
-                <div class="flex-1 min-w-0 flex items-center justify-between gap-4">
-                  <span class="text-sm text-zinc-500 truncate">{activity.text}</span>
-                  <span class="text-xs text-zinc-400 whitespace-nowrap">{activity.time}</span>
-                </div>
-              </div>
-            ))}
+          <div class="p-6">
+            <p class="text-sm text-zinc-500">ยังไม่มี API สำหรับกิจกรรมล่าสุด จึงยังไม่แสดงข้อมูลตัวอย่าง</p>
           </div>
         </BentoCell>
 
         {/* Top Courses */}
         <BentoCell>
           <h3 class="text-lg font-semibold mb-4 text-zinc-900">คอร์สยอดนิยม</h3>
-          <div class="space-y-4">
-            {[
-              { title: 'JavaScript Basics', students: 45, color: 'primary' },
-              { title: 'React 101', students: 38, color: 'success' },
-              { title: 'Python for Beginners', students: 32, color: 'accent' },
-            ].map((course) => (
-              <div key={course.title} class="flex items-center gap-3">
-                <div class={`h-2 w-2 rounded-full ${colorTextMap[course.color].replace('text-', 'bg-')}`} />
-                <span class="flex-1 text-sm text-zinc-500 truncate">{course.title}</span>
-                <span class="text-xs font-medium text-zinc-400">{course.students} คน</span>
-              </div>
-            ))}
-          </div>
+          <p class="text-sm text-zinc-500">ยังไม่มี API สำหรับจัดอันดับคอร์ส จึงยังไม่แสดงตัวเลขสมมติ</p>
         </BentoCell>
 
         {/* Quick Actions */}

@@ -29,6 +29,8 @@ public static class FileUploadEndpoints
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadStudentPhotoAsync(instituteId, studentId, uploadedFile, ct)));
         group.MapPost("/teacher-photo", async (HttpContext context, IFormFile file, int teacherId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadTeacherPhotoAsync(instituteId, teacherId, uploadedFile, ct)));
+        group.MapPost("/website-media", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadWebsiteMediaAsync(instituteId, uploadedFile, ct)));
 
         return app;
     }

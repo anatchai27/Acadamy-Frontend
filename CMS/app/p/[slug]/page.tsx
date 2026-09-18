@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublicInstitute } from "@/lib/content";
+import { applyPublishedContent, getPublicInstitute } from "@/lib/content";
+import { getPublicWebsiteContent } from "@/lib/api";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -27,8 +28,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicInstitutePage({ params }: PageProps) {
   const { slug } = await params;
-  const institute = getPublicInstitute(slug);
-  if (!institute) notFound();
+  const sourceInstitute = getPublicInstitute(slug);
+  if (!sourceInstitute) notFound();
+  const remoteContent = await getPublicWebsiteContent(slug);
+  const institute = remoteContent?.items?.length
+    ? applyPublishedContent(sourceInstitute, remoteContent.items)
+    : sourceInstitute;
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -61,7 +66,7 @@ export default async function PublicInstitutePage({ params }: PageProps) {
             <a className="public-link" href="#courses">Explore courses ↓</a>
           </div>
         </div>
-        <div className="hero-note"><span>01 / progress note</span><strong>Small steps<br />count here.</strong><p>Individual attention. Practical goals. A clear next step after every class.</p></div>
+        <div className="hero-note">{institute.heroImageUrl && <img src={institute.heroImageUrl} alt="" style={{ width: "100%", maxHeight: 180, objectFit: "cover", borderRadius: 12, marginBottom: 14 }} />}<span>01 / progress note</span><strong>Small steps<br />count here.</strong><p>Individual attention. Practical goals. A clear next step after every class.</p></div>
       </section>
 
       <section className="public-section" id="stories">
