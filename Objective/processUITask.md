@@ -254,7 +254,7 @@ Definition of Done: Admin แก้ draft, publish, อัปโหลด media 
 ### 13. Reports, Analytics และ Owner Dashboard
 
 สถานะ: `[/]`
-
+h
 - [x] Admin dashboard route และ revenue report UI มีอยู่
 - [x] Finance page แสดง payment/revenue ตามช่วงวันที่และ export CSV
 - [x] Daily dashboard ดึง attendance ของวันที่เลือกจาก API และแสดง present/late/absent/leave ใน summary
