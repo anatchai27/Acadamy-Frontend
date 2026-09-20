@@ -1,5 +1,6 @@
 using academy_API.Services;
 using academy_API.Utilities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace academy_API.Controllers;
 
@@ -15,7 +16,7 @@ public static class FileUploadEndpoints
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentSlipAsync(instituteId, paymentId, uploadedFile, ct)));
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
-        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, IParentService parentService, CancellationToken ct) =>
+        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>
         {
             if (context.User.IsInRole("parent"))
             {

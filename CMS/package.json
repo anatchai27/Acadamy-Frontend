@@ -1,24 +1,8 @@
 {
-  "name": "academy-cms",
-  "version": "0.1.0",
+  "name": "acadamy-platform-web",
+  "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,js,jsx,css}\" \"lib/**/*.{ts,tsx,js,jsx}\" \"components/**/*.{ts,tsx,js,jsx}\""
-  },
-  "dependencies": {
-    "next": "^15.5.7",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.15.3",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "prettier": "^3.9.6",
-    "typescript": "^5.8.3"
-  }
+  "scripts": { "dev": "next dev", "build": "next build", "start": "next start", "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"config/**/*.{ts,tsx}\"" },
+  "dependencies": { "framer-motion": "^12.23.24", "next": "^15.5.7", "react": "^19.1.0", "react-dom": "^19.1.0" },
+  "devDependencies": { "@types/node": "^22.15.3", "@types/react": "^19.1.2", "@types/react-dom": "^19.1.2", "prettier": "^3.9.6", "typescript": "^5.8.3" }
 }

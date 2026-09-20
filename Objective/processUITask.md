@@ -216,7 +216,9 @@ Definition of Done: Parent เห็นกราฟพัฒนาการ, fee
 - [x] fallback ใช้ static source เฉพาะกรณีไม่มี API URL หรือ API คืนรายการ published ว่าง
 - [x] รองรับ `contentValue` แบบ JSON array สำหรับ teachers, courses และ portfolio/stories
 - [x] public parser validate shape ก่อนแทนที่ source ตั้งต้น; JSON ผิดหรือข้อมูลไม่ครบจะไม่ทำให้ public page พัง
-- [/] CMS editor ยังเป็น textarea; ต้องทำ form builder แยกเมื่อ SA ต้องการแก้หลายรายการแบบไม่เขียน JSON
+- [x] CMS มี form builder สำหรับ teachers, courses และ portfolio/stories โดยเก็บกลับเป็น JSON contract เดิม
+- [x] Form builder อัปโหลด media แยกราย Teacher/Course/Story และเก็บ `mediaUrl` ใน JSON item
+- [x] Public page แสดงรูป Teacher และ Story เมื่อมี `mediaUrl` พร้อม fallback เดิมเมื่อไม่มีรูป
 - [x] unknown slug ยังแสดง not found และ public endpoint ไม่เปิด draft content
 - [/] ทดสอบ public fetch กับ database จริง, unpublished content และ API failure บน environment deploy
 
@@ -274,6 +276,8 @@ Definition of Done: Admin แก้ draft, publish, อัปโหลด media 
 - [x] LineLiff มี tests และ build script
 - [x] CMS มี production build script
 - [x] API มี unit/integration tests และ tenant query filter หลายจุด
+- [x] เพิ่ม integration guard ว่า `POST /api/uploads/website-media` ปฏิเสธ anonymous request
+- [x] แก้ multipart endpoint `/api/uploads/homework-submission` ให้ resolve `IParentService` จาก DI ถูกต้อง ไม่ชน JSON body inference
 - [/] ยังต้องรัน validation ล่าสุดหลังการแก้ไขแต่ละชุด ไม่ใช้ผลเก่าเป็นหลักฐานแทน
 - [ ] ทดสอบ browser/device จริงสำหรับ camera, file upload, responsive และ LIFF
 - [ ] ทดสอบ User Journey หลักบน test environment ด้วยข้อมูลจริง ไม่ใช่เฉพาะ mocked service
@@ -343,6 +347,9 @@ Pop-Location
 - CMS build หลังเพิ่ม website media upload: ผ่าน
 - API build หลังเพิ่ม website media endpoint: ผ่าน `0 warnings / 0 errors`
 - API tests หลังเพิ่ม website media endpoint: `279 passed / 0 failed / 0 skipped`
+- API tests หลังเพิ่ม upload authorization regression test: `280 passed / 0 failed / 0 skipped`
 - CMS build หลังเพิ่ม JSON parser สำหรับ teachers/courses/stories: ผ่าน
+- CMS build หลังเพิ่ม form builder สำหรับ JSON sections: ผ่าน
+- CMS build หลังเพิ่ม per-item media upload/render: ผ่าน
 - API tests หลังเพิ่ม public content/lead integration: `279 passed / 0 failed / 0 skipped`
 - ยังไม่ได้ปิด runtime smoke บน LIFF จริง, device camera หรือ API test environment

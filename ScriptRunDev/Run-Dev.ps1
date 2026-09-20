@@ -4,9 +4,10 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $frontPath = Join-Path $projectRoot 'Front'
 $apiPath = Join-Path $projectRoot 'API'
 $lineLiffPath = Join-Path $projectRoot 'LineLiff'
+$cmsPath = Join-Path $projectRoot 'CMS'
 $appSettingsPath = Join-Path $apiPath 'appsettings.json'
 
-foreach ($path in @($frontPath, $apiPath, $lineLiffPath)) {
+foreach ($path in @($frontPath, $apiPath, $lineLiffPath, $cmsPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Project folder not found: $path"
     }
@@ -14,6 +15,16 @@ foreach ($path in @($frontPath, $apiPath, $lineLiffPath)) {
 
 if (-not (Test-Path -LiteralPath $appSettingsPath -PathType Leaf)) {
     throw "API configuration not found: $appSettingsPath"
+}
+
+foreach ($packagePath in @(
+    (Join-Path $frontPath 'package.json'),
+    (Join-Path $lineLiffPath 'package.json'),
+    (Join-Path $cmsPath 'package.json')
+)) {
+    if (-not (Test-Path -LiteralPath $packagePath -PathType Leaf)) {
+        throw "Node package manifest not found: $packagePath"
+    }
 }
 
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
@@ -101,10 +112,15 @@ Write-Host 'Waiting for the LineLiff ngrok HTTPS URL...' -ForegroundColor Yellow
 $ngrokUrl = Get-NgrokHttpsUrl
 $ngrokOrigin = $ngrokUrl
 Add-CorsOriginToSettings -FilePath $appSettingsPath -Origin $ngrokOrigin
+Add-CorsOriginToSettings -FilePath $appSettingsPath -Origin 'http://localhost:3000'
 
 Start-DevWindow -Name 'API' -WorkingDirectory $apiPath -Command 'dotnet watch run --launch-profile http'
+Start-DevWindow -Name 'CMS' -WorkingDirectory $cmsPath -Command 'npm run dev'
 
 Write-Host ''
-Write-Host 'Started all 3 development servers.' -ForegroundColor Green
+Write-Host 'Started all 4 development servers.' -ForegroundColor Green
+Write-Host 'Front:    http://localhost:5173' -ForegroundColor Cyan
 Write-Host "LineLiff HTTPS: $ngrokUrl/liff/" -ForegroundColor Cyan
+Write-Host 'CMS:      http://localhost:3000' -ForegroundColor Cyan
+Write-Host 'API:      http://localhost:5000/swagger' -ForegroundColor Cyan
 Write-Host 'The current ngrok origin was added to API/appsettings.json.' -ForegroundColor Gray
