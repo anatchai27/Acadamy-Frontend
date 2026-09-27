@@ -1,7 +1,7 @@
 
 # UI Task Progress จากการสำรวจ Code จริง
 
-อัปเดตล่าสุด: 2026-09-18
+อัปเดตล่าสุด: 2026-09-26
 
 เอกสารนี้สรุปจากโค้ดที่มีอยู่จริงใน `Front`, `LineLiff`, `CMS` และ contract ฝั่ง `API` ไม่ถือว่าแค่มี route หรือมีหน้าจอแล้วจะเสร็จ ถ้า flow ยังใช้ fallback, localStorage หรือข้อมูลปลอม ให้ถือเป็นงานบางส่วนเท่านั้น
 
@@ -10,6 +10,13 @@
 - `[x]` มี UI และเชื่อม API/flow ตามขอบเขตแล้ว
 - `[/]` มีบางส่วน แต่ยังขาด contract, runtime evidence, UX state หรือรายละเอียดตาม Requirement
 - `[ ]` ยังไม่มี implementation ที่ใช้งานได้
+
+## อัปเดตล่าสุด
+
+- Registration ของสถาบันสร้าง `Institute`, admin, teacher และ PDPA consent ใน transaction ที่ครอบด้วย EF Core `CreateExecutionStrategy()` แล้ว เพื่อรองรับ MySQL `EnableRetryOnFailure()`
+- Front registration ไม่ส่ง `logoBase64` ชั่วคราว เพราะคอลัมน์เดิมรองรับโลโก้ได้ไม่เกิน 1,000 ตัวอักษร
+- API routes `/api/uploads/*` ถูกปิดชั่วคราวจาก `API/Program.cs`; service/controller ยังเก็บไว้เพื่อเปิดกลับภายหลัง
+- งานที่พึ่งพา upload API ยังไม่นับว่าใช้งานได้จริงจนกว่าจะเปิด route และทำ runtime smoke test ใหม่
 
 ## ภาพรวมจาก Code
 
@@ -83,7 +90,7 @@ Definition of Done: ครูหรือ Staff ใช้หน้าจอเ�
 สถานะ: `[/]`
 
 - [x] ฟอร์มบันทึก payment และเลือกวิธีชำระเงิน
-- [x] อัปโหลดสลิปหลังสร้าง payment
+- [/] อัปโหลดสลิปหลังสร้าง payment (API upload ถูกปิดชั่วคราว)
 - [x] ดูประวัติ payment และกรองช่วงวันที่
 - [x] ดู revenue report และ export CSV
 - [x] มี loading state ตอน submit, โหลดรายการ และ export
@@ -157,7 +164,7 @@ Definition of Done: Parent แจ้งลาและจองเรียน�
 
 - [x] โหลดรายการการบ้านจาก `getChildHomework`
 - [x] แสดงสถานะส่งแล้ว/ยังไม่ส่ง, due date, score และ feedback
-- [x] สร้าง submission และ upload ไฟล์ผ่าน API
+- [/] สร้าง submission และ upload ไฟล์ผ่าน API (API upload ถูกปิดชั่วคราว)
 - [x] มี loading, success, error และ empty state
 - [x] แยก Tab ค้างส่ง/ส่งแล้ว และมี empty state แยกตาม tab
 - [x] ใช้ camera input (`capture="environment"`) บนอุปกรณ์ที่รองรับ
@@ -235,8 +242,8 @@ Definition of Done: Admin publish แล้ว public URL แสดงข้อ�
 - [x] มี Bearer token จาก `academy-cms-admin-token`
 - [x] มี local draft fallback เมื่อ API/token ยังไม่พร้อม
 - [x] localStorage fallback แสดงสถานะ `Draft saved locally` ชัดเจน และไม่รายงานว่า publish ผ่าน API
-- [x] เพิ่ม `POST /api/uploads/website-media` ใช้ storage เดิม, tenant context เดิม และจำกัดรูปไม่เกิน 5MB
-- [x] CMS content editor อัปโหลด media แล้วเก็บ URL ใน `hero_banner` metadata ก่อน Save draft
+- [/] เพิ่ม `POST /api/uploads/website-media` ใช้ storage เดิม, tenant context เดิม และจำกัดรูปไม่เกิน 5MB (route ถูกปิดชั่วคราว)
+- [/] CMS content editor อัปโหลด media แล้วเก็บ URL ใน `hero_banner` metadata ก่อน Save draft (รอเปิด upload API)
 - [x] Public page แสดง hero media URL เมื่อ content ถูก publish
 - [/] story/teacher media ยังต้องทำ content schema แยก หากต้องการผูก media หลายรายการต่อ section
 - [x] มี API client สำหรับ `GET /api/leads` พร้อม filter status/search
@@ -276,8 +283,8 @@ h
 - [x] LineLiff มี tests และ build script
 - [x] CMS มี production build script
 - [x] API มี unit/integration tests และ tenant query filter หลายจุด
-- [x] เพิ่ม integration guard ว่า `POST /api/uploads/website-media` ปฏิเสธ anonymous request
-- [x] แก้ multipart endpoint `/api/uploads/homework-submission` ให้ resolve `IParentService` จาก DI ถูกต้อง ไม่ชน JSON body inference
+- [/] เพิ่ม integration guard ว่า `POST /api/uploads/website-media` ปฏิเสธ anonymous request (ผลทดสอบเป็นหลักฐานก่อนปิด route)
+- [/] แก้ multipart endpoint `/api/uploads/homework-submission` ให้ resolve `IParentService` จาก DI ถูกต้อง ไม่ชน JSON body inference (รอเปิด route เพื่อ runtime verify)
 - [/] ยังต้องรัน validation ล่าสุดหลังการแก้ไขแต่ละชุด ไม่ใช้ผลเก่าเป็นหลักฐานแทน
 - [ ] ทดสอบ browser/device จริงสำหรับ camera, file upload, responsive และ LIFF
 - [ ] ทดสอบ User Journey หลักบน test environment ด้วยข้อมูลจริง ไม่ใช่เฉพาะ mocked service
@@ -347,9 +354,10 @@ Pop-Location
 - CMS build หลังเพิ่ม website media upload: ผ่าน
 - API build หลังเพิ่ม website media endpoint: ผ่าน `0 warnings / 0 errors`
 - API tests หลังเพิ่ม website media endpoint: `279 passed / 0 failed / 0 skipped`
-- API tests หลังเพิ่ม upload authorization regression test: `280 passed / 0 failed / 0 skipped`
+- API tests หลังเพิ่ม upload authorization regression test: `280 passed / 0 failed / 0 skipped` (เป็นผลก่อนปิด upload routes)
 - CMS build หลังเพิ่ม JSON parser สำหรับ teachers/courses/stories: ผ่าน
 - CMS build หลังเพิ่ม form builder สำหรับ JSON sections: ผ่าน
 - CMS build หลังเพิ่ม per-item media upload/render: ผ่าน
 - API tests หลังเพิ่ม public content/lead integration: `279 passed / 0 failed / 0 skipped`
 - ยังไม่ได้ปิด runtime smoke บน LIFF จริง, device camera หรือ API test environment
+- 2026-09-26: API/Front แก้ registration transaction strategy และปิด `/api/uploads/*` ชั่วคราว; ต้องรัน upload/runtime smoke ใหม่หลังเปิด feature กลับ

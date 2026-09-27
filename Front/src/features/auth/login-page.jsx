@@ -6,7 +6,9 @@ import { showToast } from '../../components/ui';
 import { useAppContext } from '../../store/AppContext';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { authService } from '../../services';
-import { setAuthStorage } from '../../services/auth-service';
+import { clearAuthStorage, getMe, setAuthStorage } from '../../services/auth-service';
+import { getRolePermissions } from '../../services/user-service';
+import { setRolePermissions } from '../../config/permissions';
 export const LoginPage = () => {
   const {
     dispatch
@@ -51,13 +53,26 @@ export const LoginPage = () => {
       const token = payload?.token || response.data?.token || null;
       const user = payload?.user || response.data?.user || payload;
       token ? setAuthStorage(token, user) : undefined;
+      // Resolve the canonical profile and role policy before entering the app.
+      const meResponse = await getMe();
+      const profile = meResponse.data?.data || meResponse.data || user;
+      const permissionResponse = await getRolePermissions(profile?.role);
+      const rolePermissions = permissionResponse.data?.data?.permissions
+        || permissionResponse.data?.permissions;
+      if (!rolePermissions || !profile?.role) throw new Error('Role permissions unavailable');
+      setRolePermissions(profile.role, rolePermissions);
       dispatch({
         type: 'SET_USER',
-        payload: user
+        payload: profile
+      });
+      dispatch({
+        type: 'SET_PROFILE',
+        payload: profile
       });
       showToast('เข้าสู่ระบบสำเร็จ', 'success');
       route('/admin/dashboard');
     } catch (error) {
+      clearAuthStorage();
       const message = error?.data?.message || error?.data?.error || error?.status === 401 && 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' || 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
       showToast(message, 'error');
     } finally {

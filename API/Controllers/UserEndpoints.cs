@@ -4,6 +4,9 @@ using academy_API.Models;
 using academy_API.Services.Contracts;
 using academy_API.Services;
 using academy_API.Utilities;
+using academy_API.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace academy_API.Controllers;
 
@@ -14,7 +17,7 @@ public static class UserEndpoints
         var listGroup = app.MapGroup("/api/users")
             .WithTags("Users")
             .WithOpenApi()
-            .RequireAuthorization();
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
         listGroup.MapGet("/", async (HttpContext httpContext, IUserService userService, CancellationToken ct) =>
         {
@@ -22,7 +25,16 @@ public static class UserEndpoints
             if (instituteId is null)
                 return Results.BadRequest(new { error = "Institute not identified." });
 
-            return Results.Ok(await userService.GetByInstituteIdAsync(instituteId.Value, ct));
+            var users = await userService.GetByInstituteIdAsync(instituteId.Value, ct);
+            return Results.Ok(users.Select(user => new
+            {
+                user.Id,
+                user.Email,
+                user.Phone,
+                role = user.Role.ToString(),
+                user.CreatedAt,
+                fullName = user.Teacher?.FullName ?? user.Student?.FullName
+            }));
         });
 
         listGroup.MapGet("/{id:int}", async (int id, IUserService userService, CancellationToken ct) =>
@@ -30,7 +42,15 @@ public static class UserEndpoints
             var user = await userService.GetByIdAsync(id, ct);
             return user is null
                 ? Results.NotFound(new { Error = "User not found." })
-                : Results.Ok(user);
+                : Results.Ok(new
+                {
+                    user.Id,
+                    user.Email,
+                    user.Phone,
+                    role = user.Role.ToString(),
+                    user.CreatedAt,
+                    fullName = user.Teacher?.FullName ?? user.Student?.FullName
+                });
         });
 
         listGroup.MapPost("/", async (
@@ -79,6 +99,100 @@ public static class UserEndpoints
                 _ => Results.NotFound(new { error = "User not found in your institute." })
             };
         });
+
+        listGroup.MapPut("/{id:int}/password", async (
+            int id,
+            UpdatePasswordRequest request,
+            IUserService userService,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var result = await userService.UpdatePasswordForManagementAsync(id, request.NewPassword, ct);
+                return result switch
+                {
+                    UserManagementResult.Updated => Results.Ok(new { status = "success", message = "เปลี่ยนรหัสผ่านผู้ใช้สำเร็จ" }),
+                    _ => Results.NotFound(new { error = "User not found in your institute." })
+                };
+            }
+            catch (UserValidationException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message, code = ex.Code });
+            }
+        });
+
+        listGroup.MapPut("/permissions", async (
+            UpdatePermissionsRequest request,
+            HttpContext httpContext,
+            TutoringDbContext context) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "Institute not identified." });
+
+            return await SavePermissionsAsync(context, instituteId.Value, request);
+        });
+
+        listGroup.MapGet("/permissions/{role}", async (
+            string role,
+            HttpContext httpContext,
+            TutoringDbContext context) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "Institute not identified." });
+            if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
+                return Results.BadRequest(new { error = "Invalid role." });
+
+            var stored = await context.RolePermissions
+                .AsNoTracking()
+                .Where(permission => permission.InstituteId == instituteId.Value && permission.Role == parsedRole)
+                .ToListAsync();
+            var permissions = stored.Count == 0
+                ? PermissionPolicyStore.GetOrDefault(instituteId.Value, parsedRole)
+                : stored.ToDictionary(
+                    permission => permission.PageKey,
+                    permission => new PermissionActions(permission.CanRead, permission.CanEdit, permission.CanDelete));
+
+            return Results.Ok(new { role = parsedRole.ToString(), permissions });
+        });
+
+        async Task<IResult> SavePermissionsAsync(TutoringDbContext context, int instituteId, UpdatePermissionsRequest request)
+        {
+            var existing = await context.RolePermissions
+                .Where(permission => permission.InstituteId == instituteId && permission.Role == request.Role)
+                .ToListAsync();
+            var existingByPage = existing.ToDictionary(permission => permission.PageKey);
+            var now = DateTime.UtcNow;
+
+            foreach (var entry in request.Permissions)
+            {
+                if (existingByPage.TryGetValue(entry.Key, out var permission))
+                {
+                    permission.CanRead = entry.Value.Read;
+                    permission.CanEdit = entry.Value.Edit;
+                    permission.CanDelete = entry.Value.Delete;
+                    permission.UpdatedAt = now;
+                }
+                else
+                {
+                    context.RolePermissions.Add(new RolePermission
+                    {
+                        InstituteId = instituteId,
+                        Role = request.Role,
+                        PageKey = entry.Key,
+                        CanRead = entry.Value.Read,
+                        CanEdit = entry.Value.Edit,
+                        CanDelete = entry.Value.Delete,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    });
+                }
+            }
+
+            await context.SaveChangesAsync();
+            return Results.Ok(new { status = "success", message = "บันทึก permission สำเร็จ", role = request.Role.ToString(), permissions = request.Permissions });
+        }
 
         listGroup.MapDelete("/{id:int}", async (int id, IUserService userService, CancellationToken ct) =>
         {

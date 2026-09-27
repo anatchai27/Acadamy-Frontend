@@ -3,6 +3,12 @@
 > เอกสารนี้ใช้เป็น checklist สำหรับส่งงานตาม `Objective/ProjectObj.md`  
 > เน้นให้ flow ใช้งานได้จริงก่อน ไม่รอ production evidence, load test หรือ schema audit ที่ไม่จำเป็นต่อการส่งงานรอบแรก
 
+## อัปเดต 2026-09-26
+
+- แก้ registration institute ให้ transaction ทำงานผ่าน EF Core `CreateExecutionStrategy()` รองรับ MySQL retry strategy; ทดสอบสมัครจริงได้ `201 Created`
+- Front registration งดส่ง `logoBase64` ชั่วคราว เพื่อไม่เขียน Base64 ขนาดใหญ่ลง `institutes.logo_url`
+- ปิดการ map endpoint `/api/uploads/*` ชั่วคราวใน `API/Program.cs`; งาน upload ที่ระบุใน checklist ให้ถือเป็น `[/]` จนกว่าจะเปิด route และทดสอบ runtime ใหม่
+
 ## วิธีทำงาน
 
 1. อ่าน Acceptance Criteria จาก `Objective/ProjectObj.md`
@@ -250,6 +256,8 @@ Pop-Location
 - P8 source check ยืนยัน route authorization/role, tenant query filter, bcrypt password hash, QR expiry/rotation และ rate limiting มีอยู่แล้ว; ยังไม่มี deploy/load/database runtime evidence
 - P1 มีสคริปต์ตรวจแบบ read-only ที่ `API/Database/verify-attendance-p1.ps1`; รันเมื่อมี `TEST_MYSQL_HOST`, `TEST_MYSQL_USER`, `TEST_MYSQL_PASSWORD` และ `TEST_MYSQL_DATABASE`
 - ยังไม่มี production database, LINE provider และ device runtime test ในรอบนี้ แต่ไม่ใช้เป็น blocker สำหรับการส่ง flow หลักรอบแรก
+- Registration API build หลังแก้ transaction strategy: ผ่าน `0 warnings / 0 errors`; registration smoke test: `201 Created`
+- Front build หลังงดส่ง `logoBase64` ใน registration: ผ่าน
 
 ## Definition of Done
 

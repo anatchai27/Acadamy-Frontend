@@ -44,7 +44,9 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id && u.Institute != null && u.Institute.IsActive, cancellationToken);
 
     public Task<User?> GetByEmailOrPhoneAsync(string email, string? phone, CancellationToken cancellationToken = default) =>
-        _context.Users.FirstOrDefaultAsync(u => u.Email == email || (phone != null && u.Phone == phone), cancellationToken);
+        _context.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Email == email || (phone != null && u.Phone == phone), cancellationToken);
 
     public async Task<User> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
@@ -72,27 +74,42 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
         Institute? institute, User user, PdpaConsent consent, Teacher? teacher,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        if (institute is not null)
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
         {
-            _context.Institutes.Add(institute);
-            await _context.SaveChangesAsync(cancellationToken);
-            user.InstituteId = institute.Id;
-            if (teacher is not null) teacher.InstituteId = institute.Id;
-        }
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync(cancellationToken);
-        consent.UserId = user.Id;
-        consent.ReferenceId = user.Id;
-        _context.PdpaConsents.Add(consent);
-        if (teacher is not null)
-        {
-            teacher.UserId = user.Id;
-            _context.Teachers.Add(teacher);
-        }
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return (institute, user);
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                if (institute is not null)
+                {
+                    _context.Institutes.Add(institute);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    user.InstituteId = institute.Id;
+                    if (teacher is not null) teacher.InstituteId = institute.Id;
+                }
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(cancellationToken);
+                consent.UserId = user.Id;
+                consent.ReferenceId = user.Id;
+                _context.PdpaConsents.Add(consent);
+                if (teacher is not null)
+                {
+                    teacher.UserId = user.Id;
+                    _context.Teachers.Add(teacher);
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return (institute, user);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
     }
 
     public async Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken cancellationToken = default)
@@ -101,6 +118,17 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
         if (user is null) return false;
 
         user.Role = role;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UpdatePasswordAsync(int id, string passwordHash, CancellationToken cancellationToken = default)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (user is null) return false;
+
+        user.PasswordHash = passwordHash;
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
         return true;

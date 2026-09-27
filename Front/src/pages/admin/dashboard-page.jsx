@@ -32,7 +32,7 @@ export function DashboardPage({ path }) {
       {/* Bento Grid — กิจกรรมล่าสุด + Sidebar */}
       <BentoGrid>
         {/* Activity Feed — 2 คอลัมน์ */}
-        <BentoCell span={2} class="!p-0 overflow-hidden">
+        <BentoCell id="dashboard-activity" span={2} class="!p-0 overflow-hidden">
           <div class={`flex items-center justify-between px-6 py-4 ${isNeo ? 'border-b-2 border-black' : 'border-b border-zinc-100'}`}>
             <h3 class="text-lg font-semibold text-zinc-900">กิจกรรมล่าสุด</h3>
             <button class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors">
@@ -45,13 +45,13 @@ export function DashboardPage({ path }) {
         </BentoCell>
 
         {/* Top Courses */}
-        <BentoCell>
+        <BentoCell id="dashboard-top-courses">
           <h3 class="text-lg font-semibold mb-4 text-zinc-900">คอร์สยอดนิยม</h3>
           <p class="text-sm text-zinc-500">ยังไม่มี API สำหรับจัดอันดับคอร์ส จึงยังไม่แสดงตัวเลขสมมติ</p>
         </BentoCell>
 
         {/* Quick Actions */}
-        <BentoCell>
+        <BentoCell id="dashboard-quick-actions">
           <h3 class="text-lg font-semibold mb-4 text-zinc-900">ดำเนินการด่วน</h3>
           <div class="space-y-2">
             {[

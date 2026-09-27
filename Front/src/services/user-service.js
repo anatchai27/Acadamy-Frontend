@@ -24,6 +24,18 @@ export const updateUserRole = async (id, role) => {
   return api.put(`/users/${id}/role`, { role });
 };
 
+export const updateUserPassword = async (id, newPassword) => {
+  return api.put(`/users/${id}/password`, { newPassword });
+};
+
+export const updateRolePermissions = async (role, permissions) => {
+  return api.put('/users/permissions', { role, permissions });
+};
+
+export const getRolePermissions = async (role) => {
+  return api.get(`/users/permissions/${role}`);
+};
+
 export const deleteUser = async id => {
   return api.delete(`/users/${id}`);
 };
@@ -35,5 +47,8 @@ export const userService = {
   getUsers,
   getUserById,
   updateUserRole,
+  updateUserPassword,
+  updateRolePermissions,
+  getRolePermissions,
   deleteUser,
 };

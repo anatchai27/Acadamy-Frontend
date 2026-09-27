@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/preact';
 import { DashboardPage } from '../dashboard-page';
 
 vi.mock('../../../store/AppContext', () => ({
-  useAppContext: () => ({ state: { designTheme: 'bento' }, dispatch: vi.fn() }),
+  useAppContext: () => ({ state: { designTheme: 'neobrutalism' }, dispatch: vi.fn() }),
 }));
-vi.mock('../../../hooks/useDesignTheme', () => ({ useDesignTheme: () => ({ designTheme: 'bento' }) }));
+vi.mock('../../../hooks/useDesignTheme', () => ({ useDesignTheme: () => ({ designTheme: 'neobrutalism' }) }));
 vi.mock('../../../layouts/admin-layout', () => ({ AdminLayout: ({ children }) => <div>{children}</div> }));
 vi.mock('../../../components/dashboard/dashboard-overview', () => ({ DashboardOverviewWidget: () => <div>Overview Widget</div> }));
 vi.mock('../../../components/dashboard/playful-greeting', () => ({ PlayfulGreeting: () => <div>สวัสดีตอนเช้า</div> }));

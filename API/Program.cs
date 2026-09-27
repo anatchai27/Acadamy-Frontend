@@ -231,7 +231,7 @@ app.MapLeaveRequestEndpoints();
 app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
-app.MapFileUploadEndpoints();
+// File upload endpoints are temporarily disabled.
 app.MapParentEndpoints();
 app.MapPublicLeadEndpoints();
 

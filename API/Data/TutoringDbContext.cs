@@ -53,6 +53,7 @@ public class TutoringDbContext(
     public DbSet<StudentBadge> StudentBadges => Set<StudentBadge>();
     public DbSet<StreakCounter> StreakCounters => Set<StreakCounter>();
     public DbSet<RoomBooking> RoomBookings => Set<RoomBooking>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -596,6 +597,23 @@ public class TutoringDbContext(
             entity.Property(e => e.OrderIndex).HasColumnName("order_index");
 
             entity.HasIndex(e => e.CourseId);
+        });
+
+        modelBuilder.Entity<RolePermission>(entity =>
+        {
+            entity.ToTable("role_permissions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.Role).HasColumnName("role").HasMaxLength(20).HasConversion<string>();
+            entity.Property(e => e.PageKey).HasColumnName("page_key").HasMaxLength(100);
+            entity.Property(e => e.CanRead).HasColumnName("can_read");
+            entity.Property(e => e.CanEdit).HasColumnName("can_edit");
+            entity.Property(e => e.CanDelete).HasColumnName("can_delete");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(e => new { e.InstituteId, e.Role, e.PageKey }).IsUnique();
+            entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<HomeworkSkillTopic>(entity =>

@@ -4,17 +4,10 @@ import { route } from 'preact-router';
 import { AppReducer } from './AppReducer';
 import { clearAuthStorage, getMe } from '../services/auth-service';
 import { setOnUnauthorized } from '../services/api';
-import { isMobile } from 'react-device-detect';
+import { getRolePermissions } from '../services/user-service';
+import { setRolePermissions } from '../config/permissions';
 
-const savedTheme = (() => {
-  try {
-    const stored = localStorage.getItem('th_design_theme');
-    if (stored) return stored;
-    return isMobile ? 'neobrutalism' : 'bento';
-  } catch {
-    return 'bento';
-  }
-})();
+const savedTheme = 'neobrutalism';
 
 const initialState = {
   theme: 'dark',
@@ -46,8 +39,18 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     getMe()
-      .then((res) => {
+      .then(async (res) => {
         const profile = res.data?.data || res.data;
+        try {
+          const permissions = await getRolePermissions(profile?.role);
+          const rolePermissions = permissions.data?.data?.permissions
+            || permissions.data?.permissions;
+          if (rolePermissions && profile?.role) {
+            setRolePermissions(profile.role, rolePermissions);
+          }
+        } catch {
+          // Use the default policy when the API has no saved permissions yet.
+        }
         dispatch({ type: 'SET_PROFILE', payload: profile });
         dispatch({ type: 'SET_USER', payload: profile });
       })

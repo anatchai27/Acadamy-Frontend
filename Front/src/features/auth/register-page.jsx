@@ -95,8 +95,7 @@ export const RegisterPage = () => {
         const payload = {
           institute: {
             name: data.institute_name,
-            contactPhone: data.contact_phone,
-            logoBase64: logoBase64 || undefined
+            contactPhone: data.contact_phone
           },
           admin: {
             fullName: data.admin_full_name

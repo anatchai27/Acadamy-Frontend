@@ -120,13 +120,15 @@ Log in with email and password to receive a JWT token containing `institute_id`.
 
 Register a new institute with its admin account. This is the **first-step onboarding** endpoint — it creates the `Institute`, `User` (admin role), `Teacher` profile, and `PdpaConsent` in a single atomic transaction. Returns a JWT token ready for immediate use.
 
+**Current implementation note (2026-09-26):** Registration currently creates the institute without a logo. The frontend omits `logoBase64`, and the `/api/uploads/*` file upload routes are temporarily disabled. Logo upload will be restored after the storage/database contract is finalized.
+
 **Request Body**
 ```json
 {
   "institute": {
     "name": "สถาบันกวดวิชา TiwHub Tutor",
     "contact_phone": "021112222",
-    "logo_base64": "data:image/png;base64,iVBORw0K..."
+    "logo_base64": null
   },
   "admin": {
     "full_name": "สมเกียรติ ยอดเยี่ยม"
@@ -145,7 +147,7 @@ Register a new institute with its admin account. This is the **first-step onboar
 | `institute` | `object` | Yes | Institute to create |
 | `institute.name` | `string` | Yes | Institute display name |
 | `institute.contact_phone` | `string?` | No | Public phone number |
-| `institute.logo_base64` | `string?` | No | Base64-encoded logo |
+| `institute.logo_base64` | `string?` | No | Temporarily omitted by the registration UI; send `null` until logo upload is enabled |
 | `admin` | `object` | Yes | Admin profile |
 | `admin.full_name` | `string` | Yes | Display name |
 | `email` | `string` | Yes | Login email (unique) |
@@ -180,6 +182,8 @@ Register a new institute with its admin account. This is the **first-step onboar
 | Missing institute name | 400 | `{ "error": "Institute name is required." }` |
 | Email taken | 400 | `{ "error": "Email is already registered." }` |
 | Transaction failure | 500 | `{ ... "message": "เกิดข้อผิดพลาดในการลงทะเบียนสถาบัน กรุณาลองใหม่อีกครั้ง" }` |
+
+The registration transaction runs inside EF Core `CreateExecutionStrategy()` because the API uses MySQL `EnableRetryOnFailure()`.
 
 ---
 
@@ -377,7 +381,7 @@ Register a new account. When `role` is `admin`, you **must** also supply `instit
   "institute": {
     "name": "สถาบันกวดวิชา TiwHub Tutor",
     "contact_phone": "021112222",
-    "logo_base64": "data:image/png;base64,iVBORw0K..."
+    "logo_base64": null
   },
   "admin": {
     "full_name": "สมเกียรติ ยอดเยี่ยม"
@@ -397,7 +401,7 @@ Register a new account. When `role` is `admin`, you **must** also supply `instit
 | `institute` | `object?` | Yes (admin) | — | Institute to create |
 | `institute.name` | `string` | Yes | — | Institute display name (max 255) |
 | `institute.contact_phone` | `string?` | No | — | Public phone number (max 50) |
-| `institute.logo_base64` | `string?` | No | — | Base64-encoded logo (stored as `LogoUrl`) |
+| `institute.logo_base64` | `string?` | No | — | Temporarily omitted by the registration UI; logo upload is disabled |
 | `admin` | `object?` | Yes (admin/teacher) | — | Profile for the admin/teacher user |
 | `admin.full_name` | `string` | Yes | — | Display name (becomes `Teacher.FullName`) |
 | `email` | `string` | Yes | — | Login email (unique, max 255) |
@@ -2001,11 +2005,11 @@ Allowed origins are configured in `API/appsettings.json` under `Cors:AllowedOrig
 | `POST` | `/products` | 🔒 | Create product |
 | `PUT` | `/products/{id}` | 🔒 | Update product |
 | `DELETE` | `/products/{id}` | 🔒 | Delete product |
-| `POST` | `/uploads/logo` | 🔒 | Upload institute logo (image, max 2MB) |
-| `POST` | `/uploads/payment-slip` | 🔒 | Upload payment slip image (max 5MB) |
-| `POST` | `/uploads/homework` | 🔒 | Upload homework file (max 10MB) |
-| `POST` | `/uploads/homework-submission` | 🔒 | Upload homework submission (max 10MB) |
-| `POST` | `/uploads/student-photo` | 🔒 | Upload student photo (image, max 5MB) |
-| `POST` | `/uploads/teacher-photo` | 🔒 | Upload teacher photo (image, max 5MB) |
+| `POST` | `/uploads/logo` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
+| `POST` | `/uploads/payment-slip` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
+| `POST` | `/uploads/homework` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
+| `POST` | `/uploads/homework-submission` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
+| `POST` | `/uploads/student-photo` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
+| `POST` | `/uploads/teacher-photo` | ⏸ Disabled | Temporarily disabled in `API/Program.cs` |
 | `GET` | `/health` | ⃝ | Health check (TiDB connectivity) |
 | `GET` | `/v1/test-connection` | ⃝ | Database connection test |

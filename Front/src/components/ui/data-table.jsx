@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 export const DataTable = ({
+  id,
   columns = [],
   data = [],
   keyField = 'id',
@@ -23,7 +24,7 @@ export const DataTable = ({
   const currentPage = Math.min(page, totalPages);
   const pagedData = pageSize > 0 ? data.slice((currentPage - 1) * pageSize, currentPage * pageSize) : data;
   const alignClass = align => align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
-  return <div class={`w-full ${className}`}>
+  return <div id={id} class={`w-full ${className}`}>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>

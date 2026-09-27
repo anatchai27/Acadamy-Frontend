@@ -1,6 +1,7 @@
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 export const Button = ({
   children,
+  id,
   variant = 'primary',
   size = 'md',
   onClick,
@@ -27,7 +28,7 @@ export const Button = ({
     lg: 'text-base px-8 py-4'
   };
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  return <button type={type} class={classes} onClick={onClick} disabled={disabled || loading}>
+  return <button id={id} type={type} class={classes} onClick={onClick} disabled={disabled || loading}>
       {loading ? 'กำลังดำเนินการ...' : children}
     </button>;
 };

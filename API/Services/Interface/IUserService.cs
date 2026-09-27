@@ -21,6 +21,7 @@ public interface IUserService
     Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken cancellationToken = default);
     Task<bool> DeleteUserAsync(int id, CancellationToken cancellationToken = default);
     Task<UserManagementResult> UpdateRoleForManagementAsync(int id, UserRole role, CancellationToken cancellationToken = default);
+    Task<UserManagementResult> UpdatePasswordForManagementAsync(int id, string newPassword, CancellationToken cancellationToken = default);
     Task<UserManagementResult> DeleteForManagementAsync(int id, CancellationToken cancellationToken = default);
 }
 

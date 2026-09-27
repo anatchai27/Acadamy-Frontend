@@ -21,7 +21,11 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
 
     public async Task<List<TeacherResponse>> ListAsync(string? search, CancellationToken ct = default)
     {
-        var query = _context.Teachers.AsNoTracking().Include(t => t.User).AsQueryable();
+        var query = _context.Teachers
+            .AsNoTracking()
+            .Include(t => t.User)
+            .Where(t => t.User == null || t.User.Role != UserRole.admin)
+            .AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();

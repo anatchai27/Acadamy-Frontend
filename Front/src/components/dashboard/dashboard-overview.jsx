@@ -114,23 +114,23 @@ export const DashboardOverviewWidget = () => {
       }));
     }).catch(() => setError('โหลดรายได้ไม่สำเร็จ'));
   }, [selectedDate]);
-  return <>
-    <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+  return <section id="dashboard-overview" aria-label="ภาพรวม dashboard">
+    <div id="dashboard-date-filter" class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div><h2 class="text-lg font-semibold text-zinc-900">ภาพรวมตามวันที่</h2><p class="text-sm text-zinc-500">ตัวเลขทั้งหมดมาจาก API ของวันที่เลือก</p></div>
       <Input type="date" label="วันที่" value={selectedDate} onChange={event => setSelectedDate(event.target.value)} />
     </div>
-    {error && <div role="alert" class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
-    <BentoGrid class="mb-8">
-      <BentoCell><StatCard id="students" title={data.students.title} value={data.students.value} trendText={data.students.trendText} trendDirection={data.students.trendDirection} isAlertState={data.students.isAlertState} icon={<UsersGroupIcon class="h-5 w-5" />} /></BentoCell>
-      <BentoCell><StatCard id="attendance" title={data.attendance.title} value={data.attendance.value} trendText={data.attendance.trendText} trendDirection={data.attendance.trendDirection} isAlertState={data.attendance.isAlertState} icon={<QrCheckIcon class="h-5 w-5" />} /></BentoCell>
+    {error && <div id="dashboard-error" role="alert" class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
+    <BentoGrid id="dashboard-stat-grid" class="mb-8">
+      <BentoCell id="dashboard-stat-students"><StatCard id="students" title={data.students.title} value={data.students.value} trendText={data.students.trendText} trendDirection={data.students.trendDirection} isAlertState={data.students.isAlertState} icon={<UsersGroupIcon class="h-5 w-5" />} /></BentoCell>
+      <BentoCell id="dashboard-stat-attendance"><StatCard id="attendance" title={data.attendance.title} value={data.attendance.value} trendText={data.attendance.trendText} trendDirection={data.attendance.trendDirection} isAlertState={data.attendance.isAlertState} icon={<QrCheckIcon class="h-5 w-5" />} /></BentoCell>
       <BentoCell>
-        <button type="button" onClick={() => route('/admin/requests')} class="w-full text-left">
+        <button id="dashboard-stat-requests" type="button" onClick={() => route('/admin/requests')} class="w-full text-left">
           <StatCard id="requests" title={data.requests.title} value={data.requests.value} trendText={data.requests.trendText} trendDirection={data.requests.trendDirection} isAlertState={data.requests.isAlertState} icon={<ClipboardDocIcon class="h-5 w-5" />} />
         </button>
       </BentoCell>
-      <BentoCell><StatCard id="revenue" title={data.revenue.title} value={data.revenue.value} trendText={data.revenue.trendText} trendDirection={data.revenue.trendDirection} isAlertState={data.revenue.isAlertState} icon={<BanknotesIcon class="h-5 w-5" />} /></BentoCell>
+      <BentoCell id="dashboard-stat-revenue"><StatCard id="revenue" title={data.revenue.title} value={data.revenue.value} trendText={data.revenue.trendText} trendDirection={data.revenue.trendDirection} isAlertState={data.revenue.isAlertState} icon={<BanknotesIcon class="h-5 w-5" />} /></BentoCell>
     </BentoGrid>
-  </>;
+  </section>;
 };
 const UsersGroupIcon = ({
   class: className

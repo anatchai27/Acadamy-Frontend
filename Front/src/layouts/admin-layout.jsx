@@ -5,9 +5,9 @@ import { logout, clearAuthStorage } from '../services/auth-service';
 import { showConfirm, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
-import { HiOutlineCube, HiOutlineSparkles } from 'react-icons/hi2';
 import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, BellIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
+import { canReadPage } from '../config/permissions';
 const menuGroups = [{
   label: 'ข้อมูลหลัก',
   items: [{
@@ -104,8 +104,7 @@ export const AdminLayout = ({
   const currentTitle = getPageTitle(currentPath);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const {
-    designTheme,
-    toggleDesignTheme
+    designTheme
   } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
   const {
@@ -169,14 +168,14 @@ export const AdminLayout = ({
   const displayName = profile?.profile?.fullName || profile?.fullName || profile?.email || state.user?.email || state.user?.userId || 'admin';
    const displayRole = profile?.role === 'admin' ? 'ผู้ดูแลระบบ' : profile?.role === 'teacher' ? 'ผู้สอน' : profile?.role === 'staff' ? 'พนักงาน' : 'สมาชิก';
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
-  const userRole = profile?.role || state.user?.role || 'unknown';
+   const userRole = String(profile?.role || state.user?.role || 'unknown').trim().toLowerCase();
   const filteredGroups = menuGroups.map(group => ({
     ...group,
-    items: group.items.filter(item => item.roles.includes(userRole))
+     items: group.items.filter(item => item.roles.includes(userRole) && canReadPage(userRole, item.path))
   })).filter(group => group.items.length > 0);
   const filteredMenuItems = filteredGroups.flatMap(g => g.items);
   return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-slate-50 text-slate-700'}`}>
-      <aside class={`hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-white border-r border-slate-200 shadow-sm'}`}>
+      <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-white border-r border-slate-200 shadow-sm'}`}>
         <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-slate-100'}`}>
           {state.instituteLogo ? <img src={state.instituteLogo} alt="logo" class={`h-9 w-9 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <div class={`flex h-9 w-9 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-sm shrink-0 ${isNeo ? 'rounded-xl border-2 border-black shadow-[2px_2px_0px_#000]' : 'rounded-xl shadow-sm'}`}>
               TH
@@ -227,7 +226,7 @@ export const AdminLayout = ({
       </aside>
 
       {/* Mobile Header */}
-      <header class={`md:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200'}`}>
+      <header class={`lg:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200'}`}>
         <div class="flex items-center gap-2">
           {state.instituteLogo ? <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-lg object-cover shrink-0" /> : <div class={`flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-xs shrink-0 ${isNeo ? 'border-2 border-black' : ''}`}>
               TH
@@ -255,7 +254,7 @@ export const AdminLayout = ({
       </header>
 
       {/* Desktop Top Bar */}
-      <header class={`hidden md:sticky md:top-0 md:z-10 md:ml-64 md:flex md:h-16 md:items-center md:justify-between md:px-8 ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm'}`}>
+      <header class={`hidden lg:sticky lg:top-0 lg:z-10 lg:ml-64 lg:flex lg:h-16 lg:items-center lg:justify-between lg:px-8 ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm'}`}>
         <div class="flex items-center gap-4">
           <div>
             <h1 class="text-lg font-semibold text-slate-900 tracking-tight">{currentTitle}</h1>
@@ -274,10 +273,6 @@ export const AdminLayout = ({
           </button>
         </div>
         <div class="flex items-center gap-4">
-          {/* Theme Toggle */}
-          <button onClick={toggleDesignTheme} class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors flex items-center gap-1.5" aria-label="เปลี่ยนธีม">
-            {designTheme === 'bento' ? <><HiOutlineCube class="h-4 w-4" /> Bento</> : <><HiOutlineSparkles class="h-4 w-4" /> Neo</>}
-          </button>
           <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
             <BellIcon class="h-5 w-5" />
             <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
@@ -290,7 +285,7 @@ export const AdminLayout = ({
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shrink-0 shadow-sm">
                 {avatarChar}
               </div>
-              <span class="text-sm font-medium text-slate-600">{displayName}</span>
+              <span class="max-w-[min(14rem,24vw)] truncate text-sm font-medium text-slate-600">{displayName}</span>
               <ChevronDownIcon class="h-4 w-4 text-slate-400" />
             </button>
             {dropdownOpen ? <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-30">
@@ -308,16 +303,16 @@ export const AdminLayout = ({
       </header>
 
       {/* Main Content — floating card */}
-      <main class="md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0">
-        <div class="p-4 md:p-8 max-w-7xl mx-auto">
-          <div class={`${isNeo ? 'bg-white my-4 neo-card p-4 md:p-8' : 'bg-white my-4 rounded-2xl border border-slate-200 p-4 md:p-8 shadow-sm'}`}>
+      <main class="lg:ml-64 pt-14 lg:pt-0 pb-20 lg:pb-0">
+        <div class="p-4 sm:p-5 lg:p-8 max-w-7xl mx-auto">
+          <div class={`${isNeo ? 'bg-white my-4 neo-card p-4 sm:p-6 lg:p-8' : 'bg-white my-4 rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 shadow-sm'}`}>
             {children}
           </div>
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class={`md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom shadow-sm ${isNeo ? 'bg-[#FFF] border-t-3 border-black' : 'bg-white/80 backdrop-blur-lg border-t border-slate-200'}`}>
+      <nav class={`lg:hidden fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom shadow-sm ${isNeo ? 'bg-[#FFF] border-t-3 border-black' : 'bg-white/80 backdrop-blur-lg border-t border-slate-200'}`}>
         <div class="flex items-center overflow-x-auto overflow-y-hidden h-full px-2 gap-1 no-scrollbar">
           {filteredMenuItems.map(item => {
           const isActive = currentPath === item.path;

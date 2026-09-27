@@ -27,7 +27,7 @@ export const PlayfulGreeting = ({
   const isNeo = designTheme === 'neobrutalism';
   const hour = new Date().getHours();
   const timeGreeting = hour < 12 ? 'สวัสดีตอนเช้า' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
-  return <div class={isNeo ? 'neo-card bg-[#FFEAA7] p-5 mb-8' : 'bg-gradient-to-r from-oasis-primary/5 to-oasis-accent/5 border border-oasis-primary/10 rounded-2xl p-5 mb-8'}>
+  return <div id="dashboard-greeting" class={isNeo ? 'neo-card bg-[#FFEAA7] p-5 mb-8' : 'bg-gradient-to-r from-oasis-primary/5 to-oasis-accent/5 border border-oasis-primary/10 rounded-2xl p-5 mb-8'}>
       <h2 class={'text-xl font-bold tracking-tight ' + (isNeo ? 'text-black' : 'text-oasis-heading')}>
         {timeGreeting}{userName ? `, ${userName}` : ''}! 👋
       </h2>

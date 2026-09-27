@@ -40,13 +40,13 @@ export const StatCard = ({
   const config = cardConfig[id] || cardConfig.students;
   const borderClass = isAlertState && config.alertBorder ? config.alertBorder : '';
   const valueClass = isAlertState && config.valueAlert ? config.valueAlert : config.valueDefault;
-  return <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-slate-200 p-5 shadow-sm transition-all hover:shadow-md'} ${borderClass}`}>
-      <div class="flex items-start justify-between mb-4">
+  return <div id={`dashboard-card-${id}`} class={`min-w-0 ${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-slate-200 p-5 shadow-sm transition-all hover:shadow-md'} ${borderClass}`}>
+      <div class="flex flex-wrap items-start justify-between gap-2 mb-4">
         <div class={`flex h-10 w-10 items-center justify-center ${isNeo ? '' : 'rounded-xl'} ${config.iconContainer}`}>{icon}</div>
-        {trendText ? trendDirection === 'up' || trendDirection === 'down' ? <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+        {trendText ? trendDirection === 'up' || trendDirection === 'down' ? <span class="inline-flex max-w-full items-center gap-1 break-words px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
               {trendDirection === 'up' ? <ArrowUpIcon class="h-3 w-3" /> : <ArrowDownIcon class="h-3 w-3" />}
               {trendText}
-            </span> : <span class="text-xs font-medium text-slate-500">{trendText}</span> : null}
+            </span> : <span class="max-w-full break-words text-xs font-medium text-slate-500">{trendText}</span> : null}
       </div>
       <p class={`text-2xl font-semibold tracking-tight ${valueClass}`}>{value}</p>
       <p class="text-xs text-slate-500 mt-1">{title}</p>

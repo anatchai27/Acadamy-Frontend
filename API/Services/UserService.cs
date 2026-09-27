@@ -40,8 +40,14 @@ public class UserService(
             throw new UserValidationException("INVALID_ROLE", "Invalid role. Choose admin, teacher, or staff.");
         if (string.IsNullOrWhiteSpace(request.FullName))
             throw new UserValidationException("FULL_NAME_REQUIRED", "Full name is required for teacher/staff.");
-        if (await _repository.GetByEmailOrPhoneAsync(email, request.Phone, ct) is not null)
-            throw new UserValidationException("EMAIL_CONFLICT", "Email is already registered.");
+        var existingUser = await _repository.GetByEmailOrPhoneAsync(email, request.Phone, ct);
+        if (existingUser is not null)
+        {
+            if (string.Equals(existingUser.Email, email, StringComparison.OrdinalIgnoreCase))
+                throw new UserValidationException("EMAIL_CONFLICT", "อีเมลนี้มีผู้ใช้อยู่ในระบบแล้ว");
+
+            throw new UserValidationException("PHONE_CONFLICT", "เบอร์โทรศัพท์นี้มีผู้ใช้อยู่ในระบบแล้ว");
+        }
 
         var user = new User
         {
@@ -53,8 +59,13 @@ public class UserService(
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        var teacher = request.Role is UserRole.teacher or UserRole.admin
-            ? new Teacher { InstituteId = instituteId, FullName = request.FullName.Trim() }
+        var teacher = request.Role is UserRole.teacher
+            ? new Teacher
+            {
+                InstituteId = instituteId,
+                FullName = request.FullName.Trim(),
+                Status = "active"
+            }
             : null;
         return await _repository.CreateStaffAsync(user, teacher, ct);
     }
@@ -307,6 +318,20 @@ public class UserService(
         if (user is null) return UserManagementResult.NotFound;
         if (user.Role == UserRole.admin) return UserManagementResult.PrimaryAdmin;
         return await _repository.UpdateRoleAsync(id, role, ct) ? UserManagementResult.Updated : UserManagementResult.NotFound;
+    }
+
+    public async Task<UserManagementResult> UpdatePasswordForManagementAsync(int id, string newPassword, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+            throw new UserValidationException("PASSWORD_TOO_SHORT", "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+
+        var user = await _repository.GetByIdAsync(id, ct);
+        if (user is null) return UserManagementResult.NotFound;
+
+        var hash = _tokenService.HashPassword(newPassword);
+        return await _repository.UpdatePasswordAsync(id, hash, ct)
+            ? UserManagementResult.Updated
+            : UserManagementResult.NotFound;
     }
 
     public async Task<UserManagementResult> DeleteForManagementAsync(int id, CancellationToken ct = default)

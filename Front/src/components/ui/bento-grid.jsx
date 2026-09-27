@@ -1,14 +1,16 @@
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 export const BentoGrid = ({
   children,
+  id,
   class: className = ''
 }) => {
-  return <div class={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ${className}`}>
+  return <div id={id} class={`grid min-w-0 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
       {children}
     </div>;
 };
 export const BentoCell = ({
   children,
+  id,
   span,
   class: className = '',
   as = 'div'
@@ -25,7 +27,7 @@ export const BentoCell = ({
     4: 'col-span-1 lg:col-span-4',
     full: 'col-span-1 lg:col-span-4'
   }[span] || 'col-span-1';
-  return <Tag class={`${colSpan} bento-cell-hover ${isNeo ? 'bg-white p-5' : 'bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-sm'} ${className}`}>
+  return <Tag id={id} class={`${colSpan} bento-cell-hover ${isNeo ? 'bg-white p-5' : 'bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-sm'} ${className}`}>
       {children}
     </Tag>;
 };

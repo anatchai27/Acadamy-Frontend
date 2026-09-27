@@ -33,3 +33,5 @@ CMS/.next/cache/
 CMS/node_modules/
 CMS/.next/
 LineLiff/dist/
+API/academy-API.Tests/build-check/
+API/build-check/
