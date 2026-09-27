@@ -20,7 +20,7 @@ export function PlatformHome() {
   const addCompare = (course) =>
     setCompare((items) => (items.some((item) => item.name === course.name) ? items : [...items, course]));
   return (
-    <div class="marketplace">
+    <div class="marketplace neo-marketplace">
       <nav class="market-nav">
         <a class="market-brand" href="/">
           <span>+</span>
