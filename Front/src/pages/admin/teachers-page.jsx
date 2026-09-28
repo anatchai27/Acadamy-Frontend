@@ -149,7 +149,7 @@ export function TeachersPage({ path }) {
           ...payload,
           userEmail: form.userEmail.trim() || undefined,
           userPassword: form.userPassword || undefined,
-          userRole: form.userRole,
+          userRole: 'teacher',
         });
         const teacherId = res.data?.data?.id;
         if (photoFile && teacherId) {
@@ -382,17 +382,8 @@ export function TeachersPage({ path }) {
                         onInput={updateField('userPassword')}
                         error={formErrors.userPassword}
                       />
-                      <div class="flex flex-col gap-1.5">
-                        <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>บทบาท</label>
-                        <select
-                          value={form.userRole}
-                          onInput={updateField('userRole')}
-                          class={`w-full px-4 py-[11px] bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
-                        >
-                          <option value="teacher">ผู้สอน</option>
-                          <option value="admin">ผู้ดูแลระบบ</option>
-                          <option value="staff">เจ้าหน้าที่</option>
-                        </select>
+                      <div class={`flex items-center min-h-[46px] px-4 text-sm ${isNeo ? 'neo-card bg-cyan-100 border-2' : 'rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700'}`}>
+                        บัญชีนี้จะเข้าใช้งานในบทบาท <strong class="ml-1">ผู้สอน</strong> เท่านั้น
                       </div>
                     </div>
                   </div>
