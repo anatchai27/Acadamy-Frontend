@@ -160,7 +160,12 @@ export function TeachersPage({ path }) {
       closeForm();
       fetchTeachers();
     } catch (err) {
-      const msg = err?.data?.message || err?.data?.error || 'ดำเนินการไม่สำเร็จ';
+      const msg = err?.data?.message
+        || err?.data?.Message
+        || err?.data?.error
+        || err?.data?.detail
+        || err?.data?.Detail
+        || 'ดำเนินการไม่สำเร็จ';
       showToast(msg, 'error');
     } finally {
       setSubmitting(false);

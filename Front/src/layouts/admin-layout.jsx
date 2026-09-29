@@ -85,6 +85,14 @@ const menuGroups = [{
     icon: SettingsIcon,
     roles: ['admin']
   }]
+}, {
+  label: 'Master Data',
+  items: [{
+    path: '/admin/rooms',
+    label: 'ห้องเรียน',
+    icon: CourseIcon,
+    roles: ['admin']
+  }]
 }];
 const getPageTitle = path => {
   const labels = menuGroups

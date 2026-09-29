@@ -4,6 +4,7 @@ import { NotFoundPage } from './pages/not-found-page';
 import { TrialClassPage } from './pages/trial-class-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
 import { DashboardPage, UsersPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage, MakeupSlotsPage, LeadsPage } from './pages/admin';
+import { RoomsPage } from './pages/admin/rooms-page';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth, RoleForbidden } from './components/require-auth';
 import './app.css';
@@ -24,6 +25,7 @@ const AdminSettings = requireAuth(SettingsPage, ['admin']);
 const AdminProducts = requireAuth(ProductsPage, ['admin', 'staff']);
 const AdminMakeupSlots = requireAuth(MakeupSlotsPage, ['admin', 'teacher']);
 const AdminLeads = requireAuth(LeadsPage, ['admin']);
+const AdminRooms = requireAuth(RoomsPage, ['admin']);
 
 export function App() {
   return (
@@ -55,6 +57,7 @@ export function App() {
         <AdminProducts path="/admin/products" />
         <AdminMakeupSlots path="/admin/makeup-slots" />
         <AdminLeads path="/admin/leads" />
+        <AdminRooms path="/admin/rooms" />
         <NotFoundPage default />
       </Router>
       <ToastContainer />

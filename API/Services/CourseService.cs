@@ -82,9 +82,6 @@ public class CourseService(Repositories.ICourseRepository repository) : ICourseS
         {
             case "group":
             case "private":
-                if (totalSessions is null or <= 0)
-                    throw new CourseValidationException("TOTAL_SESSIONS_REQUIRED",
-                        "คอร์สประเภทนี้ต้องระบุจำนวนคาบเรียน");
                 break;
 
             case "subscription":

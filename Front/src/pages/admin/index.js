@@ -14,3 +14,4 @@ export { TeachersPage } from './teachers-page';
 export { ProductsPage } from './products-page';
 export { MakeupSlotsPage } from './makeup-slots-page';
 export { LeadsPage } from './leads-page';
+export { RoomsPage } from './rooms-page';

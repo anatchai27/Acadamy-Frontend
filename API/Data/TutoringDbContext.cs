@@ -53,6 +53,7 @@ public class TutoringDbContext(
     public DbSet<StudentBadge> StudentBadges => Set<StudentBadge>();
     public DbSet<StreakCounter> StreakCounters => Set<StreakCounter>();
     public DbSet<RoomBooking> RoomBookings => Set<RoomBooking>();
+    public DbSet<Room> Rooms => Set<Room>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -367,7 +368,7 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
-            entity.Property(e => e.Subject).HasMaxLength(255).HasColumnName("subject");
+            entity.Property(e => e.Subject).HasMaxLength(1000).HasColumnName("subject");
             entity.Property(e => e.TotalSessions).HasColumnName("total_sessions");
             entity.Property(e => e.Price).HasColumnName("price").HasColumnType("decimal(10,2)");
             entity.Property(e => e.TeacherId).HasColumnName("teacher_id").IsRequired(false);
@@ -1145,6 +1146,19 @@ public class TutoringDbContext(
             entity.HasIndex(e => new { e.InstituteId, e.RoomId, e.BookedStartAt, e.BookedEndAt });
         });
 
+        modelBuilder.Entity<Room>(entity =>
+        {
+            entity.ToTable("rooms");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name");
+            entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(e => new { e.InstituteId, e.Name }).IsUnique();
+        });
+
         ApplyTenantFilters(modelBuilder);
     }
 
@@ -1184,6 +1198,7 @@ public class TutoringDbContext(
         modelBuilder.Entity<StudentBadge>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<StreakCounter>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<RoomBooking>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<Room>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
     }
 
 }

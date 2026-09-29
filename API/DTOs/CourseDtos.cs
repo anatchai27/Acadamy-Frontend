@@ -65,6 +65,25 @@ public record CreateSessionRequest(
     string? RoomId
 );
 
+public record RecurringSessionRule(
+    int DayOfWeek,
+    string StartTime,
+    int DurationMin,
+    string? RoomId
+);
+
+public record CreateRecurringSessionsRequest(
+    DateTime StartDate,
+    DateTime EndDate,
+    List<RecurringSessionRule> Rules
+);
+
+public record CreateRecurringSessionsResponse(
+    string Status,
+    string Message,
+    int CreatedCount
+);
+
 public record CreateSessionResponse(
     string Status,
     string Message,

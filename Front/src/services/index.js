@@ -65,7 +65,9 @@ export {
   sessionService,
   getSessions,
   createSession,
+  createRecurringSessions,
 } from './session-service';
+export { roomService, getRooms, createRoom, updateRoom, deleteRoom } from './room-service';
 export {
   leaveRequestService,
   getLeaveRequests,

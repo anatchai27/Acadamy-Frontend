@@ -57,16 +57,28 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
 
     public async Task<User> CreateStaffAsync(User user, Teacher? teacher, CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync(cancellationToken);
-        if (teacher is not null)
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            teacher.UserId = user.Id;
-            _context.Teachers.Add(teacher);
-        }
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(cancellationToken);
+                if (teacher is not null)
+                {
+                    teacher.UserId = user.Id;
+                    _context.Teachers.Add(teacher);
+                }
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
         return user;
     }
 

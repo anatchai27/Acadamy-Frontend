@@ -8,7 +8,12 @@ export const createSession = (courseId, payload) => {
   return api.post(`/courses/${courseId}/sessions`, payload);
 }
 
+export const createRecurringSessions = (courseId, payload) => {
+  return api.post(`/courses/${courseId}/sessions/recurring`, payload);
+}
+
 export const sessionService = {
   getSessions,
   createSession,
+  createRecurringSessions,
 };

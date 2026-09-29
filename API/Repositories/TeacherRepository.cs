@@ -49,17 +49,29 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
 
     public async Task<Teacher> CreateAsync(Teacher teacher, User? user, CancellationToken ct = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
-        if (user is not null)
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync(ct);
-            teacher.UserId = user.Id;
-        }
+            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+            try
+            {
+                if (user is not null)
+                {
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync(ct);
+                    teacher.UserId = user.Id;
+                }
 
-        _context.Teachers.Add(teacher);
-        await _context.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
+                _context.Teachers.Add(teacher);
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+        });
         teacher.User = user;
         return teacher;
     }

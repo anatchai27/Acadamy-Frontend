@@ -38,7 +38,8 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
     private async Task<Session> CreateWithRoomLockAsync(Session session, CancellationToken ct)
     {
         var connection = _context.Database.GetDbConnection();
-        await connection.OpenAsync(ct);
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(ct);
 
         var lockName = BuildRoomLockName(session.InstituteId, session.RoomId!);
         await using var lockCommand = connection.CreateCommand();
@@ -54,19 +55,25 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
 
         try
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
-            if (await HasRoomOverlapAsync(
-                    session.InstituteId,
-                    session.RoomId!,
-                    session.ScheduledAt,
-                    session.ScheduledAt.AddMinutes(session.DurationMin),
-                    ct))
-                throw new RoomBookingConflictException("ห้องเรียนมีคาบเรียนทับซ้อนในช่วงเวลานี้");
+            // The retrying MySQL strategy requires the user transaction to run
+            // inside its execution delegate so the whole unit can be retried.
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+                if (await HasRoomOverlapAsync(
+                        session.InstituteId,
+                        session.RoomId!,
+                        session.ScheduledAt,
+                        session.ScheduledAt.AddMinutes(session.DurationMin),
+                        ct))
+                    throw new RoomBookingConflictException("ห้องเรียนมีคาบเรียนทับซ้อนในช่วงเวลานี้");
 
-            _context.Sessions.Add(session);
-            await _context.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-            return session;
+                _context.Sessions.Add(session);
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+                return session;
+            });
         }
         finally
         {
@@ -83,7 +90,9 @@ public class SessionRepository(TutoringDbContext context) : ISessionRepository
     private static string BuildRoomLockName(int instituteId, string roomId)
     {
         var value = Encoding.UTF8.GetBytes($"{instituteId}:{roomId}");
-        return $"academy-room-{Convert.ToHexString(SHA256.HashData(value))}";
+        // MySQL GET_LOCK names are limited to 64 characters.
+        var hash = Convert.ToHexString(SHA256.HashData(value));
+        return $"academy-room-{hash[..51]}";
     }
 
     public Task<bool> HasRoomOverlapAsync(int instituteId, string roomId, DateTime start, DateTime end, CancellationToken ct = default)

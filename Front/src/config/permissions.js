@@ -62,6 +62,10 @@ export const PAGE_PERMISSIONS = {
     label: 'ตั้งค่า',
     admin: { read: true, edit: true, delete: false },
   },
+  '/admin/rooms': {
+    label: 'ห้องเรียน',
+    admin: { read: true, edit: true, delete: true },
+  },
 };
 
 const ROLE_PERMISSIONS = {};

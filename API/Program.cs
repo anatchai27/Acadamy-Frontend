@@ -102,6 +102,7 @@ builder.Services.AddRateLimiter(options =>
 
 // Register application services
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<ILeadRepository, LeadRepository>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -216,6 +217,7 @@ app.UseAuthorization();
 
 // Map endpoint groups
 app.MapProductEndpoints();
+app.MapRoomEndpoints();
 app.MapStudentEndpoints();
 app.MapTeacherEndpoints();
 app.MapAuthEndpoints();
