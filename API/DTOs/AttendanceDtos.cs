@@ -77,7 +77,8 @@ public record DailyAttendanceData(
 public record DailySessionInfo(
     int Id,
     string CourseName,
-    DateTime ScheduledAt
+    DateTime ScheduledAt,
+    string? CourseNameEn = null
 );
 
 public record DailyAttendanceRow(

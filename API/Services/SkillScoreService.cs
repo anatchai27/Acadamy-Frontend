@@ -43,6 +43,7 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
         {
             CourseId = request.CourseId,
             Name = request.Name.Trim(),
+            NameEn = Clean(request.NameEn),
             OrderIndex = request.OrderIndex
         };
 
@@ -63,6 +64,7 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
         var topic = new Models.SkillTopic
         {
             Name = request.Name.Trim(),
+            NameEn = request.NameEn?.Trim(),
             OrderIndex = request.OrderIndex
         };
 
@@ -73,6 +75,8 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
     {
         await _repository.DeleteTopicAsync(id, ct);
     }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 public class SkillScoreValidationException : Exception

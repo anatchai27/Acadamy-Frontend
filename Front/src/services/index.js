@@ -27,32 +27,11 @@ export {
   updateStudent,
   getStudentQR,
 } from './student-service';
-export {
-  attendanceService,
-  scanAttendance,
-  getDailyAttendance,
-  submitManualAttendance,
-} from './attendance-service';
-export {
-  financeService,
-  createPayment,
-  getPayments,
-} from './finance-service';
+export { attendanceService, scanAttendance, getDailyAttendance, submitManualAttendance } from './attendance-service';
+export { financeService, createPayment, getPayments, verifyPaymentSlip, issuePaymentReceipt } from './finance-service';
 export { reportService, getRevenueReport, downloadPaymentCsv } from './report-service';
-export {
-  teacherService,
-  getTeachers,
-  getTeacherById,
-  createTeacher,
-  patchTeacher,
-} from './teacher-service';
-export {
-  courseService,
-  getCourses,
-  getCourseById,
-  createCourse,
-  updateCourse,
-} from './course-service';
+export { teacherService, getTeachers, getTeacherById, createTeacher, patchTeacher } from './teacher-service';
+export { courseService, getCourses, getCourseById, createCourse, updateCourse } from './course-service';
 export {
   productService,
   getProducts,
@@ -61,12 +40,7 @@ export {
   updateProduct,
   deleteProduct,
 } from './product-service';
-export {
-  sessionService,
-  getSessions,
-  createSession,
-  createRecurringSessions,
-} from './session-service';
+export { sessionService, getSessions, createSession, createRecurringSessions } from './session-service';
 export { roomService, getRooms, createRoom, updateRoom, deleteRoom } from './room-service';
 export {
   leaveRequestService,
@@ -74,23 +48,17 @@ export {
   approveLeaveRequest,
   rejectLeaveRequest,
 } from './leave-request-service';
-export {
-  homeworkService,
-  getHomeworks,
-  createHomework,
-  getSubmissions,
-  gradeSubmission,
-} from './homework-service';
+export { homeworkService, getHomeworks, createHomework, getSubmissions, gradeSubmission } from './homework-service';
 export {
   skillScoreService,
   getSkillTopics,
+  createSkillTopic,
+  updateSkillTopic,
+  deleteSkillTopic,
   getSkillScores,
   batchUpdateSkillScores,
 } from './skill-score-service';
-export {
-  enrollmentService,
-  enrollStudent,
-} from './enrollment-service';
+export { enrollmentService, getEnrollments, enrollStudent } from './enrollment-service';
 export {
   uploadService,
   uploadPaymentSlip,

@@ -1,0 +1,385 @@
+{
+  "common": {
+    "appName": "acadamy",
+    "tagline": "ศูนย์กลางค้นหาและเปรียบเทียบสถาบันเรียนพิเศษสำหรับเด็ก",
+    "search": "ค้นหา",
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "add": "เพิ่ม",
+    "viewAll": "ดูทั้งหมด",
+    "loading": "กำลังโหลด...",
+    "noData": "ไม่มีข้อมูล",
+    "confirm": "ยืนยัน",
+    "close": "ปิด",
+    "yes": "ใช่",
+    "no": "ไม่",
+    "back": "กลับ",
+    "next": "ถัดไป",
+    "previous": "ก่อนหน้า",
+    "submit": "ส่ง",
+    "reset": "รีเซ็ต",
+    "clear": "ล้าง",
+    "filter": "กรอง",
+    "sort": "เรียงลำดับ",
+    "export": "ส่งออก",
+    "import": "นำเข้า",
+    "download": "ดาวน์โหลด",
+    "upload": "อัปโหลด",
+    "print": "พิมพ์",
+    "share": "แชร์",
+    "copy": "คัดลอก",
+    "refresh": "รีเฟรช",
+    "settings": "ตั้งค่า",
+    "profile": "โปรไฟล์",
+    "logout": "ออกจากระบบ",
+    "login": "เข้าสู่ระบบ",
+    "register": "สมัครสมาชิก",
+    "forgotPassword": "ลืมรหัสผ่าน",
+    "rememberMe": "จำฉันไว้",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "fullName": "ชื่อ-นามสกุล",
+    "phone": "เบอร์โทรศัพท์",
+    "role": "บทบาท",
+    "status": "สถานะ",
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน",
+    "pending": "รอดำเนินการ",
+    "approved": "อนุมัติแล้ว",
+    "rejected": "ปฏิเสธ",
+    "actions": "การจัดการ",
+    "createdAt": "วันที่สร้าง",
+    "updatedAt": "วันที่อัปเดต",
+    "name": "ชื่อ",
+    "description": "คำอธิบาย",
+    "price": "ราคา",
+    "duration": "ระยะเวลา",
+    "format": "รูปแบบ",
+    "rating": "คะแนน",
+    "reviews": "รีวิว",
+    "location": "สถานที่",
+    "subject": "วิชา",
+    "level": "ระดับ",
+    "institute": "สถาบัน",
+    "teacher": "ผู้สอน",
+    "student": "ผู้เรียน",
+    "parent": "ผู้ปกครอง",
+    "admin": "ผู้ดูแล",
+    "staff": "พนักงาน",
+    "member": "สมาชิก",
+    "all": "ทั้งหมด",
+    "today": "วันนี้",
+    "yesterday": "เมื่อวาน",
+    "thisWeek": "สัปดาห์นี้",
+    "thisMonth": "เดือนนี้",
+    "thisYear": "ปีนี้"
+  },
+  "language": {
+    "switchToEnglish": "เปลี่ยนภาษาเป็นภาษาอังกฤษ",
+    "switchToThai": "เปลี่ยนภาษาเป็นภาษาไทย"
+  },
+  "platform": {
+    "navigation": {
+      "institutes": "สถาบันทั้งหมด",
+      "courses": "คอร์สเรียน",
+      "howItWorks": "วิธีใช้งาน",
+      "partner": "เปิดคอร์สกับเรา"
+    },
+    "subjects": {
+      "all": "ทั้งหมด",
+      "english": "ภาษาอังกฤษ",
+      "coding": "Coding",
+      "math": "คณิตศาสตร์"
+    },
+    "problems": {
+      "communication": { "eyebrow": "01 / ทักษะการสื่อสาร", "title": "ไม่กล้าพูด\nไม่กล้าแสดงออก", "cta": "รวมสถาบันที่ช่วยเรื่องนี้" },
+      "foundation": { "eyebrow": "02 / การเรียนรู้", "title": "พื้นฐานยังไม่แน่น\nตามเพื่อนไม่ทัน", "cta": "รวมสถาบันที่ช่วยเรื่องนี้" },
+      "future-skills": { "eyebrow": "03 / ทักษะแห่งอนาคต", "title": "อยากลองสิ่งใหม่\nค้นหาความถนัด", "cta": "รวมสถาบันที่ช่วยเรื่องนี้" }
+    },
+    "institutes": {
+      "kicker": "สถาบันแนะนำ",
+      "save": "บันทึก {{name}}",
+      "reviews": "รีวิว",
+      "action": "ดูสถาบันและคอร์ส",
+      "items": [
+        { "location": "ลาดพร้าว", "description": "ห้องเรียนกลุ่มเล็กที่ช่วยให้เด็กคิดเป็นระบบและกล้าลองผิดลองถูก", "tags": ["ทดลองเรียนฟรี", "กลุ่มเล็ก"] },
+        { "location": "อโศก", "description": "ภาษาอังกฤษและ Public Speaking ผ่านกิจกรรมที่เด็กสนุกและมีส่วนร่วม", "tags": ["ครูเจ้าของภาษา", "เด็กชอบมาก"] },
+        { "location": "บางนา", "description": "Coding, Robotics และทักษะอนาคตสำหรับนักเรียนที่ชอบสร้างสรรค์", "tags": ["ลงมือทำจริง", "มีอุปกรณ์ให้"] }
+      ]
+    },
+    "courses": {
+      "subjects": ["ภาษาอังกฤษ", "Coding", "คณิตศาสตร์"],
+      "levels": ["ป.4–ม.ต้น", "7–12 ปี", "ป.4–ป.6"],
+      "durations": ["8 สัปดาห์", "10 ครั้ง", "12 ครั้ง"],
+      "perCourse": "ต่อคอร์ส",
+      "compare": "เปรียบเทียบราคาคอร์ส"
+    }
+  },
+  "navigation": {
+    "groups": { "primary": "ข้อมูลหลัก", "operations": "การดำเนินงาน", "commerce": "การเงินและสินค้า", "system": "ระบบ", "master": "ข้อมูลอ้างอิง" },
+    "scanQr": "สแกน QR",
+    "logoutConfirmation": "คุณแน่ใจว่าต้องการออกจากระบบใช่หรือไม่?",
+    "home": "หน้าหลัก",
+    "dashboard": "แดชบอร์ด",
+    "users": "จัดการผู้ใช้",
+    "teachers": "จัดการผู้สอน",
+    "students": "จัดการผู้เรียน",
+    "courses": "จัดการคอร์ส",
+    "sessions": "จัดการเซสชัน",
+    "attendance": "เช็คอิน/เช็คเอาท์",
+    "requests": "คำร้องขอ",
+    "academics": "วิชาการ",
+    "finance": "การเงิน",
+    "permissions": "สิทธิ์การเข้าถึง",
+    "settings": "ตั้งค่า",
+    "products": "สินค้า",
+    "makeupSlots": "สล็อตเรียนทดแทน",
+    "leads": "ลีด",
+    "rooms": "ห้องเรียน"
+  },
+  "hero": {
+    "eyebrow": "THE SMART WAY TO CHOOSE TUTORING",
+    "title": "ค้นพบที่เรียนที่",
+    "highlight": "เหมาะกับลูก",
+    "description": "เปรียบเทียบสถาบัน คอร์สเรียน และรีวิวจากผู้ปกครองจริงในที่เดียว เพื่อการตัดสินใจที่มั่นใจขึ้น",
+    "searchPlaceholder": "ค้นหาวิชา ชื่อสถาบัน หรือทำเล...",
+    "searchAriaLabel": "ค้นหาสถาบันและคอร์ส",
+    "popularSearches": "กำลังเป็นที่นิยม:"
+  },
+  "trust": {
+    "institutes": "สถาบันที่คัดสรร",
+    "courses": "คอร์สเรียน",
+    "rating": "คะแนนจากผู้ปกครอง",
+    "transparent": "ข้อมูลโปร่งใส",
+    "decide": "ตัดสินใจได้ด้วยตัวเอง"
+  },
+  "problems": {
+    "eyebrow": "START WITH A NEED",
+    "title": "ลูกกำลังมองหาอะไรอยู่?",
+    "subtitle": "เลือกหัวข้อเพื่อค้นหาสถาบันที่เข้าใจโจทย์นี้",
+    "communication": {
+      "eyebrow": "01 / ทักษะการสื่อสาร",
+      "title": "ไม่กล้าพูด\nไม่กล้าแสดงออก",
+      "cta": "รวมสถาบันที่ช่วยเรื่องนี้"
+    },
+    "foundation": {
+      "eyebrow": "02 / การเรียนรู้",
+      "title": "พื้นฐานยังไม่แน่น\nตามเพื่อนไม่ทัน",
+      "cta": "รวมสถาบันที่ช่วยเรื่องนี้"
+    },
+    "futureSkills": {
+      "eyebrow": "03 / ทักษะแห่งอนาคต",
+      "title": "อยากลองสิ่งใหม่\nค้นหาความถนัด",
+      "cta": "รวมสถาบันที่ช่วยเรื่องนี้"
+    }
+  },
+  "institutes": {
+    "eyebrow": "TRUSTED BY PARENTS",
+    "title": "สถาบันแนะนำประจำเดือน",
+    "viewAll": "ดูสถาบันทั้งหมด ↗"
+  },
+  "courses": {
+    "eyebrow": "COMPARE & CHOOSE",
+    "title": "คอร์สเรียนยอดฮิตจากหลายสถาบัน",
+    "tabs": ["ทั้งหมด", "ภาษาอังกฤษ", "Coding", "คณิตศาสตร์"],
+    "empty": "ไม่พบคอร์สที่ตรงกับคำค้น ลองค้นหาวิชาอื่น"
+  },
+  "compare": {
+    "eyebrow": "MAKE A CONFIDENT CHOICE",
+    "title": "เปรียบเทียบก่อนตัดสินใจ",
+    "description": "บันทึกคอร์สที่สนใจ แล้วดูราคา รูปแบบการเรียน และรีวิวเทียบกันได้ในมุมมองเดียว",
+    "empty": "ยังไม่มีคอร์สที่เลือกเปรียบเทียบ",
+    "button": "เปรียบเทียบ {{count}} คอร์ส"
+  },
+  "partner": {
+    "eyebrow": "FOR EDUCATION PARTNERS",
+    "title": "มีคอร์สที่อยากให้",
+    "highlight": "เด็ก ๆ ได้ค้นพบ?",
+    "description": "เข้าร่วม Acadamy เพื่อให้ผู้ปกครองค้นพบสถาบันของคุณได้ง่ายขึ้น จัดการคอร์สจากที่เดียว และเติบโตไปพร้อมกับครอบครัวที่ใช่",
+    "cta": "สมัครเป็นพาร์ทเนอร์ →",
+    "benefits": {
+      "01": {
+        "title": "เข้าถึงผู้ปกครองที่กำลังค้นหา",
+        "description": "แสดงสถาบันในผลค้นหาและหมวดวิชาที่ตรงกลุ่ม"
+      },
+      "02": {
+        "title": "โปรไฟล์และคอร์สที่เป็นของคุณ",
+        "description": "เล่าเรื่องจุดเด่น ราคา รูปแบบการสอน และผลงานได้ชัดเจน"
+      },
+      "03": {
+        "title": "ข้อมูลช่วยให้เติบโต",
+        "description": "ดูความสนใจและ lead เพื่อวางแผนคอร์สได้ดีขึ้น"
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Acadamy Platform"
+  },
+  "dashboard": {
+    "overview": {
+      "ariaLabel": "ภาพรวมแดชบอร์ด",
+      "title": "ภาพรวมตามวันที่",
+      "description": "ตัวเลขทั้งหมดมาจาก API ของวันที่เลือก",
+      "date": "วันที่",
+      "stats": { "students": "นักเรียน", "attendance": "เช็คชื่อวันนี้", "requests": "คำขอลา/ชดเชย", "revenue": "รายได้ (เดือนนี้)" },
+      "studentsCount": "ทั้งหมด {{count}} คน",
+      "attendanceBreakdown": "มา {{present}} · สาย {{late}} · ขาด {{absent}} · ลา {{leave}}",
+      "pendingRequests": "รอตรวจสอบ",
+      "noRequests": "ไม่มีรายการใหม่",
+      "errors": { "students": "โหลดข้อมูลนักเรียนไม่สำเร็จ", "attendance": "โหลดข้อมูลเช็คชื่อไม่สำเร็จ", "requests": "โหลดคำขอลาไม่สำเร็จ", "revenue": "โหลดรายได้ไม่สำเร็จ" }
+    },
+    "recentActivity": "กิจกรรมล่าสุด",
+    "topCourses": "คอร์สยอดนิยม",
+    "quickActions": "ดำเนินการด่วน",
+    "noActivityData": "ยังไม่มี API สำหรับกิจกรรมล่าสุด จึงยังไม่แสดงข้อมูลตัวอย่าง",
+    "noCourseData": "ยังไม่มี API สำหรับจัดอันดับคอร์ส จึงยังไม่แสดงตัวเลขสมมติ",
+    "quickActionsList": {
+      "addUser": "เพิ่มผู้ใช้ใหม่",
+      "createCourse": "สร้างคอร์สเรียน",
+      "viewReports": "ดูรายงาน"
+    },
+    "stats": {
+      "totalUsers": "ผู้ใช้ทั้งหมด",
+      "teachers": "ผู้สอน",
+      "students": "ผู้เรียน",
+      "admins": "ผู้ดูแล"
+    }
+  },
+  "users": {
+    "loadError": "ไม่สามารถโหลดข้อมูลผู้ใช้ได้",
+    "listTitle": "รายชื่อผู้ใช้ทั้งหมด",
+    "title": "จัดการผู้ใช้",
+    "subtitle": "จัดการบัญชีผู้ใช้ทั้งหมดในระบบ",
+    "searchPlaceholder": "ค้นหาชื่อหรืออีเมล...",
+    "addUser": "เพิ่มผู้ใช้",
+    "stats": {
+      "total": "ผู้ใช้ทั้งหมด",
+      "teacher": "ผู้สอน",
+      "student": "ผู้เรียน",
+      "admin": "ผู้ดูแล"
+    },
+    "table": {
+      "user": "ผู้ใช้",
+      "email": "อีเมล",
+      "role": "บทบาท",
+      "joinedDate": "วันที่สมัคร",
+      "actions": "จัดการ"
+    },
+    "form": {
+      "title": "เพิ่มผู้ใช้",
+      "fullName": "ชื่อผู้ใช้",
+      "fullNamePlaceholder": "ชื่อ-นามสกุล",
+      "email": "อีเมล",
+      "emailPlaceholder": "อีเมลสำหรับเข้าสู่ระบบ",
+      "phone": "เบอร์โทรศัพท์",
+      "phonePlaceholder": "08xxxxxxxx",
+      "password": "รหัสผ่าน",
+      "passwordPlaceholder": "ตั้งรหัสผ่าน",
+      "role": "บทบาท",
+      "roleAdmin": "ผู้ดูแลระบบ",
+      "cancel": "ยกเลิก",
+      "submit": "เพิ่มผู้ใช้",
+      "success": "เพิ่มผู้ใช้สำเร็จ",
+      "error": "เพิ่มผู้ใช้ไม่สำเร็จ",
+      "requiredEmailPassword": "กรุณากรอกอีเมลและรหัสผ่าน",
+      "requiredFullName": "กรุณากรอกชื่อผู้ใช้"
+    },
+    "edit": {
+      "title": "จัดการบัญชีผู้ใช้",
+      "role": "บทบาท / สิทธิ์",
+      "roleAdmin": "ผู้ดูแล",
+      "roleTeacher": "ผู้สอน",
+      "roleStaff": "พนักงาน",
+      "roleParent": "ผู้ปกครอง",
+      "roleStudent": "ผู้เรียน",
+      "newPassword": "รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)",
+      "passwordPlaceholder": "อย่างน้อย 8 ตัวอักษร",
+      "passwordNote": "ระบบจะไม่แสดงรหัสผ่านเดิม เพื่อความปลอดภัย",
+      "permissions": {
+        "page": "หน้า",
+        "read": "อ่าน",
+        "edit": "แก้ไข",
+        "delete": "ลบ"
+      },
+      "cancel": "ยกเลิก",
+      "submit": "บันทึก",
+      "success": "อัปเดตข้อมูลผู้ใช้สำเร็จ",
+      "error": "อัปเดตข้อมูลผู้ใช้ไม่สำเร็จ"
+    },
+    "delete": {
+      "title": "ลบผู้ใช้",
+      "message": "คุณแน่ใจว่าต้องการลบผู้ใช้ \"{{email}}\"?",
+      "yes": "ลบ",
+      "cancel": "ยกเลิก",
+      "notReady": "ฟังก์ชันลบผู้ใช้ยังไม่พร้อมใช้งาน"
+    },
+    "empty": {
+      "loading": "กำลังโหลดข้อมูล...",
+      "noResults": "ไม่พบผู้ใช้ที่ค้นหา",
+      "noUsers": "ไม่มีผู้ใช้ในระบบ"
+    },
+    "showing": "แสดงทั้งหมด {{count}} รายการ",
+    "roles": {
+      "admin": "ผู้ดูแล",
+      "teacher": "ผู้สอน",
+      "staff": "พนักงาน",
+      "parent": "ผู้ปกครอง",
+      "student": "ผู้เรียน"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "เข้าสู่ระบบ",
+      "subtitle": "เข้าสู่ระบบเพื่อใช้งานต่อ",
+      "emailLabel": "อีเมล",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "รหัสผ่าน",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "จำฉันไว้",
+      "forgotPassword": "ลืมรหัสผ่าน?",
+      "submit": "เข้าสู่ระบบ",
+      "noAccount": "ยังไม่มีบัญชี?",
+      "registerLink": "สมัครสมาชิก"
+    },
+    "register": {
+      "title": "สมัครสมาชิก",
+      "subtitle": "สร้างบัญชีเพื่อเริ่มใช้งาน",
+      "fullNameLabel": "ชื่อ-นามสกุล",
+      "fullNamePlaceholder": "ชื่อ-นามสกุล",
+      "emailLabel": "อีเมล",
+      "emailPlaceholder": "you@example.com",
+      "phoneLabel": "เบอร์โทรศัพท์",
+      "phonePlaceholder": "08xxxxxxxx",
+      "passwordLabel": "รหัสผ่าน",
+      "passwordPlaceholder": "อย่างน้อย 8 ตัวอักษร",
+      "confirmPasswordLabel": "ยืนยันรหัสผ่าน",
+      "confirmPasswordPlaceholder": "ยืนยันรหัสผ่าน",
+      "submit": "สมัครสมาชิก",
+      "hasAccount": "มีบัญชีแล้ว?",
+      "loginLink": "เข้าสู่ระบบ"
+    },
+    "forgotPassword": {
+      "title": "ลืมรหัสผ่าน",
+      "subtitle": "กรอกอีเมลเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
+      "emailLabel": "อีเมล",
+      "emailPlaceholder": "you@example.com",
+      "submit": "ส่งลิงก์รีเซ็ต",
+      "backToLogin": "กลับไปหน้าเข้าสู่ระบบ"
+    }
+  },
+  "toast": {
+    "success": "สำเร็จ",
+    "error": "ผิดพลาด",
+    "warning": "คำเตือน",
+    "info": "ข้อมูล"
+  },
+  "confirmDialog": {
+    "title": "ยืนยันการดำเนินการ",
+    "message": "คุณแน่ใจหรือไม่?",
+    "yes": "ใช่",
+    "no": "ไม่"
+  }
+}

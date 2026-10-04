@@ -2,19 +2,25 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
-import { BentoGrid, BentoCell } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService } from '../../services';
 import { useAbortController } from '../../hooks';
-import { HiOutlinePlus, HiOutlineBookOpen, HiOutlineUser, HiOutlineClock, HiOutlineCalendarDays, HiOutlinePencil } from 'react-icons/hi2';
+import {
+  HiOutlinePlus,
+  HiOutlineBookOpen,
+  HiOutlineClock,
+  HiOutlinePencil,
+  HiOutlineArrowUpRight,
+  HiOutlineTag,
+} from 'react-icons/hi2';
 
 const courseTypeLabels = {
-    group: 'กลุ่ม',
-    private: 'เดี่ยว',
-    subscription: 'บุฟเฟต์',
-    video: 'วิดีโอ',
-    credit: 'เครดิต',
-  };
+  group: 'กลุ่ม',
+  private: 'เดี่ยว',
+  subscription: 'บุฟเฟต์',
+  video: 'วิดีโอ',
+  credit: 'เครดิต',
+};
 
 const courseTypeDescriptions = {
   group: 'เรียนพร้อมผู้เรียนหลายคนตามตารางสอนของสถาบัน เหมาะกับคลาสที่จัดรอบแน่นอน',
@@ -24,12 +30,28 @@ const courseTypeDescriptions = {
   credit: 'ซื้อเครดิตไว้ล่วงหน้า แล้วใช้เครดิตต่อการเรียนแต่ละครั้ง',
 };
 
-  const formatCurrency = (n) =>
-  n != null ? `฿${Number(n).toLocaleString()}` : '-';
+const formatCurrency = (n) => (n != null ? `฿${Number(n).toLocaleString()}` : '-');
+
+const getCourseCover = (course) =>
+  course.coverImage ||
+  course.imageUrl ||
+  course.thumbnailUrl ||
+  `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+    <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#fef3c7"/></linearGradient></defs>
+    <rect width="960" height="540" fill="url(#g)"/>
+    <circle cx="790" cy="100" r="130" fill="#ffffff" opacity=".35"/>
+    <text x="56" y="420" fill="#29436e" font-family="Arial,sans-serif" font-size="42" font-weight="700">${course.name || 'Course'}</text>
+  </svg>
+`)}`;
+
+const getOriginalPrice = (course) => course.originalPrice ?? course.listPrice ?? course.fullPrice;
 
 const emptyForm = {
   name: '',
+  nameEn: '',
   subject: '',
+  subjectEn: '',
   courseType: 'group',
   totalSessions: '20',
   price: '',
@@ -73,7 +95,9 @@ export function CoursesPage({ path }) {
     try {
       const res = await teacherService.getTeachers();
       setTeachers(Array.isArray(res.data) ? res.data : res.data?.data || []);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   useEffect(() => {
@@ -98,7 +122,9 @@ export function CoursesPage({ path }) {
     setEditingId(course.id);
     setForm({
       name: course.name || '',
+      nameEn: course.nameEn || '',
       subject: course.subject || '',
+      subjectEn: course.subjectEn || '',
       courseType: course.courseType || 'group',
       totalSessions: String(course.totalSessions || '20'),
       price: course.price != null ? String(course.price) : '',
@@ -131,14 +157,16 @@ export function CoursesPage({ path }) {
     try {
       const payload = {
         name: form.name.trim(),
+        nameEn: form.nameEn.trim(),
         subject: form.subject.trim(),
+        subjectEn: form.subjectEn.trim(),
         courseType: form.courseType,
         totalSessions: undefined,
         price: form.price ? Number(form.price) : 0,
         teacherId: form.teacherId ? Number(form.teacherId) : undefined,
-        expiresInDays: form.courseType === 'subscription' ? (Number(form.expiresInDays) || 30) : undefined,
+        expiresInDays: form.courseType === 'subscription' ? Number(form.expiresInDays) || 30 : undefined,
         requireComputer: form.courseType === 'private' ? form.requireComputer : undefined,
-        creditCost: form.courseType === 'credit' ? (Number(form.creditCost) || 1) : undefined,
+        creditCost: form.courseType === 'credit' ? Number(form.creditCost) || 1 : undefined,
       };
 
       if (editingId) {
@@ -173,9 +201,7 @@ export function CoursesPage({ path }) {
         <div>
           <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">รายละเอียดวิชา</h2>
           <p class="text-sm text-zinc-500 mt-1">
-            {courses.length > 0
-              ? 'ข้อมูลวิชาและคอร์สเรียนที่เปิดให้ลงทะเบียน'
-              : 'จัดการรายละเอียดวิชาและคอร์สเรียน'}
+            {courses.length > 0 ? 'ข้อมูลวิชาและคอร์สเรียนที่เปิดให้ลงทะเบียน' : 'จัดการรายละเอียดวิชาและคอร์สเรียน'}
           </p>
         </div>
         <Button variant="primary" size="md" onClick={openCreate}>
@@ -190,7 +216,7 @@ export function CoursesPage({ path }) {
       {showForm && (
         <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} mb-6`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">
-             {editingId ? 'แก้ไขรายละเอียดวิชา' : 'เพิ่มรายละเอียดวิชา'}
+            {editingId ? 'แก้ไขรายละเอียดวิชา' : 'เพิ่มรายละเอียดวิชา'}
           </h3>
           <form onSubmit={handleSubmit}>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -205,32 +231,60 @@ export function CoursesPage({ path }) {
                 >
                   <option value="group">คอร์สกลุ่ม</option>
                   <option value="private">คอร์สตัวต่อตัว</option>
-                  <option value="subscription" disabled>คอร์สสมาชิก / รายเดือน (ยังไม่เปิดใช้งาน)</option>
-                  <option value="video" disabled>คอร์สวิดีโอ (ยังไม่เปิดใช้งาน)</option>
-                  <option value="credit" disabled>แพ็กเกจเครดิต (ยังไม่เปิดใช้งาน)</option>
+                  <option value="subscription" disabled>
+                    คอร์สสมาชิก / รายเดือน (ยังไม่เปิดใช้งาน)
+                  </option>
+                  <option value="video" disabled>
+                    คอร์สวิดีโอ (ยังไม่เปิดใช้งาน)
+                  </option>
+                  <option value="credit" disabled>
+                    แพ็กเกจเครดิต (ยังไม่เปิดใช้งาน)
+                  </option>
                 </select>
                 <p class="text-xs leading-relaxed text-zinc-500">{courseTypeDescriptions[form.courseType]}</p>
               </div>
               <SolidInput
-                 label="ชื่อวิชา / ชื่อคอร์ส *"
+                label="ชื่อวิชา / ชื่อคอร์ส (ไทย) *"
                 placeholder="เช่น คณิตศาสตร์ ม.1 เทอม 1"
                 required
                 value={form.name}
                 onInput={updateField('name')}
               />
-               <div class="flex flex-col gap-1.5 md:col-span-2">
-                 <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>รายละเอียดวิชา *</label>
-                 <textarea
-                   placeholder="เช่น เนื้อหาที่เรียน เป้าหมาย ระดับชั้น หรือรายละเอียดเพิ่มเติม"
-                   required
-                   maxLength="1000"
-                   rows="4"
-                   value={form.subject}
-                   onInput={updateField('subject')}
-                   class={`w-full resize-y px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'rounded-xl border border-zinc-200 focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
-                 />
-                 <span class="text-xs text-zinc-400">ใส่รายละเอียดได้สูงสุด 1,000 ตัวอักษร</span>
-               </div>
+              <SolidInput
+                label="ชื่อวิชา / ชื่อคอร์ส (English)"
+                placeholder="e.g. Mathematics Grade 7"
+                value={form.nameEn}
+                onInput={updateField('nameEn')}
+              />
+              <div class="flex flex-col gap-1.5 md:col-span-2">
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                  รายละเอียดวิชา (ไทย) *
+                </label>
+                <textarea
+                  placeholder="เช่น เนื้อหาที่เรียน เป้าหมาย ระดับชั้น หรือรายละเอียดเพิ่มเติม"
+                  required
+                  maxLength="1000"
+                  rows="4"
+                  value={form.subject}
+                  onInput={updateField('subject')}
+                  class={`w-full resize-y px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'rounded-xl border border-zinc-200 focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+                />
+                <span class="text-xs text-zinc-400">ใส่รายละเอียดได้สูงสุด 1,000 ตัวอักษร</span>
+              </div>
+              <div class="flex flex-col gap-1.5 md:col-span-2">
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                  รายละเอียดวิชา (English)
+                </label>
+                <textarea
+                  placeholder="Course content, goals, grade level, or other details"
+                  maxLength="1000"
+                  rows="4"
+                  value={form.subjectEn}
+                  onInput={updateField('subjectEn')}
+                  class={`w-full resize-y px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none ${isNeo ? 'neo-input' : 'rounded-xl border border-zinc-200 focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+                />
+                <span class="text-xs text-zinc-400">Optional, up to 1,000 characters</span>
+              </div>
 
               {/* Subscription */}
               {form.courseType === 'subscription' && (
@@ -269,9 +323,7 @@ export function CoursesPage({ path }) {
               {/* Private: require computer toggle */}
               {form.courseType === 'private' && (
                 <div class="flex items-center gap-3">
-                  <label class="text-sm font-medium text-zinc-800">
-                    ต้องใช้คอมพิวเตอร์
-                  </label>
+                  <label class="text-sm font-medium text-zinc-800">ต้องใช้คอมพิวเตอร์</label>
                   <input
                     type="checkbox"
                     checked={form.requireComputer}
@@ -282,9 +334,7 @@ export function CoursesPage({ path }) {
               )}
 
               <div class="flex flex-col gap-1.5">
-                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
-                  ครูผู้สอน
-                </label>
+                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ครูผู้สอน</label>
                 <select
                   value={form.teacherId}
                   onChange={updateField('teacherId')}
@@ -292,14 +342,16 @@ export function CoursesPage({ path }) {
                 >
                   <option value="">เลือกครูผู้สอน</option>
                   {teachers.map((t) => (
-                    <option key={t.id} value={t.id}>{t.fullName}</option>
+                    <option key={t.id} value={t.id}>
+                      {t.fullName}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
             <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-100">
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
-                 {editingId ? 'อัปเดตรายละเอียด' : 'บันทึกรายละเอียด'}
+                {editingId ? 'อัปเดตรายละเอียด' : 'บันทึกรายละเอียด'}
               </Button>
               <Button variant="outline" size="md" type="button" onClick={closeForm}>
                 ยกเลิก
@@ -311,12 +363,7 @@ export function CoursesPage({ path }) {
 
       {/* Search */}
       <form class="mb-6">
-        <SolidInput
-          type="text"
-          placeholder="ค้นหาชื่อคอร์สหรือวิชา..."
-          value={search}
-          onInput={handleSearch}
-        />
+        <SolidInput type="text" placeholder="ค้นหาชื่อคอร์สหรือวิชา..." value={search} onInput={handleSearch} />
       </form>
 
       {/* Loading */}
@@ -334,9 +381,7 @@ export function CoursesPage({ path }) {
             <HiOutlineBookOpen class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบคอร์สเรียน</h3>
-          <p class="text-sm text-zinc-400 mb-6">
-            {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}
-          </p>
+          <p class="text-sm text-zinc-400 mb-6">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}</p>
           {!search && (
             <Button variant="primary" size="md" onClick={openCreate}>
               + เพิ่มคอร์สเรียนแรก
@@ -348,92 +393,116 @@ export function CoursesPage({ path }) {
       {/* Courses Grid */}
       {!loading && courses.length > 0 && (
         <>
-        <div class="mb-3">
-          <h3 class="font-semibold text-zinc-900">รายละเอียดวิชาและการสอน</h3>
-          <p class="mt-1 text-xs text-zinc-500">เลือก “รายละเอียดการสอน” เพื่อกำหนดวัน เวลา และสถานที่เรียน</p>
-        </div>
-        <BentoGrid>
-          {courses.map((course) => (
-            <div
-              key={course.id}
-              class={`${
+          <div class="mb-4">
+            <h3 class="font-semibold text-zinc-900">รายละเอียดวิชาและการสอน</h3>
+            <p class="mt-1 text-xs text-zinc-500">เลือกการ์ดเพื่อดูรายละเอียดการสอนและกำหนดวัน เวลา และสถานที่เรียน</p>
+          </div>
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => (
+              <article
+                key={course.id}
+                role="link"
+                tabIndex="0"
+                onClick={() => route(`/admin/courses/${course.id}/sessions`)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    route(`/admin/courses/${course.id}/sessions`);
+                  }
+                }}
+                class={`${
                   isNeo
-                   ? 'neo-card bg-white p-0 overflow-hidden min-h-[260px]'
-                   : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden min-h-[260px]'
-              }`}
-            >
-              <div class="p-6">
-                <div class="flex items-start justify-between gap-2 mb-3">
+                    ? 'neo-card bg-white'
+                    : 'rounded-2xl border border-zinc-200/80 bg-white shadow-sm hover:-translate-y-0.5 hover:border-oasis-primary/30 hover:shadow-lg'
+                } group cursor-pointer overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30`}
+              >
+                <div class="relative aspect-[16/9] overflow-hidden bg-slate-100">
+                  <img
+                    src={getCourseCover(course)}
+                    alt=""
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = getCourseCover({
+                        ...course,
+                        coverImage: undefined,
+                        imageUrl: undefined,
+                        thumbnailUrl: undefined,
+                      });
+                    }}
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                  <span class="absolute left-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-zinc-700 backdrop-blur-sm">
+                    <HiOutlineTag class="h-3.5 w-3.5" />
+                    {courseTypeLabels[course.courseType] || course.courseType || 'กลุ่ม'}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`แก้ไข ${course.name || 'คอร์สเรียน'}`}
+                    title="แก้ไขคอร์สเรียน"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openEdit(course);
+                    }}
+                    class="absolute right-3 top-3 rounded-full bg-white/95 p-2 text-zinc-600 shadow-sm transition hover:bg-white hover:text-oasis-primary"
+                  >
+                    <HiOutlinePencil class="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div class="flex min-h-[190px] flex-col p-4">
                   <div class="min-w-0">
-                  <h3 class="text-lg font-semibold text-zinc-900">
-                    {course.name || '-'}
-                  </h3>
-                  <p class="mt-1 text-sm text-zinc-500">{course.subject || 'ยังไม่ได้ระบุรายละเอียดวิชา'}</p>
+                    <h3 class="line-clamp-2 text-lg font-bold leading-snug text-zinc-900">{course.name || '-'}</h3>
+                    <p class="mt-1.5 flex items-center gap-1.5 text-sm text-zinc-500">
+                      <span class="inline-block h-1.5 w-1.5 rounded-full bg-oasis-primary/60" />
+                      <span class="truncate">{course.teacherName || 'ยังไม่กำหนดผู้สอน'}</span>
+                    </p>
+                    <p class="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-400">
+                      {course.subject || 'ยังไม่ได้ระบุรายละเอียดวิชา'}
+                    </p>
                   </div>
-                  <div class="shrink-0 flex items-center gap-1.5">
-                    <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                      {courseTypeLabels[course.courseType] || course.courseType || 'กลุ่ม'}
-                    </span>
+
+                  <div class="mt-auto flex items-end justify-between gap-3 border-t border-zinc-100 pt-3">
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-400">
+                      {(course.courseType === 'group' || course.courseType === 'private' || !course.courseType) &&
+                        course.totalSessions != null && (
+                          <span class="inline-flex items-center gap-1" title="จำนวนครั้ง">
+                            <HiOutlineClock class="h-3 w-3" />
+                            {course.totalSessions} ครั้ง
+                          </span>
+                        )}
+                      {course.courseType === 'subscription' && course.expiresInDays != null && (
+                        <span class="inline-flex items-center gap-1">
+                          <HiOutlineClock class="h-3 w-3" />
+                          {course.expiresInDays} วัน
+                        </span>
+                      )}
+                      {course.courseType === 'credit' && course.creditCost != null && (
+                        <span class="inline-flex items-center gap-1">
+                          <HiOutlineClock class="h-3 w-3" />
+                          {course.creditCost} เครดิต/ครั้ง
+                        </span>
+                      )}
+                      <span>#{course.id}</span>
+                    </div>
+                    <div class="shrink-0 text-right">
+                      {getOriginalPrice(course) > Number(course.price) && (
+                        <div class="text-xs text-zinc-400 line-through">{formatCurrency(getOriginalPrice(course))}</div>
+                      )}
+                      <div class="text-xl font-extrabold tracking-tight text-orange-600">
+                        {formatCurrency(course.price)}
+                      </div>
+                    </div>
                   </div>
+                  <span class="mt-2 flex items-center justify-end gap-1 text-[11px] font-medium text-oasis-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    ดูรายละเอียด <HiOutlineArrowUpRight class="h-3.5 w-3.5" />
+                  </span>
                 </div>
-
-                <div class="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-zinc-50 p-4 text-sm">
-                  <div><p class="text-xs text-zinc-400">ผู้สอน</p><p class="mt-1 font-medium text-zinc-700">{course.teacherName || 'ยังไม่กำหนด'}</p></div>
-                  <div><p class="text-xs text-zinc-400">รูปแบบการเรียน</p><p class="mt-1 font-medium text-zinc-700">{courseTypeLabels[course.courseType] || course.courseType || 'กลุ่ม'}</p></div>
-                  <div><p class="text-xs text-zinc-400">จำนวนครั้ง</p><p class="mt-1 font-medium text-zinc-700">{course.totalSessions || '-'}</p></div>
-                  <div><p class="text-xs text-zinc-400">ค่าเรียน</p><p class="mt-1 font-semibold text-oasis-primary">{formatCurrency(course.price)}</p></div>
-                </div>
-                <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-500">
-                  {(course.courseType === 'group' || course.courseType === 'private' || !course.courseType) && course.totalSessions != null && (
-                    <span class="inline-flex items-center gap-1">
-                      <HiOutlineClock class="h-3 w-3" />
-                      รวม {course.totalSessions} ครั้ง
-                    </span>
-                  )}
-                  {course.courseType === 'subscription' && course.expiresInDays != null && (
-                    <span class="inline-flex items-center gap-1">
-                      <HiOutlineClock class="h-3 w-3" />
-                      {course.expiresInDays} วัน
-                    </span>
-                  )}
-                  {course.courseType === 'credit' && course.creditCost != null && (
-                    <span class="inline-flex items-center gap-1">
-                      <HiOutlineClock class="h-3 w-3" />
-                      {course.creditCost} เครดิต/ครั้ง
-                    </span>
-                  )}
-                  {course.price != null && (
-                    <span>รหัสวิชา #{course.id}</span>
-                  )}
-                </div>
-              </div>
-
-              <div class="border-t border-zinc-100 flex items-stretch">
-                <button
-                  type="button"
-                  onClick={() => route(`/admin/courses/${course.id}/sessions`)}
-                  class="flex-1 px-4 py-3 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <HiOutlineCalendarDays class="h-4 w-4" />
-                  รายละเอียดการสอน
-                </button>
-                <div class="w-px bg-zinc-100" />
-                <button
-                  type="button"
-                  onClick={() => openEdit(course)}
-                  class="flex-1 px-4 py-3 text-sm font-medium text-oasis-primary hover:bg-oasis-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <HiOutlinePencil class="h-4 w-4" />
-                  แก้ไข
-                </button>
-              </div>
-            </div>
-          ))}
-        </BentoGrid>
+              </article>
+            ))}
+          </div>
         </>
       )}
     </AdminLayout>
   );
 }
-
-

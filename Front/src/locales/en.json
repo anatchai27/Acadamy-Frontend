@@ -1,0 +1,385 @@
+{
+  "common": {
+    "appName": "acadamy",
+    "tagline": "Tutoring Center Discovery & Comparison Platform for Kids",
+    "search": "Search",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "viewAll": "View All",
+    "loading": "Loading...",
+    "noData": "No Data",
+    "confirm": "Confirm",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "print": "Print",
+    "share": "Share",
+    "copy": "Copy",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password",
+    "rememberMe": "Remember Me",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "actions": "Actions",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "name": "Name",
+    "description": "Description",
+    "price": "Price",
+    "duration": "Duration",
+    "format": "Format",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "location": "Location",
+    "subject": "Subject",
+    "level": "Level",
+    "institute": "Institute",
+    "teacher": "Teacher",
+    "student": "Student",
+    "parent": "Parent",
+    "admin": "Admin",
+    "staff": "Staff",
+    "member": "Member",
+    "all": "All",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "thisYear": "This Year"
+  },
+  "language": {
+    "switchToEnglish": "Switch language to English",
+    "switchToThai": "Switch language to Thai"
+  },
+  "platform": {
+    "navigation": {
+      "institutes": "Institutes",
+      "courses": "Courses",
+      "howItWorks": "How It Works",
+      "partner": "List a Course"
+    },
+    "subjects": {
+      "all": "All",
+      "english": "English",
+      "coding": "Coding",
+      "math": "Mathematics"
+    },
+    "problems": {
+      "communication": { "eyebrow": "01 / Communication Skills", "title": "Afraid to Speak\nAfraid to Express", "cta": "Find Institutes That Help" },
+      "foundation": { "eyebrow": "02 / Learning", "title": "Weak Foundation\nCan't Keep Up", "cta": "Find Institutes That Help" },
+      "future-skills": { "eyebrow": "03 / Future Skills", "title": "Want to Try New Things\nDiscover Talents", "cta": "Find Institutes That Help" }
+    },
+    "institutes": {
+      "kicker": "Featured Institute",
+      "save": "Save {{name}}",
+      "reviews": "reviews",
+      "action": "View Institute and Courses",
+      "items": [
+        { "location": "Lat Phrao", "description": "Small-group classes that help children think systematically and learn through experimentation", "tags": ["Free trial", "Small groups"] },
+        { "location": "Asok", "description": "English and public speaking through fun, engaging activities for children", "tags": ["Native-speaking teachers", "Kid approved"] },
+        { "location": "Bang Na", "description": "Coding, robotics, and future skills for creative young learners", "tags": ["Hands-on learning", "Equipment provided"] }
+      ]
+    },
+    "courses": {
+      "subjects": ["English", "Coding", "Mathematics"],
+      "levels": ["Grade 4–Middle School", "Ages 7–12", "Grade 4–6"],
+      "durations": ["8 weeks", "10 sessions", "12 sessions"],
+      "perCourse": "per course",
+      "compare": "Compare course prices"
+    }
+  },
+  "navigation": {
+    "groups": { "primary": "Core Data", "operations": "Operations", "commerce": "Finance & Products", "system": "System", "master": "Reference Data" },
+    "scanQr": "Scan QR",
+    "logoutConfirmation": "Are you sure you want to log out?",
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "teachers": "Teachers",
+    "students": "Students",
+    "courses": "Courses",
+    "sessions": "Sessions",
+    "attendance": "Attendance",
+    "requests": "Requests",
+    "academics": "Academics",
+    "finance": "Finance",
+    "permissions": "Permissions",
+    "settings": "Settings",
+    "products": "Products",
+    "makeupSlots": "Makeup Slots",
+    "leads": "Leads",
+    "rooms": "Rooms"
+  },
+  "hero": {
+    "eyebrow": "THE SMART WAY TO CHOOSE TUTORING",
+    "title": "Discover the",
+    "highlight": "Right Learning Place",
+    "description": "Compare institutes, courses, and real parent reviews in one place for more confident decisions",
+    "searchPlaceholder": "Search subjects, institute names, or locations...",
+    "searchAriaLabel": "Search institutes and courses",
+    "popularSearches": "Trending:"
+  },
+  "trust": {
+    "institutes": "Curated Institutes",
+    "courses": "Courses",
+    "rating": "Parent Ratings",
+    "transparent": "Transparent Data",
+    "decide": "Decide with Confidence"
+  },
+  "problems": {
+    "eyebrow": "START WITH A NEED",
+    "title": "What is your child looking for?",
+    "subtitle": "Select a topic to find institutes that understand this need",
+    "communication": {
+      "eyebrow": "01 / Communication Skills",
+      "title": "Afraid to Speak\nAfraid to Express",
+      "cta": "Find Institutes That Help"
+    },
+    "foundation": {
+      "eyebrow": "02 / Learning Foundation",
+      "title": "Weak Foundation\nCan't Keep Up",
+      "cta": "Find Institutes That Help"
+    },
+    "futureSkills": {
+      "eyebrow": "03 / Future Skills",
+      "title": "Want to Try New Things\nDiscover Talents",
+      "cta": "Find Institutes That Help"
+    }
+  },
+  "institutes": {
+    "eyebrow": "TRUSTED BY PARENTS",
+    "title": "Featured Institutes This Month",
+    "viewAll": "View All Institutes ↗"
+  },
+  "courses": {
+    "eyebrow": "COMPARE & CHOOSE",
+    "title": "Popular Courses from Multiple Institutes",
+    "tabs": ["All", "English", "Coding", "Mathematics"],
+    "empty": "No courses found matching your search. Try a different subject."
+  },
+  "compare": {
+    "eyebrow": "MAKE A CONFIDENT CHOICE",
+    "title": "Compare Before You Decide",
+    "description": "Save courses you're interested in, then compare prices, learning formats, and reviews in one view",
+    "empty": "No courses selected for comparison",
+    "button": "Compare {{count}} Courses"
+  },
+  "partner": {
+    "eyebrow": "FOR EDUCATION PARTNERS",
+    "title": "Have a Course You Want",
+    "highlight": "Kids to Discover?",
+    "description": "Join Acadamy to help parents discover your institute more easily, manage courses in one place, and grow with the right families",
+    "cta": "Become a Partner →",
+    "benefits": {
+      "01": {
+        "title": "Reach Parents Actively Searching",
+        "description": "Show your institute in search results and relevant subject categories"
+      },
+      "02": {
+        "title": "Your Profile and Courses",
+        "description": "Showcase highlights, pricing, teaching formats, and achievements clearly"
+      },
+      "03": {
+        "title": "Data to Help You Grow",
+        "description": "View interest and leads to plan courses better"
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Acadamy Platform"
+  },
+  "dashboard": {
+    "overview": {
+      "ariaLabel": "Dashboard overview",
+      "title": "Overview by Date",
+      "description": "All figures are from the API for the selected date",
+      "date": "Date",
+      "stats": { "students": "Students", "attendance": "Today's Attendance", "requests": "Leave/Makeup Requests", "revenue": "Revenue (This Month)" },
+      "studentsCount": "{{count}} total",
+      "attendanceBreakdown": "Present {{present}} · Late {{late}} · Absent {{absent}} · Leave {{leave}}",
+      "pendingRequests": "Pending review",
+      "noRequests": "No new requests",
+      "errors": { "students": "Failed to load students", "attendance": "Failed to load attendance", "requests": "Failed to load leave requests", "revenue": "Failed to load revenue" }
+    },
+    "recentActivity": "Recent Activity",
+    "topCourses": "Top Courses",
+    "quickActions": "Quick Actions",
+    "noActivityData": "No API available for recent activity yet, so no sample data is shown",
+    "noCourseData": "No API available for course rankings yet, so no sample numbers are shown",
+    "quickActionsList": {
+      "addUser": "Add New User",
+      "createCourse": "Create Course",
+      "viewReports": "View Reports"
+    },
+    "stats": {
+      "totalUsers": "Total Users",
+      "teachers": "Teachers",
+      "students": "Students",
+      "admins": "Admins"
+    }
+  },
+  "users": {
+    "loadError": "Unable to load users",
+    "listTitle": "All Users",
+    "title": "User Management",
+    "subtitle": "Manage all user accounts in the system",
+    "searchPlaceholder": "Search by name or email...",
+    "addUser": "Add User",
+    "stats": {
+      "total": "Total Users",
+      "teacher": "Teachers",
+      "student": "Students",
+      "admin": "Admins"
+    },
+    "table": {
+      "user": "User",
+      "email": "Email",
+      "role": "Role",
+      "joinedDate": "Joined Date",
+      "actions": "Actions"
+    },
+    "form": {
+      "title": "Add User",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "First Last",
+      "email": "Email",
+      "emailPlaceholder": "Email for login",
+      "phone": "Phone",
+      "phonePlaceholder": "08xxxxxxxx",
+      "password": "Password",
+      "passwordPlaceholder": "Set password",
+      "role": "Role",
+      "roleAdmin": "System Admin",
+      "cancel": "Cancel",
+      "submit": "Add User",
+      "success": "User added successfully",
+      "error": "Failed to add user",
+      "requiredEmailPassword": "Please enter email and password",
+      "requiredFullName": "Please enter full name"
+    },
+    "edit": {
+      "title": "Manage User Account",
+      "role": "Role / Permissions",
+      "roleAdmin": "Admin",
+      "roleTeacher": "Teacher",
+      "roleStaff": "Staff",
+      "roleParent": "Parent",
+      "roleStudent": "Student",
+      "newPassword": "New Password (leave blank to keep current)",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "passwordNote": "System does not show previous password for security",
+      "permissions": {
+        "page": "Page",
+        "read": "Read",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "cancel": "Cancel",
+      "submit": "Save",
+      "success": "User updated successfully",
+      "error": "Failed to update user"
+    },
+    "delete": {
+      "title": "Delete User",
+      "message": "Are you sure you want to delete user \"{{email}}\"?",
+      "yes": "Delete",
+      "cancel": "Cancel",
+      "notReady": "Delete user function not ready yet"
+    },
+    "empty": {
+      "loading": "Loading data...",
+      "noResults": "No users found matching search",
+      "noUsers": "No users in system"
+    },
+    "showing": "Showing all {{count}} items",
+    "roles": {
+      "admin": "Admin",
+      "teacher": "Teacher",
+      "staff": "Staff",
+      "parent": "Parent",
+      "student": "Student"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "subtitle": "Sign in to continue",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Login",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Register"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create an account to get started",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "First Last",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "08xxxxxxxx",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm password",
+      "submit": "Register",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Login"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email to receive a password reset link",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "backToLogin": "Back to Login"
+    }
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "confirmDialog": {
+    "title": "Confirm Action",
+    "message": "Are you sure?",
+    "yes": "Yes",
+    "no": "No"
+  }
+}

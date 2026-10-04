@@ -8,6 +8,7 @@ namespace academy_API.Services;
 public interface IPaymentService
 {
     Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default);
+    Task<string> IssueReceiptAsync(long paymentId, CancellationToken ct = default);
     Task<PaymentHistoryResponse> GetHistoryAsync(
         DateTime? startDate, DateTime? endDate, string? method,
         int page, int limit, CancellationToken ct = default);
@@ -18,14 +19,10 @@ public interface IPaymentService
 
 public class PaymentService(
     Repositories.IPaymentRepository repository,
-    IBackgroundNotificationDispatcher notificationDispatcher,
-    IReceiptPdfService receiptPdfService,
-    Interface.IFileStorageService fileStorageService) : IPaymentService
+    IPaymentReceiptService paymentReceiptService) : IPaymentService
 {
     private readonly Repositories.IPaymentRepository _repository = repository;
-    private readonly IBackgroundNotificationDispatcher _notificationDispatcher = notificationDispatcher;
-    private readonly IReceiptPdfService _receiptPdfService = receiptPdfService;
-    private readonly Interface.IFileStorageService _fileStorageService = fileStorageService;
+    private readonly IPaymentReceiptService _paymentReceiptService = paymentReceiptService;
 
     public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
@@ -39,67 +36,72 @@ public class PaymentService(
         if (request.Amount <= 0)
             throw new PaymentValidationException("INVALID_AMOUNT", "จำนวนเงินต้องมากกว่า 0");
 
+        var succeededAmount = await _repository.GetSucceededAmountByEnrollmentAsync(request.EnrollmentId, ct);
+        var pendingAmount = await _repository.GetPendingAmountByEnrollmentAsync(request.EnrollmentId, ct);
+        var amountDue = enrollment.Course.Price - succeededAmount - pendingAmount;
+        if (request.Amount > amountDue)
+            throw new PaymentValidationException("AMOUNT_EXCEEDS_BALANCE", "ยอดชำระเกินยอดคงเหลือของการลงทะเบียน");
+
         var invoiceNo = await _repository.GenerateInvoiceNoAsync(ct);
 
         var payment = new Models.Payment
         {
             EnrollmentId = request.EnrollmentId,
+            InstituteId = enrollment.InstituteId,
             InvoiceNo = invoiceNo,
             Amount = request.Amount,
             Method = request.Method,
             Status = request.Method == "transfer" ? PaymentStatus.Pending : PaymentStatus.Succeeded,
             NetAmount = request.Amount,
-            SlipUrl = request.SlipUrl?.Trim(),
+            SlipUrl = string.IsNullOrWhiteSpace(request.SlipUrl) ? null : request.SlipUrl.Trim(),
             PaidAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Enrollment = enrollment
         };
 
         var created = await _repository.CreatePaymentWithTransactionAsync(payment, ct);
-
-        var receiptBytes = _receiptPdfService.Render(new ReceiptPdfData(
-            invoiceNo,
-            enrollment.Student.FullName,
-            enrollment.Course.Name,
-            created.Amount,
-            created.Method,
-            created.PaidAt));
-        await using var receiptStream = new MemoryStream(receiptBytes);
-        var receiptPdfUrl = await _fileStorageService.UploadAsync(
-            receiptStream,
-            $"receipts/{invoiceNo}.pdf",
-            "application/pdf",
-            ct);
-
-        var parents = await _repository.GetParentsWithLineByStudentIdAsync(
-            enrollment.StudentId, CancellationToken.None);
-        foreach (var parent in parents)
+        created.Enrollment = enrollment;
+        string? receiptPdfUrl = null;
+        if (created.Status == PaymentStatus.Succeeded)
         {
-            if (parent.UserId is null || string.IsNullOrEmpty(parent.LineUserId))
-                continue;
-
-            await _notificationDispatcher.DispatchAsync(new BackgroundNotificationCandidate(
-                parent.UserId.Value,
-                enrollment.InstituteId,
-                parent.LineUserId,
-                enrollment.Student.FullName,
-                parent.FullName,
-                NotificationMessageFactory.PaymentReceived(
-                    parent.FullName,
-                    enrollment.Student.FullName,
-                    enrollment.Course.Name,
-                    created.Amount,
-                    invoiceNo,
-                    receiptPdfUrl),
-                "payment_received",
-                $"payment_received:{created.Id}:{parent.Id}"),
-                CancellationToken.None);
+            try
+            {
+                receiptPdfUrl = await _paymentReceiptService.IssueAndNotifyAsync(created, ct);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                return new CreatePaymentResponse(
+                    "success",
+                    "รับชำระสำเร็จแล้ว แต่สร้างใบเสร็จไม่สำเร็จ สามารถกดออกใบเสร็จอีกครั้งจากประวัติการเงิน",
+                    new CreatePaymentData(created.Id, invoiceNo, null));
+            }
         }
 
         return new CreatePaymentResponse(
             "success",
-            "บันทึกการชำระเงินและส่งใบเสร็จสำเร็จ",
+            created.Status == PaymentStatus.Succeeded && receiptPdfUrl is not null
+                ? "บันทึกการชำระเงินและส่งใบเสร็จสำเร็จ"
+                : created.Status == PaymentStatus.Succeeded
+                    ? "รับชำระสำเร็จแล้ว แต่สร้างใบเสร็จไม่สำเร็จ สามารถกดออกใบเสร็จอีกครั้งจากประวัติการเงิน"
+                    : "บันทึกรายการแล้ว กรุณารอการตรวจสอบสลิป",
             new CreatePaymentData(created.Id, invoiceNo, receiptPdfUrl)
         );
+    }
+
+    public async Task<string> IssueReceiptAsync(long paymentId, CancellationToken ct = default)
+    {
+        var payment = await _repository.GetPaymentForReceiptAsync(paymentId, ct)
+            ?? throw new PaymentValidationException("PAYMENT_NOT_FOUND", "ไม่พบรายการชำระเงิน");
+        if (payment.Status != PaymentStatus.Succeeded)
+            throw new PaymentValidationException("PAYMENT_NOT_SETTLED", "ยังออกใบเสร็จไม่ได้จนกว่าจะยืนยันการชำระเงินสำเร็จ");
+        if (!string.IsNullOrWhiteSpace(payment.ReceiptPdfUrl))
+            return payment.ReceiptPdfUrl;
+
+        return await _paymentReceiptService.IssueAndNotifyAsync(payment, ct);
     }
 
     public async Task<PaymentHistoryResponse> GetHistoryAsync(
@@ -118,7 +120,6 @@ public class PaymentService(
             ? (int)Math.Ceiling((double)totalCount / limit)
             : 1;
 
-        var receiptBaseUrl = "https://storage.tiwhub.com/receipts";
         var items = payments.Select(p => new PaymentHistoryItem(
             p.Id,
             p.InvoiceNo,
@@ -129,7 +130,8 @@ public class PaymentService(
             p.Status ?? PaymentStatus.Pending,
             p.PaidAt,
             p.SlipUrl,
-            $"{receiptBaseUrl}/{p.InvoiceNo}.pdf"
+            p.ReceiptPdfUrl,
+            p.Enrollment?.Course?.NameEn
         )).ToList();
 
         return new PaymentHistoryResponse(

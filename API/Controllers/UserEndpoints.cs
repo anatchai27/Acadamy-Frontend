@@ -18,6 +18,46 @@ public static class UserEndpoints
             .WithTags("Users")
             .WithOpenApi()
             .RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
+        var permissionsGroup = app.MapGroup("/api/users/permissions")
+            .WithTags("Users")
+            .WithOpenApi()
+            .RequireAuthorization();
+
+        permissionsGroup.MapPut("/", async (
+            UpdatePermissionsRequest request,
+            HttpContext httpContext,
+            TutoringDbContext context) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "Institute not identified." });
+
+            return await SavePermissionsAsync(context, instituteId.Value, request);
+        }).RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
+
+        permissionsGroup.MapGet("/{role}", async (
+            string role,
+            HttpContext httpContext,
+            TutoringDbContext context) =>
+        {
+            var instituteId = httpContext.GetInstituteId();
+            if (instituteId is null)
+                return Results.BadRequest(new { error = "Institute not identified." });
+            if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
+                return Results.BadRequest(new { error = "Invalid role." });
+
+            var stored = await context.RolePermissions
+                .AsNoTracking()
+                .Where(permission => permission.InstituteId == instituteId.Value && permission.Role == parsedRole)
+                .ToListAsync();
+            var permissions = stored.Count == 0
+                ? PermissionPolicyStore.GetOrDefault(instituteId.Value, parsedRole)
+                : stored.ToDictionary(
+                    permission => permission.PageKey,
+                    permission => new PermissionActions(permission.CanRead, permission.CanEdit, permission.CanDelete));
+
+            return Results.Ok(new { role = parsedRole.ToString(), permissions });
+        });
 
         listGroup.MapGet("/", async (HttpContext httpContext, IUserService userService, CancellationToken ct) =>
         {
@@ -119,42 +159,6 @@ public static class UserEndpoints
             {
                 return Results.BadRequest(new { error = ex.Message, code = ex.Code });
             }
-        });
-
-        listGroup.MapPut("/permissions", async (
-            UpdatePermissionsRequest request,
-            HttpContext httpContext,
-            TutoringDbContext context) =>
-        {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "Institute not identified." });
-
-            return await SavePermissionsAsync(context, instituteId.Value, request);
-        });
-
-        listGroup.MapGet("/permissions/{role}", async (
-            string role,
-            HttpContext httpContext,
-            TutoringDbContext context) =>
-        {
-            var instituteId = httpContext.GetInstituteId();
-            if (instituteId is null)
-                return Results.BadRequest(new { error = "Institute not identified." });
-            if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
-                return Results.BadRequest(new { error = "Invalid role." });
-
-            var stored = await context.RolePermissions
-                .AsNoTracking()
-                .Where(permission => permission.InstituteId == instituteId.Value && permission.Role == parsedRole)
-                .ToListAsync();
-            var permissions = stored.Count == 0
-                ? PermissionPolicyStore.GetOrDefault(instituteId.Value, parsedRole)
-                : stored.ToDictionary(
-                    permission => permission.PageKey,
-                    permission => new PermissionActions(permission.CanRead, permission.CanEdit, permission.CanDelete));
-
-            return Results.Ok(new { role = parsedRole.ToString(), permissions });
         });
 
         async Task<IResult> SavePermissionsAsync(TutoringDbContext context, int instituteId, UpdatePermissionsRequest request)

@@ -25,7 +25,9 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
         {
             CourseId = request.CourseId,
             Title = request.Title.Trim(),
+            TitleEn = Clean(request.TitleEn),
             Description = request.Description?.Trim(),
+            DescriptionEn = Clean(request.DescriptionEn),
             FileUrl = request.FileUrl?.Trim(),
             DueAt = request.DueAt,
             AssignedBy = assignedByUserId
@@ -33,7 +35,7 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
 
         var created = await _repository.CreateAsync(homework, ct);
 
-        return new HomeworkResponse("success", "สร้างการบ้านสำเร็จ", new HomeworkData(created.Id, created.Title, created.DueAt));
+        return new HomeworkResponse("success", "สร้างการบ้านสำเร็จ", new HomeworkData(created.Id, created.Title, created.DueAt, created.TitleEn, created.DescriptionEn));
     }
 
     public async Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
@@ -74,6 +76,8 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
             throw new HomeworkValidationException("INVALID_TOPIC_MAPPING", "รายการ skill topic ซ้ำกันหรือไม่ถูกต้อง");
         return _repository.SetSkillMappingAsync(homeworkId, request.TopicIds.Distinct().ToList(), ct);
     }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 public class HomeworkValidationException : Exception

@@ -84,7 +84,8 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
                 s.Topic.Name,
                 s.Score ?? 0,
                 s.Note,
-                s.UpdatedAt
+                s.UpdatedAt,
+                s.Topic.NameEn
             ))
             .ToListAsync(ct);
     }
@@ -100,7 +101,7 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
         return await _context.SkillTopics
             .Where(t => t.CourseId == courseId)
             .OrderBy(t => t.OrderIndex)
-            .Select(t => new SkillTopicItem(t.Id, t.Name, t.OrderIndex))
+            .Select(t => new SkillTopicItem(t.Id, t.Name, t.OrderIndex, t.NameEn))
             .ToListAsync(ct);
     }
 
@@ -111,6 +112,8 @@ public class SkillScoreRepository(TutoringDbContext context) : ISkillScoreReposi
             throw new SkillScoreValidationException("NOT_FOUND", "ไม่พบหัวข้อทักษะ");
 
         existing.Name = topic.Name;
+        if (topic.NameEn is not null)
+            existing.NameEn = string.IsNullOrWhiteSpace(topic.NameEn) ? null : topic.NameEn.Trim();
         existing.OrderIndex = topic.OrderIndex;
         await _context.SaveChangesAsync(ct);
     }

@@ -6,7 +6,9 @@ public class Course : IMultiTenantEntity
     public int InstituteId { get; set; }
     public string? CourseType { get; set; }
     public string Name { get; set; } = null!;
+    public string? NameEn { get; set; }
     public string Subject { get; set; } = null!;
+    public string? SubjectEn { get; set; }
     public int TotalSessions { get; set; }
     public decimal Price { get; set; }
     public int? TeacherId { get; set; }

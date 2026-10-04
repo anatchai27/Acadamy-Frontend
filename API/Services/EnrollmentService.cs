@@ -5,6 +5,7 @@ namespace academy_API.Services;
 public interface IEnrollmentService
 {
     Task<EnrollStudentResponse> EnrollAsync(EnrollStudentRequest request, CancellationToken ct = default);
+    Task<EnrollmentListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
 }
 
 public class EnrollmentService(Repositories.IEnrollmentRepository repository) : IEnrollmentService
@@ -42,6 +43,12 @@ public class EnrollmentService(Repositories.IEnrollmentRepository repository) : 
                 created.ExpiresAt!.Value
             )
         );
+    }
+
+    public async Task<EnrollmentListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default)
+    {
+        var enrollments = await _repository.GetByStudentIdAsync(studentId, ct);
+        return new EnrollmentListResponse("success", new EnrollmentListData(enrollments));
     }
 }
 

@@ -6,6 +6,7 @@ import { BentoGrid, BentoCell } from '../ui';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService, attendanceService, leaveRequestService, reportService } from '../../services';
 import { Input } from '../ui';
+import { useTranslation } from '../../hooks';
 
 export const countAttendanceStatuses = attendances => (attendances || []).reduce((counts, attendance) => {
   const status = attendance.status || attendance.Status;
@@ -24,28 +25,24 @@ const getLocalDate = () => {
 };
 const defaultData = {
   students: {
-    title: 'นักเรียน',
     value: '—',
     trendText: '',
     trendDirection: 'neutral',
     isAlertState: false
   },
   attendance: {
-    title: 'เช็คชื่อวันนี้',
     value: '—',
     trendText: '',
     trendDirection: 'neutral',
     isAlertState: false
   },
   requests: {
-    title: 'คำขอลา/ชดเชย',
     value: '—',
-    trendText: 'รอตรวจสอบ',
+    trendText: '',
     trendDirection: 'neutral',
     isAlertState: false
   },
   revenue: {
-    title: 'รายได้ (เดือนนี้)',
     value: '฿—',
     trendText: '',
     trendDirection: 'up',
@@ -53,6 +50,7 @@ const defaultData = {
   }
 };
 export const DashboardOverviewWidget = () => {
+  const { t, currentLanguage } = useTranslation();
   const [data, setData] = useState(defaultData);
   const [selectedDate, setSelectedDate] = useState(getLocalDate);
   const [error, setError] = useState('');
@@ -67,10 +65,10 @@ export const DashboardOverviewWidget = () => {
         students: {
           ...prev.students,
           value: String(total),
-          trendText: `ทั้งหมด ${total} คน`
+          trendText: t('dashboard.overview.studentsCount', { count: total })
         }
       }));
-    }).catch(() => setError('โหลดข้อมูลนักเรียนไม่สำเร็จ'));
+    }).catch(() => setError(t('dashboard.overview.errors.students')));
     attendanceService.getDailyAttendance({ date: selectedDate }).then(res => {
       const payload = res.data?.data || res.data || {};
       const attendances = payload.attendances || [];
@@ -80,11 +78,11 @@ export const DashboardOverviewWidget = () => {
         attendance: {
           ...prev.attendance,
           value: String(counts.present + counts.late),
-          trendText: `มา ${counts.present} · สาย ${counts.late} · ขาด ${counts.absent} · ลา ${counts.leave}`,
+          trendText: t('dashboard.overview.attendanceBreakdown', counts),
           breakdown: counts,
         }
       }));
-    }).catch(() => setError('โหลดข้อมูลเช็คชื่อไม่สำเร็จ'));
+    }).catch(() => setError(t('dashboard.overview.errors.attendance')));
     leaveRequestService.getLeaveRequests({
       status: 'pending'
     }).then(res => {
@@ -96,11 +94,11 @@ export const DashboardOverviewWidget = () => {
         requests: {
           ...prev.requests,
           value: String(count),
-          trendText: count > 0 ? 'รอตรวจสอบ' : 'ไม่มีรายการใหม่',
+          trendText: count > 0 ? t('dashboard.overview.pendingRequests') : t('dashboard.overview.noRequests'),
           isAlertState: count > 0
         }
       }));
-    }).catch(() => setError('โหลดคำขอลาไม่สำเร็จ'));
+    }).catch(() => setError(t('dashboard.overview.errors.requests')));
     reportService.getRevenueReport({ from: selectedDate, to: selectedDate, group_by: 'day' }).then(res => {
       const payload = res.data?.data || res.data || [];
       const totalAmount = getRevenueTotal(payload);
@@ -109,26 +107,26 @@ export const DashboardOverviewWidget = () => {
         revenue: {
           ...prev.revenue,
           value: `฿${Number(totalAmount).toLocaleString()}`,
-          trendText: selectedDate
+          trendText: new Date(`${selectedDate}T00:00:00`).toLocaleDateString(currentLanguage === 'th' ? 'th-TH' : 'en-US')
         }
       }));
-    }).catch(() => setError('โหลดรายได้ไม่สำเร็จ'));
-  }, [selectedDate]);
-  return <section id="dashboard-overview" aria-label="ภาพรวม dashboard">
+    }).catch(() => setError(t('dashboard.overview.errors.revenue')));
+  }, [selectedDate, currentLanguage]);
+  return <section id="dashboard-overview" aria-label={t('dashboard.overview.ariaLabel')}>
     <div id="dashboard-date-filter" class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-      <div><h2 class="text-lg font-semibold text-zinc-900">ภาพรวมตามวันที่</h2><p class="text-sm text-zinc-500">ตัวเลขทั้งหมดมาจาก API ของวันที่เลือก</p></div>
-      <Input type="date" label="วันที่" value={selectedDate} onChange={event => setSelectedDate(event.target.value)} />
+      <div><h2 class="text-lg font-semibold text-zinc-900">{t('dashboard.overview.title')}</h2><p class="text-sm text-zinc-500">{t('dashboard.overview.description')}</p></div>
+      <Input type="date" label={t('dashboard.overview.date')} value={selectedDate} onChange={event => setSelectedDate(event.target.value)} />
     </div>
     {error && <div id="dashboard-error" role="alert" class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
     <BentoGrid id="dashboard-stat-grid" class="mb-8">
-      <BentoCell id="dashboard-stat-students"><StatCard id="students" title={data.students.title} value={data.students.value} trendText={data.students.trendText} trendDirection={data.students.trendDirection} isAlertState={data.students.isAlertState} icon={<UsersGroupIcon class="h-5 w-5" />} /></BentoCell>
-      <BentoCell id="dashboard-stat-attendance"><StatCard id="attendance" title={data.attendance.title} value={data.attendance.value} trendText={data.attendance.trendText} trendDirection={data.attendance.trendDirection} isAlertState={data.attendance.isAlertState} icon={<QrCheckIcon class="h-5 w-5" />} /></BentoCell>
+      <BentoCell id="dashboard-stat-students"><StatCard id="students" title={t('dashboard.overview.stats.students')} value={data.students.value} trendText={data.students.trendText} trendDirection={data.students.trendDirection} isAlertState={data.students.isAlertState} icon={<UsersGroupIcon class="h-5 w-5" />} /></BentoCell>
+      <BentoCell id="dashboard-stat-attendance"><StatCard id="attendance" title={t('dashboard.overview.stats.attendance')} value={data.attendance.value} trendText={data.attendance.trendText} trendDirection={data.attendance.trendDirection} isAlertState={data.attendance.isAlertState} icon={<QrCheckIcon class="h-5 w-5" />} /></BentoCell>
       <BentoCell>
         <button id="dashboard-stat-requests" type="button" onClick={() => route('/admin/requests')} class="w-full text-left">
-          <StatCard id="requests" title={data.requests.title} value={data.requests.value} trendText={data.requests.trendText} trendDirection={data.requests.trendDirection} isAlertState={data.requests.isAlertState} icon={<ClipboardDocIcon class="h-5 w-5" />} />
+          <StatCard id="requests" title={t('dashboard.overview.stats.requests')} value={data.requests.value} trendText={data.requests.trendText} trendDirection={data.requests.trendDirection} isAlertState={data.requests.isAlertState} icon={<ClipboardDocIcon class="h-5 w-5" />} />
         </button>
       </BentoCell>
-      <BentoCell id="dashboard-stat-revenue"><StatCard id="revenue" title={data.revenue.title} value={data.revenue.value} trendText={data.revenue.trendText} trendDirection={data.revenue.trendDirection} isAlertState={data.revenue.isAlertState} icon={<BanknotesIcon class="h-5 w-5" />} /></BentoCell>
+      <BentoCell id="dashboard-stat-revenue"><StatCard id="revenue" title={t('dashboard.overview.stats.revenue')} value={data.revenue.value} trendText={data.revenue.trendText} trendDirection={data.revenue.trendDirection} isAlertState={data.revenue.isAlertState} icon={<BanknotesIcon class="h-5 w-5" />} /></BentoCell>
     </BentoGrid>
   </section>;
 };

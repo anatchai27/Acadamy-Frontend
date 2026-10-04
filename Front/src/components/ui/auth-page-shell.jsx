@@ -1,5 +1,6 @@
 import { route } from 'preact-router';
 import { Button } from './button';
+import { LanguageSwitcher } from './language-switcher';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 export const AuthPageShell = ({
   navActionLabel,
@@ -19,7 +20,10 @@ export const AuthPageShell = ({
               TiwHub
             </span>
           </span>
-          {navActionLabel && navActionHref ? <Button variant="outline" size="sm" onClick={() => route(navActionHref)}>{navActionLabel}</Button> : null}
+          <div class="flex items-center gap-3">
+            {navActionLabel && navActionHref ? <Button variant="outline" size="sm" onClick={() => route(navActionHref)}>{navActionLabel}</Button> : null}
+            <LanguageSwitcher />
+          </div>
         </div>
       </nav>
       {children}

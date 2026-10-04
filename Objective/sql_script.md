@@ -19,8 +19,23 @@
 - `student_pickup_authorizations` มีอยู่จริง พร้อม FK ไป `institutes`, `students`, `users`
 - `attendances` มี `pickup_authorization_id`, `updated_at`, `updated_by` และ FK ที่เกี่ยวข้อง
 - `attendances` มี unique constraint `uq_attendance_session_student`
+- `products` เป็นข้อมูลสินค้าแบบ tenant-scoped ผ่าน `institute_id`; standard catalog สำหรับทุกสถาบันอยู่ใน `API/Database/standard-products.sql`
 
 สิ่งเหล่านี้เป็น **schema evidence** ไม่ใช่หลักฐานว่า SRS ผ่านครบทุก acceptance criteria
+
+## 0.1 สินค้ามาตรฐานสำหรับทุกสถาบัน
+
+ไฟล์ `API/Database/standard-products.sql` เพิ่มสินค้าเครื่องเขียนมาตรฐานให้ทุกแถวใน `institutes`:
+
+- ปากกาลูกลื่น
+- สมุดโน้ต
+- ดินสอ
+- ยางลบ
+- ไม้บรรทัด
+
+Script ใช้ `INSERT ... SELECT` ร่วมกับ `NOT EXISTS` แยกตาม `institute_id` และชื่อสินค้า จึงรันซ้ำได้โดยไม่สร้างรายการซ้ำ และรองรับสถาบันที่มีสินค้าเดิมอยู่แล้ว
+
+ให้รัน Script นี้กับฐานข้อมูลจริงหลังตรวจสอบชื่อตาราง/คอลัมน์ `products` และ `institutes` แล้ว; Frontend ไม่ควร seed สินค้าเองผ่าน browser หรือ `localStorage`
 
 ## 1. ตรวจ version และโครงสร้างจริง
 

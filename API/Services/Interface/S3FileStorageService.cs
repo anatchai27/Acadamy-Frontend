@@ -6,7 +6,7 @@ namespace academy_API.Services.Interface;
 
 public class S3FileStorageService : IFileStorageService, IDisposable
 {
-    private readonly OssClient _ossClient;
+    private readonly OssClient? _ossClient;
     private readonly string _bucketName;
     private readonly string _publicUrl;
 
@@ -16,12 +16,21 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         _bucketName = config.BucketName;
         _publicUrl = config.PublicUrl.TrimEnd('/');
 
-        var ossConfig = new ClientConfiguration();
-        _ossClient = new OssClient(config.ServiceUrl, config.AccessKey, config.SecretKey, ossConfig);
+        if (!string.IsNullOrWhiteSpace(config.ServiceUrl)
+            && !string.IsNullOrWhiteSpace(config.AccessKey)
+            && !string.IsNullOrWhiteSpace(config.SecretKey)
+            && !string.IsNullOrWhiteSpace(config.BucketName))
+        {
+            var ossConfig = new ClientConfiguration();
+            _ossClient = new OssClient(config.ServiceUrl, config.AccessKey, config.SecretKey, ossConfig);
+        }
     }
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
+        if (_ossClient is null)
+            throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
+
         var buffer = new MemoryStream();
         await fileStream.CopyToAsync(buffer, ct);
         buffer.Position = 0;
@@ -31,13 +40,16 @@ public class S3FileStorageService : IFileStorageService, IDisposable
             ContentType = contentType
         };
 
-        var result = await Task.Run(() => _ossClient.PutObject(_bucketName, fileName, buffer, objectMeta), ct);
+        await Task.Run(() => _ossClient.PutObject(_bucketName, fileName, buffer, objectMeta), ct);
 
         return $"{_publicUrl}/{_bucketName}/{fileName}";
     }
 
     public async Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default)
     {
+        if (_ossClient is null)
+            throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
+
         var key = ExtractKeyFromUrl(fileUrl);
         if (string.IsNullOrEmpty(key)) return false;
 

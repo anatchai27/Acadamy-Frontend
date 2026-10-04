@@ -111,7 +111,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 a.Session.ScheduledAt,
                 a.Status,
                 a.CheckinAt ?? DateTime.MinValue,
-                a.CheckoutAt ?? DateTime.MinValue))
+                a.CheckoutAt ?? DateTime.MinValue,
+                a.Session.Course.NameEn))
             .ToListAsync(ct);
 
     public Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default) =>
@@ -125,7 +126,9 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 p.Amount,
                 p.PaidAt,
                 p.SlipUrl ?? string.Empty,
-                $"https://storage.tiwhub.com/receipts/{p.InvoiceNo}.pdf"))
+                p.ReceiptPdfUrl,
+                p.Enrollment.Course.NameEn,
+                p.Status ?? PaymentStatus.Pending))
             .ToListAsync(ct);
 
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) =>
@@ -136,7 +139,9 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 s.Topic.Course.Name,
                 s.Topic.Name,
                 s.Score ?? 0,
-                s.Note ?? string.Empty))
+                s.Note ?? string.Empty,
+                s.Topic.Course.NameEn,
+                s.Topic.NameEn))
             .ToListAsync(ct);
 
     public Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default) =>
@@ -169,7 +174,10 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                     .Where(s => s.HomeworkId == h.Id && s.StudentId == studentId)
                     .OrderByDescending(s => s.CreatedAt)
                     .Select(s => s.Feedback ?? string.Empty)
-                    .FirstOrDefault() ?? string.Empty))
+                    .FirstOrDefault() ?? string.Empty,
+                h.Course.NameEn,
+                h.TitleEn,
+                h.DescriptionEn))
              .ToListAsync(ct);
 
     public async Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default)
@@ -178,7 +186,7 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
         var badges = await _context.StudentBadges
             .Where(x => x.StudentId == studentId)
             .OrderByDescending(x => x.AwardedAt)
-            .Select(x => new ParentBadgeItem(x.BadgeId, x.Badge.BadgeKey, x.Badge.Name, x.Badge.Description, x.Badge.IconUrl, x.AwardedAt))
+            .Select(x => new ParentBadgeItem(x.BadgeId, x.Badge.BadgeKey, x.Badge.Name, x.Badge.Description, x.Badge.IconUrl, x.AwardedAt, x.Badge.NameEn, x.Badge.DescriptionEn))
             .ToListAsync(ct);
         return new ParentProgressResponse(streak?.CurrentCount ?? 0, streak?.LongestCount ?? 0, badges);
     }
@@ -194,7 +202,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 l.Reason ?? string.Empty,
                 l.Type,
                 l.Status,
-                l.CreatedAt))
+                l.CreatedAt,
+                l.Session.Course.NameEn))
             .ToListAsync(ct);
 
     public Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, DateTime from, CancellationToken ct = default) =>
@@ -209,7 +218,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 s.ScheduledAt,
                 s.DurationMin,
                 s.RoomId,
-                s.Status))
+                s.Status,
+                s.Course.NameEn))
             .ToListAsync(ct);
 
     public Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default) =>

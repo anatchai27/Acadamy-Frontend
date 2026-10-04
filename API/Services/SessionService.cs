@@ -24,7 +24,8 @@ public class SessionService(Repositories.ISessionRepository repository) : ISessi
             s.ScheduledAt,
             s.DurationMin,
             s.RoomId,
-            s.Status
+            s.Status,
+            s.Course.NameEn
         )).ToList();
 
         return new SessionListResponse("success", new SessionListData(items));

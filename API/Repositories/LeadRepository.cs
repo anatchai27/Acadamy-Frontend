@@ -62,17 +62,22 @@ public sealed class LeadRepository(TutoringDbContext context) : ILeadRepository
 
     public async Task<List<PublicContentItem>> ListContentAsync(CancellationToken ct = default) =>
         await _context.PublicWebsiteContents.AsNoTracking().OrderBy(x => x.SortOrder)
-            .Select(x => new PublicContentItem(x.Id, x.SectionKey, x.ContentType, x.ContentValue, x.Metadata, x.SortOrder, x.IsActive, x.UpdatedAt))
+            .Select(x => new PublicContentItem(x.Id, x.SectionKey, x.ContentType, x.ContentValue, x.Metadata, x.SortOrder, x.IsActive, x.UpdatedAt, x.Locale))
             .ToListAsync(ct);
 
     public async Task<PublicWebsiteContent> UpsertContentAsync(long? id, UpsertPublicContentRequest request, CancellationToken ct = default)
     {
         var content = id.HasValue
             ? await _context.PublicWebsiteContents.FirstOrDefaultAsync(x => x.Id == id.Value, ct)
-            : null;
+            : await _context.PublicWebsiteContents.FirstOrDefaultAsync(
+                x => x.InstituteId == _context.TenantInstituteId &&
+                     x.SectionKey == request.SectionKey.Trim() &&
+                     x.Locale == request.Locale,
+                ct);
         if (id.HasValue && content is null) throw new LeadValidationException("CONTENT_NOT_FOUND", "Content was not found.");
         content ??= new PublicWebsiteContent { InstituteId = _context.TenantInstituteId, CreatedAt = DateTime.UtcNow };
         content.SectionKey = request.SectionKey.Trim();
+        content.Locale = request.Locale;
         content.ContentType = request.ContentType.Trim();
         content.ContentValue = request.ContentValue;
         content.Metadata = request.Metadata;

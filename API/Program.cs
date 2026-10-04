@@ -133,8 +133,17 @@ builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPaymentSlipVerificationService, PaymentSlipVerificationService>();
+builder.Services.AddScoped<IPaymentReceiptService, PaymentReceiptService>();
 builder.Services.AddScoped<IRevenueReportService, RevenueReportService>();
-builder.Services.AddScoped<ISlipVerificationProvider, UnconfiguredSlipVerificationProvider>();
+builder.Services.Configure<EasySlipOptions>(builder.Configuration.GetSection(EasySlipOptions.SectionName));
+builder.Services.AddHttpClient<EasySlipVerificationProvider>(client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddScoped<ISlipVerificationProvider>(serviceProvider =>
+{
+    var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<EasySlipOptions>>().Value;
+    return string.IsNullOrWhiteSpace(options.ApiKey)
+        ? new UnconfiguredSlipVerificationProvider()
+        : serviceProvider.GetRequiredService<EasySlipVerificationProvider>();
+});
 builder.Services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
@@ -233,7 +242,7 @@ app.MapLeaveRequestEndpoints();
 app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
-// File upload endpoints are temporarily disabled.
+app.MapPaymentSlipUploadEndpoint();
 app.MapParentEndpoints();
 app.MapPublicLeadEndpoints();
 

@@ -146,7 +146,7 @@ public class AttendanceService(
         {
             var session = await _repository.GetSessionByIdAsync(sessionId.Value, ct);
             if (session is not null)
-                sessionInfo = new DailySessionInfo(session.Id, session.Course.Name, session.ScheduledAt);
+                sessionInfo = new DailySessionInfo(session.Id, session.Course.Name, session.ScheduledAt, session.Course.NameEn);
         }
 
         var rows = await _repository.GetDailyAttendanceAsync(sessionId, parsedDate, ct);

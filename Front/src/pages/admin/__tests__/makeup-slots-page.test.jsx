@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MakeupSlotsPage } from '../makeup-slots-page';
 import { getTeachers } from '../../../services/teacher-service';
 import { makeupService } from '../../../services/makeup-service';
+import { roomService } from '../../../services/room-service';
 
 vi.mock('../../../layouts/admin-layout', () => ({
   AdminLayout: ({ children }) => <div>{children}</div>,
@@ -26,6 +27,12 @@ vi.mock('../../../services/makeup-service', () => ({
   },
 }));
 
+vi.mock('../../../services/room-service', () => ({
+  roomService: {
+    getRooms: vi.fn(),
+  },
+}));
+
 vi.mock('react-icons/hi2', () => ({
   HiOutlineCalendarDays: () => <span aria-hidden="true" />,
   HiOutlinePlus: () => <span aria-hidden="true" />,
@@ -36,6 +43,7 @@ describe('Makeup slots page', () => {
     vi.clearAllMocks();
     window.confirm = vi.fn(() => true);
     getTeachers.mockResolvedValue({ data: [{ id: 4, fullName: 'Kru Mali' }] });
+    roomService.getRooms.mockResolvedValue({ data: [{ id: 7, name: 'Room A1', isActive: true }] });
     makeupService.getMakeupSlots.mockResolvedValue({ data: [{ id: 12, teacherId: 4, scheduledAt: '2026-10-01T10:00:00Z', capacity: 3, bookedCount: 1, roomId: 'A1', status: 'open' }] });
   });
 
@@ -63,7 +71,7 @@ describe('Makeup slots page', () => {
     render(<MakeupSlotsPage path="/admin/makeup-slots" />);
     await screen.findByText('Kru Mali', { selector: 'p' });
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: '4' } });
+    fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: '4' } });
     fireEvent.input(screen.getByLabelText('วันและเวลา *'), { target: { value: '2026-10-01T10:00' } });
     fireEvent.submit(screen.getByRole('button', { name: 'สร้าง slot' }).closest('form'));
     await waitFor(() => expect(makeupService.createMakeupSlot).toHaveBeenCalledWith(expect.objectContaining({ teacherId: 4, capacity: 1, roomId: null })));

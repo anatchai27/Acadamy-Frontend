@@ -21,7 +21,7 @@ export const getStudentQR = id => {
 }
 
 export const getStudentCardPdf = id => {
-  return api.get(`/students/${id}/card.pdf`);
+  return api.download(`/students/${id}/card.pdf`);
 }
 
 export const downloadStudentCsv = () => api.download('/students/export', { params: { format: 'csv' } });

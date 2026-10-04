@@ -28,7 +28,9 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
             var term = search.Trim();
             query = query.Where(c =>
                 c.Name.Contains(term) ||
-                c.Subject.Contains(term));
+                c.Subject.Contains(term) ||
+                (c.NameEn != null && c.NameEn.Contains(term)) ||
+                (c.SubjectEn != null && c.SubjectEn.Contains(term)));
         }
 
         if (teacherId.HasValue)
@@ -46,7 +48,9 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
                 c.Teacher != null ? c.Teacher.FullName : null,
                 c.ExpiresInDays,
                 c.RequireComputer,
-                c.CreditCost
+                c.CreditCost,
+                c.NameEn,
+                c.SubjectEn
             ))
             .ToListAsync(ct);
     }
@@ -74,7 +78,9 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
             return null;
 
         if (request.Name is not null) course.Name = request.Name.Trim();
+        if (request.NameEn is not null) course.NameEn = Clean(request.NameEn);
         if (request.Subject is not null) course.Subject = request.Subject.Trim();
+        if (request.SubjectEn is not null) course.SubjectEn = Clean(request.SubjectEn);
         if (request.CourseType is not null) course.CourseType = request.CourseType;
         if (request.TotalSessions.HasValue) course.TotalSessions = request.TotalSessions.Value;
         if (request.Price.HasValue) course.Price = request.Price.Value;
@@ -86,4 +92,6 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
         await _context.SaveChangesAsync(ct);
         return course;
     }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

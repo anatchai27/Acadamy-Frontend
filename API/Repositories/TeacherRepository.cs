@@ -32,6 +32,9 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
             query = query.Where(t =>
                 t.FullName.Contains(term) ||
                 (t.Specialization != null && t.Specialization.Contains(term)) ||
+                (t.SpecializationEn != null && t.SpecializationEn.Contains(term)) ||
+                (t.Bio != null && t.Bio.Contains(term)) ||
+                (t.BioEn != null && t.BioEn.Contains(term)) ||
                 (t.User != null && t.User.Email.Contains(term)));
         }
 
@@ -97,5 +100,7 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
             teacher.BankAccountInfo,
             teacher.TaxId,
             teacher.Status,
-            teacher.User != null ? teacher.User.Email : null);
+            teacher.User != null ? teacher.User.Email : null,
+            teacher.SpecializationEn,
+            teacher.BioEn);
 }

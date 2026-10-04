@@ -3,6 +3,9 @@ import { api } from '../api';
 import {
   skillScoreService,
   getSkillTopics,
+  createSkillTopic,
+  updateSkillTopic,
+  deleteSkillTopic,
   getSkillScores,
   batchUpdateSkillScores,
 } from '../skill-score-service';
@@ -11,6 +14,8 @@ vi.mock('../api', () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -41,6 +46,28 @@ describe('Skill Score Service', () => {
     });
   });
 
+  describe('skill topic mutations', () => {
+    const payload = { courseId: 5, name: 'การสื่อสาร', nameEn: 'Communication', orderIndex: 1 };
+
+    it('creates a skill topic with its Thai and English names', async () => {
+      api.post.mockResolvedValue({ data: {}, status: 201 });
+      await createSkillTopic(payload);
+      expect(api.post).toHaveBeenCalledWith('/skill-scores/topics', payload);
+    });
+
+    it('updates a skill topic', async () => {
+      api.put.mockResolvedValue({ data: {}, status: 200 });
+      await updateSkillTopic(12, payload);
+      expect(api.put).toHaveBeenCalledWith('/skill-scores/topics/12', payload);
+    });
+
+    it('deletes a skill topic', async () => {
+      api.delete.mockResolvedValue({ data: {}, status: 200 });
+      await deleteSkillTopic(12);
+      expect(api.delete).toHaveBeenCalledWith('/skill-scores/topics/12');
+    });
+  });
+
   describe('batchUpdateSkillScores (spec: POST /skill-scores/batch-update)', () => {
     it('calls POST /skill-scores/batch-update with { studentId, scores }', async () => {
       const payload = {
@@ -57,8 +84,11 @@ describe('Skill Score Service', () => {
   });
 
   describe('skillScoreService object', () => {
-    it('exposes all 3 functions', () => {
+    it('exposes all service functions', () => {
       expect(skillScoreService.getSkillTopics).toBe(getSkillTopics);
+      expect(skillScoreService.createSkillTopic).toBe(createSkillTopic);
+      expect(skillScoreService.updateSkillTopic).toBe(updateSkillTopic);
+      expect(skillScoreService.deleteSkillTopic).toBe(deleteSkillTopic);
       expect(skillScoreService.getSkillScores).toBe(getSkillScores);
       expect(skillScoreService.batchUpdateSkillScores).toBe(batchUpdateSkillScores);
     });

@@ -7,7 +7,9 @@ public class Teacher : IMultiTenantEntity
     public int? UserId { get; set; }
     public string FullName { get; set; } = null!;
     public string? Specialization { get; set; }
+    public string? SpecializationEn { get; set; }
     public string? Bio { get; set; }
+    public string? BioEn { get; set; }
     public decimal? HourlyRate { get; set; }
     public string? PhotoUrl { get; set; }
     public DateTime? DeletedAt { get; set; }

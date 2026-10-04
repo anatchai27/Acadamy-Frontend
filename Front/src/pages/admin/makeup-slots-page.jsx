@@ -3,6 +3,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, SolidInput, showToast } from '../../components/ui';
 import { getTeachers } from '../../services/teacher-service';
 import { makeupService } from '../../services/makeup-service';
+import { roomService } from '../../services/room-service';
 import { HiOutlineCalendarDays, HiOutlinePlus } from 'react-icons/hi2';
 
 const emptyForm = { teacherId: '', scheduledAt: '', capacity: '1', roomId: '' };
@@ -14,6 +15,7 @@ const formatStatus = value => ({ open: 'เปิดรับจอง', full: '
 export function MakeupSlotsPage({ path }) {
   const [slots, setSlots] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -24,14 +26,17 @@ export function MakeupSlotsPage({ path }) {
     setLoading(true);
     setError('');
     try {
-      const [slotResponse, teacherResponse] = await Promise.all([
+      const [slotResponse, teacherResponse, roomResponse] = await Promise.all([
         makeupService.getMakeupSlots({ from: new Date().toISOString() }),
         getTeachers(),
+        roomService.getRooms(),
       ]);
       const slotData = unwrap(slotResponse);
       const teacherData = unwrap(teacherResponse);
       setSlots(Array.isArray(slotData) ? slotData : slotData.slots || []);
       setTeachers(Array.isArray(teacherData) ? teacherData : teacherData.teachers || []);
+      const roomData = unwrap(roomResponse);
+      setRooms((Array.isArray(roomData) ? roomData : roomData.rooms || []).filter(room => room.isActive !== false));
     } catch (apiError) {
       setError(apiError.message || 'ไม่สามารถโหลดที่นั่งเรียนชดเชยได้');
     } finally {
@@ -44,6 +49,7 @@ export function MakeupSlotsPage({ path }) {
   const update = field => event => setForm(current => ({ ...current, [field]: event.target.value }));
 
   const teacherName = teacherId => teachers.find(teacher => String(teacher.id) === String(teacherId))?.fullName || `ครู #${teacherId}`;
+  const roomName = roomId => rooms.find(room => String(room.id) === String(roomId))?.name || (roomId ? `ห้อง ${roomId}` : '-');
 
   const submit = async event => {
     event.preventDefault();
@@ -113,7 +119,14 @@ export function MakeupSlotsPage({ path }) {
             <input class="rounded-xl border border-zinc-200 px-3 py-2.5" type="datetime-local" value={form.scheduledAt} onInput={update('scheduledAt')} />
           </label>
           <SolidInput label="จำนวนที่นั่ง *" type="number" min="1" value={form.capacity} onInput={update('capacity')} />
-          <SolidInput label="ห้องเรียน" value={form.roomId} onInput={update('roomId')} placeholder="เช่น Room A" />
+          <label class="grid gap-2 text-sm text-zinc-600">
+            ห้องเรียน
+            <select class="rounded-xl border border-zinc-200 bg-white px-3 py-2.5" value={form.roomId} onChange={update('roomId')}>
+              <option value="">ไม่ระบุห้องเรียน</option>
+              {rooms.map(room => <option value={String(room.id)} key={room.id}>{room.name}{room.description ? ` - ${room.description}` : ''}</option>)}
+            </select>
+            {!rooms.length && <span class="text-xs text-zinc-400">ยังไม่มีห้องเรียนที่เปิดใช้งานใน Master Data</span>}
+          </label>
           <div class="md:col-span-2">
             <Button type="submit" loading={submitting} disabled={submitting}>
               <span class="flex items-center gap-2"><HiOutlinePlus class="h-4 w-4" />สร้าง slot</span>
@@ -139,7 +152,7 @@ export function MakeupSlotsPage({ path }) {
                   <p class="mt-2 text-xs text-zinc-500">{slot.bookedCount}/{slot.capacity} ที่นั่ง</p>
                 </div>
               </div>
-              <p class="mt-3 text-sm text-zinc-500">ห้อง {slot.roomId || '-'}</p>
+               <p class="mt-3 text-sm text-zinc-500">ห้อง {roomName(slot.roomId)}</p>
               <Button class="mt-4 w-full" variant="outline" disabled={busyId === slot.id} onClick={() => cancel(slot)}>
                 {busyId === slot.id ? 'กำลังยกเลิก...' : 'ยกเลิก slot และคืนเครดิต'}
               </Button>

@@ -5,6 +5,7 @@ public class PublicWebsiteContent : IMultiTenantEntity
     public long Id { get; set; }
     public int InstituteId { get; set; }
     public string SectionKey { get; set; } = null!;
+    public string Locale { get; set; } = "th";
     public string ContentType { get; set; } = null!;
     public string? ContentValue { get; set; }
     public string? Metadata { get; set; }

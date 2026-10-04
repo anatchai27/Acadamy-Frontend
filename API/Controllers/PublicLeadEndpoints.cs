@@ -9,28 +9,28 @@ public static class PublicLeadEndpoints
 {
     public static IEndpointRouteBuilder MapPublicLeadEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/public/website-content/{slug}", async (string slug, TutoringDbContext db, CancellationToken ct) =>
+        app.MapGet("/api/public/website-content/{slug}", async (string slug, string? locale, TutoringDbContext db, CancellationToken ct) =>
         {
+            var requestedLocale = NormalizeLocale(locale);
             var institute = await db.Institutes
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.IsActive && x.Slug == slug, ct);
             if (institute is null) return Results.NotFound(new { status = "not_found" });
 
-            var items = await db.PublicWebsiteContents
+            var localizedItems = await db.PublicWebsiteContents
                 .IgnoreQueryFilters()
                 .AsNoTracking()
-                .Where(x => x.InstituteId == institute.Id && x.IsActive)
+                .Where(x => x.InstituteId == institute.Id && x.IsActive &&
+                    (x.Locale == requestedLocale || (requestedLocale != "th" && x.Locale == "th")))
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new
-                {
-                    x.SectionKey,
-                    x.ContentType,
-                    x.ContentValue,
-                    x.Metadata,
-                    x.SortOrder,
-                    x.UpdatedAt
-                })
+                .Select(x => new PublicContentItem(x.Id, x.SectionKey, x.ContentType, x.ContentValue, x.Metadata, x.SortOrder, x.IsActive, x.UpdatedAt, x.Locale))
                 .ToListAsync(ct);
+
+            var items = localizedItems
+                .GroupBy(x => x.SectionKey)
+                .Select(group => group.FirstOrDefault(x => x.Locale == requestedLocale) ?? group.First())
+                .OrderBy(x => x.SortOrder)
+                .ToList();
 
             return Results.Ok(new { status = "success", institute = new { institute.Id, institute.Name, institute.Slug }, items });
         })
@@ -98,5 +98,11 @@ public static class PublicLeadEndpoints
         });
 
         return app;
+    }
+
+    private static string NormalizeLocale(string? locale)
+    {
+        var language = locale?.Split('-', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.ToLowerInvariant();
+        return language is "th" or "en" ? language : "th";
     }
 }

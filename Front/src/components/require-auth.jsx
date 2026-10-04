@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
 import { clearAuthStorage } from '../services/auth-service';
 import { canReadPage } from '../config/permissions';
+import { LanguageSwitcher } from './ui/language-switcher';
 export const normalizeRole = role => String(role || '').trim().toLowerCase();
 
 export const hasAllowedRole = (role, allowedRoles) => (
@@ -10,7 +11,8 @@ export const hasAllowedRole = (role, allowedRoles) => (
 );
 
 export const RoleForbidden = () => (
-  <main class="flex min-h-screen items-center justify-center bg-oasis-bg p-6 text-center">
+  <main class="relative flex min-h-screen items-center justify-center bg-oasis-bg p-6 text-center">
+    <LanguageSwitcher class="absolute right-4 top-4" />
     <div class="max-w-md">
       <h1 class="text-2xl font-bold text-zinc-900">ไม่มีสิทธิ์เข้าหน้านี้</h1>
       <p class="mt-2 text-sm text-zinc-500">บัญชีของคุณไม่มีสิทธิ์ใช้งานเมนูนี้</p>

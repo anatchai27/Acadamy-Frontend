@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using academy_API.DTOs;
+using academy_API.Models;
 using academy_API.Services;
 using academy_API.Services.Contracts;
 
@@ -130,6 +131,7 @@ public static class ParentEndpoints
             data = records.Select(r => new
             {
                 r.CourseName,
+                courseNameEn = r.CourseNameEn,
                 date = r.ScheduledAt.ToString("yyyy-MM-dd"),
                 time = r.ScheduledAt.ToString("HH:mm"),
                 r.Status
@@ -149,10 +151,11 @@ public static class ParentEndpoints
                 p.Id,
                 p.InvoiceNo,
                 description = p.CourseName,
+                descriptionEn = p.CourseNameEn,
                 date = p.PaidAt.ToString("yyyy-MM-dd"),
                 amount = p.Amount,
                 method = "",
-                status = "paid",
+                status = p.Status == PaymentStatus.Succeeded ? "paid" : "pending",
                 receiptPdfUrl = p.ReceiptPdfUrl
             })
         });
@@ -175,8 +178,11 @@ public static class ParentEndpoints
             {
                 id = h.Id,
                 courseName = h.CourseName,
+                courseNameEn = h.CourseNameEn,
                 title = h.Title,
+                titleEn = h.TitleEn,
                 description = h.Description,
+                descriptionEn = h.DescriptionEn,
                 dueAt = h.DueAt.ToString("yyyy-MM-dd")
             })
         });
@@ -199,6 +205,7 @@ public static class ParentEndpoints
             {
                 i.Id,
                 courseName = i.CourseName,
+                courseNameEn = i.CourseNameEn,
                 reason = i.Reason,
                 type = i.Type,
                 i.Status,

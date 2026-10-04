@@ -58,6 +58,10 @@ export const PAGE_PERMISSIONS = {
     label: 'ผู้ใช้',
     admin: { read: true, edit: true, delete: true },
   },
+  '/admin/permissions': {
+    label: 'สิทธิ์การใช้งาน',
+    admin: { read: true, edit: true, delete: false },
+  },
   '/admin/settings': {
     label: 'ตั้งค่า',
     admin: { read: true, edit: true, delete: false },
@@ -83,6 +87,11 @@ export const getPagePermission = (role, path) => {
   const page = PAGE_PERMISSIONS[path] ? path : Object.keys(PAGE_PERMISSIONS)
     .find((knownPath) => path?.startsWith(`${knownPath}/`));
   const normalizedRole = String(role || '').trim().toLowerCase();
+  // Keep the admin recovery page reachable even when an older saved policy
+  // predates this route or explicitly omitted it.
+  if (page === '/admin/permissions' && normalizedRole === 'admin') {
+    return PAGE_PERMISSIONS[page].admin;
+  }
   return ROLE_PERMISSIONS[normalizedRole]?.[page]
     || PAGE_PERMISSIONS[page]?.[normalizedRole]
     || {

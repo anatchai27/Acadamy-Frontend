@@ -19,6 +19,7 @@ public static class PaymentEndpoints
             HttpContext httpContext,
             CancellationToken ct) =>
         {
+            if (!httpContext.User.IsInRole("admin")) return Results.Forbid();
             try
             {
                 var result = await service.CreateAsync(request, ct);
@@ -44,6 +45,7 @@ public static class PaymentEndpoints
             int limit = 20,
             CancellationToken ct = default) =>
         {
+            if (!httpContext.User.IsInRole("admin")) return Results.Forbid();
             if (!TryParseDateRange(start_date, end_date, out var startDate, out var endDate, out var error))
                 return Results.BadRequest(new { error });
 
@@ -53,11 +55,13 @@ public static class PaymentEndpoints
 
         group.MapGet("/export", async (
             IPaymentService service,
+            HttpContext httpContext,
             string? start_date,
             string? end_date,
             string? method,
             CancellationToken ct = default) =>
         {
+            if (!httpContext.User.IsInRole("admin")) return Results.Forbid();
             if (!TryParseDateRange(start_date, end_date, out var startDate, out var endDate, out var error))
                 return Results.BadRequest(new { error });
 
@@ -71,14 +75,35 @@ public static class PaymentEndpoints
             HttpContext context,
             CancellationToken ct) =>
         {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
             var actorId = int.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) ? id : (int?)null;
             try { return Results.Ok(await service.VerifyAsync(paymentId, actorId, ct)); }
             catch (PaymentValidationException ex) when (ex.ErrorCode == "PAYMENT_NOT_FOUND" || ex.ErrorCode == "SLIP_NOT_FOUND")
             { return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode }); }
             catch (PaymentValidationException ex) when (ex.ErrorCode is "AMOUNT_MISMATCH" or "ALREADY_VERIFIED")
             { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode == "DUPLICATE_SLIP")
+            { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
             catch (PaymentValidationException ex) when (ex.ErrorCode == "VERIFICATION_UNAVAILABLE")
-            { return Results.StatusCode(StatusCodes.Status503ServiceUnavailable); }
+            { return Results.Json(new { error = ex.Message, code = ex.ErrorCode }, statusCode: StatusCodes.Status503ServiceUnavailable); }
+        });
+
+        group.MapPost("/{paymentId:long}/issue-receipt", async (
+            long paymentId,
+            IPaymentService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            try
+            {
+                var receiptPdfUrl = await service.IssueReceiptAsync(paymentId, ct);
+                return Results.Ok(new { receiptPdfUrl });
+            }
+            catch (PaymentValidationException ex) when (ex.ErrorCode == "PAYMENT_NOT_FOUND")
+            { return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex)
+            { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
         });
 
         return app;

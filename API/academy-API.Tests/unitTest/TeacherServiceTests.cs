@@ -37,6 +37,29 @@ public class TeacherServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_EnglishFields_AreTrimmedAndReturned()
+    {
+        Teacher? created = null;
+        var repository = new Mock<ITeacherRepository>();
+        repository.Setup(r => r.CreateAsync(It.IsAny<Teacher>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Teacher teacher, User? _, CancellationToken _) =>
+            {
+                created = teacher;
+                teacher.Id = 14;
+                return teacher;
+            });
+        var service = new TeacherService(repository.Object);
+        var request = CreateRequest() with { SpecializationEn = " Science ", BioEn = " Experienced teacher " };
+
+        var response = await service.CreateAsync(request, 7);
+
+        Assert.Equal("Science", created!.SpecializationEn);
+        Assert.Equal("Experienced teacher", created.BioEn);
+        Assert.Equal("Science", response.SpecializationEn);
+        Assert.Equal("Experienced teacher", response.BioEn);
+    }
+
+    [Fact]
     public async Task CreateAsync_WithUser_CreatesTeacherAndHashedUser()
     {
         var repository = new Mock<ITeacherRepository>();

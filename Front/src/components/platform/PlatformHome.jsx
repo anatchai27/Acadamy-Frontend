@@ -2,20 +2,32 @@ import { useMemo, useState } from 'preact/hooks';
 import { platformContent } from '../../config/content';
 import { CoursePlatformCard } from './CoursePlatformCard';
 import { InstituteCard } from './InstituteCard';
+import { useTranslation } from '../../hooks';
+import { LanguageSwitcher } from '../ui/language-switcher';
 import './platform.css';
 
 export function PlatformHome() {
+  const { t, currentLanguage } = useTranslation();
   const [query, setQuery] = useState('');
-  const [subject, setSubject] = useState('ทั้งหมด');
+  const [subjectKey, setSubjectKey] = useState('all');
   const [compare, setCompare] = useState([]);
   const courses = useMemo(
     () =>
       platformContent.courses.filter(
-        (course) =>
-          (subject === 'ทั้งหมด' || course.subject === subject) &&
-          `${course.name} ${course.subject} ${course.institute}`.toLowerCase().includes(query.toLowerCase()),
+        (course) => {
+          const courseIndex = platformContent.courses.indexOf(course);
+          const instituteIndex = platformContent.institutes.findIndex((institute) => institute.name === course.institute);
+          const translatedCourseSubject = t(`platform.courses.subjects.${courseIndex}`);
+          const translatedLocation = t(`platform.institutes.items.${instituteIndex}.location`);
+          return (
+            (subjectKey === 'all' || ['english', 'coding', 'math'][courseIndex] === subjectKey) &&
+            `${course.name} ${course.subject} ${translatedCourseSubject} ${course.institute} ${translatedLocation}`
+              .toLowerCase()
+              .includes(query.toLowerCase())
+          );
+        },
       ),
-    [query, subject],
+    [query, subjectKey, currentLanguage],
   );
   const addCompare = (course) =>
     setCompare((items) => (items.some((item) => item.name === course.name) ? items : [...items, course]));
@@ -24,78 +36,81 @@ export function PlatformHome() {
       <nav class="market-nav">
         <a class="market-brand" href="/">
           <span>+</span>
-          {platformContent.brand.name}
+          {t('common.appName')}
         </a>
         <div class="market-nav-links">
-          <a href="#institutes">สถาบันทั้งหมด</a>
-          <a href="#courses">คอร์สเรียน</a>
-          <a href="#how-it-works">วิธีใช้งาน</a>
+          <a href="#institutes">{t('platform.navigation.institutes')}</a>
+          <a href="#courses">{t('platform.navigation.courses')}</a>
+          <a href="#how-it-works">{t('platform.navigation.howItWorks')}</a>
         </div>
         <a class="market-partner-link" href="#for-institutes">
-          เปิดคอร์สกับเรา <span>↗</span>
+          {t('platform.navigation.partner')} <span>↗</span>
         </a>
+        <LanguageSwitcher />
       </nav>
       <main>
         <section class="market-hero">
-          <span class="market-eyebrow">{platformContent.hero.eyebrow}</span>
+          <span class="market-eyebrow">{t('hero.eyebrow')}</span>
           <h1>
-            {platformContent.hero.title}
+            {t('hero.title')}
             <br />
-            <em>{platformContent.hero.highlight}</em>
+            <em>{t('hero.highlight')}</em>
           </h1>
-          <p>{platformContent.hero.description}</p>
+          <p>{t('hero.description')}</p>
           <div class="market-search">
             <span>⌕</span>
             <input
               value={query}
               onInput={(event) => setQuery(event.currentTarget.value)}
-              placeholder="ค้นหาวิชา ชื่อสถาบัน หรือทำเล..."
-              aria-label="ค้นหาสถาบันและคอร์ส"
+              placeholder={t('hero.searchPlaceholder')}
+              aria-label={t('hero.searchAriaLabel')}
             />
             <button onClick={() => document.querySelector('#courses')?.scrollIntoView({ behavior: 'smooth' })}>
-              ค้นหา
+              {t('common.search')}
             </button>
           </div>
           <div class="market-suggestions">
-            <span>กำลังเป็นที่นิยม:</span>
+            <span>{t('hero.popularSearches')}</span>
             <button onClick={() => setQuery('Coding')}>Coding</button>
-            <button onClick={() => setQuery('ภาษาอังกฤษ')}>ภาษาอังกฤษ</button>
-            <button onClick={() => setQuery('ลาดพร้าว')}>ลาดพร้าว</button>
+            <button onClick={() => setQuery(t('platform.subjects.english'))}>{t('platform.subjects.english')}</button>
+            <button onClick={() => setQuery(t('platform.institutes.items.0.location'))}>{t('platform.institutes.items.0.location')}</button>
           </div>
         </section>
         <section class="market-trust">
           <div>
             <strong>2,400+</strong>
-            <span>สถาบันที่คัดสรร</span>
+            <span>{t('trust.institutes')}</span>
           </div>
           <div>
             <strong>18,000+</strong>
-            <span>คอร์สเรียน</span>
+            <span>{t('trust.courses')}</span>
           </div>
           <div>
             <strong>4.8/5</strong>
-            <span>คะแนนจากผู้ปกครอง</span>
+            <span>{t('trust.rating')}</span>
           </div>
           <p>
-            ข้อมูลโปร่งใส
+            {t('trust.transparent')}
             <br />
-            ตัดสินใจได้ด้วยตัวเอง
+            {t('trust.decide')}
           </p>
         </section>
         <section class="market-section" id="how-it-works">
           <div class="market-heading">
             <div>
-              <span class="market-eyebrow">START WITH A NEED</span>
-              <h2>ลูกกำลังมองหาอะไรอยู่?</h2>
+              <span class="market-eyebrow">{t('problems.eyebrow')}</span>
+              <h2>{t('problems.title')}</h2>
             </div>
-            <span>เลือกหัวข้อเพื่อค้นหาสถาบันที่เข้าใจโจทย์นี้</span>
+            <span>{t('problems.subtitle')}</span>
           </div>
           <div class="market-need-grid">
-            {platformContent.problems.map((problem) => (
+            {platformContent.problems.map((problem) => {
+              const copy = t(`platform.problems.${problem.id}`, { returnObjects: true });
+              return (
               <a href="#institutes" class={`market-need-card need-${problem.tone}`} key={problem.id}>
-                <span>{problem.eyebrow}</span>
+                <span>{copy.eyebrow}</span>
                 <h3>
-                  {problem.title.split('\n').map((line, index) => (
+                  {copy.title.split('\n').map((line, index) => (
                     <span key={line}>
                       {index > 0 && <br />}
                       {line}
@@ -103,52 +118,52 @@ export function PlatformHome() {
                   ))}
                 </h3>
                 <b>
-                  {problem.cta} <i>↗</i>
+                  {copy.cta} <i>↗</i>
                 </b>
               </a>
-            ))}
+            );})}
           </div>
         </section>
         <section class="market-section" id="institutes">
           <div class="market-heading">
             <div>
-              <span class="market-eyebrow">TRUSTED BY PARENTS</span>
-              <h2>สถาบันแนะนำประจำเดือน</h2>
+              <span class="market-eyebrow">{t('institutes.eyebrow')}</span>
+              <h2>{t('institutes.title')}</h2>
             </div>
-            <a href="#courses">ดูสถาบันทั้งหมด ↗</a>
+            <a href="#courses">{t('institutes.viewAll')}</a>
           </div>
           <div class="market-institute-grid">
-            {platformContent.institutes.map((institute) => (
-              <InstituteCard key={institute.name} institute={institute} />
+            {platformContent.institutes.map((institute, index) => (
+              <InstituteCard key={institute.name} institute={institute} copy={t(`platform.institutes.items.${index}`, { returnObjects: true })} labels={t('platform.institutes', { returnObjects: true })} />
             ))}
           </div>
         </section>
         <section class="market-section" id="courses">
           <div class="market-heading">
             <div>
-              <span class="market-eyebrow">COMPARE & CHOOSE</span>
-              <h2>คอร์สเรียนยอดฮิตจากหลายสถาบัน</h2>
+              <span class="market-eyebrow">{t('courses.eyebrow')}</span>
+              <h2>{t('courses.title')}</h2>
             </div>
             <div class="market-tabs">
-              {['ทั้งหมด', 'ภาษาอังกฤษ', 'Coding', 'คณิตศาสตร์'].map((item) => (
-                <button class={subject === item ? 'active' : ''} onClick={() => setSubject(item)} key={item}>
-                  {item}
+              {['all', 'english', 'coding', 'math'].map((key) => (
+                <button class={subjectKey === key ? 'active' : ''} onClick={() => setSubjectKey(key)} key={key}>
+                  {t(`platform.subjects.${key}`)}
                 </button>
               ))}
             </div>
           </div>
           <div class="market-course-grid">
             {courses.map((course) => (
-              <CoursePlatformCard key={course.name} course={course} onCompare={addCompare} />
+              <CoursePlatformCard key={course.name} course={course} onCompare={addCompare} copy={t('platform.courses', { returnObjects: true })} index={platformContent.courses.indexOf(course)} />
             ))}
           </div>
-          {!courses.length && <p class="market-empty">ไม่พบคอร์สที่ตรงกับคำค้น ลองค้นหาวิชาอื่น</p>}
+          {!courses.length && <p class="market-empty">{t('courses.empty')}</p>}
         </section>
         <section class="market-compare">
           <div>
-            <span class="market-eyebrow">MAKE A CONFIDENT CHOICE</span>
-            <h2>เปรียบเทียบก่อนตัดสินใจ</h2>
-            <p>บันทึกคอร์สที่สนใจ แล้วดูราคา รูปแบบการเรียน และรีวิวเทียบกันได้ในมุมมองเดียว</p>
+            <span class="market-eyebrow">{t('compare.eyebrow')}</span>
+            <h2>{t('compare.title')}</h2>
+            <p>{t('compare.description')}</p>
           </div>
           <div class="market-compare-list">
             {compare.length ? (
@@ -158,54 +173,51 @@ export function PlatformHome() {
                 </span>
               ))
             ) : (
-              <span>ยังไม่มีคอร์สที่เลือกเปรียบเทียบ</span>
+              <span>{t('compare.empty')}</span>
             )}
           </div>
           <button disabled={!compare.length}>
-            เปรียบเทียบ {compare.length || 'คอร์ส'} <span>→</span>
+            {t('compare.button', { count: compare.length })} <span>→</span>
           </button>
         </section>
         <section class="market-partner" id="for-institutes">
           <div>
-            <span class="market-eyebrow">FOR EDUCATION PARTNERS</span>
+            <span class="market-eyebrow">{t('partner.eyebrow')}</span>
             <h2>
-              มีคอร์สที่อยากให้
+              {t('partner.title')}
               <br />
-              <em>เด็ก ๆ ได้ค้นพบ?</em>
+              <em>{t('partner.highlight')}</em>
             </h2>
-            <p>
-              เข้าร่วม Acadamy เพื่อให้ผู้ปกครองค้นพบสถาบันของคุณได้ง่ายขึ้น จัดการคอร์สจากที่เดียว
-              และเติบโตไปพร้อมกับครอบครัวที่ใช่
-            </p>
-            <a href="mailto:partners@acadamy.co?subject=เปิดคอร์สกับ Acadamy">
-              สมัครเป็นพาร์ทเนอร์ <span>→</span>
+            <p>{t('partner.description')}</p>
+            <a href={`mailto:partners@acadamy.co?subject=${encodeURIComponent(t('platform.navigation.partner') + ' Acadamy')}`}>
+              {t('partner.cta')} <span>→</span>
             </a>
           </div>
           <div class="market-benefits">
             <div>
               <b>01</b>
-              <strong>เข้าถึงผู้ปกครองที่กำลังค้นหา</strong>
-              <span>แสดงสถาบันในผลค้นหาและหมวดวิชาที่ตรงกลุ่ม</span>
+              <strong>{t('partner.benefits.01.title')}</strong>
+              <span>{t('partner.benefits.01.description')}</span>
             </div>
             <div>
               <b>02</b>
-              <strong>โปรไฟล์และคอร์สที่เป็นของคุณ</strong>
-              <span>เล่าเรื่องจุดเด่น ราคา รูปแบบการสอน และผลงานได้ชัดเจน</span>
+              <strong>{t('partner.benefits.02.title')}</strong>
+              <span>{t('partner.benefits.02.description')}</span>
             </div>
             <div>
               <b>03</b>
-              <strong>ข้อมูลช่วยให้เติบโต</strong>
-              <span>ดูความสนใจและ lead เพื่อวางแผนคอร์สได้ดีขึ้น</span>
+              <strong>{t('partner.benefits.03.title')}</strong>
+              <span>{t('partner.benefits.03.description')}</span>
             </div>
           </div>
         </section>
       </main>
       <footer class="market-footer">
         <b>
-          <span>+</span>acadamy
+          <span>+</span>{t('common.appName')}
         </b>
-        <span>{platformContent.brand.tagline}</span>
-        <span>© 2026 Acadamy Platform</span>
+        <span>{t('common.tagline')}</span>
+        <span>{t('footer.copyright')}</span>
       </footer>
     </div>
   );

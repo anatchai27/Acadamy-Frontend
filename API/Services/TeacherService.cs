@@ -52,7 +52,9 @@ public sealed class TeacherService(ITeacherRepository repository) : ITeacherServ
             InstituteId = instituteId,
             FullName = request.FullName.Trim(),
             Specialization = Clean(request.Specialization),
+            SpecializationEn = Clean(request.SpecializationEn),
             Bio = Clean(request.Bio),
+            BioEn = Clean(request.BioEn),
             HourlyRate = request.HourlyRate,
             PhotoUrl = Clean(request.PhotoUrl),
             BankAccountInfo = Clean(request.BankAccountInfo),
@@ -76,7 +78,9 @@ public sealed class TeacherService(ITeacherRepository repository) : ITeacherServ
         }
 
         if (request.Specialization is not null) teacher.Specialization = Clean(request.Specialization);
+        if (request.SpecializationEn is not null) teacher.SpecializationEn = Clean(request.SpecializationEn);
         if (request.Bio is not null) teacher.Bio = Clean(request.Bio);
+        if (request.BioEn is not null) teacher.BioEn = Clean(request.BioEn);
         if (request.HourlyRate is not null) teacher.HourlyRate = request.HourlyRate;
         if (request.PhotoUrl is not null) teacher.PhotoUrl = Clean(request.PhotoUrl);
         if (request.BankAccountInfo is not null) teacher.BankAccountInfo = Clean(request.BankAccountInfo);
@@ -98,7 +102,7 @@ public sealed class TeacherService(ITeacherRepository repository) : ITeacherServ
     private static TeacherResponse Map(Teacher teacher) => new(
         teacher.Id, teacher.InstituteId, teacher.UserId, teacher.FullName, teacher.Specialization,
         teacher.Bio, teacher.HourlyRate, teacher.PhotoUrl, teacher.BankAccountInfo, teacher.TaxId,
-        teacher.Status, teacher.User?.Email);
+        teacher.Status, teacher.User?.Email, teacher.SpecializationEn, teacher.BioEn);
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

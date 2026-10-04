@@ -40,7 +40,8 @@ public record PaymentHistoryItem(
     string Status,
     DateTime PaidAt,
     string? SlipUrl,
-    string? ReceiptPdfUrl
+    string? ReceiptPdfUrl,
+    string? CourseNameEn = null
 );
 
 public record PaymentSummary(

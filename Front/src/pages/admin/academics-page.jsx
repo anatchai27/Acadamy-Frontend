@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast, DatePickerInput } from '../../components/ui';
+import { SolidInput, Button, showToast } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlinePlus, HiOutlineChevronDown } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineChevronDown, HiOutlinePencil, HiOutlineTrash, HiOutlineXMark } from 'react-icons/hi2';
 
 export function AcademicsPage({ path }) {
   const [tab, setTab] = useState('homework');
@@ -16,7 +16,8 @@ export function AcademicsPage({ path }) {
   const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
-    courseService.getCourses({}, { signal: getSignal() })
+    courseService
+      .getCourses({}, { signal: getSignal() })
       .then((res) => {
         const payload = res.data?.data || res.data || {};
         const list = payload.courses || (Array.isArray(payload) ? payload : []);
@@ -39,7 +40,9 @@ export function AcademicsPage({ path }) {
           onClick={() => setTab('homework')}
           class={`px-5 py-2 text-sm font-medium transition-all ${
             isNeo
-              ? (tab === 'homework' ? 'neo-tab-active' : 'neo-tab-inactive')
+              ? tab === 'homework'
+                ? 'neo-tab-active'
+                : 'neo-tab-inactive'
               : `rounded-lg ${tab === 'homework' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
           }`}
         >
@@ -50,7 +53,9 @@ export function AcademicsPage({ path }) {
           onClick={() => setTab('skills')}
           class={`px-5 py-2 text-sm font-medium transition-all ${
             isNeo
-              ? (tab === 'skills' ? 'neo-tab-active' : 'neo-tab-inactive')
+              ? tab === 'skills'
+                ? 'neo-tab-active'
+                : 'neo-tab-inactive'
               : `rounded-lg ${tab === 'skills' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
           }`}
         >
@@ -60,21 +65,25 @@ export function AcademicsPage({ path }) {
 
       {courses.length > 0 && (
         <div class="mb-6 max-w-xs">
-          <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>เลือกคอร์สเรียน</label>
+          <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>
+            เลือกคอร์สเรียน
+          </label>
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
             class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 ${isNeo ? 'neo-select' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
           >
             {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
             ))}
           </select>
         </div>
       )}
 
       {tab === 'homework' ? (
-        <HomeworkTab courseId={selectedCourseId} />
+        <HomeworkTab courseId={selectedCourseId} courses={courses} onCourseChange={setSelectedCourseId} />
       ) : (
         <SkillScoresTab courseId={selectedCourseId} />
       )}
@@ -84,7 +93,7 @@ export function AcademicsPage({ path }) {
 
 /* ─── HOMEWORK TAB ─── */
 
-function HomeworkTab({ courseId }) {
+function HomeworkTab({ courseId, courses, onCourseChange }) {
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
   const [homeworks, setHomeworks] = useState([]);
@@ -99,8 +108,11 @@ function HomeworkTab({ courseId }) {
 
   const [form, setForm] = useState({
     title: '',
+    titleEn: '',
     description: '',
+    descriptionEn: '',
     dueDate: '',
+    dueTime: '',
     fileUrl: '',
   });
 
@@ -118,11 +130,14 @@ function HomeworkTab({ courseId }) {
     }
   };
 
-  useEffect(() => { fetchHomeworks(); }, [courseId]);
+  useEffect(() => {
+    fetchHomeworks();
+  }, [courseId]);
 
   useEffect(() => {
     if (!courseId) return;
-    skillScoreService.getSkillTopics(courseId)
+    skillScoreService
+      .getSkillTopics(courseId)
       .then((res) => {
         const payload = res.data?.data || res.data || {};
         setSkillTopics(payload.topics || []);
@@ -135,7 +150,7 @@ function HomeworkTab({ courseId }) {
   };
 
   const openCreate = () => {
-    setForm({ title: '', description: '', dueDate: '', fileUrl: '' });
+    setForm({ title: '', titleEn: '', description: '', descriptionEn: '', dueDate: '', dueTime: '', fileUrl: '' });
     setShowForm(true);
   };
 
@@ -145,14 +160,20 @@ function HomeworkTab({ courseId }) {
       showToast('กรุณากรอกชื่อการบ้าน', 'error');
       return;
     }
+    if (!courseId || !form.dueDate || !form.dueTime) {
+      showToast('กรุณาระบุคอร์สและกำหนดส่งให้ครบถ้วน', 'error');
+      return;
+    }
 
     setSubmitting(true);
     try {
       const payload = {
         courseId: Number(courseId),
         title: form.title.trim(),
+        titleEn: form.titleEn.trim(),
         description: form.description.trim() || undefined,
-        dueAt: form.dueDate ? new Date(form.dueDate).toISOString() : undefined,
+        descriptionEn: form.descriptionEn.trim(),
+        dueAt: new Date(`${form.dueDate}T${form.dueTime}`).toISOString(),
         fileUrl: form.fileUrl.trim() || undefined,
       };
 
@@ -191,7 +212,9 @@ function HomeworkTab({ courseId }) {
           ...prev,
           [hwId]: payload.submissions || (Array.isArray(payload) ? payload : []),
         }));
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
   };
 
@@ -233,13 +256,33 @@ function HomeworkTab({ courseId }) {
       </div>
 
       {showForm && (
-        <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-slate-200 p-6'} mb-6 shadow-sm`}>
+        <div
+          class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-slate-200 p-6'} mb-6 shadow-sm`}
+        >
           <h4 class="text-base font-semibold text-slate-900 mb-4">สั่งการบ้านใหม่</h4>
           <form onSubmit={handleSubmitHomework}>
             <BentoGrid>
               <div class="md:col-span-2">
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>
+                  คอร์สเรียนที่สั่งการบ้าน *
+                </label>
+                <select
+                  required
+                  value={courseId}
+                  onChange={(event) => onCourseChange(event.target.value)}
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 ${isNeo ? 'neo-select' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
+                >
+                  <option value="">เลือกคอร์สเรียน</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div class="md:col-span-2">
                 <SolidInput
-                  label="ชื่อการบ้าน *"
+                  label="ชื่อการบ้าน (ไทย) *"
                   placeholder="เช่น แบบฝึกหัดบทที่ 1"
                   required
                   value={form.title}
@@ -247,7 +290,17 @@ function HomeworkTab({ courseId }) {
                 />
               </div>
               <div class="md:col-span-2">
-                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>รายละเอียด</label>
+                <SolidInput
+                  label="ชื่อการบ้าน (English)"
+                  placeholder="e.g. Chapter 1 Exercises"
+                  value={form.titleEn}
+                  onInput={updateField('titleEn')}
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>
+                  รายละเอียด (ไทย)
+                </label>
                 <textarea
                   value={form.description}
                   onInput={updateField('description')}
@@ -256,13 +309,26 @@ function HomeworkTab({ courseId }) {
                   class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 placeholder-slate-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
                 />
               </div>
-              <DatePickerInput
-                label="กำหนดส่ง"
-                showTime
-                value={form.dueDate ? new Date(form.dueDate) : null}
-                onChange={(date) => setForm((prev) => ({ ...prev, dueDate: date ? date.toISOString() : '' }))}
-                placeholder="เลือกวันที่และเวลา"
+              <div class="md:col-span-2">
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-slate-700'}`}>
+                  รายละเอียด (English)
+                </label>
+                <textarea
+                  value={form.descriptionEn}
+                  onInput={updateField('descriptionEn')}
+                  placeholder="Homework instructions"
+                  rows={3}
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-slate-900 placeholder-slate-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'}`}
+                />
+              </div>
+              <SolidInput
+                label="ส่งภายในวันที่ *"
+                type="date"
+                value={form.dueDate}
+                onInput={updateField('dueDate')}
+                required
               />
+              <SolidInput label="เวลา *" type="time" value={form.dueTime} onInput={updateField('dueTime')} required />
               <SolidInput
                 label="ลิงก์ไฟล์แนบ"
                 placeholder="URL ไฟล์ (ถ้ามี)"
@@ -294,7 +360,10 @@ function HomeworkTab({ courseId }) {
       )}
 
       {homeworks.map((hw) => (
-        <div key={hw.id} class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} mb-3 overflow-hidden shadow-sm`}>
+        <div
+          key={hw.id}
+          class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} mb-3 overflow-hidden shadow-sm`}
+        >
           <button
             type="button"
             onClick={() => toggleSubmissions(hw.id)}
@@ -304,29 +373,65 @@ function HomeworkTab({ courseId }) {
               <h4 class="text-sm font-semibold text-slate-900">{hw.title}</h4>
               {hw.dueAt && (
                 <p class="text-xs text-slate-500 mt-1">
-                  ส่งภายใน {new Date(hw.dueAt).toLocaleDateString('th-TH')}
+                  ส่งภายใน{' '}
+                  {new Date(hw.dueAt).toLocaleString('th-TH', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
                 </p>
               )}
             </div>
             <span class="text-xs text-slate-400 shrink-0 flex items-center gap-1">
               {hw.submissionCount != null && `${hw.submissionCount} คนส่ง`}
-              <HiOutlineChevronDown class={`h-4 w-4 transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`} />
+              <HiOutlineChevronDown
+                class={`h-4 w-4 transition-transform ${expandedHw === hw.id ? 'rotate-180' : ''}`}
+              />
             </span>
           </button>
 
-           {expandedHw === hw.id && (
-             <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
-               <div class="mb-5 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-                 <div class="flex items-center justify-between gap-3">
-                   <div><p class="text-sm font-semibold text-slate-800">Skill topics ของการบ้าน</p><p class="mt-1 text-xs text-slate-500">คะแนนที่ตรวจจะอัปเดตไปยัง topic ที่เลือก</p></div>
-                   <Button variant="primary" size="sm" loading={mappingSaving === hw.id} disabled={mappingSaving === hw.id} onClick={() => saveSkillMapping(hw.id)}>บันทึก</Button>
-                 </div>
-                 <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                   {skillTopics.map((topic) => <label key={topic.id} class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={(homeworkMappings[hw.id] || []).includes(topic.id)} onChange={(event) => setHomeworkMappings((prev) => ({ ...prev, [hw.id]: event.target.checked ? [...(prev[hw.id] || []), topic.id] : (prev[hw.id] || []).filter((id) => id !== topic.id) }))} />{topic.name}</label>)}
-                   {skillTopics.length === 0 && <p class="text-xs text-slate-500">คอร์สนี้ยังไม่มี skill topic</p>}
-                 </div>
-               </div>
-               <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
+          {expandedHw === hw.id && (
+            <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
+              <div class="mb-5 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-slate-800">Skill topics ของการบ้าน</p>
+                    <p class="mt-1 text-xs text-slate-500">คะแนนที่ตรวจจะอัปเดตไปยัง topic ที่เลือก</p>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    loading={mappingSaving === hw.id}
+                    disabled={mappingSaving === hw.id}
+                    onClick={() => saveSkillMapping(hw.id)}
+                  >
+                    บันทึก
+                  </Button>
+                </div>
+                <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                  {skillTopics.map((topic) => (
+                    <label key={topic.id} class="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={(homeworkMappings[hw.id] || []).includes(topic.id)}
+                        onChange={(event) =>
+                          setHomeworkMappings((prev) => ({
+                            ...prev,
+                            [hw.id]: event.target.checked
+                              ? [...(prev[hw.id] || []), topic.id]
+                              : (prev[hw.id] || []).filter((id) => id !== topic.id),
+                          }))
+                        }
+                      />
+                      <span>
+                        {topic.name}
+                        {topic.nameEn && <span class="ml-1 text-xs text-slate-500">({topic.nameEn})</span>}
+                      </span>
+                    </label>
+                  ))}
+                  {skillTopics.length === 0 && <p class="text-xs text-slate-500">คอร์สนี้ยังไม่มี skill topic</p>}
+                </div>
+              </div>
+              <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
             </div>
           )}
         </div>
@@ -347,15 +452,14 @@ function SubmissionsList({ submissions, onGrade }) {
     <div class="space-y-2">
       <p class="text-xs font-medium text-slate-500 mb-2">นักเรียนที่ส่งงาน ({submissions.length} คน)</p>
       {submissions.map((sub) => (
-        <div key={sub.id} class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-slate-50 first:border-0">
+        <div
+          key={sub.id}
+          class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-slate-50 first:border-0"
+        >
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-700">
-              {sub.studentName || `นักเรียน #${sub.studentId}`}
-            </p>
+            <p class="text-sm font-medium text-slate-700">{sub.studentName || `นักเรียน #${sub.studentId}`}</p>
             {sub.submittedAt && (
-              <p class="text-xs text-slate-500">
-                ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}
-              </p>
+              <p class="text-xs text-slate-500">ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}</p>
             )}
           </div>
           <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -402,6 +506,11 @@ function SkillScoresTab({ courseId }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [topicSaving, setTopicSaving] = useState(false);
+  const [topicDeleting, setTopicDeleting] = useState(null);
+  const [showTopicForm, setShowTopicForm] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState(null);
+  const [topicForm, setTopicForm] = useState({ name: '', nameEn: '', orderIndex: '1' });
   const [scoreValues, setScoreValues] = useState({});
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
@@ -425,7 +534,83 @@ function SkillScoresTab({ courseId }) {
     }
   };
 
-  useEffect(() => { fetchTopicsAndStudents(); }, [courseId]);
+  useEffect(() => {
+    fetchTopicsAndStudents();
+  }, [courseId]);
+
+  const updateTopicField = (field) => (event) => {
+    setTopicForm((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const openCreateTopic = () => {
+    setEditingTopicId(null);
+    setTopicForm({ name: '', nameEn: '', orderIndex: String(topics.length + 1) });
+    setShowTopicForm(true);
+  };
+
+  const openEditTopic = (topic) => {
+    setEditingTopicId(topic.id);
+    setTopicForm({
+      name: topic.name || '',
+      nameEn: topic.nameEn || '',
+      orderIndex: String(topic.orderIndex ?? 0),
+    });
+    setShowTopicForm(true);
+  };
+
+  const closeTopicForm = () => {
+    setShowTopicForm(false);
+    setEditingTopicId(null);
+    setTopicForm({ name: '', nameEn: '', orderIndex: String(topics.length + 1) });
+  };
+
+  const handleTopicSubmit = async (event) => {
+    event.preventDefault();
+    if (!topicForm.name.trim()) {
+      showToast('กรุณากรอกชื่อหัวข้อทักษะภาษาไทย', 'error');
+      return;
+    }
+
+    setTopicSaving(true);
+    try {
+      const payload = {
+        courseId: Number(courseId),
+        name: topicForm.name.trim(),
+        nameEn: topicForm.nameEn.trim(),
+        orderIndex: Number(topicForm.orderIndex) || 0,
+      };
+      if (editingTopicId) {
+        await skillScoreService.updateSkillTopic(editingTopicId, payload);
+        showToast('แก้ไขหัวข้อทักษะสำเร็จ', 'success');
+      } else {
+        await skillScoreService.createSkillTopic(payload);
+        showToast('เพิ่มหัวข้อทักษะสำเร็จ', 'success');
+      }
+      closeTopicForm();
+      await fetchTopicsAndStudents();
+    } catch (err) {
+      showToast(err?.data?.message || err?.data?.Message || 'บันทึกหัวข้อทักษะไม่สำเร็จ', 'error');
+    } finally {
+      setTopicSaving(false);
+    }
+  };
+
+  const handleDeleteTopic = async (topic) => {
+    if (!window.confirm(`ลบหัวข้อทักษะ "${topic.name}" หรือไม่?`)) return;
+    setTopicDeleting(topic.id);
+    try {
+      await skillScoreService.deleteSkillTopic(topic.id);
+      setScoreValues((prev) =>
+        Object.fromEntries(Object.entries(prev).filter(([key]) => !key.endsWith(`_${topic.id}`))),
+      );
+      await fetchTopicsAndStudents();
+      showToast('ลบหัวข้อทักษะสำเร็จ', 'success');
+    } catch (err) {
+      showToast(err?.data?.message || err?.data?.Message || 'ลบหัวข้อทักษะไม่สำเร็จ', 'error');
+    } finally {
+      setTopicDeleting(null);
+    }
+  };
 
   const handleScoreChange = (studentId, topicId, value) => {
     setScoreValues((prev) => ({ ...prev, [`${studentId}_${topicId}`]: value }));
@@ -475,65 +660,148 @@ function SkillScoresTab({ courseId }) {
     );
   }
 
-  if (topics.length === 0) {
-    return <p class="text-sm text-slate-400 text-center py-12">ยังไม่มีหัวข้อทักษะในคอร์สนี้</p>;
-  }
-
   return (
     <div>
-      <div class="flex items-center justify-between mb-4">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 class="text-lg font-semibold text-slate-900">ประเมินทักษะ</h3>
-        <Button variant="primary" size="sm" onClick={handleBatchSave} loading={saving} disabled={saving}>
-          บันทึกคะแนนทั้งหมด
-        </Button>
+        <div class="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={openCreateTopic}>
+            <span class="flex items-center gap-1.5">
+              <HiOutlinePlus class="h-4 w-4" />
+              เพิ่มหัวข้อทักษะ
+            </span>
+          </Button>
+          {topics.length > 0 && (
+            <Button variant="primary" size="sm" onClick={handleBatchSave} loading={saving} disabled={saving}>
+              บันทึกคะแนนทั้งหมด
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-slate-200'} overflow-x-auto shadow-sm`}>
-        <table class="w-full text-sm">
-          <thead>
-            <tr class={`${isNeo ? 'bg-black text-white' : 'bg-slate-50'}`}>
-              <th class={`text-left px-4 py-3 text-xs font-semibold uppercase ${isNeo ? 'text-white' : 'text-slate-500'}`}>นักเรียน</th>
-              {topics.map((t) => (
-                <th key={t.id} class={`text-center px-3 py-3 text-xs font-semibold uppercase min-w-[100px] ${isNeo ? 'text-white' : 'text-slate-500'}`}>
-                  {t.name}
+      {showTopicForm && (
+        <form
+          onSubmit={handleTopicSubmit}
+          class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-slate-200 bg-white'} mb-5 p-5 shadow-sm`}
+        >
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h4 class="font-semibold text-slate-900">{editingTopicId ? 'แก้ไขหัวข้อทักษะ' : 'เพิ่มหัวข้อทักษะ'}</h4>
+            <button
+              type="button"
+              onClick={closeTopicForm}
+              class="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+              aria-label="ปิดฟอร์มหัวข้อทักษะ"
+            >
+              <HiOutlineXMark class="h-5 w-5" />
+            </button>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3">
+            <SolidInput label="ชื่อหัวข้อ (ไทย) *" value={topicForm.name} onInput={updateTopicField('name')} required />
+            <SolidInput
+              label="ชื่อหัวข้อ (English)"
+              value={topicForm.nameEn}
+              onInput={updateTopicField('nameEn')}
+              placeholder="e.g. Communication"
+            />
+            <SolidInput
+              label="ลำดับ"
+              type="number"
+              min="0"
+              value={topicForm.orderIndex}
+              onInput={updateTopicField('orderIndex')}
+            />
+          </div>
+          <div class="mt-4 flex gap-2">
+            <Button variant="primary" type="submit" loading={topicSaving} disabled={topicSaving}>
+              {editingTopicId ? 'บันทึกการแก้ไข' : 'เพิ่มหัวข้อ'}
+            </Button>
+            <Button variant="outline" type="button" onClick={closeTopicForm}>
+              ยกเลิก
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {topics.length === 0 ? (
+        <p class="py-12 text-center text-sm text-slate-400">ยังไม่มีหัวข้อทักษะในคอร์สนี้</p>
+      ) : (
+        <div
+          class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-slate-200 bg-white'} overflow-x-auto shadow-sm`}
+        >
+          <table class="w-full text-sm">
+            <thead>
+              <tr class={`${isNeo ? 'bg-black text-white' : 'bg-slate-50'}`}>
+                <th
+                  class={`text-left px-4 py-3 text-xs font-semibold uppercase ${isNeo ? 'text-white' : 'text-slate-500'}`}
+                >
+                  นักเรียน
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.length === 0 ? (
-              <tr>
-                <td colspan={topics.length + 1} class="text-center py-8 text-sm text-slate-400">ยังไม่มีนักเรียนในคอร์สนี้</td>
+                {topics.map((t) => (
+                  <th
+                    key={t.id}
+                    class={`text-center px-3 py-3 text-xs font-semibold uppercase min-w-[100px] ${isNeo ? 'text-white' : 'text-slate-500'}`}
+                  >
+                    <div class="flex min-w-[100px] flex-col items-center gap-1">
+                      <span>{t.name}</span>
+                      {t.nameEn && <span class="font-normal normal-case opacity-70">{t.nameEn}</span>}
+                      <span class="flex gap-1">
+                        <button
+                          type="button"
+                          aria-label={`แก้ไขหัวข้อ ${t.name}`}
+                          onClick={() => openEditTopic(t)}
+                          class="rounded p-1 opacity-75 hover:bg-white/20 hover:opacity-100"
+                        >
+                          <HiOutlinePencil class="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`ลบหัวข้อ ${t.name}`}
+                          onClick={() => handleDeleteTopic(t)}
+                          disabled={topicDeleting === t.id}
+                          class="rounded p-1 text-red-500 opacity-75 hover:bg-white/20 hover:opacity-100 disabled:opacity-40"
+                        >
+                          <HiOutlineTrash class="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </div>
+                  </th>
+                ))}
               </tr>
-            ) : (
-              students.map((student) => (
-                <tr key={student.id} class="border-t border-slate-100">
-                  <td class="px-4 py-3 text-sm font-medium text-slate-700">
-                    {student.fullName || '-'}
+            </thead>
+            <tbody>
+              {students.length === 0 ? (
+                <tr>
+                  <td colspan={topics.length + 1} class="text-center py-8 text-sm text-slate-400">
+                    ยังไม่มีนักเรียนในคอร์สนี้
                   </td>
-                  {topics.map((topic) => {
-                    const key = `${student.id}_${topic.id}`;
-                    return (
-                      <td key={topic.id} class="px-3 py-3 text-center">
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          value={scoreValues[key] ?? ''}
-                          onInput={(e) => handleScoreChange(student.id, topic.id, e.target.value)}
-                          class="w-20 px-2 py-1.5 text-sm text-center border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:border-blue-600"
-                          placeholder="-"
-                        />
-                      </td>
-                    );
-                  })}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                students.map((student) => (
+                  <tr key={student.id} class="border-t border-slate-100">
+                    <td class="px-4 py-3 text-sm font-medium text-slate-700">{student.fullName || '-'}</td>
+                    {topics.map((topic) => {
+                      const key = `${student.id}_${topic.id}`;
+                      return (
+                        <td key={topic.id} class="px-3 py-3 text-center">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={scoreValues[key] ?? ''}
+                            onInput={(e) => handleScoreChange(student.id, topic.id, e.target.value)}
+                            class="w-20 px-2 py-1.5 text-sm text-center border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:border-blue-600"
+                            placeholder="-"
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
-

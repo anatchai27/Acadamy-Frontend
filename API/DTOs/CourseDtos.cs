@@ -19,7 +19,9 @@ public record CourseItem(
     string? TeacherName,
     int? ExpiresInDays,
     bool? RequireComputer,
-    int? CreditCost
+    int? CreditCost,
+    string? NameEn = null,
+    string? SubjectEn = null
 );
 
 public record CreateCourseRequest(
@@ -31,7 +33,9 @@ public record CreateCourseRequest(
     int? TeacherId,
     int? ExpiresInDays,
     bool? RequireComputer,
-    int? CreditCost
+    int? CreditCost,
+    string? NameEn = null,
+    string? SubjectEn = null
 );
 
 public record CreateCourseResponse(
@@ -44,7 +48,9 @@ public record CreateCourseData(
     int CourseId,
     string Name,
     string CourseType,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? NameEn = null,
+    string? SubjectEn = null
 );
 
 public record UpdateCourseRequest(
@@ -56,7 +62,9 @@ public record UpdateCourseRequest(
     int? TeacherId,
     int? ExpiresInDays,
     bool? RequireComputer,
-    int? CreditCost
+    int? CreditCost,
+    string? NameEn = null,
+    string? SubjectEn = null
 );
 
 public record CreateSessionRequest(
@@ -111,7 +119,8 @@ public record SessionItem(
     DateTime ScheduledAt,
     int DurationMin,
     string? RoomId,
-    string Status
+    string Status,
+    string? CourseNameEn = null
 );
 
 public record LeaveRequestResponse(
@@ -147,7 +156,9 @@ public record HomeworkRequest(
     string Title,
     string? Description,
     string? FileUrl,
-    DateTime DueAt
+    DateTime DueAt,
+    string? TitleEn = null,
+    string? DescriptionEn = null
 );
 
 public record HomeworkResponse(
@@ -159,7 +170,9 @@ public record HomeworkResponse(
 public record HomeworkData(
     int HomeworkId,
     string Title,
-    DateTime DueAt
+    DateTime DueAt,
+    string? TitleEn = null,
+    string? DescriptionEn = null
 );
 
 public record HomeworkListResponse(
@@ -177,7 +190,9 @@ public record HomeworkItem(
     string? Description,
     string? FileUrl,
     DateTime DueAt,
-    int SubmissionCount
+    int SubmissionCount,
+    string? TitleEn = null,
+    string? DescriptionEn = null
 );
 
 public record HomeworkSubmissionItem(
@@ -242,13 +257,15 @@ public record SkillScoreDetailItem(
     string TopicName,
     decimal Score,
     string? Note,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    string? TopicNameEn = null
 );
 
 public record SkillTopicRequest(
     int CourseId,
     string Name,
-    int OrderIndex
+    int OrderIndex,
+    string? NameEn = null
 );
 
 public record SkillTopicListResponse(
@@ -263,7 +280,8 @@ public record SkillTopicListData(
 public record SkillTopicItem(
     int Id,
     string Name,
-    int OrderIndex
+    int OrderIndex,
+    string? NameEn = null
 );
 
 public record HomeworkSkillMappingRequest(List<int> TopicIds);
@@ -287,5 +305,8 @@ public record EnrollmentItem(
     int SessionsRemaining,
     decimal PaidAmount,
     DateTime? ExpiresAt,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? CourseNameEn = null,
+    decimal CoursePrice = 0,
+    decimal PendingAmount = 0
 );

@@ -49,9 +49,16 @@ public class EnrollmentRepository(TutoringDbContext context) : IEnrollmentReposi
                 e.CourseId,
                 e.Course.Name,
                 e.SessionsRemaining,
-                e.PaidAmount,
+                _context.Payments
+                    .Where(p => p.EnrollmentId == e.Id && p.Status == PaymentStatus.Succeeded)
+                    .Sum(p => (decimal?)p.Amount) ?? 0m,
                 e.ExpiresAt,
-                e.CreatedAt
+                e.CreatedAt,
+                e.Course.NameEn,
+                e.Course.Price,
+                _context.Payments
+                    .Where(p => p.EnrollmentId == e.Id && p.Status == PaymentStatus.Pending)
+                    .Sum(p => (decimal?)p.Amount) ?? 0m
             ))
             .ToListAsync(ct);
     }

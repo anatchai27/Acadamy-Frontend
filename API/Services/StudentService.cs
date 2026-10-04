@@ -5,6 +5,13 @@ using academy_API.Services.Contracts;
 
 namespace academy_API.Services;
 
+internal static class StudentQrPolicy
+{
+    public const int TokenLifetimeYears = 2;
+    public static DateTime GetExpiry(DateTime issuedAt) => issuedAt.AddYears(TokenLifetimeYears);
+    public static int RefreshIntervalSeconds => TokenLifetimeYears * 365 * 24 * 60 * 60;
+}
+
 public class StudentService(IStudentRepository studentRepository) : IStudentService
 {
     private readonly IStudentRepository _studentRepository = studentRepository;
@@ -63,7 +70,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             throw new StudentValidationException("NOT_FOUND", "ไม่พบข้อมูลนักเรียน");
 
         student.QrTokenVersion += 1;
-        student.QrTokenExpiresAt = DateTime.UtcNow.AddSeconds(60);
+        student.QrTokenExpiresAt = StudentQrPolicy.GetExpiry(DateTime.UtcNow);
         await _studentRepository.UpdateAsync(student.Id, new UpdateStudentRequest(null, null), CancellationToken.None);
 
         return new QrTokenResponse(
@@ -73,7 +80,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
                 student.QrToken!,
                 student.QrTokenExpiresAt.Value,
                 student.QrTokenVersion,
-                60
+                StudentQrPolicy.RefreshIntervalSeconds
             )
         );
     }
@@ -98,7 +105,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             new CreateStudentData(
                 created.Id,
                 created.QrToken ?? string.Empty,
-                DateTime.UtcNow,
+                 created.QrTokenExpiresAt ?? StudentQrPolicy.GetExpiry(DateTime.UtcNow),
                 created.QrTokenVersion
             )
         );
@@ -117,6 +124,7 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
             MedicalInfo = request.Student.MedicalInfo?.Trim(),
             QrToken = Guid.NewGuid().ToString("N"),
             QrTokenVersion = 1,
+            QrTokenExpiresAt = StudentQrPolicy.GetExpiry(DateTime.UtcNow),
             CreatedAt = DateTime.UtcNow
         };
     }

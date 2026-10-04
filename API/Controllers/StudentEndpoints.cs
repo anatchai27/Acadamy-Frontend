@@ -138,8 +138,8 @@ public static class StudentEndpoints
         {
             try
             {
-                var url = await service.GenerateAsync(id, ct);
-                return Results.Ok(new { status = "success", data = new { cardPdfUrl = url } });
+                var bytes = await service.RenderAsync(id, ct);
+                return Results.File(bytes, "application/pdf", $"student-card-{id}.pdf");
             }
             catch (StudentValidationException ex) when (ex.ErrorCode == "NOT_FOUND")
             { return Results.NotFound(new StudentErrorResponse("error", ex.ErrorCode, ex.Message)); }

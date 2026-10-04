@@ -78,10 +78,10 @@ export const StudentProfilePage = ({ path, id }) => {
     if (!id) return;
     setCardLoading(true);
     try {
-      const { data } = await studentService.getStudentCardPdf(id);
-      const cardUrl = data?.data?.cardPdfUrl || data?.cardPdfUrl;
-      if (!cardUrl) throw new Error('ไม่พบลิงก์บัตรนักเรียน');
+      const { blob } = await studentService.getStudentCardPdf(id);
+      const cardUrl = URL.createObjectURL(blob);
       window.open(cardUrl, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(cardUrl), 60_000);
       showToast('สร้างบัตรนักเรียน PDF สำเร็จ', 'success');
     } catch (err) {
       showToast(err?.data?.message || err?.data?.error || err.message || 'สร้างบัตรนักเรียนไม่สำเร็จ', 'error');

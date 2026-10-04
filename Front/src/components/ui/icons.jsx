@@ -1,4 +1,4 @@
-import { HiOutlineHome, HiOutlineAcademicCap, HiOutlineClipboardDocumentCheck, HiOutlineUserGroup, HiOutlineBanknotes, HiOutlineQrCode, HiOutlineChevronDown, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineLightBulb, HiOutlineUsers, HiOutlineCube } from 'react-icons/hi2';
+import { HiOutlineHome, HiOutlineAcademicCap, HiOutlineClipboardDocumentCheck, HiOutlineUserGroup, HiOutlineBanknotes, HiOutlineQrCode, HiOutlineChevronDown, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineLightBulb, HiOutlineUsers, HiOutlineCube, HiOutlineShieldCheck } from 'react-icons/hi2';
 export const DashboardIcon = ({
   class: className
 }) => {
@@ -73,4 +73,9 @@ export const PackageIcon = ({
   class: className
 }) => {
   return <HiOutlineCube className={className} />;
+};
+export const PermissionsIcon = ({
+  class: className
+}) => {
+  return <HiOutlineShieldCheck className={className} />;
 };

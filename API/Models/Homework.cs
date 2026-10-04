@@ -6,7 +6,9 @@ public class Homework : IMultiTenantEntity
     public int CourseId { get; set; }
     public int InstituteId { get; set; }
     public string Title { get; set; } = null!;
+    public string? TitleEn { get; set; }
     public string? Description { get; set; }
+    public string? DescriptionEn { get; set; }
     public string? FileUrl { get; set; }
     public DateTime DueAt { get; set; }
     public int? AssignedBy { get; set; }

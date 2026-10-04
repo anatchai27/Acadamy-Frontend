@@ -21,11 +21,15 @@ public class CourseServiceTests
             .ReturnsAsync((Course c, CancellationToken _) => { c.Id = 10; c.CreatedAt = DateTime.UtcNow; return c; });
 
         var sut = new CourseService(repoMock.Object);
-        var result = await sut.CreateAsync(new CreateCourseRequest(Name: "Math 101", Subject: "Math", CourseType: "group", TotalSessions: 10, Price: 5000, TeacherId: 2, ExpiresInDays: null, RequireComputer: null, CreditCost: null), 1);
+        var result = await sut.CreateAsync(new CreateCourseRequest(Name: "Math 101", Subject: "Math", CourseType: "group", TotalSessions: 10, Price: 5000, TeacherId: 2, ExpiresInDays: null, RequireComputer: null, CreditCost: null, NameEn: " Math 101 English ", SubjectEn: " Mathematics "), 1);
 
         Assert.Equal("success", result.Status);
         Assert.Equal(10, result.Data.CourseId);
         Assert.Equal("Math 101", result.Data.Name);
+        Assert.Equal("Math 101 English", result.Data.NameEn);
+        Assert.Equal("Mathematics", result.Data.SubjectEn);
+        repoMock.Verify(r => r.CreateAsync(It.Is<Course>(c =>
+            c.NameEn == "Math 101 English" && c.SubjectEn == "Mathematics"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 2

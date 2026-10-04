@@ -1,4 +1,5 @@
 using academy_API.DTOs;
+using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Services.Interface;
 
@@ -28,6 +29,8 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
     {
         ValidateFile(file, 5, true);
         var payment = await repository.GetPaymentAsync(paymentId, instituteId, ct) ?? throw new FileUploadValidationException("NOT_FOUND", "Payment not found.");
+        if (payment.Status != PaymentStatus.Pending || payment.Method != "transfer")
+            throw new FileUploadValidationException("PAYMENT_NOT_PENDING", "อัปโหลดสลิปได้เฉพาะรายการโอนที่รอตรวจสอบเท่านั้น");
         return await UploadAsync(file, 5, true, $"slips/payment_{paymentId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "slip", async url =>
         {
         payment.SlipUrl = url;

@@ -7,4 +7,5 @@ public sealed record PaymentSlipVerificationResponse(
     string? Reference,
     string? Reason,
     string Provider,
-    DateTime? VerifiedAt);
+    DateTime? VerifiedAt,
+    string? ReceiptPdfUrl = null);

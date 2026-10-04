@@ -5,6 +5,7 @@ import { BentoGrid, BentoCell, unlockBadge } from '../../components/ui';
 import { route } from 'preact-router';
 import { useEffect } from 'preact/hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { useTranslation } from '../../hooks';
 import { HiOutlineUserPlus, HiOutlineBookOpen, HiOutlineChartBar } from 'react-icons/hi2';
 
 const colorTextMap = {
@@ -15,6 +16,7 @@ const colorTextMap = {
 
 export function DashboardPage({ path }) {
   const { designTheme } = useDesignTheme();
+  const { t } = useTranslation();
   const isNeo = designTheme === 'neobrutalism';
 
   useEffect(() => {
@@ -34,30 +36,30 @@ export function DashboardPage({ path }) {
         {/* Activity Feed — 2 คอลัมน์ */}
         <BentoCell id="dashboard-activity" span={2} class="!p-0 overflow-hidden">
           <div class={`flex items-center justify-between px-6 py-4 ${isNeo ? 'border-b-2 border-black' : 'border-b border-zinc-100'}`}>
-            <h3 class="text-lg font-semibold text-zinc-900">กิจกรรมล่าสุด</h3>
+            <h3 class="text-lg font-semibold text-zinc-900">{t('dashboard.recentActivity')}</h3>
             <button class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark transition-colors">
-              ดูทั้งหมด
+              {t('common.viewAll')}
             </button>
           </div>
           <div class="p-6">
-            <p class="text-sm text-zinc-500">ยังไม่มี API สำหรับกิจกรรมล่าสุด จึงยังไม่แสดงข้อมูลตัวอย่าง</p>
+            <p class="text-sm text-zinc-500">{t('dashboard.noActivityData')}</p>
           </div>
         </BentoCell>
 
         {/* Top Courses */}
         <BentoCell id="dashboard-top-courses">
-          <h3 class="text-lg font-semibold mb-4 text-zinc-900">คอร์สยอดนิยม</h3>
-          <p class="text-sm text-zinc-500">ยังไม่มี API สำหรับจัดอันดับคอร์ส จึงยังไม่แสดงตัวเลขสมมติ</p>
+          <h3 class="text-lg font-semibold mb-4 text-zinc-900">{t('dashboard.topCourses')}</h3>
+          <p class="text-sm text-zinc-500">{t('dashboard.noCourseData')}</p>
         </BentoCell>
 
         {/* Quick Actions */}
         <BentoCell id="dashboard-quick-actions">
-          <h3 class="text-lg font-semibold mb-4 text-zinc-900">ดำเนินการด่วน</h3>
+          <h3 class="text-lg font-semibold mb-4 text-zinc-900">{t('dashboard.quickActions')}</h3>
           <div class="space-y-2">
             {[
-              { label: 'เพิ่มผู้ใช้ใหม่', icon: HiOutlineUserPlus, color: 'primary', onClick: () => route('/admin/users') },
-              { label: 'สร้างคอร์สเรียน', icon: HiOutlineBookOpen, color: 'success', onClick: () => route('/admin/courses') },
-              { label: 'ดูรายงาน', icon: HiOutlineChartBar, color: 'accent', onClick: () => route('/admin/finance') },
+              { label: t('dashboard.quickActionsList.addUser'), icon: HiOutlineUserPlus, color: 'primary', onClick: () => route('/admin/users') },
+              { label: t('dashboard.quickActionsList.createCourse'), icon: HiOutlineBookOpen, color: 'success', onClick: () => route('/admin/courses') },
+              { label: t('dashboard.quickActionsList.viewReports'), icon: HiOutlineChartBar, color: 'accent', onClick: () => route('/admin/finance') },
             ].map((action) => (
               <button
                 key={action.label}

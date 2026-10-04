@@ -59,4 +59,45 @@ public sealed class LeadServiceTests
         Assert.Equal("INSTITUTE_NOT_FOUND", exception.Code);
         repository.Verify(x => x.CreateAsync(It.IsAny<Lead>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task UpsertContentAsync_NormalizesEnglishLocaleAndReturnsIt()
+    {
+        var repository = new Mock<ILeadRepository>();
+        repository.Setup(x => x.UpsertContentAsync(null, It.IsAny<UpsertPublicContentRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long? _, UpsertPublicContentRequest request, CancellationToken _) => new PublicWebsiteContent
+            {
+                Id = 8,
+                InstituteId = 2,
+                SectionKey = request.SectionKey,
+                Locale = request.Locale,
+                ContentType = request.ContentType,
+                ContentValue = request.ContentValue,
+                Metadata = request.Metadata,
+                SortOrder = request.SortOrder,
+                IsActive = request.IsActive,
+                UpdatedAt = DateTime.UtcNow
+            });
+        var service = new LeadService(repository.Object);
+
+        var result = await service.UpsertContentAsync(null,
+            new UpsertPublicContentRequest("hero", "text", "Welcome", null, 0, true, " EN "));
+
+        Assert.Equal("en", result.Locale);
+        repository.Verify(x => x.UpsertContentAsync(null,
+            It.Is<UpsertPublicContentRequest>(request => request.Locale == "en"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpsertContentAsync_UnsupportedLocaleIsRejected()
+    {
+        var repository = new Mock<ILeadRepository>();
+        var service = new LeadService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<LeadValidationException>(() => service.UpsertContentAsync(null,
+            new UpsertPublicContentRequest("hero", "text", "Welcome", null, 0, true, "fr")));
+
+        Assert.Equal("LOCALE_INVALID", exception.Code);
+        repository.VerifyNoOtherCalls();
+    }
 }

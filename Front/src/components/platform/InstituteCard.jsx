@@ -1,30 +1,30 @@
-export function InstituteCard({ institute }) {
+export function InstituteCard({ institute, copy, labels }) {
   return (
     <article class="market-institute-card">
       <div class="market-card-top">
         <div class="market-logo" style={{ background: institute.accent }}>
           {institute.initials}
         </div>
-        <button class="market-save" aria-label={`บันทึก ${institute.name}`}>
+        <button class="market-save" aria-label={labels.save.replace('{{name}}', institute.name)}>
           ♡
         </button>
       </div>
-      <span class="market-kicker">สถาบันแนะนำ</span>
+      <span class="market-kicker">{labels.kicker}</span>
       <h3>{institute.name}</h3>
-      <p>{institute.description}</p>
+      <p>{copy.description}</p>
       <div class="market-tags">
-        {institute.tags.map((tag) => (
+        {copy.tags.map((tag) => (
           <span key={tag}>{tag}</span>
         ))}
       </div>
       <div class="market-rating">
         <span>
-          ★ <b>{institute.rating.toFixed(1)}</b> <small>({institute.reviews} รีวิว)</small>
+          ★ <b>{institute.rating.toFixed(1)}</b> <small>({institute.reviews} {labels.reviews})</small>
         </span>
-        <small>⌖ {institute.location}</small>
+        <small>⌖ {copy.location}</small>
       </div>
       <a class="market-card-link" href="#courses">
-        ดูสถาบันและคอร์ส <span>↗</span>
+        {labels.action} <span>↗</span>
       </a>
     </article>
   );

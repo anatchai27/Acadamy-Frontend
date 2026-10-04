@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { createPublicLead } from '../services/lead-service';
+import { LanguageSwitcher } from '../components/ui/language-switcher';
 
 const initialForm = {
   instituteSlug: '',
@@ -45,7 +46,8 @@ export function TrialClassPage() {
   };
 
   return (
-    <main class="min-h-screen bg-deep-navy px-6 py-16 text-white">
+    <main class="relative min-h-screen bg-deep-navy px-6 py-16 text-white">
+      <LanguageSwitcher class="absolute right-4 top-4 border-white/30 text-white hover:bg-white/10" />
       <section class="mx-auto max-w-2xl rounded-3xl border border-mist-blue/10 bg-white/5 p-8 shadow-2xl">
         <p class="mb-3 text-sm uppercase tracking-[0.25em] text-sky-blue">Trial class</p>
         <h1 class="mb-3 text-4xl font-bold">Book a free trial class</h1>

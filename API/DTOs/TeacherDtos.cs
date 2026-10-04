@@ -11,7 +11,9 @@ public record CreateTeacherRequest(
     string? Status,
     string? UserEmail,
     string? UserPassword,
-    string? UserRole
+    string? UserRole,
+    string? SpecializationEn = null,
+    string? BioEn = null
 );
 
 public record PatchTeacherRequest(
@@ -22,7 +24,9 @@ public record PatchTeacherRequest(
     string? PhotoUrl,
     string? BankAccountInfo,
     string? TaxId,
-    string? Status
+    string? Status,
+    string? SpecializationEn = null,
+    string? BioEn = null
 );
 
 public record TeacherResponse(
@@ -37,5 +41,7 @@ public record TeacherResponse(
     string? BankAccountInfo,
     string? TaxId,
     string? Status,
-    string? UserEmail
+    string? UserEmail,
+    string? SpecializationEn = null,
+    string? BioEn = null
 );

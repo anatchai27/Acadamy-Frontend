@@ -40,7 +40,9 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
                 h.Description,
                 h.FileUrl,
                 h.DueAt,
-                h.CourseId
+                h.CourseId,
+                h.TitleEn,
+                h.DescriptionEn
             ))
             .ToListAsync(ct);
     }

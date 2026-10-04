@@ -43,7 +43,9 @@ public class CourseService(Repositories.ICourseRepository repository) : ICourseS
             InstituteId = instituteId,
             CourseType = request.CourseType,
             Name = request.Name.Trim(),
+            NameEn = CleanOptional(request.NameEn),
             Subject = request.Subject?.Trim() ?? string.Empty,
+            SubjectEn = CleanOptional(request.SubjectEn),
             TotalSessions = request.TotalSessions ?? 0,
             Price = request.Price,
             TeacherId = request.TeacherId,
@@ -56,7 +58,7 @@ public class CourseService(Repositories.ICourseRepository repository) : ICourseS
         var created = await _repository.CreateAsync(course, ct);
 
         return new CreateCourseResponse("success", "สร้างคอร์สเรียนสำเร็จ",
-            new CreateCourseData(created.Id, created.Name, created.CourseType ?? "group", created.CreatedAt));
+            new CreateCourseData(created.Id, created.Name, created.CourseType ?? "group", created.CreatedAt, created.NameEn, created.SubjectEn));
     }
 
     public async Task<UpdateCourseResponse> UpdateAsync(int id, UpdateCourseRequest request, CancellationToken ct = default)
@@ -100,6 +102,8 @@ public class CourseService(Repositories.ICourseRepository repository) : ICourseS
                 break;
         }
     }
+
+    private static string? CleanOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 public class CourseValidationException : Exception

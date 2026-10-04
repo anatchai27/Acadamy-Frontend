@@ -11,7 +11,7 @@ public static class RoomEndpoints
     public static IEndpointRouteBuilder MapRoomEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/rooms").WithTags("Rooms").WithOpenApi()
-            .RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
+            .RequireAuthorization();
 
         group.MapGet("/", async (IRoomRepository repository, CancellationToken ct) => Results.Ok(await repository.ListAsync(ct)));
 
@@ -23,22 +23,25 @@ public static class RoomEndpoints
             if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest(new { error = "Room name is required." });
             if (await repository.ExistsByNameAsync(name, ct: ct)) return Results.Conflict(new { error = "Room name already exists." });
             var now = DateTime.UtcNow;
-            var room = await repository.CreateAsync(new Room { InstituteId = instituteId.Value, Name = name, Description = request.Description?.Trim(), IsActive = request.IsActive, CreatedAt = now, UpdatedAt = now }, ct);
+            var room = await repository.CreateAsync(new Room { InstituteId = instituteId.Value, Name = name, NameEn = Clean(request.NameEn), Description = request.Description?.Trim(), DescriptionEn = Clean(request.DescriptionEn), IsActive = request.IsActive, CreatedAt = now, UpdatedAt = now }, ct);
             return Results.Created($"/api/rooms/{room.Id}", room);
-        });
+        }).RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
         group.MapPut("/{id:int}", async (int id, UpdateRoomRequest request, IRoomRepository repository, CancellationToken ct) =>
         {
             var name = request.Name?.Trim();
             if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest(new { error = "Room name is required." });
             if (await repository.ExistsByNameAsync(name, id, ct)) return Results.Conflict(new { error = "Room name already exists." });
-            var room = await repository.UpdateAsync(id, name, request.Description?.Trim(), request.IsActive, ct);
+            var room = await repository.UpdateAsync(id, name, request.Description?.Trim(), request.IsActive, request.NameEn, request.DescriptionEn, ct);
             return room is null ? Results.NotFound() : Results.Ok(room);
-        });
+        }).RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
         group.MapDelete("/{id:int}", async (int id, IRoomRepository repository, CancellationToken ct) =>
-            await repository.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+            await repository.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound())
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
         return app;
     }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

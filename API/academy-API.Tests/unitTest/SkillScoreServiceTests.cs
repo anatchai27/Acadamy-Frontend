@@ -43,9 +43,9 @@ public class SkillScoreServiceTests
         repoMock.Setup(r => r.CreateTopicAsync(It.IsAny<Models.SkillTopic>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = new SkillScoreService(repoMock.Object);
-        await sut.CreateTopicAsync(new SkillTopicRequest(1, "ความเข้าใจ", 1));
+        await sut.CreateTopicAsync(new SkillTopicRequest(1, "ความเข้าใจ", 1, "Understanding"));
 
-        repoMock.Verify(r => r.CreateTopicAsync(It.Is<Models.SkillTopic>(t => t.Name == "ความเข้าใจ" && t.OrderIndex == 1), It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.CreateTopicAsync(It.Is<Models.SkillTopic>(t => t.Name == "ความเข้าใจ" && t.NameEn == "Understanding" && t.OrderIndex == 1), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 4

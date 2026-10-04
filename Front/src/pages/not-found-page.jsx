@@ -1,9 +1,11 @@
 import { route } from 'preact-router';
 import { Button } from '../components/ui';
+import { LanguageSwitcher } from '../components/ui/language-switcher';
 
 export function NotFoundPage() {
   return (
-    <div class="min-h-screen bg-oasis-bg flex items-center justify-center px-6">
+    <div class="relative min-h-screen bg-oasis-bg flex items-center justify-center px-6">
+      <LanguageSwitcher class="absolute right-4 top-4" />
       <div class="text-center max-w-md">
         <div class="text-7xl font-semibold text-oasis-primary/20 mb-4">404</div>
         <h1 class="text-2xl font-semibold text-zinc-900 mb-2">ไม่พบหน้าที่คุณค้นหา</h1>

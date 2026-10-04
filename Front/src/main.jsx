@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { App } from './app.jsx';
 import { AppProvider } from './store/AppContext.jsx';
+import './i18n';
 import './index.css';
 
 render(

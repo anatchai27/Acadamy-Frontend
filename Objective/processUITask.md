@@ -1,7 +1,7 @@
 
 # UI Task Progress จากการสำรวจ Code จริง
 
-อัปเดตล่าสุด: 2026-09-26
+อัปเดตล่าสุด: 2026-10-03
 
 เอกสารนี้สรุปจากโค้ดที่มีอยู่จริงใน `Front`, `LineLiff`, `CMS` และ contract ฝั่ง `API` ไม่ถือว่าแค่มี route หรือมีหน้าจอแล้วจะเสร็จ ถ้า flow ยังใช้ fallback, localStorage หรือข้อมูลปลอม ให้ถือเป็นงานบางส่วนเท่านั้น
 
@@ -13,6 +13,14 @@
 
 ## อัปเดตล่าสุด
 
+- Admin course cards ถูก refactor เป็น thumbnail grid อย่างน้อย 3 คอลัมน์บน Desktop; card คลิกไปหน้าตารางสอน, มี placeholder image, hierarchy ของชื่อ/ผู้สอน/metadata/ราคา และปุ่มแก้ไขมุมการ์ด
+- `/admin/courses/:courseId/sessions` แสดงสรุปชื่อคอร์ส รายละเอียดวิชา อาจารย์ จำนวนครั้ง ค่าเรียน และรหัสวิชาก่อนจัดการตารางสอน
+- `/admin/makeup-slots` ใช้ห้องเรียนจาก Room Master Data ผ่าน `roomService.getRooms()` และเลือกเฉพาะห้องที่ active
+- `/admin/academics` ฟอร์มสั่งการบ้านระบุคอร์สโดยตรง แยกวันและเวลาส่ง และแสดง deadline ด้วยข้อความ `ส่งภายใน`
+- `/admin/rooms` รองรับแก้ไขชื่อ รายละเอียด และสถานะห้องผ่าน `PUT /rooms/{id}`
+- Permission Management ถูกแยกเป็นหน้า `/admin/permissions` ใต้เมนู `ระบบ`; Admin ยังเข้าหน้านี้ได้แม้ policy เก่าใน localStorage ไม่มี route ใหม่
+- เพิ่ม `API/Database/standard-products.sql` สำหรับเติมสินค้าเครื่องเขียนมาตรฐานให้ทุกสถาบันแบบ idempotent; Frontend ไม่สร้างสินค้าเริ่มต้นเองแล้ว
+- Validation รอบนี้: Front tests `17 files / 67 tests` ผ่าน, Front build ผ่าน และ API `dotnet build --no-restore` ผ่าน `0 warnings / 0 errors`
 - Registration ของสถาบันสร้าง `Institute`, admin, teacher และ PDPA consent ใน transaction ที่ครอบด้วย EF Core `CreateExecutionStrategy()` แล้ว เพื่อรองรับ MySQL `EnableRetryOnFailure()`
 - Front registration ไม่ส่ง `logoBase64` ชั่วคราว เพราะคอลัมน์เดิมรองรับโลโก้ได้ไม่เกิน 1,000 ตัวอักษร
 - API routes `/api/uploads/*` ถูกปิดชั่วคราวจาก `API/Program.cs`; service/controller ยังเก็บไว้เพื่อเปิดกลับภายหลัง
@@ -108,11 +116,15 @@ Definition of Done: Staff สร้างรายการเงิน, ตร�
 สถานะ: `[/]`
 
 - [x] Course list/search/create/edit เชื่อม API
+- [x] Course card เป็น thumbnail grid และมี course/session summary สำหรับการจัดตารางสอน
 - [x] สร้าง session และจัดการ slot/requests ตามหน้าที่มีใน Admin
 - [x] Teacher และ product pages มี route และ service รองรับ
-- [x] ครูสร้าง homework, ดู submission และให้คะแนน/feedback
+- [x] Product มี SQL standard catalog ต่อสถาบัน; ต้องรัน `API/Database/standard-products.sql` กับ DB จริง
+- [x] ครูสร้าง homework, ระบุ course และ deadline แบบวัน/เวลาแยกกัน, ดู submission และให้คะแนน/feedback
 - [x] สร้าง skill topics และกรอก skill score ใน Admin
 - [x] homework-to-skill topic mapping UI มีอยู่ใน `academics-page.jsx`
+- [x] Room Master Data ใช้กับ session และ make-up slot; rooms รองรับ create/edit/delete
+- [x] Permission Management แยกเป็น `/admin/permissions` ใต้กลุ่มเมนู `ระบบ`
 - [/] ตรวจ role teacher ให้เห็นเฉพาะ schedule/student ที่ได้รับมอบหมาย ไม่ใช่เพียง auth guard
 - [/] รัน migration/DDL และมี mapping row จริงเพื่อยืนยันว่า grade แล้ว score ถูก update
 - [ ] เพิ่ม automated test ระดับ page สำหรับ create homework, grade และ mapping save

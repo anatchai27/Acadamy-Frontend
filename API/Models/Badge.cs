@@ -6,7 +6,9 @@ public class Badge : IMultiTenantEntity
     public int InstituteId { get; set; }
     public string BadgeKey { get; set; } = null!;
     public string Name { get; set; } = null!;
+    public string? NameEn { get; set; }
     public string? Description { get; set; }
+    public string? DescriptionEn { get; set; }
     public string? IconUrl { get; set; }
     public string CriteriaType { get; set; } = null!;
     public int CriteriaValue { get; set; }

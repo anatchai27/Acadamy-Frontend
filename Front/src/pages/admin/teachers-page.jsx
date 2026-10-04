@@ -4,15 +4,24 @@ import { SolidInput, Button, showToast, showConfirm, ImageUpload, BentoGrid } fr
 import { teacherService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineChevronLeft, HiOutlineUserGroup, HiOutlinePhoto, HiOutlineXMark } from 'react-icons/hi2';
+import {
+  HiOutlinePlus,
+  HiOutlinePencil,
+  HiOutlineTrash,
+  HiOutlineChevronLeft,
+  HiOutlineUserGroup,
+  HiOutlinePhoto,
+  HiOutlineXMark,
+} from 'react-icons/hi2';
 
-const formatCurrency = (n) =>
-  n ? `฿${Number(n).toLocaleString()}` : '-';
+const formatCurrency = (n) => (n ? `฿${Number(n).toLocaleString()}` : '-');
 
 const emptyForm = {
   fullName: '',
   specialization: '',
+  specializationEn: '',
   bio: '',
+  bioEn: '',
   hourlyRate: '',
   userEmail: '',
   userPassword: '',
@@ -71,7 +80,9 @@ export function TeachersPage({ path }) {
     }
   };
 
-  useEffect(() => { fetchTeachers(); }, []);
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -99,7 +110,9 @@ export function TeachersPage({ path }) {
     setForm({
       fullName: teacher.fullName || '',
       specialization: teacher.specialization || '',
+      specializationEn: teacher.specializationEn || '',
       bio: teacher.bio || '',
+      bioEn: teacher.bioEn || '',
       hourlyRate: teacher.hourlyRate ? String(teacher.hourlyRate) : '',
     });
     setPhotoPreview(teacher.photoUrl || null);
@@ -134,7 +147,9 @@ export function TeachersPage({ path }) {
       const payload = {
         fullName: form.fullName.trim(),
         specialization: form.specialization.trim() || undefined,
+        specializationEn: form.specializationEn.trim(),
         bio: form.bio.trim() || undefined,
+        bioEn: form.bioEn.trim(),
         hourlyRate: form.hourlyRate ? Number(form.hourlyRate) : undefined,
       };
 
@@ -160,12 +175,13 @@ export function TeachersPage({ path }) {
       closeForm();
       fetchTeachers();
     } catch (err) {
-      const msg = err?.data?.message
-        || err?.data?.Message
-        || err?.data?.error
-        || err?.data?.detail
-        || err?.data?.Detail
-        || 'ดำเนินการไม่สำเร็จ';
+      const msg =
+        err?.data?.message ||
+        err?.data?.Message ||
+        err?.data?.error ||
+        err?.data?.detail ||
+        err?.data?.Detail ||
+        'ดำเนินการไม่สำเร็จ';
       showToast(msg, 'error');
     } finally {
       setSubmitting(false);
@@ -209,7 +225,9 @@ export function TeachersPage({ path }) {
           </button>
 
           {/* Profile header */}
-          <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-sm'}`}>
+          <div
+            class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-sm'}`}
+          >
             <div class="flex flex-col sm:flex-row items-start gap-5">
               <Avatar src={viewing.photoUrl} name={viewing.fullName} size="lg" />
               <div class="flex-1 min-w-0">
@@ -222,16 +240,26 @@ export function TeachersPage({ path }) {
                           {viewing.specialization}
                         </span>
                       )}
-                      {viewing.userEmail && (
-                        <span class="text-sm text-zinc-500">{viewing.userEmail}</span>
-                      )}
+                      {viewing.userEmail && <span class="text-sm text-zinc-500">{viewing.userEmail}</span>}
                     </div>
                   </div>
                   <div class="flex gap-2 shrink-0">
-                    <Button variant="primary" size="sm" onClick={() => { openEdit(viewing); setViewing(null); }}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        openEdit(viewing);
+                        setViewing(null);
+                      }}
+                    >
                       แก้ไขข้อมูล
                     </Button>
-                    <Button variant="outline" size="sm" class="!border-oasis-danger/30 !text-oasis-danger hover:!bg-oasis-danger/5" onClick={() => handleDelete(viewing)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="!border-oasis-danger/30 !text-oasis-danger hover:!bg-oasis-danger/5"
+                      onClick={() => handleDelete(viewing)}
+                    >
                       ลบ
                     </Button>
                   </div>
@@ -244,7 +272,9 @@ export function TeachersPage({ path }) {
         {/* Detail info */}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2">
-            <div class={`${isNeo ? 'neo-card bg-white overflow-hidden' : 'bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm'}`}>
+            <div
+              class={`${isNeo ? 'neo-card bg-white overflow-hidden' : 'bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm'}`}
+            >
               <div class={`px-6 py-4 ${isNeo ? 'border-b-2 border-black' : 'border-b border-zinc-100'}`}>
                 <h3 class="text-base font-semibold text-zinc-900">ข้อมูลส่วนตัว</h3>
               </div>
@@ -252,7 +282,11 @@ export function TeachersPage({ path }) {
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                   <InfoField label="ชื่อ-นามสกุล" value={viewing.fullName} isNeo={isNeo} />
                   <InfoField label="ความเชี่ยวชาญ" value={viewing.specialization} isNeo={isNeo} />
-                  <InfoField label="ค่าสอน/ชั่วโมง" value={viewing.hourlyRate != null ? formatCurrency(viewing.hourlyRate) : '-'} isNeo={isNeo} />
+                  <InfoField
+                    label="ค่าสอน/ชั่วโมง"
+                    value={viewing.hourlyRate != null ? formatCurrency(viewing.hourlyRate) : '-'}
+                    isNeo={isNeo}
+                  />
                   {viewing.bio && (
                     <div class="sm:col-span-2">
                       <dt class="text-xs font-medium text-zinc-500 mb-1">ประวัติ</dt>
@@ -266,7 +300,9 @@ export function TeachersPage({ path }) {
 
           {/* Quick stats sidebar */}
           <div class="space-y-4">
-            <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5 shadow-sm'}`}>
+            <div
+              class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5 shadow-sm'}`}
+            >
               <h4 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">สถิติ</h4>
               <div class="space-y-3">
                 <div class="flex items-center justify-between text-sm">
@@ -308,7 +344,9 @@ export function TeachersPage({ path }) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div class={`${isNeo ? 'neo-card bg-white p-6 mb-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6 shadow-sm'}`}>
+        <div
+          class={`${isNeo ? 'neo-card bg-white p-6 mb-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6 mb-6 shadow-sm'}`}
+        >
           <div class="flex items-center justify-between mb-5">
             <h3 class={`text-base font-semibold ${isNeo ? 'text-black' : 'text-zinc-900'}`}>
               {editingId ? 'แก้ไขข้อมูลครูผู้สอน' : 'เพิ่มครูผู้สอนใหม่'}
@@ -329,10 +367,16 @@ export function TeachersPage({ path }) {
                 error={formErrors.fullName}
               />
               <SolidInput
-                label="ความเชี่ยวชาญ"
+                label="ความเชี่ยวชาญ (ไทย)"
                 placeholder="เช่น คณิตศาสตร์, วิทยาศาสตร์"
                 value={form.specialization}
                 onInput={updateField('specialization')}
+              />
+              <SolidInput
+                label="ความเชี่ยวชาญ (English)"
+                placeholder="e.g. Mathematics, Science"
+                value={form.specializationEn}
+                onInput={updateField('specializationEn')}
               />
               <SolidInput
                 label="ค่าสอน/ชั่วโมง (บาท)"
@@ -354,7 +398,9 @@ export function TeachersPage({ path }) {
 
               {/* Bio — full width */}
               <div class="md:col-span-2">
-                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ประวัติ / ข้อมูลเพิ่มเติม</label>
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                  ประวัติ / ข้อมูลเพิ่มเติม (ไทย)
+                </label>
                 <textarea
                   value={form.bio}
                   onInput={updateField('bio')}
@@ -363,11 +409,25 @@ export function TeachersPage({ path }) {
                   class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 placeholder:text-zinc-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                 />
               </div>
+              <div class="md:col-span-2">
+                <label class={`text-sm font-medium mb-1.5 block ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                  ประวัติ / ข้อมูลเพิ่มเติม (English)
+                </label>
+                <textarea
+                  value={form.bioEn}
+                  onInput={updateField('bioEn')}
+                  placeholder="Teaching experience or additional information"
+                  rows={3}
+                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 placeholder:text-zinc-400 resize-none transition-colors ${isNeo ? 'neo-input' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+                />
+              </div>
 
               {/* Account creation — only when adding a new teacher */}
               {!editingId && (
                 <div class="md:col-span-2">
-                  <div class={`${isNeo ? 'border-2 border-black p-5' : 'bg-amber-50/50 border border-amber-200 rounded-xl p-5'}`}>
+                  <div
+                    class={`${isNeo ? 'border-2 border-black p-5' : 'bg-amber-50/50 border border-amber-200 rounded-xl p-5'}`}
+                  >
                     <p class={`text-sm font-medium mb-3 ${isNeo ? 'text-black' : 'text-amber-800'}`}>
                       บัญชีผู้ใช้สำหรับเข้าสู่ระบบ <span class="font-normal text-zinc-400">(ไม่บังคับ)</span>
                     </p>
@@ -387,7 +447,9 @@ export function TeachersPage({ path }) {
                         onInput={updateField('userPassword')}
                         error={formErrors.userPassword}
                       />
-                      <div class={`flex items-center min-h-[46px] px-4 text-sm ${isNeo ? 'neo-card bg-cyan-100 border-2' : 'rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700'}`}>
+                      <div
+                        class={`flex items-center min-h-[46px] px-4 text-sm ${isNeo ? 'neo-card bg-cyan-100 border-2' : 'rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700'}`}
+                      >
                         บัญชีนี้จะเข้าใช้งานในบทบาท <strong class="ml-1">ผู้สอน</strong> เท่านั้น
                       </div>
                     </div>
@@ -400,7 +462,9 @@ export function TeachersPage({ path }) {
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 {editingId ? 'บันทึกการแก้ไข' : 'บันทึก'}
               </Button>
-              <Button variant="outline" size="md" type="button" onClick={closeForm}>ยกเลิก</Button>
+              <Button variant="outline" size="md" type="button" onClick={closeForm}>
+                ยกเลิก
+              </Button>
             </div>
           </form>
         </div>
@@ -410,7 +474,10 @@ export function TeachersPage({ path }) {
       {loading && (
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} animate-pulse`}>
+            <div
+              key={i}
+              class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} animate-pulse`}
+            >
               <div class="flex items-start gap-4">
                 <div class="h-14 w-14 rounded-full bg-zinc-200" />
                 <div class="flex-1 space-y-2">
@@ -426,13 +493,13 @@ export function TeachersPage({ path }) {
       {/* Empty State */}
       {!loading && teachers.length === 0 && (
         <div class="text-center py-20">
-          <div class={`mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full ${isNeo ? 'bg-black/5 border-2 border-black' : 'bg-zinc-100'}`}>
+          <div
+            class={`mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full ${isNeo ? 'bg-black/5 border-2 border-black' : 'bg-zinc-100'}`}
+          >
             <HiOutlineUserGroup class={`h-10 w-10 ${isNeo ? 'text-black/40' : 'text-zinc-300'}`} />
           </div>
           <h3 class={`text-lg font-semibold mb-1 ${isNeo ? 'text-black' : 'text-zinc-700'}`}>ไม่พบข้อมูลครูผู้สอน</h3>
-          <p class="text-sm text-zinc-400 mb-6">
-            {search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีครูผู้สอนในสถาบัน'}
-          </p>
+          <p class="text-sm text-zinc-400 mb-6">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีครูผู้สอนในสถาบัน'}</p>
           {!search && (
             <Button variant="primary" size="md" onClick={openAdd}>
               <span class="flex items-center gap-1.5">
@@ -457,12 +524,12 @@ export function TeachersPage({ path }) {
                 <div class="flex items-start gap-4">
                   <Avatar src={teacher.photoUrl} name={teacher.fullName} />
                   <div class="flex-1 min-w-0">
-                    <h3 class={`text-base font-semibold truncate group-hover:text-oasis-primary transition-colors ${isNeo ? 'text-black' : 'text-zinc-900'}`}>
+                    <h3
+                      class={`text-base font-semibold truncate group-hover:text-oasis-primary transition-colors ${isNeo ? 'text-black' : 'text-zinc-900'}`}
+                    >
                       {teacher.fullName || '-'}
                     </h3>
-                    {teacher.userEmail && (
-                      <p class="text-xs text-zinc-500 mt-0.5 truncate">{teacher.userEmail}</p>
-                    )}
+                    {teacher.userEmail && <p class="text-xs text-zinc-500 mt-0.5 truncate">{teacher.userEmail}</p>}
                     {teacher.specialization && (
                       <span class="mt-2 inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
                         {teacher.specialization}
@@ -471,13 +538,13 @@ export function TeachersPage({ path }) {
                   </div>
                 </div>
 
-                {teacher.bio && (
-                  <p class="mt-3 text-sm text-zinc-500 line-clamp-2 leading-relaxed">{teacher.bio}</p>
-                )}
+                {teacher.bio && <p class="mt-3 text-sm text-zinc-500 line-clamp-2 leading-relaxed">{teacher.bio}</p>}
                 {teacher.hourlyRate != null && (
                   <div class="mt-3 flex items-center gap-2">
                     <span class="text-xs font-medium text-zinc-400">ค่าสอน/ชม.</span>
-                    <span class={`font-semibold ${isNeo ? 'text-black' : 'text-oasis-primary'}`}>{formatCurrency(teacher.hourlyRate)}</span>
+                    <span class={`font-semibold ${isNeo ? 'text-black' : 'text-oasis-primary'}`}>
+                      {formatCurrency(teacher.hourlyRate)}
+                    </span>
                   </div>
                 )}
               </div>

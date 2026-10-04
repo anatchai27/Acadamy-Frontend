@@ -6,7 +6,7 @@ import { sessionService, courseService, roomService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlinePlus, HiOutlineChevronLeft, HiOutlineCalendar } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineChevronLeft, HiOutlineCalendar, HiOutlineUser, HiOutlineBookOpen, HiOutlineClock, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 
 const STATUS_MAP = {
   scheduled: { label: 'ตามตาราง', color: 'bg-oasis-primary/10 text-oasis-primary' },
@@ -183,6 +183,43 @@ export function SessionsPage({ path, courseId }) {
           </span>
         </Button>
       </div>
+
+      <section class={`${isNeo ? 'neo-card border-3 border-black bg-white' : 'rounded-2xl border border-zinc-200/80 bg-white shadow-sm'} mb-6 overflow-hidden`}>
+        <div class="grid gap-0 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div class="p-5 sm:p-6">
+            <div class="flex items-start gap-3">
+              <div class={`flex h-11 w-11 shrink-0 items-center justify-center ${isNeo ? 'border-2 border-black bg-[#dbeafe]' : 'rounded-xl bg-oasis-primary/10 text-oasis-primary'}`}>
+                <HiOutlineBookOpen class="h-5 w-5" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">ข้อมูลคอร์สเรียน</p>
+                <h3 class="mt-1 text-lg font-bold text-zinc-900">{course?.name || 'กำลังโหลดข้อมูลคอร์ส...'}</h3>
+                <p class="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-500">
+                  {course?.subject || 'ยังไม่ได้ระบุรายละเอียดวิชา'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class={`grid grid-cols-2 border-t border-zinc-100 sm:grid-cols-4 lg:min-w-[500px] lg:border-l lg:border-t-0 ${isNeo ? 'lg:border-black' : ''}`}>
+            <div class="border-r border-zinc-100 p-4 sm:p-5 lg:border-b-0">
+              <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineUser class="h-3.5 w-3.5" />ผู้สอน</p>
+              <p class="mt-2 truncate text-sm font-semibold text-zinc-800" title={course?.teacherName || ''}>{course?.teacherName || 'ยังไม่กำหนด'}</p>
+            </div>
+            <div class="border-b border-zinc-100 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+              <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineClock class="h-3.5 w-3.5" />จำนวนครั้ง</p>
+              <p class="mt-2 text-sm font-semibold text-zinc-800">{course?.totalSessions || '-'} ครั้ง</p>
+            </div>
+            <div class="border-r border-zinc-100 p-4 sm:p-5">
+              <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineCurrencyDollar class="h-3.5 w-3.5" />ค่าเรียน</p>
+              <p class="mt-2 text-sm font-bold text-orange-600">{course?.price != null ? `฿${Number(course.price).toLocaleString()}` : '-'}</p>
+            </div>
+            <div class="p-4 sm:p-5">
+              <p class="text-xs text-zinc-400">รหัสวิชา</p>
+              <p class="mt-2 text-sm font-semibold text-zinc-800">#{course?.id || courseId}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {showForm && (
         <div class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} mb-6`}>

@@ -13,6 +13,13 @@ public static class EnrollmentEndpoints
             .WithOpenApi()
             .RequireAuthorization();
 
+        group.MapGet("/", async (int studentId, IEnrollmentService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            var result = await service.GetByStudentIdAsync(studentId, ct);
+            return Results.Ok(result);
+        });
+
         group.MapPost("/", async (
             EnrollStudentRequest request,
             IEnrollmentService service,

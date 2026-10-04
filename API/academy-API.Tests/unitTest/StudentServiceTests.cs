@@ -305,7 +305,7 @@ public class StudentServiceTests
         Assert.Equal("success", result.Status);
         Assert.Equal(105, result.Data.StudentId);
         Assert.StartsWith("tiwhub_", result.Data.QrToken);
-        Assert.Equal(60, result.Data.RefreshIntervalSec);
+        Assert.Equal(63072000, result.Data.RefreshIntervalSec);
     }
 
     // 19

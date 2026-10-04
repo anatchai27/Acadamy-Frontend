@@ -24,6 +24,7 @@ public class Payment : IMultiTenantEntity
     public decimal? SlipAmount { get; set; }
     public string? SlipTransRef { get; set; }
     public DateTime? SlipVerifiedAt { get; set; }
+    public string? ReceiptPdfUrl { get; set; }
 
     public Enrollment Enrollment { get; set; } = null!;
     public Institute Institute { get; set; } = null!;

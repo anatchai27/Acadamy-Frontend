@@ -161,7 +161,9 @@ public class TutoringDbContext(
 
             entity.Property(t => t.FullName).HasMaxLength(255).HasColumnName("full_name");
             entity.Property(t => t.Specialization).HasMaxLength(255).HasColumnName("subjects");
+            entity.Property(t => t.SpecializationEn).HasMaxLength(255).HasColumnName("subjects_en");
             entity.Property(t => t.Bio).HasMaxLength(2000).HasColumnName("bio");
+            entity.Property(t => t.BioEn).HasColumnType("text").HasColumnName("bio_en");
             entity.Property(t => t.HourlyRate).HasColumnName("hourly_rate");
             entity.Property(t => t.PhotoUrl).HasMaxLength(255).HasColumnName("photo_url");
             entity.Property(t => t.DeletedAt).HasColumnName("deleted_at");
@@ -368,7 +370,9 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
-            entity.Property(e => e.Subject).HasMaxLength(1000).HasColumnName("subject");
+            entity.Property(e => e.NameEn).HasMaxLength(255).HasColumnName("name_en");
+            entity.Property(e => e.Subject).HasMaxLength(100).HasColumnName("subject");
+            entity.Property(e => e.SubjectEn).HasMaxLength(100).HasColumnName("subject_en");
             entity.Property(e => e.TotalSessions).HasColumnName("total_sessions");
             entity.Property(e => e.Price).HasColumnName("price").HasColumnType("decimal(10,2)");
             entity.Property(e => e.TeacherId).HasColumnName("teacher_id").IsRequired(false);
@@ -419,6 +423,7 @@ public class TutoringDbContext(
             entity.Property(e => e.SlipAmount).HasColumnName("slip_amount").HasColumnType("decimal(10,2)");
             entity.Property(e => e.SlipTransRef).HasMaxLength(255).HasColumnName("slip_trans_ref");
             entity.Property(e => e.SlipVerifiedAt).HasColumnName("slip_verified_at");
+            entity.Property(e => e.ReceiptPdfUrl).HasMaxLength(1000).HasColumnName("receipt_pdf_url");
 
             entity.HasOne(e => e.Enrollment)
                   .WithMany()
@@ -527,7 +532,9 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.Title).HasMaxLength(255).HasColumnName("title");
+            entity.Property(e => e.TitleEn).HasMaxLength(255).HasColumnName("title_en");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.DescriptionEn).HasColumnType("text").HasColumnName("description_en");
             entity.Property(e => e.FileUrl).HasMaxLength(1000).HasColumnName("file_url");
             entity.Property(e => e.DueAt).HasColumnName("due_at");
             entity.Property(e => e.AssignedBy).HasColumnName("assigned_by").IsRequired(false);
@@ -595,6 +602,7 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
+            entity.Property(e => e.NameEn).HasMaxLength(255).HasColumnName("name_en");
             entity.Property(e => e.OrderIndex).HasColumnName("order_index");
 
             entity.HasIndex(e => e.CourseId);
@@ -991,6 +999,7 @@ public class TutoringDbContext(
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.SectionKey).HasMaxLength(100).HasColumnName("section_key");
+            entity.Property(e => e.Locale).HasMaxLength(10).HasColumnName("locale");
             entity.Property(e => e.ContentType).HasMaxLength(50).HasColumnName("content_type");
             entity.Property(e => e.ContentValue).HasColumnType("text").HasColumnName("content_value");
             entity.Property(e => e.Metadata).HasColumnType("json").HasColumnName("metadata");
@@ -1005,7 +1014,8 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.InstituteId);
-            entity.HasIndex(e => new { e.InstituteId, e.SectionKey }).IsUnique();
+            entity.HasIndex(e => new { e.InstituteId, e.SectionKey, e.Locale }).IsUnique()
+                .HasDatabaseName("uq_public_content_section_locale");
         });
 
         modelBuilder.Entity<TeacherPayrollPeriod>(entity =>
@@ -1045,7 +1055,9 @@ public class TutoringDbContext(
             entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.BadgeKey).HasMaxLength(100).HasColumnName("badge_key");
             entity.Property(e => e.Name).HasMaxLength(255).HasColumnName("name");
+            entity.Property(e => e.NameEn).HasMaxLength(255).HasColumnName("name_en");
             entity.Property(e => e.Description).HasColumnType("text").HasColumnName("description");
+            entity.Property(e => e.DescriptionEn).HasColumnType("text").HasColumnName("description_en");
             entity.Property(e => e.IconUrl).HasMaxLength(1000).HasColumnName("icon_url");
             entity.Property(e => e.CriteriaType).HasMaxLength(50).HasColumnName("criteria_type");
             entity.Property(e => e.CriteriaValue).HasColumnName("criteria_value");
@@ -1152,7 +1164,9 @@ public class TutoringDbContext(
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.InstituteId).HasColumnName("institute_id");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name");
+            entity.Property(e => e.NameEn).HasMaxLength(100).HasColumnName("name_en");
             entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description");
+            entity.Property(e => e.DescriptionEn).HasMaxLength(500).HasColumnName("description_en");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");

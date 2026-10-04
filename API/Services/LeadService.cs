@@ -102,8 +102,12 @@ public sealed class LeadService(ILeadRepository repository) : ILeadService
     {
         if (string.IsNullOrWhiteSpace(request.SectionKey) || string.IsNullOrWhiteSpace(request.ContentType))
             throw new LeadValidationException("CONTENT_REQUIRED", "SectionKey and ContentType are required.");
-        var saved = await repository.UpsertContentAsync(id, request, ct);
-        return new PublicContentItem(saved.Id, saved.SectionKey, saved.ContentType, saved.ContentValue, saved.Metadata, saved.SortOrder, saved.IsActive, saved.UpdatedAt);
+        var locale = request.Locale?.Trim().ToLowerInvariant() ?? "";
+        if (locale is not ("th" or "en"))
+            throw new LeadValidationException("LOCALE_INVALID", "Locale must be 'th' or 'en'.");
+        var normalizedRequest = request with { Locale = locale };
+        var saved = await repository.UpsertContentAsync(id, normalizedRequest, ct);
+        return new PublicContentItem(saved.Id, saved.SectionKey, saved.ContentType, saved.ContentValue, saved.Metadata, saved.SortOrder, saved.IsActive, saved.UpdatedAt, saved.Locale);
     }
 
     private static string Required(string? value, string code) =>

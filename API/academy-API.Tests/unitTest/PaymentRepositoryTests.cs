@@ -46,6 +46,7 @@ public class PaymentRepositoryTests
             InvoiceNo = invoiceNo ?? $"INV-{paidAt:yyyyMM}-{Guid.NewGuid().ToString()[..4]}",
             Amount = amount,
             Method = method,
+            Status = method == "transfer" ? PaymentStatus.Pending : PaymentStatus.Succeeded,
             PaidAt = paidAt,
             CreatedAt = paidAt
         };
@@ -264,7 +265,7 @@ public class PaymentRepositoryTests
 
     // 11
     [Fact]
-    public async Task GetTotalAmountAsync_NoFilters_ReturnsSumOfAllAmounts()
+    public async Task GetTotalAmountAsync_NoFilters_ExcludesPendingPayments()
     {
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
@@ -277,7 +278,7 @@ public class PaymentRepositoryTests
         var repo = new PaymentRepository(context);
         var total = await repo.GetTotalAmountAsync(null, null, null);
 
-        Assert.Equal(4350.75m, total);
+        Assert.Equal(1600.50m, total);
     }
 
     // 12
@@ -295,7 +296,7 @@ public class PaymentRepositoryTests
         var repo = new PaymentRepository(context);
         var total = await repo.GetTotalAmountAsync(new DateTime(2026, 6, 10), new DateTime(2026, 6, 20), null);
 
-        Assert.Equal(5000m, total);
+        Assert.Equal(3000m, total);
     }
 
     // 13
@@ -397,5 +398,22 @@ public class PaymentRepositoryTests
         var count = await repo.GetPaymentCountAsync(null, null, null);
 
         Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public async Task GetEnrollmentPaymentAmounts_SeparatesSettledAndPendingAmounts()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        await SeedEnrollmentAsync(context, 1, "สมชาย", "คณิตศาสตร์");
+        context.Payments.Add(MakePayment(1500m, "cash", DateTime.UtcNow, 1));
+        context.Payments.Add(MakePayment(300m, "credit_card", DateTime.UtcNow, 1));
+        context.Payments.Add(MakePayment(900m, "transfer", DateTime.UtcNow, 1));
+        await context.SaveChangesAsync();
+
+        var repository = new PaymentRepository(context);
+
+        Assert.Equal(1800m, await repository.GetSucceededAmountByEnrollmentAsync(1));
+        Assert.Equal(900m, await repository.GetPendingAmountByEnrollmentAsync(1));
     }
 }
