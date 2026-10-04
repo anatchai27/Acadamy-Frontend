@@ -155,6 +155,9 @@ export function SessionsPage({ path, courseId }) {
   const formatDay = (iso) => iso ? new Date(iso).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
   const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-';
   const getRoomName = roomId => rooms.find(room => String(room.id) === String(roomId))?.name || (roomId ? `ห้อง ${roomId}` : 'ไม่ระบุห้อง');
+  const upcomingSessionsCount = sessions.filter((session) =>
+    session.status === 'scheduled' && new Date(session.scheduledAt).getTime() >= Date.now(),
+  ).length;
 
   return (
     <AdminLayout path={path}>
@@ -206,8 +209,8 @@ export function SessionsPage({ path, courseId }) {
               <p class="mt-2 truncate text-sm font-semibold text-zinc-800" title={course?.teacherName || ''}>{course?.teacherName || 'ยังไม่กำหนด'}</p>
             </div>
             <div class="border-b border-zinc-100 p-4 sm:p-5 lg:border-b-0 lg:border-r">
-              <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineClock class="h-3.5 w-3.5" />จำนวนครั้ง</p>
-              <p class="mt-2 text-sm font-semibold text-zinc-800">{course?.totalSessions || '-'} ครั้ง</p>
+              <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineClock class="h-3.5 w-3.5" />คาบที่ยังไม่ถึงวันเรียน</p>
+              <p class="mt-2 text-sm font-semibold text-zinc-800">{upcomingSessionsCount} คาบ</p>
             </div>
             <div class="border-r border-zinc-100 p-4 sm:p-5">
               <p class="flex items-center gap-1.5 text-xs text-zinc-400"><HiOutlineCurrencyDollar class="h-3.5 w-3.5" />ค่าเรียน</p>

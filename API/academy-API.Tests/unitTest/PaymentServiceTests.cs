@@ -272,7 +272,7 @@ public class PaymentServiceTests
     public async Task GetHistoryAsync_WithPagination_PassesPageAndLimit()
     {
         var repoMock = CreateMockRepo();
-        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 3, 10, It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.GetPaymentsAsync(null, null, null, 1, 30, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         repoMock.Setup(r => r.GetTotalAmountAsync(null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0m);
@@ -282,7 +282,7 @@ public class PaymentServiceTests
         var sut = CreateSut(repoMock);
         await sut.GetHistoryAsync(null, null, null, 3, 10);
 
-        repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, 3, 10, It.IsAny<CancellationToken>()), Times.Once);
+        repoMock.Verify(r => r.GetPaymentsAsync(null, null, null, 1, 30, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

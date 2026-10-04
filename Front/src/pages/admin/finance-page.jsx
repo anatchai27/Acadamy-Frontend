@@ -14,7 +14,7 @@ const paymentStatusLabels = {
   partially_refunded: 'คืนเงินบางส่วน',
 };
 
-const formatError = (error, fallback) => error?.data?.message || error?.data?.error || error?.message || fallback;
+const formatError = (error, fallback) => error?.data?.message || error?.data?.error || error?.data?.detail || error?.data?.title || error?.message || fallback;
 
 export function FinancePage({ path }) {
   const [mode, setMode] = useState('form');
@@ -24,12 +24,14 @@ export function FinancePage({ path }) {
   const [payments, setPayments] = useState([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [students, setStudents] = useState([]);
-  const [enrollments, setEnrollments] = useState([]);
-  const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
+  const [paymentGroups, setPaymentGroups] = useState([{ key: 0, studentId: '', enrollments: [], loading: false }]);
+  const [allocations, setAllocations] = useState({});
+  const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [verifyingPaymentId, setVerifyingPaymentId] = useState(null);
   const [issuingReceiptId, setIssuingReceiptId] = useState(null);
-  const [pendingSlipPaymentId, setPendingSlipPaymentId] = useState(null);
-  const [pendingSlipUploaded, setPendingSlipUploaded] = useState(false);
+  const [pendingBatchId, setPendingBatchId] = useState(null);
+  const [pendingBatchInvoiceNo, setPendingBatchInvoiceNo] = useState('');
+  const [pendingBatchSlipUploaded, setPendingBatchSlipUploaded] = useState(false);
   const [latestReceipt, setLatestReceipt] = useState(null);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
@@ -40,19 +42,14 @@ export function FinancePage({ path }) {
   const [reportLoading, setReportLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const [form, setForm] = useState({
-    studentId: '',
-    enrollmentId: '',
-    amount: '',
-    method: 'transfer',
-  });
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
 
-  const enrollmentRequestId = useRef(0);
+  const enrollmentRequestIds = useRef(new Map());
+  const paymentGroupKey = useRef(1);
   const [slipUploadKey, setSlipUploadKey] = useState(0);
 
   useEffect(() => {
@@ -127,82 +124,112 @@ export function FinancePage({ path }) {
     if (mode === 'history') fetchPayments();
   }, [mode, historyPage, historyMethod]);
 
-  const updateField = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  };
-
-  const selectedEnrollment = enrollments.find((item) => String(item.id) === form.enrollmentId);
-  const amountDue = selectedEnrollment
-    ? Math.max(
-        Number(selectedEnrollment.coursePrice || 0) -
-          Number(selectedEnrollment.paidAmount || 0) -
-          Number(selectedEnrollment.pendingAmount || 0),
-        0,
-      )
-    : 0;
+  const getAmountDue = (enrollment) => Math.max(
+    Number(enrollment.coursePrice || 0) - Number(enrollment.paidAmount || 0) - Number(enrollment.pendingAmount || 0),
+    0,
+  );
+  const selectedItems = paymentGroups.flatMap((group) => group.enrollments
+    .filter((enrollment) => allocations[enrollment.id] !== undefined)
+    .map((enrollment) => ({
+      groupKey: group.key,
+      studentId: group.studentId,
+      studentName: students.find((student) => String(student.id) === group.studentId)?.fullName || enrollment.studentName,
+      enrollment,
+      amount: Number(allocations[enrollment.id]),
+      amountDue: getAmountDue(enrollment),
+    })));
+  const paymentTotal = selectedItems.reduce((total, item) => total + (Number.isFinite(item.amount) ? item.amount : 0), 0);
+  const allocationsValid = selectedItems.length > 0 && selectedItems.every((item) =>
+    Number.isFinite(item.amount) && item.amount > 0 && Math.round(item.amount * 100) <= Math.round(item.amountDue * 100),
+  );
 
   const resetPaymentForm = () => {
-    setForm({ studentId: '', enrollmentId: '', amount: '', method: 'transfer' });
-    setEnrollments([]);
+    paymentGroupKey.current += 1;
+    setPaymentGroups([{ key: paymentGroupKey.current, studentId: '', enrollments: [], loading: false }]);
+    setAllocations({});
+    setPaymentMethod('transfer');
     setSlipFile(null);
     setSlipPreview(null);
-    setPendingSlipPaymentId(null);
-    setPendingSlipUploaded(false);
+    setPendingBatchId(null);
+    setPendingBatchInvoiceNo('');
+    setPendingBatchSlipUploaded(false);
     setLatestReceipt(null);
     setSlipUploadKey((key) => key + 1);
   };
 
-  const handleStudentChange = async (event) => {
+  const handleStudentChange = async (groupKey, event) => {
     const studentId = event.target.value;
-    const requestId = ++enrollmentRequestId.current;
-    setForm((prev) => ({ ...prev, studentId, enrollmentId: '', amount: '' }));
-    setEnrollments([]);
+    const requestId = (enrollmentRequestIds.current.get(groupKey) || 0) + 1;
+    enrollmentRequestIds.current.set(groupKey, requestId);
+    const oldEnrollmentIds = paymentGroups.find((group) => group.key === groupKey)?.enrollments.map((item) => item.id) || [];
+    setAllocations((previous) => {
+      const next = { ...previous };
+      oldEnrollmentIds.forEach((id) => delete next[id]);
+      return next;
+    });
+    setPaymentGroups((previous) => previous.map((group) => group.key === groupKey
+      ? { ...group, studentId, enrollments: [], loading: Boolean(studentId) }
+      : group));
     if (!studentId) {
-      setEnrollmentsLoading(false);
       return;
     }
 
-    setEnrollmentsLoading(true);
     try {
       const res = await enrollmentService.getEnrollments(studentId, { signal: getSignal() });
-      if (requestId !== enrollmentRequestId.current) return;
+      if (requestId !== enrollmentRequestIds.current.get(groupKey)) return;
       const payload = res.data?.data || res.data || {};
-      setEnrollments(payload.enrollments || []);
+      setPaymentGroups((previous) => previous.map((group) => group.key === groupKey
+        ? { ...group, enrollments: payload.enrollments || [], loading: false }
+        : group));
     } catch {
-      if (requestId === enrollmentRequestId.current) {
-        showToast('ไม่สามารถโหลดรายการลงทะเบียนของนักเรียนได้', 'error');
+      if (requestId === enrollmentRequestIds.current.get(groupKey)) {
+        showToast(formatError(error, 'ไม่สามารถโหลดรายการลงทะเบียนของนักเรียนได้'), 'error');
+        setPaymentGroups((previous) => previous.map((group) => group.key === groupKey
+          ? { ...group, loading: false }
+          : group));
       }
-    } finally {
-      if (requestId === enrollmentRequestId.current) setEnrollmentsLoading(false);
     }
   };
 
-  const handleEnrollmentChange = (event) => {
-    const enrollmentId = event.target.value;
-    const enrollment = enrollments.find((item) => String(item.id) === enrollmentId);
-    const remaining = enrollment
-      ? Math.max(
-          Number(enrollment.coursePrice || 0) -
-            Number(enrollment.paidAmount || 0) -
-            Number(enrollment.pendingAmount || 0),
-          0,
-        )
-      : 0;
-    setForm((prev) => ({
-      ...prev,
-      enrollmentId,
-      amount: remaining > 0 ? remaining.toFixed(2) : '',
-    }));
+  const addStudentGroup = () => {
+    const key = paymentGroupKey.current + 1;
+    paymentGroupKey.current = key;
+    setPaymentGroups((previous) => [...previous, { key, studentId: '', enrollments: [], loading: false }]);
+  };
+
+  const removeStudentGroup = (groupKey) => {
+    const group = paymentGroups.find((item) => item.key === groupKey);
+    setAllocations((previous) => {
+      const next = { ...previous };
+      (group?.enrollments || []).forEach((enrollment) => delete next[enrollment.id]);
+      return next;
+    });
+    setPaymentGroups((previous) => previous.filter((item) => item.key !== groupKey));
+  };
+
+  const toggleEnrollment = (enrollment, checked) => {
+    setAllocations((previous) => {
+      const next = { ...previous };
+      if (checked) next[enrollment.id] = getAmountDue(enrollment).toFixed(2);
+      else delete next[enrollment.id];
+      return next;
+    });
+  };
+
+  const updateAllocationAmount = (enrollmentId, value) => {
+    setAllocations((previous) => ({ ...previous, [enrollmentId]: value }));
   };
 
   const handleVerifyPayment = async (payment) => {
     setVerifyingPaymentId(payment.id);
     try {
-      const res = await financeService.verifyPaymentSlip(payment.id);
+      const res = payment.isBatch
+        ? await financeService.verifyPaymentBatchSlip(payment.batchId)
+        : await financeService.verifyPaymentSlip(payment.id);
       const result = res.data?.data || res.data || {};
       if (!result.verified) throw new Error(result.reason || 'ตรวจสลิปไม่ผ่าน');
       showToast(`ตรวจสลิปสำเร็จ: ${payment.invoiceNo}`, 'success');
-      if (pendingSlipPaymentId === payment.id) {
+      if (payment.isBatch && pendingBatchId === payment.batchId) {
         resetPaymentForm();
         setLatestReceipt({ invoiceNo: payment.invoiceNo, url: result.receiptPdfUrl });
       }
@@ -218,7 +245,9 @@ export function FinancePage({ path }) {
   const handleIssueReceipt = async (payment) => {
     setIssuingReceiptId(payment.id);
     try {
-      await financeService.issuePaymentReceipt(payment.id);
+      await (payment.isBatch
+        ? financeService.issuePaymentBatchReceipt(payment.batchId)
+        : financeService.issuePaymentReceipt(payment.id));
       showToast(`ออกใบเสร็จสำเร็จ: ${payment.invoiceNo}`, 'success');
       await fetchPayments(historyPage);
     } catch (error) {
@@ -237,7 +266,8 @@ export function FinancePage({ path }) {
 
     setVerifyingPaymentId(payment.id);
     try {
-      await uploadService.uploadPaymentSlip(file, payment.id);
+      if (payment.isBatch) await uploadService.uploadPaymentBatchSlip(file, payment.batchId);
+      else await uploadService.uploadPaymentSlip(file, payment.id);
       showToast('แนบสลิปแล้ว กำลังตรวจสอบยอด', 'success');
       await handleVerifyPayment(payment);
     } catch (error) {
@@ -254,7 +284,16 @@ export function FinancePage({ path }) {
       label: 'วันที่',
       render: (value) => (value ? new Date(value).toLocaleDateString('th-TH') : '-'),
     },
-    { key: 'studentName', label: 'นักเรียน' },
+    {
+      key: 'studentName',
+      label: 'นักเรียน',
+      render: (value, payment) => (
+        <div>
+          <span>{value || '-'}</span>
+          {payment.isBatch && <span class="ml-2 rounded-full bg-oasis-primary/10 px-2 py-0.5 text-[10px] font-semibold text-oasis-primary">บิลรวม</span>}
+        </div>
+      ),
+    },
     { key: 'courseName', label: 'คอร์สเรียน' },
     {
       key: 'amount',
@@ -359,64 +398,62 @@ export function FinancePage({ path }) {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      let paymentId = pendingSlipPaymentId;
-      let invoiceNo = latestReceipt?.invoiceNo;
+      let batchId = pendingBatchId;
+      let invoiceNo = pendingBatchInvoiceNo;
       let receiptPdfUrl = null;
 
-      if (!paymentId) {
-        const amount = Number(form.amount);
-        if (!form.studentId || !form.enrollmentId || !selectedEnrollment) {
-          showToast('กรุณาเลือกนักเรียนและรายการลงทะเบียน', 'error');
+      if (!batchId) {
+        if (!allocationsValid) {
+          showToast('เลือกอย่างน้อยหนึ่งคอร์ส และตรวจยอดที่แบ่งชำระอีกครั้ง', 'error');
           return;
         }
-        if (!Number.isFinite(amount) || amount <= 0 || Math.round(amount * 100) > Math.round(amountDue * 100)) {
-          showToast('กรุณากรอกยอดที่มากกว่า 0 และไม่เกินยอดคงเหลือ', 'error');
-          return;
-        }
-        if (form.method === 'transfer' && !slipFile) {
-          showToast('กรุณาแนบสลิปก่อนบันทึกรายการโอนเงิน', 'error');
+        if (paymentMethod === 'transfer' && !slipFile) {
+          showToast('กรุณาแนบสลิปยอดรวมก่อนสร้างบิล', 'error');
           return;
         }
 
-        const res = await financeService.createPayment({
-          enrollmentId: Number(form.enrollmentId),
-          amount,
-          method: form.method,
+        const res = await financeService.createPaymentBatch({
+          allocations: selectedItems.map((item) => ({
+            enrollmentId: Number(item.enrollment.id),
+            amount: item.amount,
+          })),
+          method: paymentMethod,
         });
         const created = res.data?.data || res.data || {};
-        paymentId = created.paymentId;
+        batchId = created.batchId;
         invoiceNo = created.invoiceNo;
         receiptPdfUrl = created.receiptPdfUrl;
-        if (!paymentId) throw new Error('API ไม่ได้ส่งรหัสรายการชำระเงินกลับมา');
+        if (!batchId) throw new Error('API ไม่ได้ส่งรหัสบิลรวมกลับมา');
 
-        if (form.method === 'transfer') {
-          setPendingSlipPaymentId(paymentId);
-          setPendingSlipUploaded(false);
+        if (paymentMethod === 'transfer') {
+          setPendingBatchId(batchId);
+          setPendingBatchInvoiceNo(invoiceNo || '');
+          setPendingBatchSlipUploaded(false);
         }
       }
 
-      if (form.method === 'transfer') {
-        if (!pendingSlipUploaded) {
+      if (paymentMethod === 'transfer') {
+        if (!pendingBatchSlipUploaded) {
           if (!slipFile) {
-            showToast(`สร้างรายการ ${invoiceNo || `#${paymentId}`} แล้ว กรุณาแนบสลิปและกดต่ออีกครั้ง`, 'error');
+            showToast(`สร้างบิล ${invoiceNo || `#${batchId}`} แล้ว กรุณาแนบสลิปและกดต่ออีกครั้ง`, 'error');
             return;
           }
-          await uploadService.uploadPaymentSlip(slipFile, paymentId);
-          setPendingSlipUploaded(true);
+          await uploadService.uploadPaymentBatchSlip(slipFile, batchId);
+          setPendingBatchSlipUploaded(true);
         }
 
         try {
-          const verifyResponse = await financeService.verifyPaymentSlip(paymentId);
+          const verifyResponse = await financeService.verifyPaymentBatchSlip(batchId);
           const verification = verifyResponse.data?.data || verifyResponse.data || {};
           if (!verification.verified) throw new Error(verification.reason || 'ตรวจสลิปไม่ผ่าน');
           receiptPdfUrl = verification.receiptPdfUrl;
-          showToast(`ตรวจสลิปและรับชำระสำเร็จ: ${invoiceNo || `#${paymentId}`}`, 'success');
+          showToast(`ตรวจสลิปยอดรวมและรับชำระสำเร็จ: ${invoiceNo || `#${batchId}`}`, 'success');
         } catch (error) {
           showToast(`แนบสลิปแล้ว แต่ยังยืนยันการชำระไม่ได้: ${formatError(error, 'รายการยังรอตรวจสอบ')}`, 'error');
           return;
         }
       } else {
-        showToast(`รับชำระสำเร็จ: ${invoiceNo}`, 'success');
+        showToast(`รับชำระรวม ฿${paymentTotal.toLocaleString('th-TH', { maximumFractionDigits: 2 })} สำเร็จ · ${invoiceNo}`, 'success');
       }
 
       resetPaymentForm();
@@ -471,163 +508,212 @@ export function FinancePage({ path }) {
       </div>
 
       {mode === 'form' ? (
-        <div class="max-w-2xl">
-          <form onSubmit={handleSubmitPayment}>
-            <div
-              class={`${isNeo ? 'neo-card bg-white p-6' : 'bg-white rounded-2xl border border-zinc-200/80 p-6'} space-y-5 shadow-sm`}
-            >
-              <div class="flex flex-col gap-1.5">
-                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>เลือกนักเรียน</label>
-                <select
-                  value={form.studentId}
-                  onChange={handleStudentChange}
-                  disabled={Boolean(pendingSlipPaymentId)}
-                  class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
-                >
-                  <option value="">-- เลือกนักเรียน --</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.fullName}
-                      {student.nickname ? ` (${student.nickname})` : ''}
-                      {student.grade ? ` · ${student.grade}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {form.studentId && (
-                <div class="flex flex-col gap-1.5">
-                  <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>รายการลงทะเบียน</label>
-                  <select
-                    value={form.enrollmentId}
-                    onChange={handleEnrollmentChange}
-                    disabled={enrollmentsLoading || Boolean(pendingSlipPaymentId)}
-                    class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+        <div class="max-w-6xl">
+          <form onSubmit={handleSubmitPayment} noValidate>
+            <div class="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
+              <section class={`${isNeo ? 'neo-card bg-white p-5' : 'rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm'}`}>
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-bold text-zinc-900">ใครและคอร์สอะไรบ้าง</h3>
+                    <p class="mt-1 text-xs text-zinc-500">เลือกได้หลายคอร์สต่อคน และเพิ่มพี่น้องในบิลเดียวกัน</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addStudentGroup}
+                    disabled={Boolean(pendingBatchId)}
+                    class="rounded-xl border border-oasis-primary/25 px-3 py-2 text-sm font-semibold text-oasis-primary transition hover:bg-oasis-primary/5 disabled:opacity-50"
                   >
-                    <option value="">{enrollmentsLoading ? 'กำลังโหลด...' : '-- เลือกรายการลงทะเบียน --'}</option>
-                    {enrollments.map((enrollment) => (
-                      <option key={enrollment.id} value={enrollment.id}>
-                        {enrollment.courseName}
-                        {enrollment.courseNameEn ? ` / ${enrollment.courseNameEn}` : ''} · เหลือ ฿
-                        {Math.max(
-                          Number(enrollment.coursePrice || 0) -
-                            Number(enrollment.paidAmount || 0) -
-                            Number(enrollment.pendingAmount || 0),
-                          0,
-                        ).toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                  {!enrollmentsLoading && enrollments.length === 0 && (
-                    <span class="text-xs text-amber-700">นักเรียนคนนี้ยังไม่มีรายการลงทะเบียนที่เลือกชำระได้</span>
-                  )}
+                    + เพิ่มนักเรียน
+                  </button>
                 </div>
-              )}
 
-              {selectedEnrollment && (
-                <div class="rounded-xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
-                  <div class="flex flex-wrap justify-between gap-2">
-                    <span>ราคาคอร์ส</span>
-                    <strong>฿{Number(selectedEnrollment.coursePrice || 0).toLocaleString()}</strong>
-                  </div>
-                  <div class="mt-1 flex flex-wrap justify-between gap-2">
-                    <span>ชำระแล้ว</span>
-                    <strong>฿{Number(selectedEnrollment.paidAmount || 0).toLocaleString()}</strong>
-                  </div>
-                  <div class="mt-1 flex flex-wrap justify-between gap-2">
-                    <span>รอตรวจสอบ</span>
-                    <strong>฿{Number(selectedEnrollment.pendingAmount || 0).toLocaleString()}</strong>
-                  </div>
-                  <div class="mt-2 flex flex-wrap justify-between gap-2 border-t border-zinc-200 pt-2">
-                    <span>ยอดคงเหลือ</span>
-                    <strong>฿{amountDue.toLocaleString()}</strong>
-                  </div>
+                <div class="space-y-4">
+                  {paymentGroups.map((group, index) => {
+                    const usedStudentIds = paymentGroups
+                      .filter((other) => other.key !== group.key)
+                      .map((other) => other.studentId)
+                      .filter(Boolean);
+                    const payableEnrollments = group.enrollments.filter((enrollment) => getAmountDue(enrollment) > 0);
+                    return (
+                      <div key={group.key} class="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
+                        <div class="mb-3 flex items-center justify-between gap-3">
+                          <label for={`payment-student-${group.key}`} class="text-sm font-semibold text-zinc-800">
+                            {paymentGroups.length > 1 ? `นักเรียน ${index + 1}` : 'เลือกนักเรียน'}
+                          </label>
+                          {paymentGroups.length > 1 && !pendingBatchId && (
+                            <button type="button" onClick={() => removeStudentGroup(group.key)} class="text-xs font-medium text-zinc-500 hover:text-red-600">
+                              เอาออก
+                            </button>
+                          )}
+                        </div>
+                        <select
+                          id={`payment-student-${group.key}`}
+                          value={group.studentId}
+                          onChange={(event) => handleStudentChange(group.key, event)}
+                          disabled={Boolean(pendingBatchId) || students.length === 0}
+                          class={`w-full bg-white px-4 py-2.5 text-sm text-zinc-800 focus:outline-none ${isNeo ? 'neo-select' : 'rounded-xl border border-zinc-200 focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
+                        >
+                          <option value="">-- ค้นหา/เลือกนักเรียน --</option>
+                          {students.map((student) => (
+                            <option key={student.id} value={student.id} disabled={usedStudentIds.includes(String(student.id))}>
+                              {student.fullName}{student.nickname ? ` (${student.nickname})` : ''}{student.grade ? ` · ${student.grade}` : ''}
+                            </option>
+                          ))}
+                        </select>
+
+                        {group.loading && <p class="mt-3 text-sm text-zinc-500">กำลังโหลดรายการคอร์ส...</p>}
+                        {group.studentId && !group.loading && (
+                          <div class="mt-3 space-y-2">
+                            {payableEnrollments.map((enrollment) => {
+                              const isSelected = allocations[enrollment.id] !== undefined;
+                              const due = getAmountDue(enrollment);
+                              return (
+                                <div key={enrollment.id} class={`rounded-xl border bg-white p-3 transition ${isSelected ? 'border-oasis-primary/40 ring-1 ring-oasis-primary/10' : 'border-zinc-200'}`}>
+                                  <label class="flex cursor-pointer items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      disabled={Boolean(pendingBatchId)}
+                                      onChange={(event) => toggleEnrollment(enrollment, event.currentTarget.checked)}
+                                      class="mt-1 h-4 w-4 rounded border-zinc-300 accent-oasis-primary"
+                                    />
+                                    <span class="min-w-0 flex-1">
+                                      <span class="block truncate text-sm font-semibold text-zinc-800">{enrollment.courseName}</span>
+                                      <span class="mt-0.5 block text-xs text-zinc-500">ค้างชำระ ฿{due.toLocaleString('th-TH', { maximumFractionDigits: 2 })}</span>
+                                    </span>
+                                  </label>
+                                  {isSelected && (
+                                    <label class="mt-3 flex items-center justify-between gap-3 border-t border-zinc-100 pt-2 text-xs text-zinc-500">
+                                      <span>ยอดที่รับในบิลนี้</span>
+                                      <span class="flex items-center gap-1 text-sm font-semibold text-zinc-800">
+                                        ฿<input
+                                          type="number"
+                                          min="0.01"
+                                          step="0.01"
+                                          value={allocations[enrollment.id]}
+                                          disabled={Boolean(pendingBatchId)}
+                                          onInput={(event) => updateAllocationAmount(enrollment.id, event.currentTarget.value)}
+                                          class="w-28 rounded-lg border border-zinc-200 px-2 py-1 text-right outline-none focus:border-oasis-primary"
+                                        />
+                                      </span>
+                                    </label>
+                                  )}
+                                  {isSelected && Number(allocations[enrollment.id]) > due && (
+                                    <p class="mt-1 text-right text-xs font-medium text-red-600">ยอดเกินยอดคงเหลือ ฿{due.toLocaleString('th-TH', { maximumFractionDigits: 2 })}</p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {payableEnrollments.length === 0 && (
+                              <p class="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">ไม่มีคอร์สที่มียอดค้างชำระ</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
+              </section>
 
-              <SolidInput
-                label="ยอดเงิน (บาท)"
-                type="number"
-                placeholder="0.00"
-                min="0.01"
-                max={amountDue.toFixed(2)}
-                step="0.01"
-                required
-                disabled={!selectedEnrollment || amountDue <= 0 || Boolean(pendingSlipPaymentId)}
-                value={form.amount}
-                onInput={updateField('amount')}
-              />
-
-              <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-medium text-zinc-800">ช่องทางชำระเงิน</label>
-                <div class="flex gap-2">
-                  {[
-                    { label: 'โอนเงิน', value: 'transfer' },
-                    { label: 'เงินสด', value: 'cash' },
-                  ].map((m) => (
-                    <button
-                      key={m.value}
-                      type="button"
-                      onClick={() => updateField('method')({ target: { value: m.value } })}
-                      disabled={Boolean(pendingSlipPaymentId)}
-                      class={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                        form.method === m.value
-                          ? 'bg-oasis-primary text-white shadow-sm'
-                          : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {form.method === 'transfer' && (
-                <>
-                  <ImageUpload
-                    key={slipUploadKey}
-                    label="สลิปการโอนเงิน (สูงสุด 1MB)"
-                    preview={slipPreview}
-                    onChange={(base64, file) => {
-                      setSlipPreview(base64);
-                      setSlipFile(file);
-                      if (pendingSlipPaymentId) setPendingSlipUploaded(false);
-                    }}
-                  />
-                  {pendingSlipPaymentId && (
-                    <p class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                      รายการ #{pendingSlipPaymentId} ถูกสร้างแล้วและยังไม่ถูกนับเป็นยอดชำระสำเร็จ
-                      การกดอีกครั้งจะอัปโหลด/ตรวจสลิปของรายการเดิม ไม่สร้างรายการใหม่
-                    </p>
-                  )}
-                </>
-              )}
-
-              {latestReceipt && (
-                <div class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                  <span>รับชำระสำเร็จ · {latestReceipt.invoiceNo}</span>
-                  {latestReceipt.url ? (
-                    <a href={latestReceipt.url} target="_blank" rel="noreferrer" class="ml-3 font-semibold underline">
-                      เปิดใบเสร็จ PDF
-                    </a>
+              <aside class={`${isNeo ? 'neo-card bg-white p-5' : 'h-fit rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm'} space-y-5 lg:sticky lg:top-4`}>
+                <div>
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-zinc-900">สรุปบิลรวม</h3>
+                    <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600">{selectedItems.length} รายการ</span>
+                  </div>
+                  {selectedItems.length > 0 ? (
+                    <div class="mt-3 max-h-52 space-y-2 overflow-y-auto">
+                      {selectedItems.map((item) => (
+                        <div key={item.enrollment.id} class="flex justify-between gap-3 text-sm">
+                          <span class="min-w-0">
+                            <span class="block truncate font-medium text-zinc-800">{item.studentName}</span>
+                            <span class="block truncate text-xs text-zinc-500">{item.enrollment.courseName}</span>
+                          </span>
+                          <span class="shrink-0 font-semibold text-zinc-800">฿{(Number.isFinite(item.amount) ? item.amount : 0).toLocaleString('th-TH', { maximumFractionDigits: 2 })}</span>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <span class="ml-2">ใบเสร็จกำลังรอออก กดออกใหม่ได้จากประวัติการเงิน</span>
+                    <p class="mt-3 rounded-xl bg-zinc-50 px-3 py-4 text-center text-sm text-zinc-500">เลือกรายการคอร์สเพื่อเริ่มสร้างบิล</p>
                   )}
+                  <div class="mt-4 flex items-end justify-between border-t border-zinc-200 pt-3">
+                    <span class="text-sm font-semibold text-zinc-700">ยอดรวม</span>
+                    <strong class="text-2xl font-extrabold text-oasis-primary">฿{paymentTotal.toLocaleString('th-TH', { maximumFractionDigits: 2 })}</strong>
+                  </div>
                 </div>
-              )}
 
-              <div class="flex gap-3 pt-2">
-                <Button variant="primary" size="md" type="submit" loading={isSubmitting} disabled={isSubmitting}>
-                  {pendingSlipPaymentId
-                    ? pendingSlipUploaded
-                      ? 'ตรวจสลิปของรายการเดิม'
-                      : 'อัปโหลดสลิปต่อ'
-                    : 'บันทึกรับชำระ'}
-                </Button>
-                <Button variant="outline" size="md" type="button" onClick={resetPaymentForm}>
-                  {pendingSlipPaymentId ? 'ปิดฟอร์ม (รายการยังรอตรวจ)' : 'ล้างฟอร์ม'}
-                </Button>
-              </div>
+                <div>
+                  <p class="mb-2 text-sm font-semibold text-zinc-800">ช่องทางชำระ</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'โอนเงิน · สลิปเดียว', value: 'transfer' },
+                      { label: 'เงินสด', value: 'cash' },
+                    ].map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => setPaymentMethod(method.value)}
+                        disabled={Boolean(pendingBatchId)}
+                        class={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === method.value ? 'bg-oasis-primary text-white shadow-sm' : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'} disabled:opacity-50`}
+                      >
+                        {method.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {paymentMethod === 'transfer' && (
+                  <>
+                    <ImageUpload
+                      key={slipUploadKey}
+                      label="สลิปยอดรวม (สูงสุด 1MB)"
+                      preview={slipPreview}
+                      onChange={(base64, file) => {
+                        setSlipPreview(base64);
+                        setSlipFile(file);
+                        if (pendingBatchId) setPendingBatchSlipUploaded(false);
+                      }}
+                    />
+                    {pendingBatchId && (
+                      <p class="rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                        บิล {pendingBatchInvoiceNo || `#${pendingBatchId}`} รอตรวจสอบ การกดต่อจะใช้บิลเดิมและไม่สร้างบิลซ้ำ
+                      </p>
+                    )}
+                  </>
+                )}
+
+                {latestReceipt && (
+                  <div class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <span>รับชำระสำเร็จ · {latestReceipt.invoiceNo}</span>
+                    {latestReceipt.url ? (
+                      <a href={latestReceipt.url} target="_blank" rel="noreferrer" class="ml-3 font-semibold underline">เปิดใบเสร็จ PDF</a>
+                    ) : (
+                      <span class="ml-2">ใบเสร็จยังไม่พร้อม ออกใหม่ได้จากประวัติการเงิน</span>
+                    )}
+                  </div>
+                )}
+
+                <div class="space-y-2 border-t border-zinc-100 pt-4">
+                  {paymentMethod === 'transfer' && !slipFile && !pendingBatchId && (
+                    <p class="text-xs text-zinc-500">แนบสลิปยอดรวมก่อนยืนยันบิล</p>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="md"
+                    type="submit"
+                    loading={isSubmitting}
+                    disabled={isSubmitting || !allocationsValid || (paymentMethod === 'transfer' && !slipFile && !pendingBatchId)}
+                    class="w-full justify-center"
+                  >
+                    {pendingBatchId
+                      ? pendingBatchSlipUploaded ? 'ตรวจสลิปของบิลเดิม' : 'อัปโหลดสลิปและตรวจยอดรวม'
+                      : `บันทึกบิลรวม · ฿${paymentTotal.toLocaleString('th-TH', { maximumFractionDigits: 2 })}`}
+                  </Button>
+                  <Button variant="outline" size="md" type="button" onClick={resetPaymentForm} disabled={isSubmitting} class="w-full justify-center">
+                    {pendingBatchId ? 'ปิดฟอร์ม (บิลยังรอตรวจ)' : 'ล้างฟอร์ม'}
+                  </Button>
+                </div>
+              </aside>
             </div>
           </form>
         </div>

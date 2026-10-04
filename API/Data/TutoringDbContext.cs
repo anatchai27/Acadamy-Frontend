@@ -28,6 +28,8 @@ public class TutoringDbContext(
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentBatch> PaymentBatches => Set<PaymentBatch>();
+    public DbSet<PaymentBatchAllocation> PaymentBatchAllocations => Set<PaymentBatchAllocation>();
     public DbSet<Institute> Institutes => Set<Institute>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
@@ -438,6 +440,44 @@ public class TutoringDbContext(
             entity.HasIndex(e => e.InvoiceNo).IsUnique();
             entity.HasIndex(e => e.EnrollmentId);
             entity.HasIndex(e => e.InstituteId);
+        });
+
+        modelBuilder.Entity<PaymentBatch>(entity =>
+        {
+            entity.ToTable("payment_batches");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+            entity.Property(e => e.InvoiceNo).HasMaxLength(50).HasColumnName("invoice_no");
+            entity.Property(e => e.Amount).HasColumnName("amount").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.Method).HasMaxLength(20).HasColumnName("method");
+            entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.PaidAt).HasColumnName("paid_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.SlipUrl).HasMaxLength(1000).HasColumnName("slip_url");
+            entity.Property(e => e.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(e => e.VerifiedBy).HasColumnName("verified_by");
+            entity.Property(e => e.VerificationProvider).HasMaxLength(50).HasColumnName("verification_provider");
+            entity.Property(e => e.VerificationPayload).HasColumnType("json").HasColumnName("verification_payload");
+            entity.Property(e => e.SlipAmount).HasColumnName("slip_amount").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.SlipTransRef).HasMaxLength(255).HasColumnName("slip_trans_ref");
+            entity.Property(e => e.ReceiptPdfUrl).HasMaxLength(1000).HasColumnName("receipt_pdf_url");
+            entity.HasOne(e => e.Institute).WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.Allocations).WithOne(e => e.PaymentBatch).HasForeignKey(e => e.PaymentBatchId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.InvoiceNo).IsUnique();
+            entity.HasIndex(e => new { e.InstituteId, e.CreatedAt });
+        });
+
+        modelBuilder.Entity<PaymentBatchAllocation>(entity =>
+        {
+            entity.ToTable("payment_batch_allocations");
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.PaymentBatchId).HasColumnName("payment_batch_id");
+            entity.Property(e => e.EnrollmentId).HasColumnName("enrollment_id");
+            entity.Property(e => e.Amount).HasColumnName("amount").HasColumnType("decimal(10,2)");
+            entity.Property(e => e.ReceiptPdfUrl).HasMaxLength(1000).HasColumnName("receipt_pdf_url");
+            entity.HasOne(e => e.Enrollment).WithMany().HasForeignKey(e => e.EnrollmentId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.PaymentBatchId, e.EnrollmentId }).IsUnique();
+            entity.HasIndex(e => e.EnrollmentId);
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -1183,6 +1223,7 @@ public class TutoringDbContext(
         modelBuilder.Entity<Session>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Attendance>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Payment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+        modelBuilder.Entity<PaymentBatch>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
       modelBuilder.Entity<LeaveRequestAttachment>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Homework>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

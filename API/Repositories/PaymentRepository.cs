@@ -161,18 +161,24 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
 
     public async Task<decimal> GetPendingAmountByEnrollmentAsync(int enrollmentId, CancellationToken ct = default)
     {
-        var amount = await _context.Payments
+        var paymentAmount = await _context.Payments
             .Where(p => p.EnrollmentId == enrollmentId && p.Status == PaymentStatus.Pending)
             .SumAsync(p => (decimal?)p.Amount, ct);
-        return amount ?? 0m;
+        var batchAmount = await _context.PaymentBatchAllocations
+            .Where(allocation => allocation.EnrollmentId == enrollmentId && allocation.PaymentBatch.Status == PaymentStatus.Pending)
+            .SumAsync(allocation => (decimal?)allocation.Amount, ct);
+        return (paymentAmount ?? 0m) + (batchAmount ?? 0m);
     }
 
     public async Task<decimal> GetSucceededAmountByEnrollmentAsync(int enrollmentId, CancellationToken ct = default)
     {
-        var amount = await _context.Payments
+        var paymentAmount = await _context.Payments
             .Where(p => p.EnrollmentId == enrollmentId && p.Status == PaymentStatus.Succeeded)
             .SumAsync(p => (decimal?)p.Amount, ct);
-        return amount ?? 0m;
+        var batchAmount = await _context.PaymentBatchAllocations
+            .Where(allocation => allocation.EnrollmentId == enrollmentId && allocation.PaymentBatch.Status == PaymentStatus.Succeeded)
+            .SumAsync(allocation => (decimal?)allocation.Amount, ct);
+        return (paymentAmount ?? 0m) + (batchAmount ?? 0m);
     }
 
     public Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default) =>

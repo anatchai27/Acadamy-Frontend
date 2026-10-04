@@ -19,10 +19,12 @@ public interface IPaymentService
 
 public class PaymentService(
     Repositories.IPaymentRepository repository,
-    IPaymentReceiptService paymentReceiptService) : IPaymentService
+    IPaymentReceiptService paymentReceiptService,
+    Repositories.IPaymentBatchRepository? batchRepository = null) : IPaymentService
 {
     private readonly Repositories.IPaymentRepository _repository = repository;
     private readonly IPaymentReceiptService _paymentReceiptService = paymentReceiptService;
+    private readonly Repositories.IPaymentBatchRepository? _batchRepository = batchRepository;
 
     public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
@@ -108,13 +110,23 @@ public class PaymentService(
         DateTime? startDate, DateTime? endDate, string? method,
         int page, int limit, CancellationToken ct = default)
     {
-        var paymentsTask = _repository.GetPaymentsAsync(startDate, endDate, method, page, limit, ct);
+        var fetchLimit = Math.Max(page * limit, limit);
+        var paymentsTask = _repository.GetPaymentsAsync(startDate, endDate, method, 1, fetchLimit, ct);
         var totalAmountTask = _repository.GetTotalAmountAsync(startDate, endDate, method, ct);
         var countTask = _repository.GetPaymentCountAsync(startDate, endDate, method, ct);
+        var batchesTask = _batchRepository?.GetHistoryAsync(startDate, endDate, method, fetchLimit, ct)
+            ?? Task.FromResult(new List<PaymentBatch>());
+        var batchTotalTask = _batchRepository?.GetTotalAmountAsync(startDate, endDate, method, ct)
+            ?? Task.FromResult(0m);
+        var batchCountTask = _batchRepository?.GetBatchCountAsync(startDate, endDate, method, ct)
+            ?? Task.FromResult(0);
 
         var payments = await paymentsTask;
-        var totalAmount = await totalAmountTask;
-        var totalCount = await countTask;
+        var batches = await batchesTask;
+        var paymentTotalAmount = await totalAmountTask;
+        var batchTotalAmount = await batchTotalTask;
+        var totalAmount = paymentTotalAmount + batchTotalAmount;
+        var totalCount = await countTask + await batchCountTask;
 
         var totalPages = totalCount > 0
             ? (int)Math.Ceiling((double)totalCount / limit)
@@ -132,7 +144,25 @@ public class PaymentService(
             p.SlipUrl,
             p.ReceiptPdfUrl,
             p.Enrollment?.Course?.NameEn
-        )).ToList();
+        )).Concat(batches.Select(batch => new PaymentHistoryItem(
+            -batch.Id,
+            batch.InvoiceNo,
+            string.Join(", ", batch.Allocations.Select(allocation => allocation.Enrollment.Student.FullName).Distinct()),
+            string.Join(", ", batch.Allocations.Select(allocation => allocation.Enrollment.Course.Name).Distinct()),
+            batch.Amount,
+            batch.Method,
+            batch.Status,
+            batch.PaidAt,
+            batch.SlipUrl,
+            batch.ReceiptPdfUrl,
+            null,
+            true,
+            batch.Id
+        )))
+            .OrderByDescending(item => item.PaidAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToList();
 
         return new PaymentHistoryResponse(
             "success",
@@ -149,6 +179,9 @@ public class PaymentService(
         CancellationToken ct = default)
     {
         var payments = await _repository.GetPaymentsForExportAsync(startDate, endDate, method, ct);
+        var batches = _batchRepository is null
+            ? new List<PaymentBatch>()
+            : await _batchRepository.GetBatchesForExportAsync(startDate, endDate, method, ct);
         var csv = new StringBuilder();
         csv.AppendLine("invoice_no,student_name,course_name,amount,net_amount,method,status,paid_at");
         foreach (var payment in payments)
@@ -161,6 +194,20 @@ public class PaymentService(
                 .Append(EscapeCsv(payment.Method)).Append(',')
                 .Append(EscapeCsv(payment.Status ?? PaymentStatus.Pending)).Append(',')
                 .Append(payment.PaidAt.ToString("O", CultureInfo.InvariantCulture)).AppendLine();
+        }
+
+        foreach (var batch in batches)
+        {
+            var studentNames = string.Join("; ", batch.Allocations.Select(allocation => allocation.Enrollment.Student.FullName).Distinct());
+            var courseNames = string.Join("; ", batch.Allocations.Select(allocation => allocation.Enrollment.Course.Name).Distinct());
+            csv.Append(EscapeCsv(batch.InvoiceNo)).Append(',')
+                .Append(EscapeCsv(studentNames)).Append(',')
+                .Append(EscapeCsv(courseNames)).Append(',')
+                .Append(batch.Amount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append(batch.Amount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append(EscapeCsv(batch.Method)).Append(',')
+                .Append(EscapeCsv(batch.Status)).Append(',')
+                .Append(batch.PaidAt.ToString("O", CultureInfo.InvariantCulture)).AppendLine();
         }
 
         return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();

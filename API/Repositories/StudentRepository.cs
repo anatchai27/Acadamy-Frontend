@@ -163,9 +163,43 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
                 s.Grade,
                 s.PhotoUrl,
                 s.Parents.OrderBy(p => p.Id).Select(p => p.FullName).FirstOrDefault(),
-                s.Parents.OrderBy(p => p.Id).Select(p => p.Phone).FirstOrDefault()
+                s.Parents.OrderBy(p => p.Id).Select(p => p.Phone).FirstOrDefault(),
+                null
             ))
             .ToListAsync(ct);
+
+        if (items.Count > 0)
+        {
+            var studentIds = items.Select(student => student.Id).ToList();
+            var now = DateTime.UtcNow;
+            var pickups = await _context.StudentPickupAuthorizations
+                .Where(pickup => studentIds.Contains(pickup.StudentId)
+                    && pickup.IsActive
+                    && pickup.RevokedAt == null
+                    && (pickup.ValidFrom == null || pickup.ValidFrom <= now)
+                    && (pickup.ValidUntil == null || pickup.ValidUntil >= now))
+                .OrderBy(pickup => pickup.FullName)
+                .Select(pickup => new
+                {
+                    pickup.StudentId,
+                    Item = new AuthorizedPickupListItem(
+                        pickup.Id,
+                        pickup.FullName,
+                        pickup.Phone,
+                        pickup.Relationship,
+                        pickup.PhotoUrl)
+                })
+                .ToListAsync(ct);
+
+            var pickupsByStudent = pickups
+                .GroupBy(pickup => pickup.StudentId)
+                .ToDictionary(group => group.Key, group => group.Select(pickup => pickup.Item).ToList());
+
+            items = items.Select(student => student with
+            {
+                AuthorizedPickups = pickupsByStudent.GetValueOrDefault(student.Id) ?? [],
+            }).ToList();
+        }
 
         return (items, totalCount);
     }

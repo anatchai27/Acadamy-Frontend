@@ -9,6 +9,15 @@ export const uploadPaymentSlip = (file, paymentId, options = {}) => {
   });
 }
 
+export const uploadPaymentBatchSlip = (file, batchId, options = {}) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/uploads/payment-batch-slip', formData, {
+    ...options,
+    params: { batchId },
+  });
+}
+
 export const uploadHomeworkFile = (file, homeworkId, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -47,6 +56,7 @@ export const uploadTeacherPhoto = (file, teacherId, options = {}) => {
 
 export const uploadService = {
   uploadPaymentSlip,
+  uploadPaymentBatchSlip,
   uploadHomeworkFile,
   uploadHomeworkSubmission,
   uploadStudentPhoto,

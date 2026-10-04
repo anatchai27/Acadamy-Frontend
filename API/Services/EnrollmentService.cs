@@ -14,9 +14,14 @@ public class EnrollmentService(Repositories.IEnrollmentRepository repository) : 
 
     public async Task<EnrollStudentResponse> EnrollAsync(EnrollStudentRequest request, CancellationToken ct = default)
     {
+        var now = DateTime.UtcNow;
         var course = await _repository.GetCourseByIdAsync(request.CourseId, ct);
         if (course is null)
             throw new EnrollmentValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนที่ระบุ");
+
+        var upcomingSessionCount = await _repository.GetUpcomingSessionCountAsync(request.CourseId, now, ct);
+        if (upcomingSessionCount == 0)
+            throw new EnrollmentValidationException("NO_UPCOMING_SESSIONS", "คอร์สนี้ยังไม่มีคาบเรียนในอนาคต กรุณาจัดตารางเรียนก่อนลงทะเบียน");
 
         var alreadyEnrolled = await _repository.ExistsActiveEnrollmentAsync(request.StudentId, request.CourseId, ct);
         if (alreadyEnrolled)
@@ -26,10 +31,10 @@ public class EnrollmentService(Repositories.IEnrollmentRepository repository) : 
         {
             StudentId = request.StudentId,
             CourseId = request.CourseId,
-            SessionsRemaining = course.TotalSessions,
+            SessionsRemaining = upcomingSessionCount,
             PaidAmount = 0,
-            ExpiresAt = DateTime.UtcNow.AddMonths(6),
-            CreatedAt = DateTime.UtcNow
+            ExpiresAt = now.AddMonths(6),
+            CreatedAt = now
         };
 
         var created = await _repository.CreateAsync(enrollment, ct);

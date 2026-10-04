@@ -296,7 +296,7 @@ export function StudentControll({ path, id }) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} class="max-w-3xl">
+      <form onSubmit={handleSubmit} class="mx-auto w-full max-w-3xl">
         <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
           <h3 class="text-base font-semibold text-zinc-900 mb-4">ข้อมูลส่วนตัวนักเรียน</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

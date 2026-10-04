@@ -84,9 +84,14 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
         var pendingHomework = await _context.HomeworkSubmissions
             .Where(h => students.Contains(h.StudentId) && h.SubmittedAt == null && h.Score == null)
             .CountAsync(ct);
-        var outstandingBalance = await _context.Payments
+        var paymentBalance = await _context.Payments
             .Where(p => p.Enrollment != null && students.Contains(p.Enrollment.StudentId) && p.Status == "pending")
             .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+        var batchBalance = await _context.PaymentBatchAllocations
+            .Where(allocation => students.Contains(allocation.Enrollment.StudentId)
+                && allocation.PaymentBatch.Status == PaymentStatus.Pending)
+            .SumAsync(allocation => (decimal?)allocation.Amount, ct) ?? 0m;
+        var outstandingBalance = paymentBalance + batchBalance;
         var latestSkill = await _context.SkillScores
             .Where(s => students.Contains(s.StudentId))
             .OrderByDescending(s => s.UpdatedAt)
@@ -115,8 +120,9 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 a.Session.Course.NameEn))
             .ToListAsync(ct);
 
-    public Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default) =>
-        _context.Payments
+    public async Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default)
+    {
+        var payments = await _context.Payments
             .Where(p => p.Enrollment.StudentId == studentId)
             .OrderByDescending(p => p.PaidAt)
             .Select(p => new PaymentListItem(
@@ -130,6 +136,23 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 p.Enrollment.Course.NameEn,
                 p.Status ?? PaymentStatus.Pending))
             .ToListAsync(ct);
+        var batchPayments = await _context.PaymentBatchAllocations
+            .Where(allocation => allocation.Enrollment.StudentId == studentId)
+            .OrderByDescending(allocation => allocation.PaymentBatch.PaidAt)
+            .Select(allocation => new PaymentListItem(
+                -allocation.Id,
+                allocation.PaymentBatch.InvoiceNo,
+                allocation.Enrollment.Course.Name,
+                allocation.Amount,
+                allocation.PaymentBatch.PaidAt,
+                allocation.PaymentBatch.SlipUrl ?? string.Empty,
+                allocation.ReceiptPdfUrl,
+                allocation.Enrollment.Course.NameEn,
+                allocation.PaymentBatch.Status))
+            .ToListAsync(ct);
+
+        return payments.Concat(batchPayments).OrderByDescending(payment => payment.PaidAt).ToList();
+    }
 
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) =>
         _context.SkillScores

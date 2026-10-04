@@ -13,6 +13,11 @@ public static class FileUploadEndpoints
         group.MapPost("/logo", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadLogoAsync(instituteId, uploadedFile, ct)));
         MapPaymentSlipUploadEndpoint(group);
+        group.MapPost("/payment-batch-slip", async (HttpContext context, IFormFile file, long batchId, IFileUploadService service, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentBatchSlipAsync(instituteId, batchId, uploadedFile, ct));
+        });
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
         group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>

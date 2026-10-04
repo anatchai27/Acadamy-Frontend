@@ -9,6 +9,7 @@ public interface IFileUploadService
 {
     Task<FileUploadResponse> UploadLogoAsync(int instituteId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadPaymentSlipAsync(int instituteId, long paymentId, IFormFile file, CancellationToken ct);
+    Task<FileUploadResponse> UploadPaymentBatchSlipAsync(int instituteId, long batchId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadHomeworkAsync(int instituteId, int homeworkId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadHomeworkSubmissionAsync(int instituteId, int submissionId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadStudentPhotoAsync(int instituteId, int studentId, IFormFile file, CancellationToken ct);
@@ -49,6 +50,21 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
         {
             submission.FileUrl = url;
             submission.SubmittedAt = DateTime.UtcNow;
+            await repository.SaveAsync(ct);
+            return url;
+        }, ct);
+    }
+
+    public async Task<FileUploadResponse> UploadPaymentBatchSlipAsync(int instituteId, long batchId, IFormFile file, CancellationToken ct)
+    {
+        ValidateFile(file, 5, true);
+        var batch = await repository.GetPaymentBatchAsync(batchId, instituteId, ct)
+            ?? throw new FileUploadValidationException("NOT_FOUND", "Payment batch not found.");
+        if (batch.Status != PaymentStatus.Pending || batch.Method != "transfer")
+            throw new FileUploadValidationException("PAYMENT_BATCH_NOT_PENDING", "อัปโหลดสลิปได้เฉพาะบิลโอนที่รอตรวจสอบเท่านั้น");
+        return await UploadAsync(file, 5, true, $"slips/payment_batch_{batchId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "slip", async url =>
+        {
+            batch.SlipUrl = url;
             await repository.SaveAsync(ct);
             return url;
         }, ct);

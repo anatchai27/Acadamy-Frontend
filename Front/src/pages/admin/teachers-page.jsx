@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast, showConfirm, ImageUpload, BentoGrid } from '../../components/ui';
+import { SolidInput, Button, showToast, showConfirm, ImageUpload } from '../../components/ui';
 import { teacherService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
@@ -12,9 +12,10 @@ import {
   HiOutlineUserGroup,
   HiOutlinePhoto,
   HiOutlineXMark,
+  HiOutlineEye,
 } from 'react-icons/hi2';
 
-const formatCurrency = (n) => (n ? `฿${Number(n).toLocaleString()}` : '-');
+const formatCurrency = (n) => (n != null ? `฿${Number(n).toLocaleString()}` : '-');
 
 const emptyForm = {
   fullName: '',
@@ -327,7 +328,9 @@ export function TeachersPage({ path }) {
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class={`text-2xl font-semibold tracking-tight ${isNeo ? 'text-black' : 'text-zinc-900'}`}>ครูผู้สอน</h2>
-          <p class="text-sm text-zinc-500 mt-1">จัดการข้อมูลครูผู้สอนในสถาบัน</p>
+          <p class="text-sm text-zinc-500 mt-1">
+            {loading ? 'กำลังโหลดรายชื่อครู...' : `พบครู ${teachers.length} คน · จัดการข้อมูลครูผู้สอนในสถาบัน`}
+          </p>
         </div>
         <Button variant="primary" size="md" onClick={openAdd}>
           <span class="flex items-center gap-1.5">
@@ -472,11 +475,11 @@ export function TeachersPage({ path }) {
 
       {/* Loading skeleton */}
       {loading && (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} animate-pulse`}
+              class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80'} animate-pulse overflow-hidden`}
             >
               <div class="flex items-start gap-4">
                 <div class="h-14 w-14 rounded-full bg-zinc-200" />
@@ -513,41 +516,49 @@ export function TeachersPage({ path }) {
 
       {/* Teacher Cards Grid */}
       {!loading && teachers.length > 0 && (
-        <BentoGrid>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {teachers.map((teacher) => (
-            <div
+            <article
               key={teacher.id}
-              class={`${isNeo ? 'neo-card bg-white overflow-hidden' : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden'} group`}
+              class={`${isNeo ? 'neo-card bg-white' : 'bg-white rounded-2xl border border-zinc-200/80 hover:border-oasis-primary/30 hover:shadow-lg'} group flex min-h-[290px] flex-col overflow-hidden transition-all duration-200`}
             >
-              {/* Clickable card body */}
-              <div class="p-5 cursor-pointer" onClick={() => handleView(teacher)}>
-                <div class="flex items-start gap-4">
-                  <Avatar src={teacher.photoUrl} name={teacher.fullName} />
-                  <div class="flex-1 min-w-0">
-                    <h3
-                      class={`text-base font-semibold truncate group-hover:text-oasis-primary transition-colors ${isNeo ? 'text-black' : 'text-zinc-900'}`}
-                    >
+              <button
+                type="button"
+                onClick={() => handleView(teacher)}
+                class="flex flex-1 flex-col p-5 text-left transition-colors hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oasis-primary"
+              >
+                <div class="flex w-full items-center gap-3">
+                  <Avatar src={teacher.photoUrl} name={teacher.fullName} size="lg" />
+                  <div class="min-w-0 flex-1">
+                    <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">ครูผู้สอน</p>
+                    <h3 class={`line-clamp-2 text-base font-bold leading-snug ${isNeo ? 'text-black' : 'text-zinc-900 group-hover:text-oasis-primary'}`}>
                       {teacher.fullName || '-'}
                     </h3>
-                    {teacher.userEmail && <p class="text-xs text-zinc-500 mt-0.5 truncate">{teacher.userEmail}</p>}
                     {teacher.specialization && (
-                      <span class="mt-2 inline-flex items-center rounded-md bg-oasis-primary/5 px-2 py-0.5 text-xs font-medium text-oasis-primary">
+                      <span class="mt-1.5 inline-flex max-w-full truncate rounded-full bg-oasis-primary/10 px-2.5 py-1 text-xs font-semibold text-oasis-primary">
                         {teacher.specialization}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {teacher.bio && <p class="mt-3 text-sm text-zinc-500 line-clamp-2 leading-relaxed">{teacher.bio}</p>}
-                {teacher.hourlyRate != null && (
-                  <div class="mt-3 flex items-center gap-2">
-                    <span class="text-xs font-medium text-zinc-400">ค่าสอน/ชม.</span>
-                    <span class={`font-semibold ${isNeo ? 'text-black' : 'text-oasis-primary'}`}>
+                {teacher.userEmail && <p class="mt-4 truncate text-xs text-zinc-500">{teacher.userEmail}</p>}
+                <p class="mt-3 line-clamp-3 min-h-[3.75rem] text-sm leading-relaxed text-zinc-500">
+                  {teacher.bio || 'ยังไม่มีข้อมูลประวัติการสอน'}
+                </p>
+
+                <div class="mt-auto flex w-full items-end justify-between gap-3 border-t border-zinc-100 pt-3">
+                  <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">ค่าสอนต่อชั่วโมง</p>
+                    <p class={`mt-0.5 text-lg font-extrabold ${isNeo ? 'text-black' : 'text-oasis-primary'}`}>
                       {formatCurrency(teacher.hourlyRate)}
-                    </span>
+                    </p>
                   </div>
-                )}
-              </div>
+                  <span class="inline-flex items-center gap-1 text-xs font-semibold text-oasis-primary">
+                    <HiOutlineEye class="h-4 w-4" />ดูโปรไฟล์
+                  </span>
+                </div>
+              </button>
 
               {/* Action buttons */}
               <div class={`flex items-stretch ${isNeo ? 'border-t-2 border-black' : 'border-t border-zinc-100'}`}>
@@ -569,9 +580,9 @@ export function TeachersPage({ path }) {
                   ลบ
                 </button>
               </div>
-            </div>
+            </article>
           ))}
-        </BentoGrid>
+        </div>
       )}
     </AdminLayout>
   );

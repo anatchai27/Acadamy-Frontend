@@ -19,6 +19,7 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
 
     public async Task<List<CourseItem>> SearchAsync(string? search, int? teacherId, CancellationToken ct = default)
     {
+        var now = DateTime.UtcNow;
         var query = _context.Courses
             .Include(c => c.Teacher)
             .AsQueryable();
@@ -43,7 +44,10 @@ public class CourseRepository(TutoringDbContext context) : ICourseRepository
                 c.Name,
                 c.Subject,
                 c.CourseType,
-                c.TotalSessions,
+                _context.Sessions.Count(s =>
+                    s.CourseId == c.Id &&
+                    s.Status == "scheduled" &&
+                    s.ScheduledAt >= now),
                 c.Price,
                 c.Teacher != null ? c.Teacher.FullName : null,
                 c.ExpiresInDays,

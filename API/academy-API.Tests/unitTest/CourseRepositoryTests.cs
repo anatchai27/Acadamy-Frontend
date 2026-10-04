@@ -27,6 +27,10 @@ public class CourseRepositoryTests
         var teacher = new Teacher { Id = 1, FullName = "ครูสมชาย" };
         context.Teachers.Add(teacher);
         context.Courses.Add(new Course { Id = 1, Name = "Math 101", Subject = "Math", TotalSessions = 10, Price = 5000, TeacherId = 1, Teacher = teacher });
+        context.Sessions.AddRange(
+            new Session { Id = 1, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(1), DurationMin = 60, Status = "scheduled" },
+            new Session { Id = 2, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(2), DurationMin = 60, Status = "cancelled" },
+            new Session { Id = 3, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(-1), DurationMin = 60, Status = "scheduled" });
         await context.SaveChangesAsync();
 
         var repo = new CourseRepository(context);
@@ -34,6 +38,7 @@ public class CourseRepositoryTests
 
         Assert.Single(courses);
         Assert.Equal("ครูสมชาย", courses[0].TeacherName);
+        Assert.Equal(1, courses[0].TotalSessions);
     }
 
     // 2
@@ -132,6 +137,24 @@ public class CourseRepositoryTests
 
         Assert.Single(sessions);
         Assert.Equal("scheduled", sessions[0].Status);
+    }
+
+    [Fact]
+    public async Task EnrollmentGetUpcomingSessionCount_CountsOnlyFutureScheduledSessions()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Courses.Add(new Course { Id = 1, Name = "Math", Subject = "", InstituteId = 1 });
+        context.Sessions.AddRange(
+            new Session { Id = 1, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(1), DurationMin = 60, Status = "scheduled" },
+            new Session { Id = 2, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(2), DurationMin = 60, Status = "cancelled" },
+            new Session { Id = 3, CourseId = 1, ScheduledAt = DateTime.UtcNow.AddDays(-1), DurationMin = 60, Status = "scheduled" });
+        await context.SaveChangesAsync();
+
+        var repository = new EnrollmentRepository(context);
+        var count = await repository.GetUpcomingSessionCountAsync(1, DateTime.UtcNow);
+
+        Assert.Equal(1, count);
     }
 
     // ──────────────────── LeaveRequestRepository ────────────────────

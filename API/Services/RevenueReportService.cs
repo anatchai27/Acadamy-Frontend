@@ -10,18 +10,25 @@ public interface IRevenueReportService
     Task<List<RevenueReportRow>> GetAsync(DateTime from, DateTime to, string groupBy, CancellationToken ct = default);
 }
 
-public sealed class RevenueReportService(IPaymentRepository repository) : IRevenueReportService
+public sealed class RevenueReportService(IPaymentRepository repository, IPaymentBatchRepository? batchRepository = null) : IRevenueReportService
 {
     public async Task<List<RevenueReportRow>> GetAsync(DateTime from, DateTime to, string groupBy, CancellationToken ct = default)
     {
         var payments = await repository.GetPaymentsForExportAsync(from, to.Date.AddDays(1).AddTicks(-1), null, ct);
-        return payments
+        var batches = batchRepository is null
+            ? new List<PaymentBatch>()
+            : await batchRepository.GetBatchesForExportAsync(from, to.Date.AddDays(1).AddTicks(-1), null, ct);
+        var entries = payments
             .Where(payment => payment.Status == PaymentStatus.Succeeded)
+            .Select(payment => (payment.PaidAt, Amount: payment.NetAmount ?? payment.Amount))
+            .Concat(batches.Where(batch => batch.Status == PaymentStatus.Succeeded)
+                .Select(batch => (batch.PaidAt, Amount: batch.Amount)));
+        return entries
             .GroupBy(payment => FormatPeriod(payment.PaidAt, groupBy))
             .OrderBy(group => group.Key)
             .Select(group => new RevenueReportRow(
                 group.Key,
-                group.Sum(payment => payment.NetAmount ?? payment.Amount),
+                group.Sum(payment => payment.Amount),
                 group.Count()))
             .ToList();
     }

@@ -88,6 +88,28 @@ public class StudentRepositoryTests
     }
 
     [Fact]
+    public async Task SearchAsync_IncludesOnlyCurrentlyAuthorizedPickupContacts()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var now = DateTime.UtcNow;
+        context.Students.Add(new Student { Id = 1, FullName = "สมชาย", CreatedAt = now });
+        context.StudentPickupAuthorizations.AddRange(
+            new StudentPickupAuthorization { Id = 1, StudentId = 1, FullName = "คุณแม่", Phone = "0811111111", Relationship = "แม่", IsActive = true },
+            new StudentPickupAuthorization { Id = 2, StudentId = 1, FullName = "หมดอายุ", IsActive = true, ValidUntil = now.AddDays(-1) },
+            new StudentPickupAuthorization { Id = 3, StudentId = 1, FullName = "ถูกยกเลิก", IsActive = false },
+            new StudentPickupAuthorization { Id = 4, StudentId = 1, FullName = "ยังไม่เริ่ม", IsActive = true, ValidFrom = now.AddDays(1) });
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+        var (items, _) = await repository.SearchAsync(null, 1, 20);
+
+        var pickup = Assert.Single(items[0].AuthorizedPickups!);
+        Assert.Equal("คุณแม่", pickup.FullName);
+        Assert.Equal("แม่", pickup.Relationship);
+    }
+
+    [Fact]
     public async Task StreamExportAsync_UsesTenantFilter()
     {
         // Arrange

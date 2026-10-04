@@ -19,6 +19,44 @@ public record CreatePaymentData(
     string? ReceiptPdfUrl
 );
 
+public sealed record PaymentBatchAllocationRequest(int EnrollmentId, decimal Amount);
+
+public sealed record CreatePaymentBatchRequest(
+    List<PaymentBatchAllocationRequest> Allocations,
+    string Method
+);
+
+public sealed record PaymentBatchAllocationResponse(
+    int EnrollmentId,
+    int StudentId,
+    string StudentName,
+    string CourseName,
+    decimal Amount
+);
+
+public sealed record PaymentBatchData(
+    long BatchId,
+    string InvoiceNo,
+    decimal Amount,
+    string Status,
+    string? ReceiptPdfUrl,
+    List<PaymentBatchAllocationResponse> Allocations
+);
+
+public sealed record PaymentBatchResponse(
+    string Status,
+    string Message,
+    PaymentBatchData Data
+);
+
+public sealed record PaymentBatchSlipVerificationResponse(
+    long BatchId,
+    bool Verified,
+    decimal? VerifiedAmount,
+    string? TransactionReference,
+    string? ReceiptPdfUrl
+);
+
 public record PaymentHistoryResponse(
     string Status,
     PaymentHistoryData Data
@@ -41,7 +79,9 @@ public record PaymentHistoryItem(
     DateTime PaidAt,
     string? SlipUrl,
     string? ReceiptPdfUrl,
-    string? CourseNameEn = null
+    string? CourseNameEn = null,
+    bool IsBatch = false,
+    long? BatchId = null
 );
 
 public record PaymentSummary(

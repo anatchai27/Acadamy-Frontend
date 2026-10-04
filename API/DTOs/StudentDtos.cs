@@ -80,7 +80,16 @@ public record StudentListItem(
     string? Grade,
     string? PhotoUrl,
     string? PrimaryParentName,
-    string? PrimaryParentPhone
+    string? PrimaryParentPhone,
+    List<AuthorizedPickupListItem>? AuthorizedPickups = null
+);
+
+public record AuthorizedPickupListItem(
+    long Id,
+    string FullName,
+    string? Phone,
+    string? Relationship,
+    string? PhotoUrl
 );
 
 public record PaginationInfo(
