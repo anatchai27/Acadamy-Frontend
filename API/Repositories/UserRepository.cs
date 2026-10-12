@@ -11,6 +11,7 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
     public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Users
+            .Include(u => u.Teachers)
             .OrderByDescending(u => u.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -18,7 +19,8 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
     public async Task<IEnumerable<User>> GetByInstituteIdAsync(int instituteId, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .Where(u => u.InstituteId == instituteId)
+            .Where(u => u.InstituteId == instituteId || u.Teachers.Any(t => t.InstituteId == instituteId))
+            .Include(u => u.Teachers)
             .OrderByDescending(u => u.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -27,21 +29,35 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
     {
         return await _context.Users
             .Include(u => u.Student)
-            .Include(u => u.Teacher)
+            .Include(u => u.Teachers)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<User?> GetByIdWithProfileAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .Include(u => u.Teacher)
+            .Include(u => u.Teachers)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
-    public Task<User?> GetActiveUserForRefreshAsync(int id, CancellationToken cancellationToken = default) =>
-        _context.Users
-            .Include(u => u.Institute)
-            .FirstOrDefaultAsync(u => u.Id == id && u.Institute != null && u.Institute.IsActive, cancellationToken);
+    public async Task<User?> GetActiveUserForRefreshAsync(int id, int? instituteId = null, CancellationToken cancellationToken = default)
+    {
+        if (!instituteId.HasValue) return null;
+        var user = await _context.Users.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (user is null) return null;
+
+        var instituteIsActive = await _context.Institutes
+            .AnyAsync(institute => institute.Id == instituteId.Value && institute.IsActive, cancellationToken);
+        if (!instituteIsActive) return null;
+
+        var hasAccess = user.Role == UserRole.teacher
+            ? await _context.Teachers.IgnoreQueryFilters().AnyAsync(teacher =>
+                teacher.UserId == id && teacher.InstituteId == instituteId.Value &&
+                teacher.DeletedAt == null && teacher.Status != "inactive", cancellationToken)
+            : user.InstituteId == instituteId.Value;
+        return hasAccess ? user : null;
+    }
 
     public Task<User?> GetByEmailOrPhoneAsync(string email, string? phone, CancellationToken cancellationToken = default) =>
         _context.Users

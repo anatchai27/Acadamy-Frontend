@@ -39,10 +39,31 @@ public static class AuthEndpoints
             var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 return Results.Unauthorized();
-            var result = await userService.GetCurrentUserAsync(userId, ct);
+            int.TryParse(httpContext.User.FindFirst("institute_id")?.Value, out var instituteId);
+            var result = await userService.GetCurrentUserAsync(userId, instituteId > 0 ? instituteId : null, ct);
             return result is null
                 ? Results.Json(new { status = "error", error_code = "USER_NOT_FOUND", message = "ไม่พบบัญชีผู้ใช้" }, statusCode: 404)
                 : Results.Ok(result);
+        }).RequireAuthorization();
+
+        group.MapPost("/switch-institute", async (
+            SwitchInstituteRequest request,
+            HttpContext httpContext,
+            IUserService userService,
+            ITokenService tokenService,
+            CancellationToken ct) =>
+        {
+            var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId)) return Results.Unauthorized();
+            if (!await userService.CanAccessInstituteAsync(userId, request.InstituteId, ct))
+                return Results.Forbid();
+
+            var user = await userService.GetActiveUserForRefreshAsync(userId, request.InstituteId, ct);
+            if (user is null) return Results.Forbid();
+            var token = tokenService.GenerateToken(user, request.InstituteId);
+            var refreshToken = tokenService.GenerateRefreshToken(user, request.InstituteId);
+            AppendAuthCookie(httpContext, token, secure: true);
+            return Results.Ok(new { status = "success", token, refreshToken, instituteId = request.InstituteId });
         }).RequireAuthorization();
 
         group.MapPost("/logout", (HttpContext httpContext) =>
@@ -72,13 +93,17 @@ public static class AuthEndpoints
                 var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out var userId)) return Results.Unauthorized();
 
-                var user = await userService.GetActiveUserForRefreshAsync(userId, ct);
+                int.TryParse(principal.FindFirst("institute_id")?.Value, out var activeInstituteId);
+                var user = await userService.GetActiveUserForRefreshAsync(userId, activeInstituteId, ct);
                 if (user is null)
                     return Results.Json(new { status = "error", error_code = "INSTITUTE_SUSPENDED", message = "สถาบันถูกระงับการใช้งาน" }, statusCode: 403);
 
-                var refreshResult = tokenService.ValidateAndRefresh(request.Token, user);
+                if (activeInstituteId <= 0 || !await userService.CanAccessInstituteAsync(userId, activeInstituteId, ct))
+                    return Results.Unauthorized();
+
+                var refreshResult = tokenService.ValidateAndRefresh(request.Token, user, activeInstituteId);
                 if (refreshResult is null) return Results.Unauthorized();
-                var refreshToken = tokenService.GenerateRefreshToken(user);
+                var refreshToken = tokenService.GenerateRefreshToken(user, activeInstituteId);
                 AppendAuthCookie(httpContext, refreshResult.Value.Token, secure: false);
 
                 return Results.Ok(new
@@ -87,7 +112,7 @@ public static class AuthEndpoints
                     message = "ต่ออายุ Token สำเร็จ",
                     token = refreshResult.Value.Token,
                     refreshToken,
-                    user = new { id = user.Id, email = user.Email, role = user.Role.ToString(), instituteId = user.InstituteId }
+                    user = new { id = user.Id, email = user.Email, role = user.Role.ToString(), instituteId = activeInstituteId }
                 });
             }
             catch (SecurityTokenException)
@@ -181,3 +206,4 @@ public static class AuthEndpoints
 public record LoginRequest(string Email, string Password);
 public record LoginResponse(string Token, int UserId, string Email, string Role, string RefreshToken, int InstituteId);
 public record RefreshTokenRequest(string Token);
+public record SwitchInstituteRequest(int InstituteId);

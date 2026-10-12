@@ -28,8 +28,46 @@ public class UserService(
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _repository.GetByIdAsync(id, ct);
 
-    public Task<User?> GetActiveUserForRefreshAsync(int id, CancellationToken ct = default)
-        => _repository.GetActiveUserForRefreshAsync(id, ct);
+    public Task<User?> GetActiveUserForRefreshAsync(int id, int? instituteId = null, CancellationToken ct = default)
+        => _repository.GetActiveUserForRefreshAsync(id, instituteId, ct);
+
+    public async Task<bool> CanAccessInstituteAsync(int userId, int instituteId, CancellationToken ct = default)
+    {
+        var user = await _context.Users.IgnoreQueryFilters()
+            .Where(item => item.Id == userId)
+            .Select(item => new { item.InstituteId, item.Role })
+            .FirstOrDefaultAsync(ct);
+        if (user is null || !await _context.Institutes.AnyAsync(item => item.Id == instituteId && item.IsActive, ct))
+            return false;
+        if (user.Role != UserRole.teacher) return user.InstituteId == instituteId;
+        return await _context.Teachers.IgnoreQueryFilters()
+            .AnyAsync(teacher => teacher.UserId == userId && teacher.InstituteId == instituteId && teacher.DeletedAt == null && teacher.Status != "inactive", ct);
+    }
+
+    public async Task<IReadOnlyList<InstituteAccessResponse>> GetInstituteAccessAsync(int userId, CancellationToken ct = default)
+    {
+        var user = await _context.Users.IgnoreQueryFilters().AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == userId, ct);
+        if (user is null) return [];
+
+        var memberships = user.Role == UserRole.teacher
+            ? await _context.Teachers.IgnoreQueryFilters().AsNoTracking()
+                .Where(teacher => teacher.UserId == userId && teacher.DeletedAt == null && teacher.Status != "inactive")
+                .Join(_context.Institutes.Where(institute => institute.IsActive), teacher => teacher.InstituteId, institute => institute.Id,
+                    (teacher, institute) => new InstituteAccessResponse(institute.Id, institute.Name, institute.LogoUrl))
+                .ToListAsync(ct)
+            : [];
+
+        if (user.Role != UserRole.teacher)
+        {
+            var homeInstitute = await _context.Institutes.AsNoTracking()
+                .Where(institute => institute.Id == user.InstituteId && institute.IsActive)
+                .Select(institute => new InstituteAccessResponse(institute.Id, institute.Name, institute.LogoUrl))
+                .FirstOrDefaultAsync(ct);
+            if (homeInstitute is not null && memberships.All(item => item.Id != homeInstitute.Id)) memberships.Add(homeInstitute);
+        }
+        return memberships.OrderBy(item => item.Name).ToArray();
+    }
 
     public async Task<User> CreateStaffAsync(CreateStaffRequest request, int instituteId, CancellationToken ct = default)
     {
@@ -237,7 +275,13 @@ public class UserService(
             return null;
         }
 
-        user.InstituteId = instituteId.Value;
+        var accessibleInstitutes = await GetInstituteAccessAsync(user.Id, ct);
+        var selectedInstitute = accessibleInstitutes.FirstOrDefault(item => item.Id == instituteId.Value)
+            ?? accessibleInstitutes.FirstOrDefault(item => item.Id == user.InstituteId)
+            ?? accessibleInstitutes.FirstOrDefault();
+        if (selectedInstitute is null) return null;
+
+        user.InstituteId = selectedInstitute.Id;
 
         var token = _tokenService.GenerateToken(user);
 
@@ -246,7 +290,7 @@ public class UserService(
             UserId: user.Id,
             Email: user.Email,
             Role: user.Role.ToString(),
-            InstituteId: user.InstituteId
+            InstituteId: selectedInstitute.Id
         );
     }
 
@@ -282,15 +326,21 @@ public class UserService(
         return true;
     }
 
-    public async Task<CurrentUserResponse?> GetCurrentUserAsync(int userId, CancellationToken ct = default)
+    public async Task<CurrentUserResponse?> GetCurrentUserAsync(int userId, int? instituteId = null, CancellationToken ct = default)
     {
         var user = await _repository.GetByIdWithProfileAsync(userId, ct);
         if (user is null) return null;
 
+        var activeInstituteId = instituteId ?? user.InstituteId;
+        var institutes = await GetInstituteAccessAsync(userId, ct);
+        var currentInstitute = institutes.FirstOrDefault(item => item.Id == activeInstituteId);
+        if (currentInstitute is null) return null;
+        var teacher = user.Teachers.FirstOrDefault(item => item.InstituteId == activeInstituteId);
+
         var profile = new CurrentUserProfile(
-            FullName: user.Teacher?.FullName ?? user.Email,
-            PhotoUrl: user.Teacher?.PhotoUrl,
-            Subjects: user.Teacher?.Specialization
+            FullName: teacher?.FullName ?? user.Student?.FullName ?? user.Email,
+            PhotoUrl: teacher?.PhotoUrl,
+            Subjects: teacher?.Specialization
         );
 
         return new CurrentUserResponse(
@@ -300,8 +350,10 @@ public class UserService(
                 Email: user.Email,
                 Phone: user.Phone,
                 Role: user.Role.ToString(),
-                InstituteId: user.InstituteId,
-                Profile: profile
+                InstituteId: activeInstituteId,
+                Profile: profile,
+                CurrentInstitute: currentInstitute,
+                Institutes: institutes
             )
         );
     }

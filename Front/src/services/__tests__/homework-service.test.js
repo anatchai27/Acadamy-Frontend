@@ -48,7 +48,17 @@ describe('Homework Service', () => {
       };
       api.post.mockResolvedValue({ data: {}, status: 201 });
       await createHomework(payload);
-      expect(api.post).toHaveBeenCalledWith('/homeworks', payload);
+      expect(api.post).toHaveBeenCalledWith('/homeworks', payload, {});
+    });
+
+    it('forwards an AbortSignal to the POST request', async () => {
+      const payload = { courseId: 5, title: 'Test HW', dueAt: '2026-07-10T23:59:00Z' };
+      const options = { signal: new AbortController().signal };
+      api.post.mockResolvedValue({ data: {}, status: 201 });
+
+      await createHomework(payload, options);
+
+      expect(api.post).toHaveBeenCalledWith('/homeworks', payload, options);
     });
   });
 

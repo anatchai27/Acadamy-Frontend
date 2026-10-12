@@ -11,6 +11,7 @@ public interface IEnrollmentRepository
     Task<bool> ExistsActiveEnrollmentAsync(int studentId, int courseId, CancellationToken ct = default);
     Task<Enrollment> CreateAsync(Enrollment enrollment, CancellationToken ct = default);
     Task<List<DTOs.EnrollmentItem>> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
+    Task<List<DTOs.EnrollmentItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
 }
 
 public class EnrollmentRepository(TutoringDbContext context) : IEnrollmentRepository
@@ -50,6 +51,38 @@ public class EnrollmentRepository(TutoringDbContext context) : IEnrollmentReposi
         return await _context.Enrollments
             .Include(e => e.Course)
             .Where(e => e.StudentId == studentId)
+            .OrderByDescending(e => e.CreatedAt)
+            .Select(e => new DTOs.EnrollmentItem(
+                e.Id,
+                e.StudentId,
+                e.Student.FullName,
+                e.CourseId,
+                e.Course.Name,
+                e.SessionsRemaining,
+                (_context.Payments
+                     .Where(p => p.EnrollmentId == e.Id && p.Status == PaymentStatus.Succeeded)
+                    .Sum(p => (decimal?)p.Amount) ?? 0m)
+                    + (_context.PaymentBatchAllocations
+                        .Where(a => a.EnrollmentId == e.Id && a.PaymentBatch.Status == PaymentStatus.Succeeded)
+                        .Sum(a => (decimal?)a.Amount) ?? 0m),
+                e.ExpiresAt,
+                e.CreatedAt,
+                e.Course.NameEn,
+                e.Course.Price,
+                (_context.Payments
+                    .Where(p => p.EnrollmentId == e.Id && p.Status == PaymentStatus.Pending)
+                    .Sum(p => (decimal?)p.Amount) ?? 0m)
+                    + (_context.PaymentBatchAllocations
+                        .Where(a => a.EnrollmentId == e.Id && a.PaymentBatch.Status == PaymentStatus.Pending)
+                        .Sum(a => (decimal?)a.Amount) ?? 0m)
+            ))
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<DTOs.EnrollmentItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
+    {
+        return await _context.Enrollments
+            .Where(e => e.CourseId == courseId)
             .OrderByDescending(e => e.CreatedAt)
             .Select(e => new DTOs.EnrollmentItem(
                 e.Id,

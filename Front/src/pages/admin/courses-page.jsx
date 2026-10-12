@@ -13,6 +13,7 @@ import {
   HiOutlineArrowUpRight,
   HiOutlineTag,
   HiOutlineUserPlus,
+  HiOutlineUserGroup,
   HiOutlineMagnifyingGlass,
   HiOutlineCheckCircle,
   HiOutlineXMark,
@@ -84,10 +85,15 @@ export function CoursesPage({ path }) {
   const [courseSearch, setCourseSearch] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [enrollmentSubmitting, setEnrollmentSubmitting] = useState(false);
+  const [rosterCourse, setRosterCourse] = useState(null);
+  const [courseEnrollments, setCourseEnrollments] = useState([]);
+  const [courseEnrollmentsLoading, setCourseEnrollmentsLoading] = useState(false);
+  const [courseEnrollmentsError, setCourseEnrollmentsError] = useState(false);
   const getSignal = useAbortController();
   const debounceRef = useRef(null);
   const enrollmentSearchRef = useRef(null);
   const enrollmentStudentRequestRef = useRef(0);
+  const courseRosterRequestRef = useRef(0);
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
 
@@ -289,6 +295,38 @@ export function CoursesPage({ path }) {
     } finally {
       setEnrollmentSubmitting(false);
     }
+  };
+
+  const loadCourseEnrollments = async (course) => {
+    const requestId = ++courseRosterRequestRef.current;
+    setCourseEnrollmentsLoading(true);
+    setCourseEnrollmentsError(false);
+    try {
+      const res = await enrollmentService.getCourseEnrollments(course.id);
+      if (requestId !== courseRosterRequestRef.current) return;
+      const payload = res.data?.data || res.data || {};
+      setCourseEnrollments(payload.enrollments || []);
+    } catch {
+      if (requestId !== courseRosterRequestRef.current) return;
+      setCourseEnrollments([]);
+      setCourseEnrollmentsError(true);
+    } finally {
+      if (requestId === courseRosterRequestRef.current) setCourseEnrollmentsLoading(false);
+    }
+  };
+
+  const openCourseRoster = (course) => {
+    setRosterCourse(course);
+    setCourseEnrollments([]);
+    loadCourseEnrollments(course);
+  };
+
+  const closeCourseRoster = () => {
+    courseRosterRequestRef.current += 1;
+    setRosterCourse(null);
+    setCourseEnrollments([]);
+    setCourseEnrollmentsError(false);
+    setCourseEnrollmentsLoading(false);
   };
 
   const eligibleCourses = courses.filter((course) => Number(course.totalSessions) > 0);
@@ -611,9 +649,22 @@ export function CoursesPage({ path }) {
                       </div>
                     </div>
                   </div>
-                  <span class="mt-2 flex items-center justify-end gap-1 text-[11px] font-medium text-oasis-primary opacity-0 transition-opacity group-hover:opacity-100">
-                    ดูรายละเอียด <HiOutlineArrowUpRight class="h-3.5 w-3.5" />
-                  </span>
+                  <div class="mt-2 flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-1 text-[11px] font-medium text-oasis-primary opacity-0 transition-opacity group-hover:opacity-100">
+                      ดูตารางเรียน <HiOutlineArrowUpRight class="h-3.5 w-3.5" />
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openCourseRoster(course);
+                      }}
+                      class="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-oasis-primary/20 px-2.5 text-xs font-semibold text-oasis-primary transition hover:bg-oasis-primary/5 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30"
+                    >
+                      <HiOutlineUserGroup class="h-4 w-4" />
+                      ดูผู้ลงทะเบียน
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
@@ -779,6 +830,89 @@ export function CoursesPage({ path }) {
                   ยืนยันลงทะเบียน
                 </Button>
               </div>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {rosterCourse && (
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" role="presentation">
+          <button type="button" aria-label="ปิดหน้าต่าง" class="absolute inset-0 bg-zinc-950/55" onClick={closeCourseRoster} />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="course-roster-title"
+            class={`relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden ${isNeo ? 'neo-card bg-white' : 'rounded-2xl bg-white shadow-2xl'}`}
+          >
+            <header class="flex items-start justify-between border-b border-zinc-100 px-5 py-4 sm:px-6">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-oasis-primary">รายชื่อนักเรียน</p>
+                <h2 id="course-roster-title" class="mt-1 truncate text-xl font-bold text-zinc-900">{rosterCourse.name}</h2>
+                <p class="mt-1 text-sm text-zinc-500">
+                  {courseEnrollmentsLoading ? 'กำลังโหลดรายชื่อ...' : `${courseEnrollments.length} รายการลงทะเบียน`}
+                </p>
+              </div>
+              <button type="button" aria-label="ปิด" onClick={closeCourseRoster} class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700">
+                <HiOutlineXMark class="h-5 w-5" />
+              </button>
+            </header>
+
+            <div class="overflow-y-auto p-5 sm:p-6">
+              {courseEnrollmentsLoading ? (
+                <div class="space-y-3" aria-label="กำลังโหลดรายชื่อ">
+                  {[0, 1, 2].map((item) => <div key={item} class="h-16 animate-pulse rounded-xl bg-zinc-100" />)}
+                </div>
+              ) : courseEnrollmentsError ? (
+                <div class="py-8 text-center">
+                  <p class="text-sm font-medium text-rose-700">โหลดรายชื่อผู้ลงทะเบียนไม่สำเร็จ</p>
+                  <button type="button" onClick={() => loadCourseEnrollments(rosterCourse)} class="mt-2 text-sm font-semibold text-oasis-primary hover:underline">ลองอีกครั้ง</button>
+                </div>
+              ) : courseEnrollments.length === 0 ? (
+                <div class="py-10 text-center">
+                  <HiOutlineUserGroup class="mx-auto h-9 w-9 text-zinc-300" />
+                  <p class="mt-3 text-sm font-semibold text-zinc-700">ยังไม่มีนักเรียนลงทะเบียนคอร์สนี้</p>
+                  <p class="mt-1 text-xs text-zinc-500">เมื่อลงทะเบียนแล้ว รายชื่อจะแสดงในหน้านี้</p>
+                </div>
+              ) : (
+                <div class="overflow-x-auto">
+                  <table class="w-full min-w-[520px] text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-zinc-200 text-xs text-zinc-500">
+                        <th scope="col" class="pb-3 pr-3 font-medium">นักเรียน</th>
+                        <th scope="col" class="pb-3 px-3 font-medium">สถานะ</th>
+                        <th scope="col" class="pb-3 px-3 font-medium">คาบคงเหลือ</th>
+                        <th scope="col" class="pb-3 pl-3 text-right font-medium">วันที่ลงทะเบียน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {courseEnrollments.map((enrollment) => {
+                        const isActive = Number(enrollment.sessionsRemaining) > 0;
+                        return (
+                          <tr key={enrollment.id} class="border-b border-zinc-100 last:border-0">
+                            <td class="py-3 pr-3">
+                              <p class="font-semibold text-zinc-900">{enrollment.studentName}</p>
+                              <p class="mt-0.5 text-xs text-zinc-500">รหัสนักเรียน #{enrollment.studentId}</p>
+                            </td>
+                            <td class="px-3 py-3">
+                              <span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
+                                {isActive ? 'กำลังเรียน' : 'ใช้สิทธิ์ครบแล้ว'}
+                              </span>
+                            </td>
+                            <td class="px-3 py-3 font-medium text-zinc-700">{enrollment.sessionsRemaining} คาบ</td>
+                            <td class="py-3 pl-3 text-right text-xs text-zinc-500">
+                              {enrollment.createdAt ? new Date(enrollment.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <footer class="flex justify-end border-t border-zinc-100 px-5 py-4 sm:px-6">
+              <Button variant="outline" size="md" onClick={closeCourseRoster}>ปิด</Button>
             </footer>
           </section>
         </div>

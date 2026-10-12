@@ -134,7 +134,7 @@ export function TeachersPage({ path }) {
   const validate = () => {
     const errs = {};
     if (!form.fullName.trim()) errs.fullName = 'กรุณากรอกชื่อ-นามสกุล';
-    if (!editingId && form.userEmail && !form.userPassword) errs.userPassword = 'กรุณากรอกรหัสผ่านหากระบุอีเมล';
+    if (!editingId && form.userEmail && !form.userPassword) errs.userPassword = 'กรุณากรอกรหัสผ่านบัญชีเดิม หรือเว้นอีเมลไว้หากไม่ต้องการสร้างบัญชี';
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -431,9 +431,10 @@ export function TeachersPage({ path }) {
                   <div
                     class={`${isNeo ? 'border-2 border-black p-5' : 'bg-amber-50/50 border border-amber-200 rounded-xl p-5'}`}
                   >
-                    <p class={`text-sm font-medium mb-3 ${isNeo ? 'text-black' : 'text-amber-800'}`}>
-                      บัญชีผู้ใช้สำหรับเข้าสู่ระบบ <span class="font-normal text-zinc-400">(ไม่บังคับ)</span>
+                    <p class={`text-sm font-medium mb-1 ${isNeo ? 'text-black' : 'text-amber-800'}`}>
+                      บัญชีผู้ใช้สำหรับเข้าสู่ระบบ <span class="font-normal text-zinc-400">(ไม่บังคับ; ใช้อีเมลและรหัสผ่านเดิมเพื่อเชื่อมครูข้ามสถาบัน)</span>
                     </p>
+                    <p class="mb-3 text-xs leading-relaxed text-zinc-600">หากครูมีบัญชีผู้สอนจากสถาบันอื่น ให้ใช้อีเมลและรหัสผ่านเดิมเพื่อเชื่อมบัญชี ครูจะสลับสถาบันได้หลังเข้าสู่ระบบ</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <SolidInput
                         label="อีเมล"
@@ -445,7 +446,7 @@ export function TeachersPage({ path }) {
                       <SolidInput
                         label="รหัสผ่าน"
                         type="password"
-                        placeholder="ตั้งรหัสผ่าน"
+                        placeholder="ตั้งรหัสผ่าน หรือยืนยันรหัสผ่านเดิม"
                         value={form.userPassword}
                         onInput={updateField('userPassword')}
                         error={formErrors.userPassword}

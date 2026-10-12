@@ -8,6 +8,7 @@ namespace academy_API.Repositories;
 
 public interface IHomeworkRepository
 {
+    Task<int?> GetTeacherIdByUserIdAsync(int userId, CancellationToken ct = default);
     Task<Homework> CreateAsync(Homework homework, CancellationToken ct = default);
     Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<List<HomeworkSubmissionItem>> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);
@@ -21,6 +22,12 @@ public interface IHomeworkRepository
 public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
 {
     private readonly TutoringDbContext _context = context;
+
+    public Task<int?> GetTeacherIdByUserIdAsync(int userId, CancellationToken ct = default) =>
+        _context.Teachers
+            .Where(teacher => teacher.UserId == userId)
+            .Select(teacher => (int?)teacher.Id)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<Homework> CreateAsync(Homework homework, CancellationToken ct = default)
     {

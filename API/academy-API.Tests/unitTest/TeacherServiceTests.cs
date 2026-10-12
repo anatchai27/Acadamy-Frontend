@@ -100,6 +100,82 @@ public class TeacherServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ExistingTeacherAccountWithCorrectPassword_AddsInstituteProfile()
+    {
+        var existingUser = new User
+        {
+            Id = 20,
+            InstituteId = 3,
+            Email = "teacher@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+            Role = UserRole.teacher
+        };
+        var repository = new Mock<ITeacherRepository>();
+        repository.Setup(r => r.GetUserByEmailAsync("teacher@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+        repository.Setup(r => r.HasMembershipAsync(20, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        repository.Setup(r => r.CreateAsync(It.IsAny<Teacher>(), existingUser, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Teacher teacher, User? _, CancellationToken _) =>
+            {
+                teacher.Id = 22;
+                teacher.UserId = existingUser.Id;
+                return teacher;
+            });
+        var service = new TeacherService(repository.Object);
+
+        var result = await service.CreateAsync(CreateRequest(email: "teacher@example.com", password: "Password123!"), 8);
+
+        Assert.Equal(20, result.UserId);
+        Assert.Equal(8, result.InstituteId);
+        repository.Verify(r => r.CreateAsync(It.Is<Teacher>(teacher => teacher.InstituteId == 8), existingUser, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ExistingTeacherAccountWrongPassword_IsRejected()
+    {
+        var existingUser = new User
+        {
+            Id = 20,
+            Email = "teacher@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct-password"),
+            Role = UserRole.teacher
+        };
+        var repository = new Mock<ITeacherRepository>();
+        repository.Setup(r => r.GetUserByEmailAsync("teacher@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+        var service = new TeacherService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<TeacherValidationException>(() =>
+            service.CreateAsync(CreateRequest(email: "teacher@example.com", password: "wrong-password"), 8));
+
+        Assert.Equal("EMAIL_CONFLICT", exception.Code);
+        repository.Verify(r => r.CreateAsync(It.IsAny<Teacher>(), It.IsAny<User?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ExistingInstituteMembership_IsRejected()
+    {
+        var existingUser = new User
+        {
+            Id = 20,
+            Email = "teacher@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+            Role = UserRole.teacher
+        };
+        var repository = new Mock<ITeacherRepository>();
+        repository.Setup(r => r.GetUserByEmailAsync("teacher@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+        repository.Setup(r => r.HasMembershipAsync(20, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var service = new TeacherService(repository.Object);
+
+        var exception = await Assert.ThrowsAsync<TeacherValidationException>(() =>
+            service.CreateAsync(CreateRequest(email: "teacher@example.com", password: "Password123!"), 8));
+
+        Assert.Equal("MEMBERSHIP_EXISTS", exception.Code);
+        repository.Verify(r => r.CreateAsync(It.IsAny<Teacher>(), It.IsAny<User?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task PatchAsync_ValidRequest_UpdatesProvidedFieldsOnly()
     {
         var teacher = new Teacher { Id = 4, FullName = "Old", Specialization = "Old specialization", Status = "active" };

@@ -10,6 +10,7 @@ public interface ITeacherRepository
     Task<List<TeacherResponse>> ListAsync(string? search, CancellationToken ct = default);
     Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
     Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default);
+    Task<bool> HasMembershipAsync(int userId, CancellationToken ct = default);
     Task<Teacher> CreateAsync(Teacher teacher, User? user, CancellationToken ct = default);
     Task SaveAsync(CancellationToken ct = default);
     Task DeleteAsync(Teacher teacher, CancellationToken ct = default);
@@ -48,7 +49,10 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
         _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default) =>
-        _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == email, ct);
+
+    public Task<bool> HasMembershipAsync(int userId, CancellationToken ct = default) =>
+        _context.Teachers.AnyAsync(t => t.UserId == userId, ct);
 
     public async Task<Teacher> CreateAsync(Teacher teacher, User? user, CancellationToken ct = default)
     {
@@ -60,8 +64,11 @@ public sealed class TeacherRepository(TutoringDbContext context) : ITeacherRepos
             {
                 if (user is not null)
                 {
-                    _context.Users.Add(user);
-                    await _context.SaveChangesAsync(ct);
+                    if (user.Id == 0)
+                    {
+                        _context.Users.Add(user);
+                        await _context.SaveChangesAsync(ct);
+                    }
                     teacher.UserId = user.Id;
                 }
 

@@ -73,7 +73,7 @@ public static class UserEndpoints
                 user.Phone,
                 role = user.Role.ToString(),
                 user.CreatedAt,
-                fullName = user.Teacher?.FullName ?? user.Student?.FullName
+                fullName = user.Teachers.FirstOrDefault()?.FullName ?? user.Student?.FullName
             }));
         });
 
@@ -89,7 +89,7 @@ public static class UserEndpoints
                     user.Phone,
                     role = user.Role.ToString(),
                     user.CreatedAt,
-                    fullName = user.Teacher?.FullName ?? user.Student?.FullName
+                    fullName = user.Teachers.FirstOrDefault()?.FullName ?? user.Student?.FullName
                 });
         });
 

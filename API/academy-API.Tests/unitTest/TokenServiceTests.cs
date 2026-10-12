@@ -58,6 +58,19 @@ public class TokenServiceTests
         Assert.False(string.IsNullOrEmpty(token));
     }
 
+    [Fact]
+    public void GenerateToken_SelectedInstitute_UsesInstituteClaimWithoutChangingUserHomeInstitute()
+    {
+        var user = CreateTestUser(role: UserRole.teacher);
+        user.InstituteId = 7;
+        var service = new TokenService(CreateConfig());
+
+        var jwt = ParseToken(service.GenerateToken(user, 22));
+
+        Assert.Equal("22", jwt.Claims.Single(claim => claim.Type == "institute_id").Value);
+        Assert.Equal(7, user.InstituteId);
+    }
+
     // 2
     [Fact]
     public void GenerateToken_MissingJwtKey_ThrowsInvalidOperationException()

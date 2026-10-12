@@ -22,7 +22,8 @@ public static class HomeworkEndpoints
             try
             {
                 var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userId = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var id) ? id : 0;
+                if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
+                    return Results.Unauthorized();
 
                 var result = await service.CreateAsync(request, userId, ct);
                 return Results.Created($"/api/homeworks/{result.Data.HomeworkId}", result);

@@ -35,6 +35,7 @@ vi.mock('react-icons/hi2', () => ({
   HiOutlineArrowUpRight: () => <span aria-hidden="true" />,
   HiOutlineTag: () => <span aria-hidden="true" />,
   HiOutlineUserPlus: () => <span aria-hidden="true" />,
+  HiOutlineUserGroup: () => <span aria-hidden="true" />,
   HiOutlineMagnifyingGlass: () => <span aria-hidden="true" />,
   HiOutlineCheckCircle: () => <span aria-hidden="true" />,
   HiOutlineXMark: () => <span aria-hidden="true" />,

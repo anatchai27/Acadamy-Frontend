@@ -53,6 +53,9 @@ export function AppProvider({ children }) {
         }
         dispatch({ type: 'SET_PROFILE', payload: profile });
         dispatch({ type: 'SET_USER', payload: profile });
+        const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
+        dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
+        dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
       })
       .catch(() => {
         dispatch({ type: 'CLEAR_USER' });

@@ -21,6 +21,7 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
         if (string.IsNullOrWhiteSpace(request.Title))
             throw new HomeworkValidationException("TITLE_REQUIRED", "กรุณาระบุหัวข้อการบ้าน");
 
+        var assignedByTeacherId = await _repository.GetTeacherIdByUserIdAsync(assignedByUserId, ct);
         var homework = new Models.Homework
         {
             CourseId = request.CourseId,
@@ -30,7 +31,7 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
             DescriptionEn = Clean(request.DescriptionEn),
             FileUrl = request.FileUrl?.Trim(),
             DueAt = request.DueAt,
-            AssignedBy = assignedByUserId
+            AssignedBy = assignedByTeacherId
         };
 
         var created = await _repository.CreateAsync(homework, ct);

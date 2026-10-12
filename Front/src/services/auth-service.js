@@ -11,6 +11,10 @@ export const getMe = async () => {
   return api.get('/auth/me');
 };
 
+export const switchInstitute = async (instituteId) => {
+  return api.post('/auth/switch-institute', { instituteId });
+};
+
 export const logout = async () => {
   return api.post('/auth/logout');
 };
@@ -35,6 +39,7 @@ export const authService = {
   login,
   logout,
   getMe,
+  switchInstitute,
   registerInstitute,
   refreshToken,
   forgotPassword,

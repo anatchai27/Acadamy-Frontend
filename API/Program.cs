@@ -138,6 +138,10 @@ builder.Services.AddScoped<IPaymentBatchService, PaymentBatchService>();
 builder.Services.AddScoped<IPaymentSlipVerificationService, PaymentSlipVerificationService>();
 builder.Services.AddScoped<IPaymentReceiptService, PaymentReceiptService>();
 builder.Services.AddScoped<IRevenueReportService, RevenueReportService>();
+builder.Services.Configure<OmiseOptions>(builder.Configuration.GetSection(OmiseOptions.SectionName));
+builder.Services.AddHttpClient<OmisePromptPayGateway>(client => client.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddScoped<IOmisePromptPayGateway>(serviceProvider =>
+    serviceProvider.GetRequiredService<OmisePromptPayGateway>());
 builder.Services.Configure<EasySlipOptions>(builder.Configuration.GetSection(EasySlipOptions.SectionName));
 builder.Services.AddHttpClient<EasySlipVerificationProvider>(client => client.Timeout = TimeSpan.FromSeconds(15));
 builder.Services.AddScoped<ISlipVerificationProvider>(serviceProvider =>

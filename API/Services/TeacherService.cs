@@ -31,20 +31,33 @@ public sealed class TeacherService(ITeacherRepository repository) : ITeacherServ
 
         User? user = null;
         var email = request.UserEmail?.Trim();
-        if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(request.UserPassword))
+        if (!string.IsNullOrWhiteSpace(email))
         {
-            if (await repository.GetUserByEmailAsync(email, ct) is not null)
-                throw new TeacherValidationException("EMAIL_CONFLICT", "อีเมลนี้มีผู้ใช้อยู่ในระบบแล้ว");
+            if (string.IsNullOrWhiteSpace(request.UserPassword))
+                throw new TeacherValidationException("PASSWORD_REQUIRED", "กรุณากรอกรหัสผ่านบัญชีครู");
 
-            user = new User
+            var existingUser = await repository.GetUserByEmailAsync(email, ct);
+            if (existingUser is not null)
             {
-                InstituteId = instituteId,
-                Email = email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.UserPassword),
-                Role = Enum.TryParse<UserRole>(request.UserRole, true, out var role) ? role : UserRole.teacher,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                if (existingUser.Role != UserRole.teacher ||
+                    !BCrypt.Net.BCrypt.Verify(request.UserPassword, existingUser.PasswordHash))
+                    throw new TeacherValidationException("EMAIL_CONFLICT", "บัญชีนี้ไม่ใช่บัญชีครู หรือรหัสผ่านไม่ถูกต้อง");
+                if (await repository.HasMembershipAsync(existingUser.Id, ct))
+                    throw new TeacherValidationException("MEMBERSHIP_EXISTS", "ครูบัญชีนี้มีข้อมูลในสถาบันนี้อยู่แล้ว");
+                user = existingUser;
+            }
+            else
+            {
+                user = new User
+                {
+                    InstituteId = instituteId,
+                    Email = email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.UserPassword),
+                    Role = UserRole.teacher,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
         }
 
         var teacher = new Teacher

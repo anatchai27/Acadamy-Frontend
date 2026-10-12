@@ -108,10 +108,10 @@ public class UserManagementServiceTests
     {
         var repository = new Mock<IUserRepository>();
         var user = new User { Id = 9, InstituteId = 4, Email = "admin@example.com" };
-        repository.Setup(r => r.GetActiveUserForRefreshAsync(9, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        repository.Setup(r => r.GetActiveUserForRefreshAsync(9, It.IsAny<int?>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var sut = CreateSut(repository);
 
-        var result = await sut.GetActiveUserForRefreshAsync(9);
+        var result = await sut.GetActiveUserForRefreshAsync(9, 4);
 
         Assert.Same(user, result);
     }

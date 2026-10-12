@@ -4,8 +4,8 @@ export const getHomeworks = (courseId, params = {}, options = {}) => {
   return api.get(`/homeworks/course/${courseId}`, { params, ...options });
 }
 
-export const createHomework = payload => {
-  return api.post('/homeworks', payload);
+export const createHomework = (payload, options = {}) => {
+  return api.post('/homeworks', payload, options);
 }
 
 export const getSubmissions = (homeworkId, params = {}, options = {}) => {

@@ -1,8 +1,8 @@
 import { route } from 'preact-router';
 import { useState, useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
-import { logout, clearAuthStorage } from '../services/auth-service';
-import { showConfirm, BadgeSticker } from '../components/ui';
+import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../services/auth-service';
+import { showConfirm, showToast, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
 import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, BellIcon } from '../components/ui/icons';
@@ -125,6 +125,7 @@ export const AdminLayout = ({
   const { t, currentLanguage } = useTranslation();
   const currentTitle = t(`navigation.${navigationKeyByPath[currentPath] || 'dashboard'}`);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [switchingInstituteId, setSwitchingInstituteId] = useState(null);
   const {
     designTheme
   } = useDesignTheme();
@@ -187,6 +188,8 @@ export const AdminLayout = ({
     })();
   };
   const profile = state.userProfile;
+  const institutes = profile?.institutes || profile?.data?.institutes || [];
+  const currentInstitute = profile?.currentInstitute || profile?.data?.currentInstitute;
   const displayName = profile?.profile?.fullName || profile?.fullName || profile?.email || state.user?.email || state.user?.userId || 'admin';
     const displayRole = t(`users.roles.${profile?.role || 'member'}`, { defaultValue: t('common.member') });
   const avatarChar = (displayName || 'A').charAt(0).toUpperCase();
@@ -196,6 +199,33 @@ export const AdminLayout = ({
      items: group.items.filter(item => item.roles.includes(userRole) && canReadPage(userRole, item.path))
   })).filter(group => group.items.length > 0);
   const filteredMenuItems = filteredGroups.flatMap(g => g.items);
+  const handleSwitchInstitute = async (instituteId) => {
+    if (switchingInstituteId || Number(instituteId) === Number(currentInstitute?.id ?? profile?.instituteId)) return;
+    setSwitchingInstituteId(instituteId);
+    try {
+      const response = await switchInstitute(Number(instituteId));
+      const payload = response.data?.data || response.data || {};
+      if (!payload.token) throw new Error('ไม่พบ token สำหรับสถาบันที่เลือก');
+      setAuthStorage(payload.token, state.user);
+      window.location.reload();
+    } catch (error) {
+      showToast(error?.data?.message || error?.data?.error || 'สลับสถาบันไม่สำเร็จ กรุณาลองใหม่', 'error');
+      setSwitchingInstituteId(null);
+    }
+  };
+  const renderInstituteOptions = () => institutes.length > 1 ? <div class="border-b border-slate-100 py-2">
+    <p class="px-4 pb-1 text-xs font-semibold text-slate-500">สถาบันที่ใช้งาน</p>
+    {institutes.map(institute => <button
+      key={institute.id}
+      type="button"
+      disabled={!!switchingInstituteId}
+      onClick={() => handleSwitchInstitute(institute.id)}
+      class={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition hover:bg-slate-50 disabled:opacity-60 ${Number(institute.id) === Number(currentInstitute?.id ?? profile?.instituteId) ? 'font-semibold text-blue-700' : 'text-slate-700'}`}
+    >
+      <span class="truncate">{institute.name}</span>
+      {switchingInstituteId === institute.id ? <span class="ml-2 text-xs">กำลังสลับ…</span> : Number(institute.id) === Number(currentInstitute?.id ?? profile?.instituteId) ? <span aria-label="สถาบันปัจจุบัน">✓</span> : null}
+    </button>)}
+  </div> : null;
   return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-slate-50 text-slate-700'}`}>
       <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-white border-r border-slate-200 shadow-sm'}`}>
         <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-slate-100'}`}>
@@ -268,6 +298,7 @@ export const AdminLayout = ({
                 <p class="text-sm font-semibold text-slate-900">{displayName}</p>
                 <p class="text-xs text-slate-500">{displayRole}</p>
               </div>
+              {renderInstituteOptions()}
               <button onClick={handleLogout} class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-600 hover:bg-red-50 hover:text-red-600 transition-colors">
                 <LogoutIcon class="h-4 w-4" />
                 {t('common.logout')}
@@ -317,6 +348,7 @@ export const AdminLayout = ({
                   <p class="text-sm font-semibold text-slate-900">{displayName}</p>
                   <p class="text-xs text-slate-500">{displayRole}</p>
                 </div>
+                {renderInstituteOptions()}
                 <button onClick={handleLogout} class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-zinc-600 hover:bg-red-50 hover:text-red-600 transition-colors">
                   <LogoutIcon class="h-4 w-4" />
                    {t('common.logout')}

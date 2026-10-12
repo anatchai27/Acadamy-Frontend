@@ -16,7 +16,7 @@ public class User : IMultiTenantEntity
 
     public Institute? Institute { get; set; }
     public Student? Student { get; set; }
-    public Teacher? Teacher { get; set; }
+    public ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
 }
 
 public class UserCreateRequest

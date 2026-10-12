@@ -16,6 +16,8 @@ public class HomeworkServiceTests
         var repoMock = CreateMockRepo();
         repoMock.Setup(r => r.CreateAsync(It.IsAny<Homework>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Homework h, CancellationToken _) => { h.Id = 10; return h; });
+        repoMock.Setup(r => r.GetTeacherIdByUserIdAsync(42, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(24);
 
         var sut = new HomeworkService(repoMock.Object);
         var result = await sut.CreateAsync(
@@ -24,6 +26,26 @@ public class HomeworkServiceTests
         Assert.Equal("success", result.Status);
         Assert.Equal(10, result.Data.HomeworkId);
         Assert.Equal("HW1", result.Data.Title);
+        repoMock.Verify(r => r.CreateAsync(
+            It.Is<Homework>(homework => homework.AssignedBy == 24),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_UserWithoutTeacherProfile_CreatesHomeworkWithNoAssignedTeacher()
+    {
+        var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.GetTeacherIdByUserIdAsync(42, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int?)null);
+        repoMock.Setup(r => r.CreateAsync(It.IsAny<Homework>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Homework h, CancellationToken _) => { h.Id = 10; return h; });
+
+        var sut = new HomeworkService(repoMock.Object);
+        await sut.CreateAsync(new HomeworkRequest(1, "HW1", "desc", null, DateTime.UtcNow.AddDays(7)), 42);
+
+        repoMock.Verify(r => r.CreateAsync(
+            It.Is<Homework>(homework => homework.AssignedBy == null),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // 2

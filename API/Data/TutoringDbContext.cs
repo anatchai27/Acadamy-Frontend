@@ -153,13 +153,13 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(t => t.User)
-                  .WithOne(u => u.Teacher)
-                  .HasForeignKey<Teacher>(t => t.UserId)
+                  .WithMany(u => u.Teachers)
+                  .HasForeignKey(t => t.UserId)
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(t => t.InstituteId);
-            entity.HasIndex(t => t.UserId).IsUnique();
+            entity.HasIndex(t => new { t.UserId, t.InstituteId }).IsUnique();
 
             entity.Property(t => t.FullName).HasMaxLength(255).HasColumnName("full_name");
             entity.Property(t => t.Specialization).HasMaxLength(255).HasColumnName("subjects");
@@ -1241,7 +1241,8 @@ public class TutoringDbContext(
         modelBuilder.Entity<Teacher>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Course>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Product>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
-        modelBuilder.Entity<User>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+            modelBuilder.Entity<User>().HasQueryFilter(e =>
+                  e.InstituteId == _currentInstituteId || e.Teachers.Any(t => t.InstituteId == _currentInstituteId));
         modelBuilder.Entity<StudentWallet>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<WalletTransaction>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

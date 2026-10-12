@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
@@ -100,6 +100,7 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const createControllerRef = useRef(null);
   const [expandedHw, setExpandedHw] = useState(null);
   const [submissions, setSubmissions] = useState({});
   const [skillTopics, setSkillTopics] = useState([]);
@@ -115,6 +116,12 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
     dueTime: '',
     fileUrl: '',
   });
+
+  useEffect(() => () => {
+    const controller = createControllerRef.current;
+    createControllerRef.current = null;
+    controller?.abort();
+  }, []);
 
   const fetchHomeworks = async () => {
     if (!courseId) return;
@@ -166,6 +173,9 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
     }
 
     setSubmitting(true);
+    const controller = new AbortController();
+    createControllerRef.current?.abort();
+    createControllerRef.current = controller;
     try {
       const payload = {
         courseId: Number(courseId),
@@ -177,16 +187,27 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
         fileUrl: form.fileUrl.trim() || undefined,
       };
 
-      await homeworkService.createHomework(payload);
+      await homeworkService.createHomework(payload, { signal: controller.signal });
       showToast('สั่งการบ้านสำเร็จ', 'success');
       setShowForm(false);
       fetchHomeworks();
     } catch (err) {
+      if (err?.name === 'AbortError') return;
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ';
       showToast(msg, 'error');
     } finally {
-      setSubmitting(false);
+      if (createControllerRef.current === controller) {
+        createControllerRef.current = null;
+        setSubmitting(false);
+      }
     }
+  };
+
+  const cancelHomeworkCreation = () => {
+    createControllerRef.current?.abort();
+    createControllerRef.current = null;
+    setSubmitting(false);
+    setShowForm(false);
   };
 
   const toggleSubmissions = async (hwId) => {
@@ -340,7 +361,7 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
               <Button variant="primary" size="md" type="submit" loading={submitting} disabled={submitting}>
                 สั่งการบ้าน
               </Button>
-              <Button variant="outline" size="md" type="button" onClick={() => setShowForm(false)}>
+              <Button variant="outline" size="md" type="button" onClick={cancelHomeworkCreation}>
                 ยกเลิก
               </Button>
             </div>

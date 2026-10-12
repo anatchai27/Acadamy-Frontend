@@ -13,7 +13,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
 {
     private readonly IConfiguration _configuration = configuration;
 
-    public string GenerateToken(User user)
+    public string GenerateToken(User user, int? instituteId = null)
     {
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured.");
@@ -29,7 +29,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Role, user.Role.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new("institute_id", user.InstituteId.ToString())
+            new("institute_id", (instituteId ?? user.InstituteId).ToString())
         };
 
         var token = new JwtSecurityToken(
@@ -43,7 +43,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerateRefreshToken(User user)
+    public string GenerateRefreshToken(User user, int? instituteId = null)
     {
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured.");
@@ -60,7 +60,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
             new(ClaimTypes.Role, user.Role.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new("token_type", "refresh"),
-            new("institute_id", user.InstituteId.ToString())
+            new("institute_id", (instituteId ?? user.InstituteId).ToString())
         };
 
         var token = new JwtSecurityToken(
@@ -74,7 +74,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public (string Token, int UserId, string Email, string Role, int InstituteId)? ValidateAndRefresh(string expiredToken, User user)
+    public (string Token, int UserId, string Email, string Role, int InstituteId)? ValidateAndRefresh(string expiredToken, User user, int? instituteId = null)
     {
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured.");
@@ -109,12 +109,14 @@ public class TokenService(IConfiguration configuration) : ITokenService
             var tokenType = principal.FindFirst("token_type")?.Value;
             if (tokenType == "refresh")
             {
-                var token = GenerateRefreshToken(user);
-                return (token, user.Id, user.Email, user.Role.ToString(), user.InstituteId);
+                var activeInstituteId = instituteId ?? user.InstituteId;
+                var token = GenerateRefreshToken(user, activeInstituteId);
+                return (token, user.Id, user.Email, user.Role.ToString(), activeInstituteId);
             }
 
-            var newToken = GenerateToken(user);
-            return (newToken, user.Id, user.Email, user.Role.ToString(), user.InstituteId);
+            var activeId = instituteId ?? user.InstituteId;
+            var newToken = GenerateToken(user, activeId);
+            return (newToken, user.Id, user.Email, user.Role.ToString(), activeId);
         }
         catch
         {

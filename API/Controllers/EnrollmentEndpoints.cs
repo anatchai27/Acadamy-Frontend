@@ -20,6 +20,13 @@ public static class EnrollmentEndpoints
             return Results.Ok(result);
         });
 
+        group.MapGet("/course", async (int courseId, IEnrollmentService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            var result = await service.GetByCourseIdAsync(courseId, ct);
+            return Results.Ok(result);
+        });
+
         group.MapPost("/", async (
             EnrollStudentRequest request,
             IEnrollmentService service,

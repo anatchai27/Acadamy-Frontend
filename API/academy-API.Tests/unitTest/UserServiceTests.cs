@@ -16,12 +16,16 @@ public class UserServiceTests
             .UseInMemoryDatabase(dbName)
             .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
-        return new TutoringDbContext(options, new MockTenantProvider());
+        var context = new TutoringDbContext(options, new MockTenantProvider());
+        context.Institutes.Add(new Institute { Id = 1, Name = "Test Institute", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        context.SaveChanges();
+        return context;
     }
 
     private static User CreateTestUser(string email = "test@example.com", string passwordHash = "$2a$11$hashedpassword", UserRole role = UserRole.student) => new()
     {
         Id = 1,
+        InstituteId = 1,
         Role = role,
         Email = email,
         PasswordHash = passwordHash,
@@ -37,7 +41,7 @@ public class UserServiceTests
         var mock = new Mock<ITokenService>();
         mock.Setup(s => s.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns((string pwd, string hash) => verifyResult && hash == passwordHash);
-        mock.Setup(s => s.GenerateToken(It.IsAny<User>())).Returns(generatedToken);
+        mock.Setup(s => s.GenerateToken(It.IsAny<User>(), It.IsAny<int?>())).Returns(generatedToken);
         mock.Setup(s => s.HashPassword(It.IsAny<string>())).Returns(passwordHash);
         return mock;
     }
@@ -85,7 +89,7 @@ public class UserServiceTests
         var result = await sut.LoginAsync("user@example.com", "wrong-password");
 
         Assert.Null(result);
-        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>()), Times.Never);
+        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>(), It.IsAny<int?>()), Times.Never);
     }
 
     // 3
@@ -99,7 +103,7 @@ public class UserServiceTests
         var result = await sut.LoginAsync("nonexistent@example.com", "any-password");
 
         Assert.Null(result);
-        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>()), Times.Never);
+        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>(), It.IsAny<int?>()), Times.Never);
     }
 
     // 4
@@ -124,10 +128,46 @@ public class UserServiceTests
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
         context.Users.Add(CreateTestUser(email: "t@ex.com", role: UserRole.teacher));
+        context.Teachers.Add(new Teacher { Id = 11, InstituteId = 1, UserId = 1, FullName = "Test Teacher", Status = "active" });
         await context.SaveChangesAsync();
 
         var sut = CreateUserService(context);
         Assert.Equal("teacher", (await sut.LoginAsync("t@ex.com", "password"))!.Role);
+    }
+
+    [Fact]
+    public async Task LoginAsync_TeacherWithMultipleInstitutes_UsesFirstActiveMembership()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Institutes.Add(new Institute { Id = 2, Name = "Second Institute", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        context.Users.Add(CreateTestUser(email: "multi-teacher@example.com", role: UserRole.teacher));
+        context.Teachers.AddRange(
+            new Teacher { Id = 11, InstituteId = 1, UserId = 1, FullName = "Teacher A", Status = "active" },
+            new Teacher { Id = 12, InstituteId = 2, UserId = 1, FullName = "Teacher B", Status = "active" });
+        await context.SaveChangesAsync();
+
+        var sut = CreateUserService(context);
+        var result = await sut.LoginAsync("multi-teacher@example.com", "password");
+
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.InstituteId);
+        Assert.True(await sut.CanAccessInstituteAsync(1, 2));
+        Assert.False(await sut.CanAccessInstituteAsync(1, 99));
+    }
+
+    [Fact]
+    public async Task CanAccessInstituteAsync_NonTeacherCannotSwitchFromHomeInstitute()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Institutes.Add(new Institute { Id = 2, Name = "Second Institute", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        context.Users.Add(CreateTestUser(email: "admin@example.com", role: UserRole.admin));
+        await context.SaveChangesAsync();
+        var sut = CreateUserService(context);
+
+        Assert.True(await sut.CanAccessInstituteAsync(1, 1));
+        Assert.False(await sut.CanAccessInstituteAsync(1, 2));
     }
 
     // 6
@@ -196,7 +236,7 @@ public class UserServiceTests
 
         Assert.Null(result);
         tokenMock.Verify(v => v.VerifyPassword("", "stored-hash"), Times.Once);
-        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>()), Times.Never);
+        tokenMock.Verify(v => v.GenerateToken(It.IsAny<User>(), It.IsAny<int?>()), Times.Never);
     }
 
     // 11
@@ -242,7 +282,7 @@ public class UserServiceTests
 
         var tokenMock = new Mock<ITokenService>();
         tokenMock.Setup(s => s.VerifyPassword("mypass", "stored-hash-123")).Returns(true);
-        tokenMock.Setup(s => s.GenerateToken(It.IsAny<User>())).Returns("token");
+        tokenMock.Setup(s => s.GenerateToken(It.IsAny<User>(), It.IsAny<int?>())).Returns("token");
         var sut = CreateUserService(context, tokenMock);
 
         await sut.LoginAsync("u@ex.com", "mypass");
@@ -766,12 +806,13 @@ public class UserServiceTests
         var user = new User
         {
             Id = 10,
+            InstituteId = 1,
             Email = "profile@ex.com",
             Role = UserRole.teacher,
             PasswordHash = "h",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Teacher = new Teacher { FullName = "คุณครูสมชาย", Specialization = "คณิตศาสตร์", PhotoUrl = "/photo.jpg" }
+            Teachers = { new Teacher { InstituteId = 1, FullName = "คุณครูสมชาย", Specialization = "คณิตศาสตร์", PhotoUrl = "/photo.jpg" } }
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -810,6 +851,7 @@ public class UserServiceTests
         var user = new User
         {
             Id = 20,
+            InstituteId = 1,
             Email = "student@ex.com",
             Role = UserRole.student,
             PasswordHash = "h",

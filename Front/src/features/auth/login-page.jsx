@@ -69,6 +69,9 @@ export const LoginPage = () => {
         type: 'SET_PROFILE',
         payload: profile
       });
+      const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
+      dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
+      dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
       showToast('เข้าสู่ระบบสำเร็จ', 'success');
       route('/admin/dashboard');
     } catch (error) {
