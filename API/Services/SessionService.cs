@@ -3,16 +3,9 @@ using System.Globalization;
 
 namespace academy_API.Services;
 
-public interface ISessionService
+public class SessionService(ISessionRepository repository) : ISessionService
 {
-    Task<SessionListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
-    Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int instituteId, CancellationToken ct = default);
-    Task<CreateRecurringSessionsResponse> CreateRecurringAsync(int courseId, CreateRecurringSessionsRequest request, int instituteId, CancellationToken ct = default);
-}
-
-public class SessionService(Repositories.ISessionRepository repository) : ISessionService
-{
-    private readonly Repositories.ISessionRepository _repository = repository;
+    private readonly ISessionRepository _repository = repository;
 
     public async Task<SessionListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default)
     {

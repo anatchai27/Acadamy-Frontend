@@ -3,17 +3,9 @@ using academy_API.Models;
 
 namespace academy_API.Services;
 
-public interface ICourseService
+public class CourseService(ICourseRepository repository) : ICourseService
 {
-    Task<CourseListResponse> GetAllAsync(string? search, int? teacherId, CancellationToken ct = default);
-    Task<Course?> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<CreateCourseResponse> CreateAsync(CreateCourseRequest request, int instituteId, CancellationToken ct = default);
-    Task<UpdateCourseResponse> UpdateAsync(int id, UpdateCourseRequest request, CancellationToken ct = default);
-}
-
-public class CourseService(Repositories.ICourseRepository repository) : ICourseService
-{
-    private readonly Repositories.ICourseRepository _repository = repository;
+    private readonly ICourseRepository _repository = repository;
 
     private static readonly HashSet<string> ValidCourseTypes = ["group", "private", "subscription", "video", "credit"];
 

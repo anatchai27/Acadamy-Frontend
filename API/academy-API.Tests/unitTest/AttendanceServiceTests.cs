@@ -7,11 +7,11 @@ namespace academy_API.Tests.unitTest;
 
 public class AttendanceServiceTests
 {
-    private static Mock<academy_API.Repositories.IAttendanceRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IAttendanceRepository> CreateMockRepo() => new();
     private static Mock<IBackgroundNotificationDispatcher> CreateMockDispatcher() => new();
 
     private static AttendanceService CreateSut(
-        Mock<academy_API.Repositories.IAttendanceRepository>? repoMock = null,
+        Mock<academy_API.Repositories.Interface.IAttendanceRepository>? repoMock = null,
         Mock<IBackgroundNotificationDispatcher>? dispatcherMock = null) =>
         new(repoMock?.Object ?? CreateMockRepo().Object, dispatcherMock?.Object ?? CreateMockDispatcher().Object);
 

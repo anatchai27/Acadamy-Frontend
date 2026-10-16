@@ -5,6 +5,7 @@ using academy_API.Data;
 using academy_API.Middlewares;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
 using academy_API.Services;
 using academy_API.Services.Contracts;
 using academy_API.Services.Interface;
@@ -250,7 +251,7 @@ app.MapLeaveRequestEndpoints();
 app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
-app.MapPaymentSlipUploadEndpoint();
+app.MapFileUploadEndpoints();
 app.MapParentEndpoints();
 app.MapPublicLeadEndpoints();
 

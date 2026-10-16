@@ -7,7 +7,7 @@ namespace academy_API.Tests.unitTest;
 
 public class StudentServiceTests
 {
-    private static Mock<academy_API.Repositories.IStudentRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IStudentRepository> CreateMockRepo() => new();
 
     private static CreateStudentRequest CreateValidRequest(
         string fullName = "ด.ช. สมชาย รักเรียน",

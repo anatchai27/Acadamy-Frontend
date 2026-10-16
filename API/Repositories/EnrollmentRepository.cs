@@ -4,16 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
 
-public interface IEnrollmentRepository
-{
-    Task<Course?> GetCourseByIdAsync(int courseId, CancellationToken ct = default);
-    Task<int> GetUpcomingSessionCountAsync(int courseId, DateTime from, CancellationToken ct = default);
-    Task<bool> ExistsActiveEnrollmentAsync(int studentId, int courseId, CancellationToken ct = default);
-    Task<Enrollment> CreateAsync(Enrollment enrollment, CancellationToken ct = default);
-    Task<List<DTOs.EnrollmentItem>> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
-    Task<List<DTOs.EnrollmentItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
-}
-
 public class EnrollmentRepository(TutoringDbContext context) : IEnrollmentRepository
 {
     private readonly TutoringDbContext _context = context;

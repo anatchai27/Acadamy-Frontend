@@ -1,8 +1,9 @@
 using Aliyun.OSS;
 using Aliyun.OSS.Common;
 using Microsoft.Extensions.Options;
+using academy_API.Services.Interface;
 
-namespace academy_API.Services.Interface;
+namespace academy_API.Services;
 
 public class S3FileStorageService : IFileStorageService, IDisposable
 {
@@ -35,13 +36,8 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         await fileStream.CopyToAsync(buffer, ct);
         buffer.Position = 0;
 
-        var objectMeta = new ObjectMetadata
-        {
-            ContentType = contentType
-        };
-
+        var objectMeta = new ObjectMetadata { ContentType = contentType };
         await Task.Run(() => _ossClient.PutObject(_bucketName, fileName, buffer, objectMeta), ct);
-
         return $"{_publicUrl}/{_bucketName}/{fileName}";
     }
 
@@ -52,22 +48,19 @@ public class S3FileStorageService : IFileStorageService, IDisposable
 
         var key = ExtractKeyFromUrl(fileUrl);
         if (string.IsNullOrEmpty(key)) return false;
-
         var result = await Task.Run(() => _ossClient.DeleteObject(_bucketName, key), ct);
         return result.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
     public string GetPublicUrl(string key) => $"{_publicUrl}/{_bucketName}/{key}";
 
-    private string? ExtractKeyFromUrl(string url)
+    private string? ExtractKeyFromUrl(string fileUrl)
     {
         var prefix = $"{_publicUrl}/{_bucketName}/";
-        return url.StartsWith(prefix) ? url[prefix.Length..] : null;
+        return fileUrl.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? fileUrl[prefix.Length..] : null;
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 }
 
 public class ThaiDataCloudOptions

@@ -5,12 +5,6 @@ using QuestPDF.Infrastructure;
 
 namespace academy_API.Services;
 
-public interface IReceiptPdfService
-{
-    byte[] Render(ReceiptPdfData data);
-    byte[] RenderBatch(ReceiptBatchPdfData data);
-}
-
 public sealed record ReceiptPdfData(
     string InvoiceNo,
     string StudentName,

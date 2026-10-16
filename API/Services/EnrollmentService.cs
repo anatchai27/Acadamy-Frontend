@@ -2,16 +2,9 @@ using academy_API.DTOs;
 
 namespace academy_API.Services;
 
-public interface IEnrollmentService
+public class EnrollmentService(IEnrollmentRepository repository) : IEnrollmentService
 {
-    Task<EnrollStudentResponse> EnrollAsync(EnrollStudentRequest request, CancellationToken ct = default);
-    Task<EnrollmentListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
-    Task<EnrollmentListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
-}
-
-public class EnrollmentService(Repositories.IEnrollmentRepository repository) : IEnrollmentService
-{
-    private readonly Repositories.IEnrollmentRepository _repository = repository;
+    private readonly IEnrollmentRepository _repository = repository;
 
     public async Task<EnrollStudentResponse> EnrollAsync(EnrollStudentRequest request, CancellationToken ct = default)
     {

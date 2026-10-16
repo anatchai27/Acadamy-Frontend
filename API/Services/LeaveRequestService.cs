@@ -2,17 +2,9 @@ using academy_API.DTOs;
 
 namespace academy_API.Services;
 
-public interface ILeaveRequestService
+public class LeaveRequestService(ILeaveRequestRepository repository) : ILeaveRequestService
 {
-    Task<LeaveRequestResponse> GetAllAsync(string? status, int page, int limit, CancellationToken ct = default);
-    Task<LeaveRequestCreatedResponse> CreateAsync(int studentId, int instituteId, CreateLeaveRequestRequest request, CancellationToken ct = default);
-    Task<LeaveDecisionResponse> ApproveAsync(long id, int approvedByUserId, CancellationToken ct = default);
-    Task<LeaveDecisionResponse> RejectAsync(long id, int approvedByUserId, CancellationToken ct = default);
-}
-
-public class LeaveRequestService(Repositories.ILeaveRequestRepository repository) : ILeaveRequestService
-{
-    private readonly Repositories.ILeaveRequestRepository _repository = repository;
+    private readonly ILeaveRequestRepository _repository = repository;
 
     public async Task<LeaveRequestResponse> GetAllAsync(string? status, int page, int limit, CancellationToken ct = default)
     {

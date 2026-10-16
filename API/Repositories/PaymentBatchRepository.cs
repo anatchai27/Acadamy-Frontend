@@ -1,26 +1,9 @@
 using academy_API.Data;
 using academy_API.Models;
-using academy_API.Services;
+using academy_API.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
-
-public interface IPaymentBatchRepository
-{
-    Task<Enrollment?> GetEnrollmentAsync(int enrollmentId, CancellationToken ct = default);
-    Task<decimal> GetSucceededAmountByEnrollmentAsync(int enrollmentId, CancellationToken ct = default);
-    Task<decimal> GetPendingAmountByEnrollmentAsync(int enrollmentId, CancellationToken ct = default);
-    Task<string> GenerateInvoiceNoAsync(CancellationToken ct = default);
-    Task<PaymentBatch> CreateAsync(PaymentBatch batch, CancellationToken ct = default);
-    Task<PaymentBatch?> GetForSlipUploadAsync(long batchId, CancellationToken ct = default);
-    Task<PaymentBatch?> GetForVerificationAsync(long batchId, CancellationToken ct = default);
-    Task<bool> SaveVerifiedSlipAsync(PaymentBatch batch, CancellationToken ct = default);
-    Task SaveReceiptPdfUrlAsync(PaymentBatch batch, CancellationToken ct = default);
-    Task<List<PaymentBatch>> GetHistoryAsync(DateTime? startDate, DateTime? endDate, string? method, int limit, CancellationToken ct = default);
-    Task<decimal> GetTotalAmountAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
-    Task<int> GetBatchCountAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
-    Task<List<PaymentBatch>> GetBatchesForExportAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
-}
 
 public sealed class PaymentBatchRepository(TutoringDbContext context) : IPaymentBatchRepository
 {

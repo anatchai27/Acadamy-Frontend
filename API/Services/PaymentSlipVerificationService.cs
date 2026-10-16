@@ -5,11 +5,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface IPaymentSlipVerificationService
-{
-    Task<PaymentSlipVerificationResponse> VerifyAsync(long paymentId, int? actorId, CancellationToken ct = default);
-}
-
 public sealed class PaymentSlipVerificationService(
     IPaymentRepository repository,
     ISlipVerificationProvider provider,

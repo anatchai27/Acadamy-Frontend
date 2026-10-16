@@ -2,11 +2,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface IBackgroundNotificationJob
-{
-    Task<int> RunOnceAsync(DateTime now, CancellationToken ct = default);
-}
-
 public sealed class LateAttendanceNotificationJob(
     IBackgroundNotificationRepository repository,
     IBackgroundNotificationDispatcher dispatcher) : IBackgroundNotificationJob

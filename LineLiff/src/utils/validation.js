@@ -7,6 +7,13 @@ export const validateHomeworkFile = file => {
   return '';
 };
 
+export const validatePaymentSlip = file => {
+  if (!file) return 'เลือกรูปสลิปก่อนส่ง';
+  if (!file.type?.startsWith('image/')) return 'สลิปต้องเป็นไฟล์รูปภาพ';
+  if (file.size > 10 * 1024 * 1024) return `ไฟล์มีขนาด ${formatSize(file.size)} และต้องไม่เกิน 10MB`;
+  return '';
+};
+
 export const validateLeaveAttachment = file => {
   if (!file) return '';
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];

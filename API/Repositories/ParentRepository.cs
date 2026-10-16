@@ -1,32 +1,10 @@
 using academy_API.Data;
+using academy_API.DTOs;
 using academy_API.Models;
-using academy_API.Services;
+using academy_API.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
-
-public interface IParentRepository
-{
-    Task<Parent?> FindByLineUserAsync(string lineUserId, CancellationToken ct = default);
-    Task<Parent?> FindByPhoneAsync(string phone, CancellationToken ct = default);
-    Task<Parent?> FindByUserIdAsync(int userId, CancellationToken ct = default);
-    Task<User?> FindUserByIdAsync(int userId, CancellationToken ct = default);
-    Task<User?> FindUserByPhoneAsync(string phone, CancellationToken ct = default);
-    Task<User> CreateUserAsync(User user, CancellationToken ct = default);
-    Task SaveChangesAsync(CancellationToken ct = default);
-    Task<List<ChildSummary>> GetChildrenAsync(int userId, CancellationToken ct = default);
-    Task<ParentDashboardSnapshot> GetDashboardAsync(int userId, CancellationToken ct = default);
-    Task<List<AttendanceRecord>> GetAttendanceAsync(int studentId, CancellationToken ct = default);
-    Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default);
-    Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, DateTime from, CancellationToken ct = default);
-    Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default);
-    Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default);
-    Task<bool> IsParentOfHomeworkSubmissionAsync(int userId, int submissionId, CancellationToken ct = default);
-}
 
 public sealed class ParentRepository(TutoringDbContext context) : IParentRepository
 {
@@ -134,7 +112,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 p.SlipUrl ?? string.Empty,
                 p.ReceiptPdfUrl,
                 p.Enrollment.Course.NameEn,
-                p.Status ?? PaymentStatus.Pending))
+                p.Status ?? PaymentStatus.Pending,
+                (long?)null))
             .ToListAsync(ct);
         var batchPayments = await _context.PaymentBatchAllocations
             .Where(allocation => allocation.Enrollment.StudentId == studentId)
@@ -148,10 +127,59 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 allocation.PaymentBatch.SlipUrl ?? string.Empty,
                 allocation.ReceiptPdfUrl,
                 allocation.Enrollment.Course.NameEn,
-                allocation.PaymentBatch.Status))
+                allocation.PaymentBatch.Status,
+                (long?)allocation.PaymentBatchId))
             .ToListAsync(ct);
 
         return payments.Concat(batchPayments).OrderByDescending(payment => payment.PaidAt).ToList();
+    }
+
+    public async Task<List<ParentPayableBalance>> GetPayableBalancesAsync(int studentId, CancellationToken ct = default)
+    {
+        var enrollments = await _context.Enrollments
+            .Where(enrollment => enrollment.StudentId == studentId)
+            .Select(enrollment => new
+            {
+                enrollment.Id,
+                enrollment.StudentId,
+                StudentName = enrollment.Student.FullName,
+                CourseName = enrollment.Course.Name,
+                CoursePrice = enrollment.Course.Price,
+                InstituteName = enrollment.Institute.Name,
+                InstituteContactPhone = enrollment.Institute.ContactPhone,
+            })
+            .ToListAsync(ct);
+
+        if (enrollments.Count == 0) return [];
+
+        var enrollmentIds = enrollments.Select(enrollment => enrollment.Id).ToList();
+        var paymentTotals = await _context.Payments
+            .Where(payment => enrollmentIds.Contains(payment.EnrollmentId)
+                && (payment.Status == PaymentStatus.Succeeded || payment.Status == PaymentStatus.Pending))
+            .GroupBy(payment => payment.EnrollmentId)
+            .Select(group => new { EnrollmentId = group.Key, Amount = group.Sum(payment => payment.Amount) })
+            .ToDictionaryAsync(item => item.EnrollmentId, item => item.Amount, ct);
+        var batchTotals = await _context.PaymentBatchAllocations
+            .Where(allocation => enrollmentIds.Contains(allocation.EnrollmentId)
+                && (allocation.PaymentBatch.Status == PaymentStatus.Succeeded
+                    || allocation.PaymentBatch.Status == PaymentStatus.Pending))
+            .GroupBy(allocation => allocation.EnrollmentId)
+            .Select(group => new { EnrollmentId = group.Key, Amount = group.Sum(allocation => allocation.Amount) })
+            .ToDictionaryAsync(item => item.EnrollmentId, item => item.Amount, ct);
+
+        return enrollments
+            .Select(enrollment => new ParentPayableBalance(
+                enrollment.Id,
+                enrollment.StudentId,
+                enrollment.StudentName,
+                enrollment.CourseName,
+                Math.Max(enrollment.CoursePrice
+                    - paymentTotals.GetValueOrDefault(enrollment.Id)
+                    - batchTotals.GetValueOrDefault(enrollment.Id), 0m),
+                enrollment.InstituteName,
+                enrollment.InstituteContactPhone))
+            .Where(balance => balance.AmountDue > 0m)
+            .ToList();
     }
 
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) =>
@@ -247,6 +275,18 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
 
     public Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default) =>
         _context.Parents.AnyAsync(p => p.UserId == userId && p.StudentId == studentId, ct);
+
+    public Task<bool> IsParentOfPaymentAsync(int userId, long paymentId, CancellationToken ct = default) =>
+        _context.Payments.AnyAsync(payment => payment.Id == paymentId
+            && payment.Enrollment.Student.Parents.Any(parent => parent.UserId == userId), ct);
+
+    public async Task<bool> IsParentOfPaymentBatchAsync(int userId, long batchId, CancellationToken ct = default)
+    {
+        var allocations = _context.PaymentBatchAllocations.Where(allocation => allocation.PaymentBatchId == batchId);
+        if (!await allocations.AnyAsync(ct)) return false;
+        return await allocations.AllAsync(allocation => _context.Parents.Any(parent =>
+            parent.UserId == userId && parent.StudentId == allocation.Enrollment.StudentId), ct);
+    }
 
     public async Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default)
     {

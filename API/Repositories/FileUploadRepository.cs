@@ -4,17 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
 
-public interface IFileUploadRepository
-{
-    Task<bool> InstituteExistsAsync(int instituteId, CancellationToken ct);
-    Task<Payment?> GetPaymentAsync(long paymentId, int instituteId, CancellationToken ct);
-    Task<PaymentBatch?> GetPaymentBatchAsync(long batchId, int instituteId, CancellationToken ct);
-    Task<Student?> GetStudentAsync(int studentId, int instituteId, CancellationToken ct);
-    Task<Teacher?> GetTeacherAsync(int teacherId, int instituteId, CancellationToken ct);
-    Task<HomeworkSubmission?> GetHomeworkSubmissionAsync(int submissionId, int instituteId, CancellationToken ct);
-    Task SaveAsync(CancellationToken ct);
-}
-
 public sealed class FileUploadRepository(TutoringDbContext db) : IFileUploadRepository
 {
     public Task<bool> InstituteExistsAsync(int instituteId, CancellationToken ct) => db.Institutes.AnyAsync(x => x.Id == instituteId, ct);

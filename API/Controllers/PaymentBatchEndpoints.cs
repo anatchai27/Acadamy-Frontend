@@ -1,5 +1,6 @@
 using academy_API.DTOs;
 using academy_API.Services;
+using academy_API.Services.Interface;
 
 namespace academy_API.Controllers;
 

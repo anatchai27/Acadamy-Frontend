@@ -7,7 +7,7 @@ namespace academy_API.Tests.unitTest;
 
 public class HomeworkServiceTests
 {
-    private static Mock<academy_API.Repositories.IHomeworkRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IHomeworkRepository> CreateMockRepo() => new();
 
     // 1
     [Fact]

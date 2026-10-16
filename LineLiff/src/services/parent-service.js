@@ -16,6 +16,24 @@ export const getChildPayments = (childId, params = {}) => {
   return api.get(`/parents/children/${childId}/payments`, { params });
 }
 
+export const getChildPayableBalances = childId =>
+  api.get(`/parents/children/${childId}/payable-balances`);
+
+export const createChildPaymentBatch = (childId, enrollmentId) =>
+  api.post(`/parents/children/${childId}/payment-batches`, { enrollmentId });
+
+export const uploadPaymentBatchSlip = (batchId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.postForm('/uploads/payment-batch-slip', formData, { params: { batchId } });
+}
+
+export const uploadPaymentSlip = (paymentId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.postForm('/uploads/payment-slip', formData, { params: { paymentId } });
+}
+
 export const getChildScores = childId => {
   return api.get(`/parents/children/${childId}/scores`);
 }

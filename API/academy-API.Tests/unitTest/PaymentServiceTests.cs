@@ -7,10 +7,10 @@ namespace academy_API.Tests.unitTest;
 
 public class PaymentServiceTests
 {
-    private static Mock<Repositories.IPaymentRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IPaymentRepository> CreateMockRepo() => new();
 
     private static PaymentService CreateSut(
-        Mock<Repositories.IPaymentRepository>? repoMock = null,
+        Mock<academy_API.Repositories.Interface.IPaymentRepository>? repoMock = null,
         Mock<IPaymentReceiptService>? receiptServiceMock = null) =>
         new(
             repoMock?.Object ?? CreateMockRepo().Object,

@@ -4,15 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Repositories;
 
-public interface IStudentPickupRepository
-{
-    Task<bool> StudentExistsAsync(int studentId, CancellationToken ct);
-    Task<List<StudentPickupAuthorization>> ListAsync(int studentId, CancellationToken ct);
-    Task<StudentPickupAuthorization> AddAsync(StudentPickupAuthorization authorization, CancellationToken ct);
-    Task<StudentPickupAuthorization?> GetAsync(int studentId, long authorizationId, CancellationToken ct);
-    Task SaveAsync(CancellationToken ct);
-}
-
 public sealed class StudentPickupRepository(TutoringDbContext db) : IStudentPickupRepository
 {
     public Task<bool> StudentExistsAsync(int studentId, CancellationToken ct) => db.Students.AnyAsync(x => x.Id == studentId, ct);

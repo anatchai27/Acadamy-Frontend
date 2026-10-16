@@ -1,14 +1,10 @@
 using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
 using System.Globalization;
 
 namespace academy_API.Services;
-
-public interface IRevenueReportService
-{
-    Task<List<RevenueReportRow>> GetAsync(DateTime from, DateTime to, string groupBy, CancellationToken ct = default);
-}
 
 public sealed class RevenueReportService(IPaymentRepository repository, IPaymentBatchRepository? batchRepository = null) : IRevenueReportService
 {

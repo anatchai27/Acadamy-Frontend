@@ -166,6 +166,18 @@ export const DashboardPage = () => {
 
         {activeChild && (
           <>
+            <button
+              type="button"
+              onClick={() => route(`/liff/payments/${activeChild.id}`)}
+              class="flex w-full items-center justify-between rounded-card border border-sage-200 bg-white px-4 py-4 text-left shadow-soft transition hover:border-sage-400"
+            >
+              <span>
+                <span class="block font-bold text-ink-900">ชำระค่าเรียน / ส่งสลิป</span>
+                <span class="mt-1 block text-sm text-ink-700">ดูยอดค้างและแนบหลักฐานโอนเงิน</span>
+              </span>
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sage-100 text-lg font-bold text-sage-700" aria-hidden="true">→</span>
+            </button>
+
             <section class="relative overflow-hidden rounded-card bg-gradient-to-br from-sage-600 to-sage-700 p-5 text-white shadow-float">
               <div class="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/10" />
               <div class="absolute -bottom-16 right-14 h-32 w-32 rounded-full bg-gold-500/20" />

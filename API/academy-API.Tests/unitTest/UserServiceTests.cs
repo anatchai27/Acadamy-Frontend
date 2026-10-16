@@ -48,8 +48,8 @@ public class UserServiceTests
 
     private static UserService CreateUserService(TutoringDbContext context, Mock<ITokenService>? tokenMock = null)
     {
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
-        var pdpaRepoMock = new Mock<academy_API.Repositories.IPdpaConsentRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
+        var pdpaRepoMock = new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>();
         tokenMock ??= CreateMockTokenService();
         return new UserService(userRepoMock.Object, pdpaRepoMock.Object, tokenMock.Object, context);
     }
@@ -636,8 +636,8 @@ public class UserServiceTests
         await context.SaveChangesAsync();
 
         var mockToken = CreateMockTokenService();
-        var pdpaRepoMock = new Mock<academy_API.Repositories.IPdpaConsentRepository>();
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var pdpaRepoMock = new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         userRepoMock.Setup(r => r.GetByInstituteIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(context.Users.Where(u => u.InstituteId == 5).ToList());
 
@@ -655,10 +655,10 @@ public class UserServiceTests
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
         var mockToken = CreateMockTokenService();
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         userRepoMock.Setup(r => r.GetByInstituteIdAsync(99, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, mockToken.Object, context);
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, mockToken.Object, context);
         Assert.Empty(await sut.GetByInstituteIdAsync(99));
     }
 
@@ -667,10 +667,10 @@ public class UserServiceTests
     [Fact]
     public async Task UpdateRoleAsync_ExistingUser_UpdatesRole()
     {
-        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        var mockRepo = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         mockRepo.Setup(r => r.UpdateRoleAsync(1, UserRole.teacher, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
         Assert.True(await sut.UpdateRoleAsync(1, UserRole.teacher));
         mockRepo.Verify(r => r.UpdateRoleAsync(1, UserRole.teacher, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -678,10 +678,10 @@ public class UserServiceTests
     [Fact]
     public async Task UpdateRoleAsync_NotFound_ReturnsFalse()
     {
-        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        var mockRepo = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         mockRepo.Setup(r => r.UpdateRoleAsync(999, UserRole.staff, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
         Assert.False(await sut.UpdateRoleAsync(999, UserRole.staff));
     }
 
@@ -690,20 +690,20 @@ public class UserServiceTests
     [Fact]
     public async Task DeleteUserAsync_Existing_ReturnsTrue()
     {
-        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        var mockRepo = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         mockRepo.Setup(r => r.DeleteAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
         Assert.True(await sut.DeleteUserAsync(1));
     }
 
     [Fact]
     public async Task DeleteUserAsync_NotFound_ReturnsFalse()
     {
-        var mockRepo = new Mock<academy_API.Repositories.IUserRepository>();
+        var mockRepo = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         mockRepo.Setup(r => r.DeleteAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
+        var sut = new UserService(mockRepo.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, null!);
         Assert.False(await sut.DeleteUserAsync(999));
     }
 
@@ -718,8 +718,8 @@ public class UserServiceTests
         var tokenService = CreateMockTokenService();
         tokenService.Setup(s => s.HashPassword(It.IsAny<string>())).Returns("hashed-pw");
 
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
-        var pdpaRepoMock = new Mock<academy_API.Repositories.IPdpaConsentRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
+        var pdpaRepoMock = new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>();
 
         var sut = new UserService(userRepoMock.Object, pdpaRepoMock.Object, tokenService.Object, context);
         var user = await sut.CreateWithConsentAsync(new UserCreateRequest
@@ -749,7 +749,7 @@ public class UserServiceTests
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
 
-        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var sut = new UserService(new Mock<academy_API.Repositories.Interface.IUserRepository>().Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.CreateWithConsentAsync(new UserCreateRequest
@@ -770,7 +770,7 @@ public class UserServiceTests
         var tokenService = CreateMockTokenService();
         tokenService.Setup(s => s.HashPassword(It.IsAny<string>())).Returns("h");
 
-        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, tokenService.Object, context);
+        var sut = new UserService(new Mock<academy_API.Repositories.Interface.IUserRepository>().Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, tokenService.Object, context);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.CreateWithConsentAsync(new UserCreateRequest
@@ -786,7 +786,7 @@ public class UserServiceTests
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
 
-        var sut = new UserService(new Mock<academy_API.Repositories.IUserRepository>().Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var sut = new UserService(new Mock<academy_API.Repositories.Interface.IUserRepository>().Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
 
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             sut.CreateWithConsentAsync(new UserCreateRequest
@@ -817,10 +817,10 @@ public class UserServiceTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         userRepoMock.Setup(r => r.GetByIdWithProfileAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
         var result = await sut.GetCurrentUserAsync(10);
 
         Assert.NotNull(result);
@@ -836,10 +836,10 @@ public class UserServiceTests
     {
         var dbName = Guid.NewGuid().ToString();
         await using var context = CreateInMemoryDbContext(dbName);
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         userRepoMock.Setup(r => r.GetByIdWithProfileAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
 
-        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
         Assert.Null(await sut.GetCurrentUserAsync(999));
     }
 
@@ -861,10 +861,10 @@ public class UserServiceTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var userRepoMock = new Mock<academy_API.Repositories.IUserRepository>();
+        var userRepoMock = new Mock<academy_API.Repositories.Interface.IUserRepository>();
         userRepoMock.Setup(r => r.GetByIdWithProfileAsync(20, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
+        var sut = new UserService(userRepoMock.Object, new Mock<academy_API.Repositories.Interface.IPdpaConsentRepository>().Object, CreateMockTokenService().Object, context);
         var result = await sut.GetCurrentUserAsync(20);
 
         Assert.NotNull(result);

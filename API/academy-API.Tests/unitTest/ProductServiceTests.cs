@@ -7,7 +7,7 @@ namespace academy_API.Tests.unitTest;
 
 public class ProductServiceTests
 {
-    private static Mock<academy_API.Repositories.IProductRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IProductRepository> CreateMockRepo() => new();
 
     private static Product CreateTestProduct(int id = 1, int instituteId = 5, string name = "เสื้อสถาบัน", decimal price = 300m, string? desc = null) => new()
     {

@@ -3,6 +3,7 @@ import {
   apiErrorMessage,
   validateHomeworkFile,
   validateLeaveAttachment,
+  validatePaymentSlip,
 } from './validation';
 
 const file = (type, size) => ({ type, size });
@@ -21,6 +22,12 @@ describe('LIFF upload validation', () => {
     expect(validateLeaveAttachment(file('application/pdf', 1024))).toBe('');
     expect(validateLeaveAttachment(file('text/plain', 1024))).toContain('PDF, JPG, PNG หรือ WEBP');
     expect(validateLeaveAttachment(file('image/png', 5 * 1024 * 1024 + 1))).toContain('ไม่เกิน 5MB');
+  });
+
+  it('accepts image slips and rejects unsupported or oversized files', () => {
+    expect(validatePaymentSlip(file('image/jpeg', 1024))).toBe('');
+    expect(validatePaymentSlip(file('application/pdf', 1024))).toContain('รูปภาพ');
+    expect(validatePaymentSlip(file('image/png', 10 * 1024 * 1024 + 1))).toContain('ไม่เกิน 10MB');
   });
 });
 

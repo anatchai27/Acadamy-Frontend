@@ -1,13 +1,10 @@
+using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
 using academy_API.Services.Interface;
 
 namespace academy_API.Services;
-
-public interface IPaymentBatchReceiptService
-{
-    Task<string> IssueAndNotifyAsync(PaymentBatch batch, CancellationToken ct = default);
-}
 
 public sealed class PaymentBatchReceiptService(
     IPaymentBatchRepository repository,

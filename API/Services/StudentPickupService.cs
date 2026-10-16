@@ -7,14 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Services;
 
-public interface IStudentPickupService
-{
-    Task<IReadOnlyList<PickupAuthorizationResponse>> ListAsync(int studentId, CancellationToken ct);
-    Task<PickupAuthorizationResponse> CreateAsync(int studentId, CreatePickupAuthorizationRequest request, int? actorId, CancellationToken ct);
-    Task<PickupAuthorizationResponse> UpdateAsync(int studentId, long authorizationId, UpdatePickupAuthorizationRequest request, CancellationToken ct);
-    Task DeleteAsync(int studentId, long authorizationId, CancellationToken ct);
-}
-
 public sealed class StudentPickupService(IStudentPickupRepository repository, TutoringDbContext db) : IStudentPickupService
 {
     private readonly IStudentPickupRepository _repository = repository;

@@ -1,6 +1,6 @@
 using academy_API.Models;
 
-namespace academy_API.Services.Contracts;
+namespace academy_API.Services.Interface;
 
 public interface ITokenService
 {

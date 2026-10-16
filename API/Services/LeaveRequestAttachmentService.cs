@@ -5,11 +5,6 @@ using academy_API.Services.Interface;
 
 namespace academy_API.Services;
 
-public interface ILeaveRequestAttachmentService
-{
-    Task<LeaveRequestAttachmentResponse> UploadAsync(long leaveRequestId, int userId, bool isParent, int instituteId, IFormFile file, CancellationToken ct = default);
-}
-
 public sealed class LeaveRequestAttachmentService(
     ILeaveRequestRepository repository,
     IFileStorageService storage) : ILeaveRequestAttachmentService

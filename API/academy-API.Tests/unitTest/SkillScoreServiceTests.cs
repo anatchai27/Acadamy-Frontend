@@ -6,7 +6,7 @@ namespace academy_API.Tests.unitTest;
 
 public class SkillScoreServiceTests
 {
-    private static Mock<academy_API.Repositories.ISkillScoreRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.ISkillScoreRepository> CreateMockRepo() => new();
 
     // 1
     [Fact]

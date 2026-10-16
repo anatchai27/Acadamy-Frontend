@@ -6,11 +6,6 @@ using QRCoder;
 
 namespace academy_API.Services;
 
-public interface IStudentCardPdfService
-{
-    byte[] Render(StudentCardPdfData data);
-}
-
 public sealed record StudentCardPdfData(
     int StudentId,
     string FullName,

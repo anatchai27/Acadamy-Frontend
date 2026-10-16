@@ -2,11 +2,6 @@ using System.Text.Json;
 
 namespace academy_API.Services;
 
-public interface ISlipVerificationProvider
-{
-    Task<SlipVerificationResult> VerifyAsync(string slipUrl, decimal expectedAmount, CancellationToken ct = default);
-}
-
 public sealed record SlipVerificationResult(
     bool IsVerified,
     decimal? Amount,

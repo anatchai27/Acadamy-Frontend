@@ -7,8 +7,8 @@ namespace academy_API.Tests.unitTest;
 
 public class CourseServiceTests
 {
-    private static Mock<academy_API.Repositories.ICourseRepository> CreateMockRepo() => new();
-    private static Mock<academy_API.Repositories.ISessionRepository> CreateMockSessionRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.ICourseRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.ISessionRepository> CreateMockSessionRepo() => new();
 
     // ──────────────────── CourseService ────────────────────
 

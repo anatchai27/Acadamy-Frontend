@@ -3,11 +3,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface IStudentExportService
-{
-    Task<byte[]> ExportCsvAsync(CancellationToken ct = default);
-}
-
 public sealed class StudentExportService(IStudentRepository repository) : IStudentExportService
 {
     public async Task<byte[]> ExportCsvAsync(CancellationToken ct = default)

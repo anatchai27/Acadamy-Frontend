@@ -2,19 +2,9 @@ using academy_API.DTOs;
 
 namespace academy_API.Services;
 
-public interface IHomeworkService
+public class HomeworkService(IHomeworkRepository repository) : IHomeworkService
 {
-    Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int assignedByUserId, CancellationToken ct = default);
-    Task<HomeworkListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
-    Task<HomeworkSubmissionsResponse> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);
-    Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, CancellationToken ct = default);
-    Task<HomeworkSkillMappingResponse> GetSkillMappingAsync(int homeworkId, CancellationToken ct = default);
-    Task<HomeworkSkillMappingResponse> SetSkillMappingAsync(int homeworkId, HomeworkSkillMappingRequest request, CancellationToken ct = default);
-}
-
-public class HomeworkService(Repositories.IHomeworkRepository repository) : IHomeworkService
-{
-    private readonly Repositories.IHomeworkRepository _repository = repository;
+    private readonly IHomeworkRepository _repository = repository;
 
     public async Task<HomeworkResponse> CreateAsync(HomeworkRequest request, int assignedByUserId, CancellationToken ct = default)
     {
@@ -81,11 +71,3 @@ public class HomeworkService(Repositories.IHomeworkRepository repository) : IHom
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-public class HomeworkValidationException : Exception
-{
-    public string ErrorCode { get; }
-    public HomeworkValidationException(string errorCode, string message) : base(message)
-    {
-        ErrorCode = errorCode;
-    }
-}

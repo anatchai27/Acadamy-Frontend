@@ -1,5 +1,7 @@
+using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
 using academy_API.Services;
 using Moq;
 
@@ -17,6 +19,16 @@ public class ParentServiceTests
 
         Assert.True(await sut.IsParentOfStudentAsync(10, 20));
         Assert.False(await sut.IsParentOfStudentAsync(10, 99));
+    }
+
+    [Fact]
+    public async Task IsParentOfPaymentAsync_DelegatesOwnershipCheck()
+    {
+        var repository = new Mock<IParentRepository>();
+        repository.Setup(r => r.IsParentOfPaymentAsync(10, 44, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var sut = new ParentService(repository.Object);
+
+        Assert.True(await sut.IsParentOfPaymentAsync(10, 44));
     }
 
     [Fact]

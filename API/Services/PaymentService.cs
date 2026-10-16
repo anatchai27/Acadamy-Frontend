@@ -1,30 +1,19 @@
 using academy_API.DTOs;
 using academy_API.Models;
+using academy_API.Repositories.Interface;
 using System.Globalization;
 using System.Text;
 
 namespace academy_API.Services;
 
-public interface IPaymentService
-{
-    Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default);
-    Task<string> IssueReceiptAsync(long paymentId, CancellationToken ct = default);
-    Task<PaymentHistoryResponse> GetHistoryAsync(
-        DateTime? startDate, DateTime? endDate, string? method,
-        int page, int limit, CancellationToken ct = default);
-    Task<byte[]> ExportCsvAsync(
-        DateTime? startDate, DateTime? endDate, string? method,
-        CancellationToken ct = default);
-}
-
 public class PaymentService(
-    Repositories.IPaymentRepository repository,
+    IPaymentRepository repository,
     IPaymentReceiptService paymentReceiptService,
-    Repositories.IPaymentBatchRepository? batchRepository = null) : IPaymentService
+    IPaymentBatchRepository? batchRepository = null) : IPaymentService
 {
-    private readonly Repositories.IPaymentRepository _repository = repository;
+    private readonly IPaymentRepository _repository = repository;
     private readonly IPaymentReceiptService _paymentReceiptService = paymentReceiptService;
-    private readonly Repositories.IPaymentBatchRepository? _batchRepository = batchRepository;
+    private readonly IPaymentBatchRepository? _batchRepository = batchRepository;
 
     public async Task<CreatePaymentResponse> CreateAsync(CreatePaymentRequest request, CancellationToken ct = default)
     {
@@ -222,8 +211,3 @@ public class PaymentService(
     }
 }
 
-public class PaymentValidationException : Exception
-{
-    public string ErrorCode { get; }
-    public PaymentValidationException(string errorCode, string message) : base(message) => ErrorCode = errorCode;
-}

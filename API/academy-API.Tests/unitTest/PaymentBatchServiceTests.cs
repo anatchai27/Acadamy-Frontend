@@ -1,6 +1,7 @@
 using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
 using academy_API.Services;
 using Moq;
 
@@ -60,6 +61,44 @@ public class PaymentBatchServiceTests
         Assert.Equal("https://receipts.test/batch.pdf", result.Data.ReceiptPdfUrl);
         batches.Verify(repository => repository.CreateAsync(It.Is<PaymentBatch>(batch =>
             batch.Allocations.Count == 2 && batch.Amount == 2300m && batch.Status == PaymentStatus.Succeeded), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateParentTransferAsync_CreatesOnlyTheParentsChildBalanceAsPendingTransfer()
+    {
+        var enrollment = Enrollment(45, 20, 1000m);
+        enrollment.Student.Parents.Add(new Parent { UserId = 10, StudentId = 20 });
+        var batches = new Mock<IPaymentBatchRepository>();
+        var payments = new Mock<IPaymentRepository>();
+        batches.Setup(repository => repository.GetEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        batches.Setup(repository => repository.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync("INV-202610-B123456789");
+        batches.Setup(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PaymentBatch batch, CancellationToken _) => batch);
+        payments.Setup(repository => repository.GetSucceededAmountByEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(200m);
+        payments.Setup(repository => repository.GetPendingAmountByEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(100m);
+
+        var result = await CreateSut(batches, payments).CreateParentTransferAsync(10, 20, 45);
+
+        Assert.Equal(700m, result.Data.Amount);
+        Assert.Equal(PaymentStatus.Pending, result.Data.Status);
+        batches.Verify(repository => repository.CreateAsync(It.Is<PaymentBatch>(batch =>
+            batch.Method == "transfer" && batch.Status == PaymentStatus.Pending && batch.Amount == 700m
+            && batch.Allocations.Single().EnrollmentId == 45), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateParentTransferAsync_RejectsEnrollmentOwnedByAnotherParent()
+    {
+        var enrollment = Enrollment(45, 20, 1000m);
+        enrollment.Student.Parents.Add(new Parent { UserId = 11, StudentId = 20 });
+        var batches = new Mock<IPaymentBatchRepository>();
+        batches.Setup(repository => repository.GetEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+
+        var exception = await Assert.ThrowsAsync<PaymentValidationException>(() =>
+            CreateSut(batches).CreateParentTransferAsync(10, 20, 45));
+
+        Assert.Equal("ENROLLMENT_NOT_FOUND", exception.ErrorCode);
+        batches.Verify(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

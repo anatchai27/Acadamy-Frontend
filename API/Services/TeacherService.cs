@@ -4,15 +4,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface ITeacherService
-{
-    Task<List<TeacherResponse>> ListAsync(string? search, CancellationToken ct = default);
-    Task<TeacherResponse?> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<TeacherResponse> CreateAsync(CreateTeacherRequest request, int instituteId, CancellationToken ct = default);
-    Task<PatchTeacherResult> PatchAsync(int id, PatchTeacherRequest request, CancellationToken ct = default);
-    Task<bool> DeleteAsync(int id, CancellationToken ct = default);
-}
-
 public sealed class TeacherService(ITeacherRepository repository) : ITeacherService
 {
     public Task<List<TeacherResponse>> ListAsync(string? search, CancellationToken ct = default) =>

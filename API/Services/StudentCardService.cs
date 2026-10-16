@@ -3,12 +3,6 @@ using academy_API.Services.Interface;
 
 namespace academy_API.Services;
 
-public interface IStudentCardService
-{
-    Task<byte[]> RenderAsync(int studentId, CancellationToken ct = default);
-    Task<string> GenerateAsync(int studentId, CancellationToken ct = default);
-}
-
 public sealed class StudentCardService(IStudentRepository repository, IStudentCardPdfService pdf, IFileStorageService storage) : IStudentCardService
 {
     public async Task<byte[]> RenderAsync(int studentId, CancellationToken ct = default)

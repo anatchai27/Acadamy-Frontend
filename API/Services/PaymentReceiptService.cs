@@ -1,13 +1,9 @@
+using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Services.Interface;
 
 namespace academy_API.Services;
-
-public interface IPaymentReceiptService
-{
-    Task<string> IssueAndNotifyAsync(Payment payment, CancellationToken ct = default);
-}
 
 public sealed class PaymentReceiptService(
     IPaymentRepository repository,

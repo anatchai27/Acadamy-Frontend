@@ -1,14 +1,10 @@
 using System.Text.Json;
+using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Services.Contracts;
 
 namespace academy_API.Services;
-
-public interface IBackgroundNotificationDispatcher
-{
-    Task<BackgroundNotificationResult> DispatchAsync(BackgroundNotificationCandidate candidate, CancellationToken ct = default);
-}
 
 public sealed class BackgroundNotificationDispatcher(
     IBackgroundNotificationRepository repository,

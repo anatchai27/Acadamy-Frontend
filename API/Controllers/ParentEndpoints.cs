@@ -4,6 +4,7 @@ using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Services;
 using academy_API.Services.Contracts;
+using academy_API.Services.Interface;
 
 namespace academy_API.Controllers;
 
@@ -20,6 +21,8 @@ public static class ParentEndpoints
         group.MapPatch("/me/profile", UpdateProfile).RequireAuthorization();
         group.MapGet("/children/{childId:int}/attendance", GetChildAttendance).RequireAuthorization();
         group.MapGet("/children/{childId:int}/payments", GetChildPayments).RequireAuthorization();
+        group.MapGet("/children/{childId:int}/payable-balances", GetChildPayableBalances).RequireAuthorization();
+        group.MapPost("/children/{childId:int}/payment-batches", CreateChildPaymentBatch).RequireAuthorization();
         group.MapGet("/children/{childId:int}/scores", GetChildScores).RequireAuthorization();
         group.MapGet("/children/{childId:int}/homework", GetChildHomework).RequireAuthorization();
         group.MapGet("/children/{childId:int}/progress", GetChildProgress).RequireAuthorization();
@@ -149,16 +152,75 @@ public static class ParentEndpoints
             data = payments.Select(p => new
             {
                 p.Id,
+                batchId = p.BatchId,
                 p.InvoiceNo,
                 description = p.CourseName,
                 descriptionEn = p.CourseNameEn,
                 date = p.PaidAt.ToString("yyyy-MM-dd"),
                 amount = p.Amount,
                 method = "",
-                status = p.Status == PaymentStatus.Succeeded ? "paid" : "pending",
+                status = p.Status == PaymentStatus.Succeeded ? "paid" : p.Status,
+                slipUrl = p.SlipUrl,
                 receiptPdfUrl = p.ReceiptPdfUrl
             })
         });
+    }
+
+    private static async Task<IResult> GetChildPayableBalances(
+        int childId,
+        HttpContext httpContext,
+        IParentService service,
+        CancellationToken ct)
+    {
+        if (!await OwnsChild(httpContext, childId, service, ct)) return ParentForbidden(httpContext);
+        var balances = await service.GetPayableBalancesAsync(childId, ct);
+        return Results.Ok(new
+        {
+            status = "success",
+            data = balances.Select(balance => new
+            {
+                balance.EnrollmentId,
+                balance.StudentId,
+                balance.StudentName,
+                balance.CourseName,
+                balance.AmountDue,
+                balance.InstituteName,
+                balance.InstituteContactPhone
+            })
+        });
+    }
+
+    private static async Task<IResult> CreateChildPaymentBatch(
+        int childId,
+        CreateParentPaymentBatchRequest request,
+        HttpContext httpContext,
+        IParentService parentService,
+        IPaymentBatchService paymentBatchService,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(httpContext);
+        if (!userId.HasValue) return Results.Unauthorized();
+        if (!await parentService.IsParentOfStudentAsync(userId.Value, childId, ct)) return Results.Forbid();
+        if (request.EnrollmentId <= 0)
+            return Results.BadRequest(new { error = "เลือกรายการคอร์สที่ต้องการชำระ", code = "INVALID_ENROLLMENT" });
+
+        try
+        {
+            return Results.Ok(await paymentBatchService.CreateParentTransferAsync(
+                userId.Value, childId, request.EnrollmentId, ct));
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode == "BALANCE_ALREADY_RESERVED")
+        {
+            return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode });
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode == "ENROLLMENT_NOT_FOUND")
+        {
+            return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode });
+        }
+        catch (PaymentValidationException ex)
+        {
+            return Results.BadRequest(new { error = ex.Message, code = ex.ErrorCode });
+        }
     }
 
     private static async Task<IResult> GetChildScores(int childId, HttpContext httpContext, IParentService service, CancellationToken ct)
@@ -291,3 +353,4 @@ public static class ParentEndpoints
 }
 
 public record BindLineRequest(string? LineUserId, string? AccessToken, string? Phone);
+public record CreateParentPaymentBatchRequest(int EnrollmentId);

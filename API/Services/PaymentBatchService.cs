@@ -2,15 +2,10 @@ using System.Text.Json;
 using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
+using academy_API.Services.Interface;
 
 namespace academy_API.Services;
-
-public interface IPaymentBatchService
-{
-    Task<PaymentBatchResponse> CreateAsync(CreatePaymentBatchRequest request, CancellationToken ct = default);
-    Task<PaymentBatchSlipVerificationResponse> VerifySlipAsync(long batchId, int? actorId, CancellationToken ct = default);
-    Task<string> IssueReceiptAsync(long batchId, CancellationToken ct = default);
-}
 
 public sealed class PaymentBatchService(
     IPaymentBatchRepository repository,
@@ -92,6 +87,29 @@ public sealed class PaymentBatchService(
 
         batch.ReceiptPdfUrl = receiptUrl;
         return ToResponse(batch, message);
+    }
+
+    public async Task<PaymentBatchResponse> CreateParentTransferAsync(
+        int parentUserId,
+        int studentId,
+        int enrollmentId,
+        CancellationToken ct = default)
+    {
+        var enrollment = await repository.GetEnrollmentAsync(enrollmentId, ct);
+        if (enrollment is null
+            || enrollment.StudentId != studentId
+            || !enrollment.Student.Parents.Any(parent => parent.UserId == parentUserId))
+            throw new PaymentValidationException("ENROLLMENT_NOT_FOUND", "ไม่พบรายการลงทะเบียนที่เลือก");
+
+        var succeeded = await paymentRepository.GetSucceededAmountByEnrollmentAsync(enrollmentId, ct);
+        var pending = await paymentRepository.GetPendingAmountByEnrollmentAsync(enrollmentId, ct);
+        var amountDue = Math.Max(enrollment.Course.Price - succeeded - pending, 0m);
+        if (amountDue <= 0m)
+            throw new PaymentValidationException("BALANCE_ALREADY_RESERVED", "ยอดนี้ถูกชำระหรืออยู่ระหว่างตรวจสอบแล้ว");
+
+        return await CreateAsync(new CreatePaymentBatchRequest(
+            [new PaymentBatchAllocationRequest(enrollmentId, amountDue)],
+            "transfer"), ct);
     }
 
     public async Task<PaymentBatchSlipVerificationResponse> VerifySlipAsync(long batchId, int? actorId, CancellationToken ct = default)

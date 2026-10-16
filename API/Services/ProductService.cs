@@ -2,9 +2,9 @@ using academy_API.Services.Contracts;
 
 namespace academy_API.Services;
 
-public class ProductService(Repositories.IProductRepository repository) : IProductService
+public class ProductService(IProductRepository repository) : IProductService
 {
-    private readonly Repositories.IProductRepository _repository = repository;
+    private readonly IProductRepository _repository = repository;
 
     public async Task<IEnumerable<DTOs.ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {

@@ -1,6 +1,7 @@
+using academy_API.Services.Interface;
 using academy_API.Utilities;
 
-namespace academy_API.Services.Interface;
+namespace academy_API.Services;
 
 public class TenantProvider(IHttpContextAccessor httpContextAccessor) : ITenantProvider
 {

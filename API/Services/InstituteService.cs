@@ -3,12 +3,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface IInstituteService
-{
-    Task<InstituteResponse?> GetMeAsync(int instituteId, CancellationToken cancellationToken = default);
-    Task<bool> UpdateMeAsync(int instituteId, UpdateInstituteRequest request, CancellationToken cancellationToken = default);
-}
-
 public sealed class InstituteService(IInstituteRepository repository) : IInstituteService
 {
     public async Task<InstituteResponse?> GetMeAsync(int instituteId, CancellationToken cancellationToken = default)

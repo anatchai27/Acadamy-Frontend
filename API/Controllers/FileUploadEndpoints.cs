@@ -1,4 +1,5 @@
 using academy_API.Services;
+using academy_API.Services.Interface;
 using academy_API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,7 @@ public static class FileUploadEndpoints
         group.MapPost("/logo", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadLogoAsync(instituteId, uploadedFile, ct)));
         MapPaymentSlipUploadEndpoint(group);
-        group.MapPost("/payment-batch-slip", async (HttpContext context, IFormFile file, long batchId, IFileUploadService service, CancellationToken ct) =>
-        {
-            if (!context.User.IsInRole("admin")) return Results.Forbid();
-            return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentBatchSlipAsync(instituteId, batchId, uploadedFile, ct));
-        });
+        MapPaymentBatchSlipUploadEndpoint(group);
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
         group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>
@@ -40,19 +37,35 @@ public static class FileUploadEndpoints
         return app;
     }
 
-    public static IEndpointRouteBuilder MapPaymentSlipUploadEndpoint(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/api/uploads").WithTags("File Uploads").WithOpenApi().RequireAuthorization();
-        MapPaymentSlipUploadEndpoint(group);
-        return app;
-    }
-
     private static void MapPaymentSlipUploadEndpoint(RouteGroupBuilder group)
     {
-        group.MapPost("/payment-slip", async (HttpContext context, IFormFile file, int paymentId, IFileUploadService service, CancellationToken ct) =>
+        group.MapPost("/payment-slip", async (HttpContext context, IFormFile file, long paymentId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>
         {
-            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            if (!context.User.IsInRole("admin"))
+            {
+                var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!context.User.IsInRole("parent")
+                    || !int.TryParse(userId, out var parentUserId)
+                    || !await parentService.IsParentOfPaymentAsync(parentUserId, paymentId, ct))
+                    return Results.Forbid();
+            }
             return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentSlipAsync(instituteId, paymentId, uploadedFile, ct));
+        });
+    }
+
+    private static void MapPaymentBatchSlipUploadEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/payment-batch-slip", async (HttpContext context, IFormFile file, long batchId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin"))
+            {
+                var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!context.User.IsInRole("parent")
+                    || !int.TryParse(userId, out var parentUserId)
+                    || !await parentService.IsParentOfPaymentBatchAsync(parentUserId, batchId, ct))
+                    return Results.Forbid();
+            }
+            return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentBatchSlipAsync(instituteId, batchId, uploadedFile, ct));
         });
     }
 

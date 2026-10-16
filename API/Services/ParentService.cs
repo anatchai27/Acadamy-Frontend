@@ -1,27 +1,11 @@
 using academy_API.DTOs;
 using academy_API.Models;
 using academy_API.Repositories;
+using academy_API.Repositories.Interface;
+using academy_API.Services.Contracts;
+using academy_API.Services.Interface;
 
 namespace academy_API.Services;
-
-public interface IParentService
-{
-    Task<ParentBindingResult?> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default);
-    Task<Parent?> ResolveAsync(int userId, CancellationToken ct = default);
-    Task<ParentDashboardSnapshot> GetDashboardAsync(int userId, CancellationToken ct = default);
-    Task<ParentProfileResult?> GetProfileAsync(int userId, CancellationToken ct = default);
-    Task<ParentProfileResult?> UpdateProfileAsync(int userId, UpdateParentProfileRequest request, CancellationToken ct = default);
-    Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default);
-    Task<List<AttendanceRecord>> GetAttendanceAsync(int studentId, CancellationToken ct = default);
-    Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default);
-    Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentLeaveRequestItem>> GetLeaveRequestsAsync(int studentId, CancellationToken ct = default);
-    Task<List<ParentSessionItem>> GetSessionsAsync(int studentId, CancellationToken ct = default);
-    Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default);
-    Task<bool> IsParentOfHomeworkSubmissionAsync(int userId, int submissionId, CancellationToken ct = default);
-}
 
 public sealed class ParentService(IParentRepository repository) : IParentService
 {
@@ -81,8 +65,15 @@ public sealed class ParentService(IParentRepository repository) : IParentService
     public Task<bool> IsParentOfStudentAsync(int userId, int studentId, CancellationToken ct = default) =>
         _repository.IsParentOfStudentAsync(userId, studentId, ct);
 
+    public Task<bool> IsParentOfPaymentBatchAsync(int userId, long batchId, CancellationToken ct = default) =>
+        _repository.IsParentOfPaymentBatchAsync(userId, batchId, ct);
+
+    public Task<bool> IsParentOfPaymentAsync(int userId, long paymentId, CancellationToken ct = default) =>
+        _repository.IsParentOfPaymentAsync(userId, paymentId, ct);
+
     public Task<List<AttendanceRecord>> GetAttendanceAsync(int studentId, CancellationToken ct = default) => _repository.GetAttendanceAsync(studentId, ct);
     public Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default) => _repository.GetPaymentsAsync(studentId, ct);
+    public Task<List<ParentPayableBalance>> GetPayableBalancesAsync(int studentId, CancellationToken ct = default) => _repository.GetPayableBalancesAsync(studentId, ct);
     public Task<List<ParentSkillScoreItem>> GetScoresAsync(int studentId, CancellationToken ct = default) => _repository.GetScoresAsync(studentId, ct);
     public Task<List<ParentHomeworkItem>> GetHomeworkAsync(int studentId, CancellationToken ct = default) => _repository.GetHomeworkAsync(studentId, ct);
     public Task<ParentProgressResponse> GetProgressAsync(int studentId, CancellationToken ct = default) => _repository.GetProgressAsync(studentId, ct);
@@ -113,16 +104,3 @@ public sealed class ParentService(IParentRepository repository) : IParentService
     }
 }
 
-public sealed record ParentBindingResult(User User, Parent Parent, List<ChildSummary> Children);
-public sealed record ParentProfileResult(Parent Parent, string Email, List<ChildSummary> Children);
-public sealed record ParentDashboardSnapshot(int TodayAttendance, int PendingHomework, decimal OutstandingBalance, decimal? LatestSkillScore, List<ChildSummary> Children);
-public record ChildSummary(int Id, string FullName, string Grade, int InstituteId);
-public record UpdateParentProfileRequest(string? FullName, string? Phone, string? Email);
-public record ParentSessionItem(int Id, int CourseId, string CourseName, DateTime ScheduledAt, int DurationMin, string? RoomId, string Status, string? CourseNameEn = null);
-public record AttendanceRecord(string CourseName, DateTime ScheduledAt, string Status, DateTime CheckinAt, DateTime CheckoutAt, string? CourseNameEn = null);
-public record PaymentListItem(long Id, string InvoiceNo, string CourseName, decimal Amount, DateTime PaidAt, string SlipUrl, string? ReceiptPdfUrl, string? CourseNameEn = null, string Status = PaymentStatus.Pending);
-public record ParentSkillScoreItem(string CourseName, string TopicName, decimal Score, string Note, string? CourseNameEn = null, string? TopicNameEn = null);
-public record ParentHomeworkItem(long Id, long HomeworkId, string CourseName, string Title, string Description, DateTime DueAt, string FileUrl, long? SubmissionId, DateTime? SubmittedAt, decimal? Score, string Feedback, string? CourseNameEn = null, string? TitleEn = null, string? DescriptionEn = null);
-public record ParentProgressResponse(int CurrentStreak, int LongestStreak, List<ParentBadgeItem> Badges);
-public record ParentBadgeItem(int Id, string BadgeKey, string Name, string? Description, string? IconUrl, DateTime AwardedAt, string? NameEn = null, string? DescriptionEn = null);
-public record ParentLeaveRequestItem(long Id, string CourseName, string Reason, string Type, string Status, DateTime CreatedAt, string? CourseNameEn = null);

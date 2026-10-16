@@ -2,19 +2,9 @@ using academy_API.DTOs;
 
 namespace academy_API.Services;
 
-public interface ISkillScoreService
+public class SkillScoreService(ISkillScoreRepository repository) : ISkillScoreService
 {
-    Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int updatedByUserId, CancellationToken ct = default);
-    Task<SkillScoreListResponse> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
-    Task CreateTopicAsync(SkillTopicRequest request, CancellationToken ct = default);
-    Task<SkillTopicListResponse> GetTopicsByCourseIdAsync(int courseId, CancellationToken ct = default);
-    Task UpdateTopicAsync(int id, SkillTopicRequest request, CancellationToken ct = default);
-    Task DeleteTopicAsync(int id, CancellationToken ct = default);
-}
-
-public class SkillScoreService(Repositories.ISkillScoreRepository repository) : ISkillScoreService
-{
-    private readonly Repositories.ISkillScoreRepository _repository = repository;
+    private readonly ISkillScoreRepository _repository = repository;
 
     public async Task<BatchSkillScoreResponse> BatchUpdateAsync(BatchSkillScoreRequest request, int updatedByUserId, CancellationToken ct = default)
     {
@@ -79,11 +69,3 @@ public class SkillScoreService(Repositories.ISkillScoreRepository repository) : 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-public class SkillScoreValidationException : Exception
-{
-    public string ErrorCode { get; }
-    public SkillScoreValidationException(string errorCode, string message) : base(message)
-    {
-        ErrorCode = errorCode;
-    }
-}

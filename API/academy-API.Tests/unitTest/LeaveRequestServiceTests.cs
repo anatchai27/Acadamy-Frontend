@@ -7,7 +7,7 @@ namespace academy_API.Tests.unitTest;
 
 public class LeaveRequestServiceTests
 {
-    private static Mock<academy_API.Repositories.ILeaveRequestRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.ILeaveRequestRepository> CreateMockRepo() => new();
 
     // 1
     [Fact]
@@ -142,7 +142,7 @@ public class LeaveRequestCreateServiceTests
     public async Task CreateAsync_MoreThan24HoursBeforeSession_CalculatesAdvanceType()
     {
         // Arrange
-        var repository = new Mock<academy_API.Repositories.ILeaveRequestRepository>();
+        var repository = new Mock<academy_API.Repositories.Interface.ILeaveRequestRepository>();
         var session = new Session { Id = 7, CourseId = 3, ScheduledAt = DateTime.UtcNow.AddDays(2) };
         repository.Setup(x => x.GetSessionForStudentAsync(10, 7, It.IsAny<CancellationToken>())).ReturnsAsync(session);
         repository.Setup(x => x.CreateAsync(It.IsAny<LeaveRequest>(), It.IsAny<CancellationToken>()))
@@ -162,7 +162,7 @@ public class LeaveRequestCreateServiceTests
     public async Task CreateAsync_SessionAlreadyStarted_CalculatesAbsenceType()
     {
         // Arrange
-        var repository = new Mock<academy_API.Repositories.ILeaveRequestRepository>();
+        var repository = new Mock<academy_API.Repositories.Interface.ILeaveRequestRepository>();
         repository.Setup(x => x.GetSessionForStudentAsync(10, 7, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Session { Id = 7, CourseId = 3, ScheduledAt = DateTime.UtcNow.AddMinutes(-5) });
         repository.Setup(x => x.CreateAsync(It.IsAny<LeaveRequest>(), It.IsAny<CancellationToken>()))
@@ -180,7 +180,7 @@ public class LeaveRequestCreateServiceTests
     public async Task ApproveAsync_AlreadyApproved_RejectsSecondDecision()
     {
         // Arrange
-        var repository = new Mock<academy_API.Repositories.ILeaveRequestRepository>();
+        var repository = new Mock<academy_API.Repositories.Interface.ILeaveRequestRepository>();
         repository.Setup(x => x.GetByIdAsync(5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LeaveRequest { Id = 5, Status = "approved" });
         var sut = new LeaveRequestService(repository.Object);

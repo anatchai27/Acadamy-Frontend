@@ -18,19 +18,6 @@ public sealed class OmiseOptions
     public string ApiBaseUrl { get; set; } = "https://api.omise.co/";
 }
 
-public interface IOmisePromptPayGateway
-{
-    Task<OmiseCharge> CreateChargeAsync(
-        decimal amount,
-        string referenceId,
-        string description,
-        CancellationToken ct = default);
-
-    Task<OmiseCharge> GetChargeAsync(string chargeId, CancellationToken ct = default);
-
-    bool VerifyWebhookSignature(string timestamp, string signatures, byte[] rawBody);
-}
-
 public sealed class OmisePromptPayGateway(
     HttpClient httpClient,
     IOptions<OmiseOptions> options) : IOmisePromptPayGateway

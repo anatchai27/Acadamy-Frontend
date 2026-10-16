@@ -4,15 +4,6 @@ using academy_API.Repositories;
 
 namespace academy_API.Services;
 
-public interface IAttendanceService
-{
-    Task<ScanAttendanceResponse> ScanAsync(ScanAttendanceRequest request, CancellationToken ct = default);
-    Task<ManualAttendanceResponse> ManualAsync(ManualAttendanceRequest request, CancellationToken ct = default);
-    Task<DailyAttendanceResponse> GetDailyAsync(int? sessionId, string? date, CancellationToken ct = default);
-    Task<CheckoutAttendanceResponse> CheckoutAsync(long attendanceId, CheckoutAttendanceRequest request, int? actorId, CancellationToken ct = default);
-    Task<AuditLogResponse?> GetCheckoutAuditAsync(long attendanceId, CancellationToken ct = default);
-}
-
 public class AttendanceService(
     IAttendanceRepository attendanceRepository,
     IBackgroundNotificationDispatcher notificationDispatcher) : IAttendanceService
@@ -245,11 +236,3 @@ public class AttendanceService(
     }
 }
 
-public class AttendanceValidationException : Exception
-{
-    public string ErrorCode { get; }
-    public AttendanceValidationException(string errorCode, string message) : base(message)
-    {
-        ErrorCode = errorCode;
-    }
-}
