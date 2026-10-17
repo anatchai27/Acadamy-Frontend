@@ -89,8 +89,8 @@ describe('student list states', () => {
     expect(screen.getByText('คุณแม่มะลิ')).toBeInTheDocument();
     expect(screen.getByText('คนที่มีสิทธิ์มารับ')).toBeInTheDocument();
     expect(screen.getByText('คุณตาสมพร')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '0898765432' })).toHaveAttribute('href', 'tel:0898765432');
-    expect(screen.getByRole('link', { name: '0812345678' })).toHaveAttribute('href', 'tel:0812345678');
+    expect(screen.getByRole('link', { name: '089-876-5432' })).toHaveAttribute('href', 'tel:0898765432');
+    expect(screen.getByRole('link', { name: '081-234-5678' })).toHaveAttribute('href', 'tel:0812345678');
 
     fireEvent.click(screen.getByRole('button', { name: 'ดูโปรไฟล์' }));
     const { route } = await import('preact-router');

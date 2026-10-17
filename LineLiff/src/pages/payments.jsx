@@ -11,6 +11,7 @@ import {
 import { LiffLayout } from '../components/liff-layout';
 import { compressImageFile } from '../utils/image-compression';
 import { validatePaymentSlip } from '../utils/validation';
+import { formatPhoneNumber } from '../utils/phone';
 
 const formatBaht = amount => `฿${Number(amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -287,7 +288,7 @@ export const PaymentsPage = ({ childId }) => {
                   {activeBatch.paymentInstructions && <p class="mt-3 text-sm leading-6 text-ink-900">{activeBatch.paymentInstructions}</p>}
                   {activeBatch.instituteContactPhone && (
                     <a href={`tel:${activeBatch.instituteContactPhone}`} class="mt-2 inline-flex min-h-10 items-center font-bold text-sage-700 underline underline-offset-2">
-                      สอบถามบัญชีรับโอน · {activeBatch.instituteContactPhone}
+                      สอบถามบัญชีรับโอน · {formatPhoneNumber(activeBatch.instituteContactPhone)}
                     </a>
                   )}
                 </div>

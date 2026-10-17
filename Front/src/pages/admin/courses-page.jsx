@@ -5,6 +5,7 @@ import { SolidInput, Button, showToast } from '../../components/ui';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService, studentService, enrollmentService } from '../../services';
 import { useAbortController } from '../../hooks';
+import { formatPhoneNumber } from '../../utils/phone';
 import {
   HiOutlinePlus,
   HiOutlineBookOpen,
@@ -738,7 +739,7 @@ export function CoursesPage({ path }) {
                             </span>
                             <span class="min-w-0">
                               <span class="block truncate text-sm font-semibold text-zinc-800">{student.fullName}</span>
-                              <span class="block truncate text-xs text-zinc-500">{student.grade || 'ไม่ระบุชั้นเรียน'}{student.primaryParentPhone ? ` · ${student.primaryParentPhone}` : ''}</span>
+                              <span class="block truncate text-xs text-zinc-500">{student.grade || 'ไม่ระบุชั้นเรียน'}{student.primaryParentPhone ? ` · ${formatPhoneNumber(student.primaryParentPhone)}` : ''}</span>
                             </span>
                           </button>
                         )) : (

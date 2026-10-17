@@ -7,6 +7,7 @@ import { studentService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { formatPhoneNumber } from '../../utils/phone';
 
 const PARENT_RELATIONS = ['แม่', 'พ่อ', 'ผู้ปกครอง', 'อื่นๆ'];
 const normalizeRelationship = (relationship = '') => {
@@ -389,7 +390,7 @@ export function StudentControll({ path, id }) {
                     <div class="flex-1 min-w-0">
                       <span class="font-medium text-zinc-800">{result.fullName}</span>
                       <span class="text-zinc-400 mx-1">·</span>
-                      <span class="text-zinc-500">{result.phone}</span>
+                      <span class="text-zinc-500">{formatPhoneNumber(result.phone)}</span>
                       <span class="text-zinc-400 mx-1">·</span>
                       <span class="text-zinc-400 text-xs">นักเรียน: {result.studentName}</span>
                     </div>

@@ -7,6 +7,7 @@ import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
+import { formatPhoneNumber } from '../../utils/phone';
 
 const relationshipLabels = {
   'แม่': 'มารดา',
@@ -241,7 +242,7 @@ export const StudentProfilePage = ({ path, id }) => {
                           {p.phone && (
                             <span class="inline-flex items-center gap-1">
                               <HiOutlinePhone class="h-3 w-3" />
-                              {p.phone}
+                              {formatPhoneNumber(p.phone)}
                             </span>
                           )}
                           {p.lineUserId && (

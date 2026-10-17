@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { getParentProfile, updateParentProfile } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
+import { formatPhoneNumber } from '../utils/phone';
 
 export const ProfilePage = () => {
   const { state, dispatch, reset } = useLiffContext();
@@ -92,7 +93,7 @@ export const ProfilePage = () => {
           ) : (
             <div class="space-y-3">
               <ProfileRow label="ชื่อ-นามสกุล" value={profile?.fullName || '-'} />
-              <ProfileRow label="เบอร์โทร" value={profile?.phone || '-'} />
+              <ProfileRow label="เบอร์โทร" value={formatPhoneNumber(profile?.phone || '-')} />
               <ProfileRow label="อีเมล" value={profile?.email || '-'} />
             </div>
           )}

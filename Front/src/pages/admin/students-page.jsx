@@ -6,6 +6,7 @@ import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
+import { formatPhoneNumber } from '../../utils/phone';
 
 export const getStudentEmptyMessage = (loadError, search) => loadError
   ? { title: loadError, description: 'ตรวจการเชื่อมต่อ API แล้วลองใหม่' }
@@ -200,7 +201,7 @@ export function StudentsPage({ path }) {
                       onClick={(event) => event.stopPropagation()}
                       class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-oasis-primary hover:underline"
                     >
-                      <HiOutlinePhone class="h-4 w-4" />{student.primaryParentPhone}
+                      <HiOutlinePhone class="h-4 w-4" />{formatPhoneNumber(student.primaryParentPhone)}
                     </a>
                   )}
                 </div>
@@ -227,7 +228,7 @@ export function StudentsPage({ path }) {
                           </span>
                           {person.phone && (
                             <a href={`tel:${person.phone}`} class="shrink-0 text-xs font-medium text-oasis-primary hover:underline">
-                              {person.phone}
+                              {formatPhoneNumber(person.phone)}
                             </a>
                           )}
                         </div>

@@ -4,6 +4,7 @@ import { ScannerCamera, StatusBadge, showToast, BentoGrid } from '../../componen
 import { attendanceService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { formatPhoneNumber } from '../../utils/phone';
 
 export function AttendancePage({ path }) {
   const [mode, setMode] = useState('scan');
@@ -345,7 +346,7 @@ export function AttendancePage({ path }) {
                     onClick={() => handleCheckout(option)}
                     class="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-left transition hover:border-oasis-primary hover:bg-oasis-primary-light disabled:opacity-50"
                   >
-                    <span><span class="block text-sm font-semibold text-zinc-900">{option.fullName}</span><span class="mt-0.5 block text-xs text-zinc-500">{option.relationship || 'ผู้รับที่ได้รับอนุญาต'} {option.phone ? `· ${option.phone}` : ''}</span></span>
+                    <span><span class="block text-sm font-semibold text-zinc-900">{option.fullName}</span><span class="mt-0.5 block text-xs text-zinc-500">{option.relationship || 'ผู้รับที่ได้รับอนุญาต'} {option.phone ? `· ${formatPhoneNumber(option.phone)}` : ''}</span></span>
                     <span class="text-xs font-semibold text-oasis-primary">{checkoutLoading ? 'กำลังบันทึก' : 'เลือก'}</span>
                   </button>
                 ))}
