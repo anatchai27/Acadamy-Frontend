@@ -16,56 +16,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Build .NET API
         run: |
           dotnet publish API/academy-API.csproj -c Release -o publish/api --self-contained false
-
-      - name: Build Frontend (Admin App)
-        run: |
-          cd Front
-          npm install
-          npm run build
-
-      - name: Build Frontend (LINE LIFF)
-        run: |
-          cd LineLiff
-          npm install
-          npm run build
-
-      - name: Prepare Frontend target on VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            sudo mkdir -p /var/www/my-app/liff
-            sudo find /var/www/my-app -mindepth 1 -maxdepth 1 ! -name liff -exec rm -rf {} +
-
-      - name: Deploy Admin Frontend assets to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "Front/dist/*"
-          target: "/var/www/my-app"
-          strip_components: 2
-
-      - name: Deploy LINE LIFF assets to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "LineLiff/dist/*"
-          target: "/var/www/my-app/liff"
-          strip_components: 2
 
       - name: Prepare Backend target on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -95,15 +48,9 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Frontend: ensure Nginx can read static files.
-            sudo chown -R www-data:www-data /var/www/my-app
-            sudo find /var/www/my-app -type d -exec chmod 755 {} \;
-            sudo find /var/www/my-app -type f -exec chmod 644 {} \;
-
             # Backend: service runs as www-data in this project.
             sudo chown -R www-data:www-data /var/www/my-api
             sudo find /var/www/my-api -type d -exec chmod 755 {} \;
             sudo find /var/www/my-api -type f -exec chmod 644 {} \;
 
             sudo systemctl start my-api.service
-            sudo systemctl restart nginx
