@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [preact(), tailwindcss()],
-  base: '/liff/',
+  // Vercel hosts this app at the project root; the VPS still serves it under /liff/.
+  base: process.env.VERCEL ? '/' : '/liff/',
   server: {
     port: 5173,
     // ngrok assigns a different public hostname when a tunnel starts.

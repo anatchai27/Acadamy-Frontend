@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/liff", "destination": "/index.html" },
+    { "source": "/liff/:path*", "destination": "/index.html" }
+  ]
+}
