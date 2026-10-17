@@ -13,6 +13,10 @@ LineLiff is a Vite + Preact static app. The Vercel configuration keeps its exist
    - Output directory: `dist`
 4. Keep the committed `vercel.json`; it rewrites `/liff` routes to the SPA entry point.
 
+The build script invokes Vite with `node ./node_modules/vite/bin/vite.js build` rather than the generated `node_modules/.bin/vite` shim. This avoids permission-denied failures on that shim in Linux build environments. The pinned `allowScripts` entry in `package.json` permits the esbuild 0.25.12 install script so npm versions that block unreviewed dependency scripts can install its platform binary.
+
+If a deployment reports `sh: .../node_modules/.bin/vite: Permission denied`, confirm Vercel is building the latest commit containing this package script, set **Build Command** to `npm run build` (not `vite build`), set **Install Command** to `npm ci`, and redeploy without the previous build cache. The npm `cache-dir` warning is separate from this executable permission error.
+
 ## 2. Set Environment Variables
 
 In **Project → Settings → Environment Variables**, add these for Production (and Preview if needed):
