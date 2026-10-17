@@ -103,9 +103,17 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
   const createControllerRef = useRef(null);
   const [expandedHw, setExpandedHw] = useState(null);
   const [submissions, setSubmissions] = useState({});
+  const [submissionsLoading, setSubmissionsLoading] = useState({});
+  const [submissionsErrors, setSubmissionsErrors] = useState({});
   const [skillTopics, setSkillTopics] = useState([]);
+  const [skillTopicsLoading, setSkillTopicsLoading] = useState(true);
   const [homeworkMappings, setHomeworkMappings] = useState({});
+  const [homeworkMappingsLoading, setHomeworkMappingsLoading] = useState({});
+  const [homeworkMappingsErrors, setHomeworkMappingsErrors] = useState({});
   const [mappingSaving, setMappingSaving] = useState(null);
+  const [quickTopicHomeworkId, setQuickTopicHomeworkId] = useState(null);
+  const [quickTopicName, setQuickTopicName] = useState('');
+  const [quickTopicSaving, setQuickTopicSaving] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -143,13 +151,16 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
 
   useEffect(() => {
     if (!courseId) return;
+    setSkillTopics([]);
+    setSkillTopicsLoading(true);
     skillScoreService
       .getSkillTopics(courseId)
       .then((res) => {
         const payload = res.data?.data || res.data || {};
         setSkillTopics(payload.topics || []);
       })
-      .catch(() => setSkillTopics([]));
+      .catch(() => setSkillTopics([]))
+      .finally(() => setSkillTopicsLoading(false));
   }, [courseId]);
 
   const updateField = (field) => (e) => {
@@ -210,33 +221,46 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
     setShowForm(false);
   };
 
+  const loadSubmissions = async (hwId) => {
+    setSubmissionsLoading((prev) => ({ ...prev, [hwId]: true }));
+    setSubmissionsErrors((prev) => ({ ...prev, [hwId]: false }));
+    try {
+      const res = await homeworkService.getSubmissions(hwId);
+      const payload = res.data?.data || res.data || {};
+      setSubmissions((prev) => ({
+        ...prev,
+        [hwId]: payload.submissions || (Array.isArray(payload) ? payload : []),
+      }));
+    } catch {
+      setSubmissionsErrors((prev) => ({ ...prev, [hwId]: true }));
+    } finally {
+      setSubmissionsLoading((prev) => ({ ...prev, [hwId]: false }));
+    }
+  };
+
+  const loadSkillMapping = async (hwId) => {
+    setHomeworkMappingsLoading(previous => ({ ...previous, [hwId]: true }));
+    setHomeworkMappingsErrors(previous => ({ ...previous, [hwId]: false }));
+    try {
+      const mappingRes = await homeworkService.getSkillMapping(hwId);
+      const mappingPayload = mappingRes.data?.data || mappingRes.data || {};
+      setHomeworkMappings(previous => ({ ...previous, [hwId]: mappingPayload.topicIds || [] }));
+    } catch {
+      setHomeworkMappingsErrors(previous => ({ ...previous, [hwId]: true }));
+      showToast('โหลดทักษะที่ผูกไว้ไม่สำเร็จ', 'error');
+    } finally {
+      setHomeworkMappingsLoading(previous => ({ ...previous, [hwId]: false }));
+    }
+  };
+
   const toggleSubmissions = async (hwId) => {
     if (expandedHw === hwId) {
       setExpandedHw(null);
       return;
     }
     setExpandedHw(hwId);
-    if (!homeworkMappings[hwId]) {
-      try {
-        const mappingRes = await homeworkService.getSkillMapping(hwId);
-        const mappingPayload = mappingRes.data?.data || mappingRes.data || {};
-        setHomeworkMappings((prev) => ({ ...prev, [hwId]: mappingPayload.topicIds || [] }));
-      } catch {
-        showToast('ไม่สามารถโหลด skill mapping ได้', 'error');
-      }
-    }
-    if (!submissions[hwId]) {
-      try {
-        const res = await homeworkService.getSubmissions(hwId);
-        const payload = res.data?.data || res.data || {};
-        setSubmissions((prev) => ({
-          ...prev,
-          [hwId]: payload.submissions || (Array.isArray(payload) ? payload : []),
-        }));
-      } catch {
-        /* silent */
-      }
-    }
+    const mappingRequest = homeworkMappings[hwId] ? Promise.resolve() : loadSkillMapping(hwId);
+    await Promise.all([mappingRequest, loadSubmissions(hwId)]);
   };
 
   const saveSkillMapping = async (homeworkId) => {
@@ -248,6 +272,46 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
       showToast(err?.data?.message || 'บันทึก skill mapping ไม่สำเร็จ', 'error');
     } finally {
       setMappingSaving(null);
+    }
+  };
+
+  const addAndLinkSkillTopic = async (homeworkId) => {
+    const name = quickTopicName.trim();
+    if (!name || !courseId) return;
+
+    setQuickTopicSaving(true);
+    let topicCreated = false;
+    try {
+      await skillScoreService.createSkillTopic({
+        courseId: Number(courseId),
+        name,
+        nameEn: '',
+        orderIndex: skillTopics.length + 1,
+      });
+      topicCreated = true;
+
+      const response = await skillScoreService.getSkillTopics(courseId);
+      const payload = response.data?.data || response.data || {};
+      const updatedTopics = payload.topics || (Array.isArray(payload) ? payload : []);
+      setSkillTopics(updatedTopics);
+
+      const previousTopicIds = new Set(skillTopics.map(topic => topic.id));
+      const createdTopic = updatedTopics.find(topic => topic.name === name && !previousTopicIds.has(topic.id));
+      if (!createdTopic) throw new Error('สร้างหัวข้อแล้ว แต่โหลดหัวข้อใหม่ไม่สำเร็จ');
+
+      const topicIds = [...new Set([...(homeworkMappings[homeworkId] || []), createdTopic.id])];
+      await homeworkService.setSkillMapping(homeworkId, topicIds);
+      setHomeworkMappings(previous => ({ ...previous, [homeworkId]: topicIds }));
+      setQuickTopicName('');
+      setQuickTopicHomeworkId(null);
+      showToast('เพิ่มและผูกทักษะกับการบ้านแล้ว', 'success');
+    } catch (error) {
+      const message = topicCreated
+        ? 'เพิ่มหัวข้อแล้ว แต่ผูกกับการบ้านไม่สำเร็จ เลือกหัวข้อแล้วกดบันทึกอีกครั้งได้เลย'
+        : error?.data?.message || error?.data?.Message || 'เพิ่มหัวข้อทักษะไม่สำเร็จ';
+      showToast(message, 'error');
+    } finally {
+      setQuickTopicSaving(false);
     }
   };
 
@@ -412,47 +476,120 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
 
           {expandedHw === hw.id && (
             <div class={`border-t p-5 ${isNeo ? 'neo-accordion-content' : 'border-slate-100'}`}>
-              <div class="mb-5 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-                <div class="flex items-center justify-between gap-3">
+              <section class="mb-5 border-b border-slate-200 pb-5" aria-labelledby={`homework-skills-${hw.id}`}>
+                <div class="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p class="text-sm font-semibold text-slate-800">Skill topics ของการบ้าน</p>
-                    <p class="mt-1 text-xs text-slate-500">คะแนนที่ตรวจจะอัปเดตไปยัง topic ที่เลือก</p>
+                    <h5 id={`homework-skills-${hw.id}`} class="text-sm font-semibold text-slate-800">ทักษะที่การบ้านนี้วัด</h5>
+                    <p class="mt-1 text-xs text-slate-500">เลือกได้หลายข้อ · คะแนนตรวจงานจะอัปเดตให้ทักษะที่เลือก</p>
                   </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    loading={mappingSaving === hw.id}
-                    disabled={mappingSaving === hw.id}
-                    onClick={() => saveSkillMapping(hw.id)}
+                  <div class="flex items-center gap-3">
+                    {skillTopics.length > 0 && !homeworkMappingsLoading[hw.id] && !homeworkMappingsErrors[hw.id] && (
+                      <span class="text-xs text-slate-500">เลือก {(homeworkMappings[hw.id] || []).length} ข้อ</span>
+                    )}
+                    {skillTopics.length > 0 && !homeworkMappingsLoading[hw.id] && !homeworkMappingsErrors[hw.id] && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        loading={mappingSaving === hw.id}
+                        disabled={mappingSaving === hw.id || quickTopicSaving}
+                        onClick={() => saveSkillMapping(hw.id)}
+                      >
+                        บันทึกทักษะ
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {skillTopicsLoading ? (
+                  <p class="mt-3 text-sm text-slate-500" role="status">กำลังโหลดทักษะของคอร์ส...</p>
+                ) : homeworkMappingsLoading[hw.id] ? (
+                  <p class="mt-3 text-sm text-slate-500" role="status">กำลังโหลดทักษะที่ผูกกับการบ้าน...</p>
+                ) : homeworkMappingsErrors[hw.id] ? (
+                  <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                    <span class="text-red-700" role="alert">โหลดทักษะที่ผูกไว้ไม่สำเร็จ</span>
+                    <button type="button" class="font-semibold text-oasis-primary hover:underline" onClick={() => loadSkillMapping(hw.id)}>ลองอีกครั้ง</button>
+                  </div>
+                ) : skillTopics.length > 0 && (
+                  <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                    {skillTopics.map((topic) => (
+                      <label key={topic.id} class="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={(homeworkMappings[hw.id] || []).includes(topic.id)}
+                          onChange={(event) =>
+                            setHomeworkMappings((previous) => ({
+                              ...previous,
+                              [hw.id]: event.target.checked
+                                ? [...new Set([...(previous[hw.id] || []), topic.id])]
+                                : (previous[hw.id] || []).filter((id) => id !== topic.id),
+                            }))
+                          }
+                        />
+                        <span>
+                          {topic.name}
+                          {topic.nameEn && <span class="ml-1 text-xs text-slate-500">({topic.nameEn})</span>}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {!skillTopicsLoading && !homeworkMappingsLoading[hw.id] && !homeworkMappingsErrors[hw.id] && quickTopicHomeworkId === hw.id ? (
+                  <form
+                    class="mt-3 flex flex-col gap-2 sm:flex-row"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      addAndLinkSkillTopic(hw.id);
+                    }}
                   >
-                    บันทึก
-                  </Button>
+                    <input
+                      autoFocus
+                      aria-label="ชื่อทักษะใหม่"
+                      class="min-h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-oasis-primary focus:outline-none focus:ring-2 focus:ring-oasis-primary/20"
+                      placeholder="เช่น การคิดวิเคราะห์"
+                      value={quickTopicName}
+                      onInput={event => setQuickTopicName(event.currentTarget.value)}
+                      disabled={quickTopicSaving}
+                    />
+                    <div class="flex gap-2">
+                      <Button type="submit" variant="primary" size="sm" loading={quickTopicSaving} disabled={quickTopicSaving || !quickTopicName.trim()}>
+                        เพิ่มและผูก
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={quickTopicSaving}
+                        onClick={() => {
+                          setQuickTopicName('');
+                          setQuickTopicHomeworkId(null);
+                        }}
+                      >
+                        ยกเลิก
+                      </Button>
+                    </div>
+                  </form>
+                ) : !skillTopicsLoading && !homeworkMappingsLoading[hw.id] && !homeworkMappingsErrors[hw.id] && (
+                  <button
+                    type="button"
+                    class="mt-3 min-h-10 text-sm font-semibold text-oasis-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary"
+                    onClick={() => {
+                      setQuickTopicName('');
+                      setQuickTopicHomeworkId(hw.id);
+                    }}
+                  >
+                    + เพิ่มทักษะใหม่
+                  </button>
+                )}
+              </section>
+              {submissionsLoading[hw.id] ? (
+                <p class="py-4 text-center text-sm text-slate-500">กำลังโหลดรายการส่งงาน...</p>
+              ) : submissionsErrors[hw.id] ? (
+                <div class="py-4 text-center">
+                  <p class="text-sm text-red-600">โหลดรายการส่งงานไม่สำเร็จ</p>
+                  <button type="button" class="mt-2 text-sm font-medium text-blue-600 hover:underline" onClick={() => loadSubmissions(hw.id)}>ลองอีกครั้ง</button>
                 </div>
-                <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                  {skillTopics.map((topic) => (
-                    <label key={topic.id} class="flex items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={(homeworkMappings[hw.id] || []).includes(topic.id)}
-                        onChange={(event) =>
-                          setHomeworkMappings((prev) => ({
-                            ...prev,
-                            [hw.id]: event.target.checked
-                              ? [...(prev[hw.id] || []), topic.id]
-                              : (prev[hw.id] || []).filter((id) => id !== topic.id),
-                          }))
-                        }
-                      />
-                      <span>
-                        {topic.name}
-                        {topic.nameEn && <span class="ml-1 text-xs text-slate-500">({topic.nameEn})</span>}
-                      </span>
-                    </label>
-                  ))}
-                  {skillTopics.length === 0 && <p class="text-xs text-slate-500">คอร์สนี้ยังไม่มี skill topic</p>}
-                </div>
-              </div>
-              <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
+              ) : (
+                <SubmissionsList submissions={submissions[hw.id] || []} onGrade={handleGrade} />
+              )}
             </div>
           )}
         </div>
@@ -481,6 +618,9 @@ function SubmissionsList({ submissions, onGrade }) {
             <p class="text-sm font-medium text-slate-700">{sub.studentName || `นักเรียน #${sub.studentId}`}</p>
             {sub.submittedAt && (
               <p class="text-xs text-slate-500">ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}</p>
+            )}
+            {sub.fileUrl && (
+              <a class="mt-1 inline-block text-xs font-medium text-blue-600 hover:underline" href={sub.fileUrl} target="_blank" rel="noopener noreferrer">เปิดไฟล์งานที่ส่ง</a>
             )}
           </div>
           <div class="flex flex-wrap items-center gap-2 shrink-0">

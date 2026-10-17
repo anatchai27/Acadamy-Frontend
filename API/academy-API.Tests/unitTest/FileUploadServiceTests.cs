@@ -29,6 +29,25 @@ public class FileUploadServiceTests
     }
 
     [Fact]
+    public async Task UploadPaymentQr_ValidImage_SavesInstituteQrUrl()
+    {
+        var institute = new Institute { Id = 1 };
+        var repository = new Mock<IFileUploadRepository>();
+        var storage = new Mock<IFileStorageService>();
+        repository.Setup(x => x.GetInstituteAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(institute);
+        storage.Setup(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), "image/png", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.test/payment-qr.png");
+        var sut = new FileUploadService(repository.Object, storage.Object);
+        var file = CreateFile("payment-qr.png", "image/png", 10);
+
+        var result = await sut.UploadPaymentQrAsync(1, file, CancellationToken.None);
+
+        Assert.Equal("https://storage.test/payment-qr.png", result.FileUrl);
+        Assert.Equal("https://storage.test/payment-qr.png", institute.PaymentQrImageUrl);
+        repository.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task UploadStudentPhoto_WrongContentType_RejectsBeforeStorage()
     {
         // Arrange

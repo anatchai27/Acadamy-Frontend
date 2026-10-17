@@ -24,6 +24,14 @@ export const normalizePayment = (payment) => ({
   status: payment.status || payment.Status || 'unknown',
   slipUrl: payment.slipUrl || payment.SlipUrl || '',
   receiptPdfUrl: payment.receiptPdfUrl || payment.ReceiptPdfUrl || '',
+  instituteName: payment.instituteName || payment.InstituteName || '',
+  instituteContactPhone: payment.instituteContactPhone || payment.InstituteContactPhone || '',
+  bankName: payment.bankName || payment.BankName || '',
+  bankAccountName: payment.bankAccountName || payment.BankAccountName || '',
+  bankAccountNumber: payment.bankAccountNumber || payment.BankAccountNumber || '',
+  promptPayId: payment.promptPayId || payment.PromptPayId || '',
+  paymentInstructions: payment.paymentInstructions || payment.PaymentInstructions || '',
+  paymentQrImageUrl: payment.paymentQrImageUrl || payment.PaymentQrImageUrl || '',
 });
 
 export const normalizePayableBalance = balance => ({
@@ -34,6 +42,12 @@ export const normalizePayableBalance = balance => ({
   amountDue: Number(balance.amountDue ?? balance.AmountDue ?? 0),
   instituteName: balance.instituteName || balance.InstituteName || '',
   instituteContactPhone: balance.instituteContactPhone || balance.InstituteContactPhone || '',
+  bankName: balance.bankName || balance.BankName || '',
+  bankAccountName: balance.bankAccountName || balance.BankAccountName || '',
+  bankAccountNumber: balance.bankAccountNumber || balance.BankAccountNumber || '',
+  promptPayId: balance.promptPayId || balance.PromptPayId || '',
+  paymentInstructions: balance.paymentInstructions || balance.PaymentInstructions || '',
+  paymentQrImageUrl: balance.paymentQrImageUrl || balance.PaymentQrImageUrl || '',
 });
 
 export const PaymentsPage = ({ childId }) => {
@@ -110,6 +124,12 @@ export const PaymentsPage = ({ childId }) => {
         courseName: balance.courseName,
         instituteName: balance.instituteName,
         instituteContactPhone: balance.instituteContactPhone,
+        bankName: balance.bankName,
+        bankAccountName: balance.bankAccountName,
+        bankAccountNumber: balance.bankAccountNumber,
+        promptPayId: balance.promptPayId,
+        paymentInstructions: balance.paymentInstructions,
+        paymentQrImageUrl: balance.paymentQrImageUrl,
       });
       setSlipFile(null);
       setNotice('สร้างรายการชำระแล้ว โอนตามข้อมูลบัญชีของสถาบัน แล้วแนบสลิปได้เลย');
@@ -132,6 +152,14 @@ export const PaymentsPage = ({ childId }) => {
       invoiceNo: payment.invoiceNo,
       amount: payment.amount,
       courseName: payment.description,
+      instituteName: payment.instituteName,
+      instituteContactPhone: payment.instituteContactPhone,
+      bankName: payment.bankName,
+      bankAccountName: payment.bankAccountName,
+      bankAccountNumber: payment.bankAccountNumber,
+      promptPayId: payment.promptPayId,
+      paymentInstructions: payment.paymentInstructions,
+      paymentQrImageUrl: payment.paymentQrImageUrl,
     });
   };
 
@@ -235,11 +263,28 @@ export const PaymentsPage = ({ childId }) => {
                 <div class="mt-4 rounded-2xl bg-sage-50 p-4">
                   <p class="font-bold text-ink-900">โอนแล้วส่งสลิปได้ในหน้านี้</p>
                   <ol class="mt-3 space-y-2 text-sm leading-6 text-ink-700">
-                    <li class="flex gap-2"><span class="font-bold text-sage-700">1.</span><span>โอนยอดนี้ไปยังบัญชีที่สถาบันแจ้งไว้</span></li>
-                    <li class="flex gap-2"><span class="font-bold text-sage-700">2.</span><span>ใส่เลขอ้างอิงในหมายเหตุการโอน เพื่อจับคู่รายการได้เร็วขึ้น</span></li>
-                    <li class="flex gap-2"><span class="font-bold text-sage-700">3.</span><span>ถ่ายรูปหรือเลือกรูปสลิป แล้วกดส่งให้สถาบันตรวจสอบ</span></li>
+                    <li class="flex gap-2"><span class="font-bold text-sage-700">1.</span><span>โอนยอดนี้ตามบัญชีรับชำระของสถาบัน</span></li>
+                    <li class="flex gap-2"><span class="font-bold text-sage-700">2.</span><span>ใส่เลขอ้างอิงในหมายเหตุการโอน เพื่อให้สถาบันตรวจสอบได้เร็วขึ้น</span></li>
+                    <li class="flex gap-2"><span class="font-bold text-sage-700">3.</span><span>ถ่ายรูปหรือเลือกรูปสลิป แล้วส่งให้สถาบันตรวจสอบ</span></li>
                   </ol>
-                  {activeBatch.instituteName && <p class="mt-3 text-xs text-ink-700">{activeBatch.instituteName}</p>}
+                  {activeBatch.instituteName && <p class="mt-3 text-sm font-bold text-ink-900">{activeBatch.instituteName}</p>}
+                  {(activeBatch.bankName || activeBatch.bankAccountName || activeBatch.bankAccountNumber || activeBatch.promptPayId) ? (
+                    <dl class="mt-3 space-y-2 rounded-xl bg-white p-3 text-sm">
+                      {activeBatch.bankName && <div class="flex flex-wrap justify-between gap-x-3"><dt class="text-ink-700">ธนาคาร</dt><dd class="font-semibold text-ink-900">{activeBatch.bankName}</dd></div>}
+                      {activeBatch.bankAccountName && <div class="flex flex-wrap justify-between gap-x-3"><dt class="text-ink-700">ชื่อบัญชี</dt><dd class="font-semibold text-ink-900">{activeBatch.bankAccountName}</dd></div>}
+                      {activeBatch.bankAccountNumber && <div class="flex flex-wrap justify-between gap-x-3"><dt class="text-ink-700">เลขที่บัญชี</dt><dd class="font-bold tracking-wide text-ink-900">{activeBatch.bankAccountNumber}</dd></div>}
+                      {activeBatch.promptPayId && <div class="flex flex-wrap justify-between gap-x-3"><dt class="text-ink-700">พร้อมเพย์</dt><dd class="font-bold tracking-wide text-ink-900">{activeBatch.promptPayId}</dd></div>}
+                    </dl>
+                  ) : !activeBatch.paymentQrImageUrl ? (
+                    <p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-900">สถาบันยังไม่ได้ระบุบัญชีรับโอน กรุณาติดต่อสถาบันก่อนชำระเงิน</p>
+                  ) : null}
+                  {activeBatch.paymentQrImageUrl && (
+                    <figure class="mt-4 rounded-xl border border-sage-100 bg-white p-3 text-center">
+                      <img src={activeBatch.paymentQrImageUrl} alt={`QR Code สำหรับชำระเงินให้${activeBatch.instituteName || 'สถาบัน'}`} class="mx-auto max-h-64 w-full max-w-64 object-contain" loading="lazy" />
+                      <figcaption class="mt-2 text-xs leading-5 text-ink-700">สแกน QR คงที่ของสถาบัน แล้วตรวจสอบยอด ฿{Number(activeBatch.amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ก่อนยืนยัน</figcaption>
+                    </figure>
+                  )}
+                  {activeBatch.paymentInstructions && <p class="mt-3 text-sm leading-6 text-ink-900">{activeBatch.paymentInstructions}</p>}
                   {activeBatch.instituteContactPhone && (
                     <a href={`tel:${activeBatch.instituteContactPhone}`} class="mt-2 inline-flex min-h-10 items-center font-bold text-sage-700 underline underline-offset-2">
                       สอบถามบัญชีรับโอน · {activeBatch.instituteContactPhone}
@@ -287,14 +332,18 @@ export const PaymentsPage = ({ childId }) => {
                         <p class="truncate font-bold text-ink-900">{balance.courseName}</p>
                         <p class="mt-1 font-semibold text-sage-700">{formatBaht(balance.amountDue)}</p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => startPayment(balance)}
-                        disabled={creatingEnrollmentId !== null}
-                        class="min-h-11 shrink-0 rounded-xl bg-sage-700 px-4 text-sm font-bold text-white disabled:opacity-50"
-                      >
-                        {creatingEnrollmentId === balance.enrollmentId ? 'กำลังเตรียม…' : 'ชำระเงิน'}
-                      </button>
+                      {balance.bankAccountNumber || balance.promptPayId || balance.paymentQrImageUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => startPayment(balance)}
+                          disabled={creatingEnrollmentId !== null}
+                          class="min-h-11 shrink-0 rounded-xl bg-sage-700 px-4 text-sm font-bold text-white disabled:opacity-50"
+                        >
+                          {creatingEnrollmentId === balance.enrollmentId ? 'กำลังเตรียม…' : 'ชำระเงิน'}
+                        </button>
+                      ) : (
+                        <p class="max-w-40 text-right text-xs font-semibold leading-5 text-amber-900" role="status">สถาบันยังไม่ได้ตั้งค่าบัญชีรับโอน</p>
+                      )}
                     </article>
                   ))}
                 </div>

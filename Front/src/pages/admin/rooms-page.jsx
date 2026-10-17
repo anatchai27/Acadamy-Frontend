@@ -184,42 +184,46 @@ export function RoomsPage({ path }) {
           <p class="text-sm text-zinc-500">ยังไม่มีห้องเรียน</p>
         </div>
       ) : (
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {rooms.map((room) => (
             <article
               key={room.id}
-              class={`${isNeo ? 'neo-card bg-cyan-100' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} flex items-center justify-between gap-3 p-5`}
+              class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} flex min-w-0 flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5`}
             >
               <div class="flex min-w-0 items-center gap-3">
-                <HiOutlineBuildingOffice2 class="h-6 w-6 shrink-0 text-oasis-primary" />
+                <div class={`flex h-11 w-11 shrink-0 items-center justify-center ${isNeo ? 'border-2 border-black bg-amber-100 text-zinc-900' : 'rounded-xl bg-oasis-primary/10 text-oasis-primary'}`}>
+                  <HiOutlineBuildingOffice2 class="h-5 w-5" aria-hidden="true" />
+                </div>
                 <div class="min-w-0">
-                  <span class="block truncate font-semibold text-zinc-900">{room.name}</span>
+                  <h3 class="truncate font-semibold text-zinc-900">{room.name}</h3>
                   {room.description && (
-                    <span class="mt-1 block truncate text-xs text-zinc-500">{room.description}</span>
+                    <p class="mt-1 truncate text-sm text-zinc-600">{room.description}</p>
                   )}
                   <span
-                    class={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${room.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}
+                    class={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${room.isActive ? 'border border-emerald-300 bg-emerald-100 text-emerald-900' : 'border border-zinc-300 bg-zinc-100 text-zinc-700'}`}
                   >
                     {room.isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                   </span>
                 </div>
               </div>
-              <div class="flex shrink-0 items-center gap-1">
+              <div class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:shrink-0 sm:items-center">
                 <button
                   type="button"
                   aria-label={`แก้ไขห้อง ${room.name}`}
                   onClick={() => openEdit(room)}
-                  class="rounded-lg p-2 text-zinc-400 hover:bg-oasis-primary/5 hover:text-oasis-primary"
+                  class={`inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary ${isNeo ? 'border-2 border-black bg-amber-100 text-zinc-900 hover:bg-amber-200' : 'rounded-xl text-oasis-primary hover:bg-oasis-primary/10'}`}
                 >
-                  <HiOutlinePencil class="h-5 w-5" />
+                  <HiOutlinePencil class="h-5 w-5" aria-hidden="true" />
+                  <span class="sm:hidden">แก้ไข</span>
                 </button>
                 <button
                   type="button"
                   aria-label={`ลบห้อง ${room.name}`}
                   onClick={() => removeRoom(room)}
-                  class="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                  class={`inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${isNeo ? 'border-2 border-black bg-red-100 text-red-900 hover:bg-red-200' : 'rounded-xl text-red-700 hover:bg-red-50'}`}
                 >
-                  <HiOutlineTrash class="h-5 w-5" />
+                  <HiOutlineTrash class="h-5 w-5" aria-hidden="true" />
+                  <span class="sm:hidden">ลบ</span>
                 </button>
               </div>
             </article>

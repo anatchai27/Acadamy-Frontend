@@ -7,7 +7,13 @@ namespace academy_API.Tests.unitTest;
 
 public class HomeworkServiceTests
 {
-    private static Mock<academy_API.Repositories.Interface.IHomeworkRepository> CreateMockRepo() => new();
+    private static Mock<academy_API.Repositories.Interface.IHomeworkRepository> CreateMockRepo()
+    {
+        var repository = new Mock<academy_API.Repositories.Interface.IHomeworkRepository>();
+        repository.Setup(r => r.GetCourseInstituteIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(7);
+        return repository;
+    }
 
     // 1
     [Fact]
@@ -27,7 +33,7 @@ public class HomeworkServiceTests
         Assert.Equal(10, result.Data.HomeworkId);
         Assert.Equal("HW1", result.Data.Title);
         repoMock.Verify(r => r.CreateAsync(
-            It.Is<Homework>(homework => homework.AssignedBy == 24),
+            It.Is<Homework>(homework => homework.AssignedBy == 24 && homework.InstituteId == 7),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -44,8 +50,23 @@ public class HomeworkServiceTests
         await sut.CreateAsync(new HomeworkRequest(1, "HW1", "desc", null, DateTime.UtcNow.AddDays(7)), 42);
 
         repoMock.Verify(r => r.CreateAsync(
-            It.Is<Homework>(homework => homework.AssignedBy == null),
+            It.Is<Homework>(homework => homework.AssignedBy == null && homework.InstituteId == 7),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_CourseNotFound_ThrowsValidationExceptionWithoutCreatingHomework()
+    {
+        var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.GetCourseInstituteIdAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int?)null);
+        var sut = new HomeworkService(repoMock.Object);
+
+        var exception = await Assert.ThrowsAsync<HomeworkValidationException>(() =>
+            sut.CreateAsync(new HomeworkRequest(999, "HW1", null, null, DateTime.UtcNow.AddDays(1)), 42));
+
+        Assert.Equal("COURSE_NOT_FOUND", exception.ErrorCode);
+        repoMock.Verify(r => r.CreateAsync(It.IsAny<Homework>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // 2

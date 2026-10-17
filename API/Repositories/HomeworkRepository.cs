@@ -15,6 +15,12 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
             .Select(teacher => (int?)teacher.Id)
             .FirstOrDefaultAsync(ct);
 
+    public Task<int?> GetCourseInstituteIdAsync(int courseId, CancellationToken ct = default) =>
+        _context.Courses
+            .Where(course => course.Id == courseId)
+            .Select(course => (int?)course.InstituteId)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<Homework> CreateAsync(Homework homework, CancellationToken ct = default)
     {
         _context.Homeworks.Add(homework);
@@ -33,7 +39,7 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
                 h.Description,
                 h.FileUrl,
                 h.DueAt,
-                h.CourseId,
+                _context.HomeworkSubmissions.Count(s => s.HomeworkId == h.Id && s.SubmittedAt != null && s.FileUrl != null),
                 h.TitleEn,
                 h.DescriptionEn
             ))
@@ -44,7 +50,7 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
     {
         return await _context.HomeworkSubmissions
             .Include(s => s.Student)
-            .Where(s => s.HomeworkId == homeworkId)
+            .Where(s => s.HomeworkId == homeworkId && s.SubmittedAt != null && s.FileUrl != null)
             .OrderBy(s => s.Student.FullName)
             .Select(s => new HomeworkSubmissionItem(
                 s.Id,

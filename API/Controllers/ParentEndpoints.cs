@@ -161,7 +161,15 @@ public static class ParentEndpoints
                 method = "",
                 status = p.Status == PaymentStatus.Succeeded ? "paid" : p.Status,
                 slipUrl = p.SlipUrl,
-                receiptPdfUrl = p.ReceiptPdfUrl
+                receiptPdfUrl = p.ReceiptPdfUrl,
+                p.InstituteName,
+                p.InstituteContactPhone,
+                p.BankName,
+                p.BankAccountName,
+                p.BankAccountNumber,
+                p.PromptPayId,
+                p.PaymentInstructions,
+                p.PaymentQrImageUrl
             })
         });
     }
@@ -185,7 +193,13 @@ public static class ParentEndpoints
                 balance.CourseName,
                 balance.AmountDue,
                 balance.InstituteName,
-                balance.InstituteContactPhone
+                balance.InstituteContactPhone,
+                balance.BankName,
+                balance.BankAccountName,
+                balance.BankAccountNumber,
+                balance.PromptPayId,
+                balance.PaymentInstructions,
+                balance.PaymentQrImageUrl
             })
         });
     }
@@ -245,7 +259,11 @@ public static class ParentEndpoints
                 titleEn = h.TitleEn,
                 description = h.Description,
                 descriptionEn = h.DescriptionEn,
-                dueAt = h.DueAt.ToString("yyyy-MM-dd")
+                dueAt = h.DueAt.ToString("yyyy-MM-dd"),
+                submissionId = h.SubmissionId,
+                submittedAt = h.SubmittedAt,
+                score = h.Score,
+                feedback = h.Feedback
             })
         });
     }

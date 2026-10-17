@@ -11,10 +11,15 @@ public class HomeworkService(IHomeworkRepository repository) : IHomeworkService
         if (string.IsNullOrWhiteSpace(request.Title))
             throw new HomeworkValidationException("TITLE_REQUIRED", "กรุณาระบุหัวข้อการบ้าน");
 
+        var instituteId = await _repository.GetCourseInstituteIdAsync(request.CourseId, ct);
+        if (!instituteId.HasValue)
+            throw new HomeworkValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียน หรือไม่มีสิทธิ์เข้าถึงคอร์สนี้");
+
         var assignedByTeacherId = await _repository.GetTeacherIdByUserIdAsync(assignedByUserId, ct);
         var homework = new Models.Homework
         {
             CourseId = request.CourseId,
+            InstituteId = instituteId.Value,
             Title = request.Title.Trim(),
             TitleEn = Clean(request.TitleEn),
             Description = request.Description?.Trim(),

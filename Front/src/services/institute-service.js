@@ -17,8 +17,15 @@ export const uploadLogo = (file, options = {}) => {
   });
 }
 
+export const uploadPaymentQr = (file, options = {}) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/uploads/payment-qr', formData, options);
+}
+
 export const instituteService = {
   getInstitute,
   updateInstitute,
   uploadLogo,
+  uploadPaymentQr,
 };

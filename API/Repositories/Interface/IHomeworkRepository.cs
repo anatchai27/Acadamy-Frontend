@@ -6,6 +6,7 @@ namespace academy_API.Repositories.Interface;
 public interface IHomeworkRepository
 {
     Task<int?> GetTeacherIdByUserIdAsync(int userId, CancellationToken ct = default);
+    Task<int?> GetCourseInstituteIdAsync(int courseId, CancellationToken ct = default);
     Task<Homework> CreateAsync(Homework homework, CancellationToken ct = default);
     Task<List<HomeworkItem>> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<List<HomeworkSubmissionItem>> GetSubmissionsAsync(int homeworkId, CancellationToken ct = default);

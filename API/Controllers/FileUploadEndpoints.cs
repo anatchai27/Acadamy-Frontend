@@ -11,6 +11,10 @@ public static class FileUploadEndpoints
     {
         var group = app.MapGroup("/api/uploads").WithTags("File Uploads").WithOpenApi().RequireAuthorization();
 
+        group.MapPost("/payment-qr", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentQrAsync(instituteId, uploadedFile, ct)))
+            .RequireAuthorization(policy => policy.RequireRole("admin"));
+
         group.MapPost("/logo", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadLogoAsync(instituteId, uploadedFile, ct)));
         MapPaymentSlipUploadEndpoint(group);

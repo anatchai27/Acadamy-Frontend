@@ -70,6 +70,16 @@ public class TutoringDbContext(
             entity.Property(e => e.Slug).HasMaxLength(64).HasColumnName("slug");
             entity.Property(e => e.LogoUrl).HasMaxLength(1000).HasColumnName("logo_url");
             entity.Property(e => e.ContactPhone).HasMaxLength(50).HasColumnName("contact_phone");
+            entity.Property(e => e.Email).HasMaxLength(255).HasColumnName("email");
+            entity.Property(e => e.Address).HasMaxLength(1000).HasColumnName("address");
+            entity.Property(e => e.TaxId).HasMaxLength(50).HasColumnName("tax_id");
+            entity.Property(e => e.ReceiptNote).HasMaxLength(2000).HasColumnName("receipt_note");
+            entity.Property(e => e.BankName).HasMaxLength(120).HasColumnName("bank_name");
+            entity.Property(e => e.BankAccountName).HasMaxLength(255).HasColumnName("bank_account_name");
+            entity.Property(e => e.BankAccountNumber).HasMaxLength(50).HasColumnName("bank_account_number");
+            entity.Property(e => e.PromptPayId).HasMaxLength(50).HasColumnName("promptpay_id");
+            entity.Property(e => e.PaymentInstructions).HasMaxLength(1000).HasColumnName("payment_instructions");
+            entity.Property(e => e.PaymentQrImageUrl).HasMaxLength(1000).HasColumnName("payment_qr_image_url");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");

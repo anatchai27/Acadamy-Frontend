@@ -1,8 +1,8 @@
 # Academy API Specification
 
 > **Base URL:** `https://your-domain.com/api`
-> **Version:** 2.3
-> **Updated:** 2026-09-12
+> **Version:** 2.4
+> **Updated:** 2026-10-16
 > **Architecture:** Multi-Tenant (Institute-scoped), Database-First (no EF migrations)
 > **Tests:** See `API/academy-API.Tests` for the current xUnit test suite.
 
@@ -1068,11 +1068,22 @@ Enroll a student in a course. The course must belong to the caller's institute.
 
 ## 8. Attendance  🔒 All endpoints
 
-> **Scope:** QR validation checks the student's institute. Daily attendance lists only students from the current institute. Cross-institute scans return `INVALID_QR`.
+> **Scope:** All routes require the `admin` or `teacher` role and use the authenticated institute context. QR validation rejects tokens outside that institute as `INVALID_QR`; a student/session institute mismatch discovered during persistence returns `FORBIDDEN`.
 
 ### POST `/attendance/scan`
 
-Check-in a student by scanning their QR token. Decrements their `sessionsRemaining` by 1 and sends a LINE notification to parents. The student's institute **must** match the caller's institute. Attendance recording and session decrement run in a single atomic transaction. LINE notification is fire-and-forget.
+Check in a student by scanning their QR token. Attendance and applicable billing changes are saved in one transaction. Billing depends on the session course type:
+
+| Course type | Scan behavior |
+|-------------|---------------|
+| `group`, `private`, or `null` | Decrement the matching enrollment's `sessionsRemaining` by 1; requires remaining quota |
+| `subscription` | Validate that the matching enrollment has not expired; does not decrement session count |
+| `credit` | Debit the configured course credit cost from the student's wallet |
+| `video` | Record attendance without billing |
+
+After the transaction commits, the service dispatches LINE notifications and returns a `notificationStatus` of `sent`, `skipped`, or `failed`. This dispatch is awaited by the request; it is not fire-and-forget.
+
+An optional `Idempotency-Key` header is copied into the request (and overrides the optional body `idempotencyKey`), but the current service does not persist or replay requests by that key. It does not provide server-side idempotency.
 
 **Request Body**
 ```json
@@ -1092,17 +1103,30 @@ Check-in a student by scanning their QR token. Decrements their `sessionsRemaini
     "studentName": "ด.ช. สมชาย รักเรียน",
     "status": "present",
     "checkinAt": "2026-06-20T13:05:00Z",
-    "sessionsRemaining": 19
+    "sessionsRemaining": 19,
+    "billingMethod": "sessions",
+    "billingDescription": "หักจำนวนคาบเรียน",
+    "attendanceId": 42,
+    "sessionId": 5,
+    "checkoutAt": null,
+    "notificationStatus": "sent"
   }
 }
 ```
+
+`sessionsRemaining` is nullable and represents an enrollment session count; it is not the balance for subscription, credit, or video billing. `billingMethod` is `sessions`, `subscription`, `credit`, or `free`.
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
 | Invalid/expired QR | 400 | `{ "status": "error", "errorCode": "INVALID_QR", "message": "QR Token ไม่ถูกต้องหรือหมดอายุแล้ว" }` |
-| Duplicate check-in | 400 | `{ "status": "error", "errorCode": "DUPLICATE_SCAN", "message": "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว" }` |
+| Invalid QR/session input | 400 | `{ "status": "error", "errorCode": "INVALID_QR", "message": "..." }` |
+| Duplicate check-in | 409 | `{ "status": "error", "errorCode": "DUPLICATE_SCAN", "message": "นักเรียนได้ทำการเช็คชื่อในคลาสนี้ไปแล้ว" }` |
+| Session not found or closed | 404 | `{ "status": "error", "errorCode": "SESSION_NOT_FOUND", "message": "..." }` |
+| Student/session institute mismatch | 403 | `{ "status": "error", "errorCode": "FORBIDDEN", "message": "..." }` |
+| No session quota | 409 | `{ "status": "error", "errorCode": "NO_QUOTA", "message": "..." }` |
+| Expired subscription, invalid credit cost, or insufficient wallet credits | 400 | `{ "status": "error", "errorCode": "SUBSCRIPTION_EXPIRED / CREDIT_COST_INVALID / INSUFFICIENT_CREDITS", "message": "..." }` |
 
 ---
 
@@ -1133,14 +1157,18 @@ Manually record attendance status for a student. Use this for late arrivals, abs
 }
 ```
 
-**Behavior:** When status is `present` or `late`, the student's `sessionsRemaining` is decremented. When `absent` or `leave`, sessions are not decremented.
+**Behavior:** The attendance record and applicable billing change are saved in one transaction. `present` and `late` apply the course-type billing rules documented for scan. `absent` and `leave` create records without a check-in timestamp and do not deduct quota. A manual record is not editable through this endpoint.
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
 | Invalid status | 400 | `{ "status": "error", "errorCode": "INVALID_STATUS", "message": "สถานะไม่ถูกต้อง (ค่าที่ใช้ได้: present, late, absent, leave)" }` |
-| Duplicate | 400 | `{ "status": "error", "errorCode": "DUPLICATE_SCAN", "message": "..." }` |
+| Duplicate | 409 | `{ "status": "error", "errorCode": "DUPLICATE_SCAN", "message": "..." }` |
+| Session not found or closed | 404 | `{ "status": "error", "errorCode": "SESSION_NOT_FOUND", "message": "..." }` |
+| Student/session institute mismatch | 403 | `{ "status": "error", "errorCode": "FORBIDDEN", "message": "..." }` |
+| No session quota | 409 | `{ "status": "error", "errorCode": "NO_QUOTA", "message": "..." }` |
+| Expired subscription, invalid credit cost, or insufficient wallet credits | 400 | `{ "status": "error", "errorCode": "SUBSCRIPTION_EXPIRED / CREDIT_COST_INVALID / INSUFFICIENT_CREDITS", "message": "..." }` |
 
 ---
 
@@ -1153,34 +1181,22 @@ Get daily attendance records for the current institute, optionally filtered by s
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
 | `session_id` | `int?` | — | Filter by session ID |
-| `date` | `string?` | today | Date in `YYYY-MM-DD` format |
+| `date` | `string?` | current UTC date | Date in `YYYY-MM-DD` format; filters by check-in date |
 
 **Response** `200 OK`
 ```json
 {
   "status": "success",
   "data": {
-    "sessionInfo": {
-      "id": 5,
-      "courseName": "คณิตศาสตร์ ม.1",
-      "scheduledAt": "2026-06-20T13:00:00Z"
-    },
+    "sessionInfo": null,
     "attendances": [
       {
+        "attendanceId": 42,
         "studentId": 1,
         "fullName": "ด.ช. สมชาย รักเรียน",
         "nickname": "ชาย",
         "status": "present",
         "checkinAt": "2026-06-20T13:05:00Z",
-        "checkoutAt": null,
-        "pickedUpBy": null
-      },
-      {
-        "studentId": 2,
-        "fullName": "ด.ญ. สมหญิง เรียนดี",
-        "nickname": "หญิง",
-        "status": "pending",
-        "checkinAt": null,
         "checkoutAt": null,
         "pickedUpBy": null
       }
@@ -1189,13 +1205,36 @@ Get daily attendance records for the current institute, optionally filtered by s
 }
 ```
 
-**Status values in response:** `present` | `late` | `absent` | `leave` | `pending` (not yet scanned & no manual record)
+`sessionInfo` is `null` unless a valid `session_id` is supplied; when present it also contains optional `courseNameEn`. Each row includes `attendanceId`, `studentId`, `fullName`, `nickname`, `status`, `checkinAt`, `checkoutAt`, and `pickedUpBy`.
+
+**Current query behavior:** The response contains existing attendance rows with a non-null `checkinAt` for the requested check-in date (and optional session). It does not synthesize `pending` rows, and manual `absent`/`leave` records, which have no check-in timestamp, are not included by the current date query. Response statuses on returned rows are the stored attendance statuses, commonly `present` or `late`.
 
 **Errors**
 
 | Code | Status | Body |
 |------|--------|------|
 | Invalid date format | 400 | `{ "status": "error", "errorCode": "INVALID_DATE", "message": "รูปแบบวันที่ไม่ถูกต้อง (ใช้ YYYY-MM-DD)" }` |
+
+### POST `/attendance/{attendanceId}/checkout`
+
+Record checkout for an attendance row. Provide exactly one of `pickedUpBy` or `pickupAuthorizationId`. A pickup authorization must be active, not revoked, within its validity dates, and belong to the student on the attendance record. The attendance must already have a check-in and must not already be checked out. The service saves the checkout and audit record before dispatching parent notifications.
+
+**Request Body**
+```json
+{
+  "pickupAuthorizationId": 789
+}
+```
+
+Alternatively, supply `{ "pickedUpBy": "Parent name" }`.
+
+**Response** `200 OK`: `id`, `sessionId`, `studentId`, `status`, `checkinAt`, `checkoutAt`, `pickedUpBy`, `pickupAuthorizationId`, `audit`, and `notificationStatus`.
+
+**Errors:** `PICKUP_REQUIRED` → 400; `NOT_FOUND` → 404; `CHECKIN_REQUIRED`, `ALREADY_CHECKED_OUT`, and `INVALID_PICKUP_AUTHORIZATION` → 409.
+
+### GET `/attendance/{attendanceId}/audit`
+
+Return the latest checkout audit record for the attendance. Returns `404` when no checkout audit exists.
 
 ---
 
@@ -1974,9 +2013,11 @@ Allowed origins are configured in `API/appsettings.json` under `Cors:AllowedOrig
 | `GET` | `/courses/{courseId}/sessions` | 🔒 | List sessions for course |
 | `POST` | `/courses/{courseId}/sessions` | 🔒 | Create session (validates course institute ownership) |
 | `POST` | `/enrollments` | 🔒 | Enroll student in course (institute-scoped course lookup) |
-| `POST` | `/attendance/scan` | 🔒 | QR check-in (atomic: record + decrement sessions) |
-| `POST` | `/attendance/manual` | 🔒 | Manual attendance (atomic: record + conditional decrement) |
-| `GET` | `/attendance/daily` | 🔒 | Daily attendance report (institute-scoped) |
+| `POST` | `/attendance/scan` | 🔒 | QR check-in (atomic attendance + course-type billing; notification status returned) |
+| `POST` | `/attendance/manual` | 🔒 | Manual attendance (atomic attendance + applicable course-type billing) |
+| `GET` | `/attendance/daily` | 🔒 | Attendance rows with check-in on the requested UTC date |
+| `POST` | `/attendance/{attendanceId}/checkout` | 🔒 | Record pickup/checkout and audit |
+| `GET` | `/attendance/{attendanceId}/audit` | 🔒 | Get latest checkout audit |
 | `POST` | `/payments` | 🔒 | Record payment (atomic: insert payment + update paidAmount) |
 | `GET` | `/payments` | 🔒 | Payment history (paginated, institute-scoped, summary total) |
 | `GET` | `/leave-requests` | 🔒 | List leave requests (status filter, paginated) |

@@ -23,6 +23,8 @@ Attendance routes require an authenticated `admin` or `teacher`.
 - A student, parent, unauthenticated caller, or cross-tenant resource receives `403 FORBIDDEN` (without exposing whether a foreign record exists).
 - `actorId` is resolved from the authenticated claims, never from the request body.
 
+Implementation note (2026-10-16): the route group enforces the `admin`/`teacher` role and repository queries apply the tenant context. The current scan/manual flow does not receive an actor ID or show a teacher-to-session ownership check; treat the teacher session-authorization rule above as a target requirement, not verified behavior.
+
 ## 3. Routes
 
 ### `GET /api/attendance/daily`
@@ -51,6 +53,8 @@ Invalid date: `400 INVALID_DATE`.
 Headers:
 
 - `Idempotency-Key` optional client event reference; 1-255 characters when supplied
+
+The length rule is a contract requirement. The current endpoint does not validate the header length.
 
 Request:
 
@@ -148,8 +152,9 @@ Success: `200` with the latest checkout audit. Missing audit or attendance: `404
 
 This document freezes the target contract; it does not claim that every behavior is implemented. The following remain P2/P3/P4/P5 work:
 
-- Server-side scan idempotency replay is deferred; database uniqueness plus client event references are the current simple policy.
-- Move scan/manual validation and quota deduction into a deterministic transaction boundary.
-- Map endpoint HTTP statuses to the table above.
-- Return actual notification dispatch status after commit.
-- Add audit event coverage for scan/manual and runtime evidence for worker, LINE, offline, and concurrency behavior.
+- Server-side scan idempotency replay is deferred. The endpoint copies `Idempotency-Key` into the request (and gives it precedence over the body field), but the service does not validate, persist, or replay by that key; database uniqueness is the duplicate-scan protection.
+- Define and align billing error mappings. `FORBIDDEN`, `SESSION_NOT_FOUND`, `NOT_FOUND`, `DUPLICATE_SCAN`, `NO_QUOTA`, and checkout conflict codes are mapped; `SUBSCRIPTION_EXPIRED`, `CREDIT_COST_INVALID`, and `INSUFFICIENT_CREDITS` currently fall through to HTTP 400 and are not explicitly listed in the target error table.
+- Update late-notification evaluation to the approved institute-timezone policy. The current candidate query compares `ScheduledAt` with the supplied `now - 20 minutes` and does not perform an institute-timezone conversion.
+- Add audit coverage for scan/manual if required by the owner; current attendance audit writes are for checkout. Runtime evidence is still needed for worker, LINE provider, offline, and concurrency behavior.
+
+Implemented in code (not a substitute for runtime evidence): scan/manual attendance and applicable billing changes run in a transaction; checkout persists the attendance update and audit before notification dispatch; scan/checkout responses report dispatcher status. Course-type billing behavior and the current daily-query limitations are documented in `Objective/specAPI.md`.

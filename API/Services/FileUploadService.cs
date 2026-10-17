@@ -14,6 +14,19 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
         return await UploadAsync(file, 2, true, $"logos/institute_{instituteId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "logo", Task.FromResult, ct);
     }
 
+    public async Task<FileUploadResponse> UploadPaymentQrAsync(int instituteId, IFormFile file, CancellationToken ct)
+    {
+        ValidateFile(file, 5, true);
+        var institute = await repository.GetInstituteAsync(instituteId, ct)
+            ?? throw new FileUploadValidationException("NOT_FOUND", "Institute not found.");
+        return await UploadAsync(file, 5, true, $"payment-qr/institute_{instituteId}_{Guid.NewGuid():N}", "payment-qr", async url =>
+        {
+            institute.PaymentQrImageUrl = url;
+            await repository.SaveAsync(ct);
+            return url;
+        }, ct);
+    }
+
     public async Task<FileUploadResponse> UploadPaymentSlipAsync(int instituteId, long paymentId, IFormFile file, CancellationToken ct)
     {
         ValidateFile(file, 5, true);

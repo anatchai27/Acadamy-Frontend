@@ -113,7 +113,15 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 p.ReceiptPdfUrl,
                 p.Enrollment.Course.NameEn,
                 p.Status ?? PaymentStatus.Pending,
-                (long?)null))
+                (long?)null,
+                p.Enrollment.Institute.Name,
+                p.Enrollment.Institute.ContactPhone,
+                p.Enrollment.Institute.BankName,
+                p.Enrollment.Institute.BankAccountName,
+                p.Enrollment.Institute.BankAccountNumber,
+                p.Enrollment.Institute.PromptPayId,
+                p.Enrollment.Institute.PaymentInstructions,
+                p.Enrollment.Institute.PaymentQrImageUrl))
             .ToListAsync(ct);
         var batchPayments = await _context.PaymentBatchAllocations
             .Where(allocation => allocation.Enrollment.StudentId == studentId)
@@ -128,7 +136,15 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 allocation.ReceiptPdfUrl,
                 allocation.Enrollment.Course.NameEn,
                 allocation.PaymentBatch.Status,
-                (long?)allocation.PaymentBatchId))
+                (long?)allocation.PaymentBatchId,
+                allocation.Enrollment.Institute.Name,
+                allocation.Enrollment.Institute.ContactPhone,
+                allocation.Enrollment.Institute.BankName,
+                allocation.Enrollment.Institute.BankAccountName,
+                allocation.Enrollment.Institute.BankAccountNumber,
+                allocation.Enrollment.Institute.PromptPayId,
+                allocation.Enrollment.Institute.PaymentInstructions,
+                allocation.Enrollment.Institute.PaymentQrImageUrl))
             .ToListAsync(ct);
 
         return payments.Concat(batchPayments).OrderByDescending(payment => payment.PaidAt).ToList();
@@ -147,6 +163,12 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                 CoursePrice = enrollment.Course.Price,
                 InstituteName = enrollment.Institute.Name,
                 InstituteContactPhone = enrollment.Institute.ContactPhone,
+                BankName = enrollment.Institute.BankName,
+                BankAccountName = enrollment.Institute.BankAccountName,
+                BankAccountNumber = enrollment.Institute.BankAccountNumber,
+                PromptPayId = enrollment.Institute.PromptPayId,
+                PaymentInstructions = enrollment.Institute.PaymentInstructions,
+                PaymentQrImageUrl = enrollment.Institute.PaymentQrImageUrl,
             })
             .ToListAsync(ct);
 
@@ -177,7 +199,13 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
                     - paymentTotals.GetValueOrDefault(enrollment.Id)
                     - batchTotals.GetValueOrDefault(enrollment.Id), 0m),
                 enrollment.InstituteName,
-                enrollment.InstituteContactPhone))
+                enrollment.InstituteContactPhone,
+                enrollment.BankName,
+                enrollment.BankAccountName,
+                enrollment.BankAccountNumber,
+                enrollment.PromptPayId,
+                enrollment.PaymentInstructions,
+                enrollment.PaymentQrImageUrl))
             .Where(balance => balance.AmountDue > 0m)
             .ToList();
     }

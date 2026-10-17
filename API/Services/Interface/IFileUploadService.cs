@@ -5,6 +5,7 @@ namespace academy_API.Services.Interface;
 public interface IFileUploadService
 {
     Task<FileUploadResponse> UploadLogoAsync(int instituteId, IFormFile file, CancellationToken ct);
+    Task<FileUploadResponse> UploadPaymentQrAsync(int instituteId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadPaymentSlipAsync(int instituteId, long paymentId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadPaymentBatchSlipAsync(int instituteId, long batchId, IFormFile file, CancellationToken ct);
     Task<FileUploadResponse> UploadHomeworkAsync(int instituteId, int homeworkId, IFormFile file, CancellationToken ct);
