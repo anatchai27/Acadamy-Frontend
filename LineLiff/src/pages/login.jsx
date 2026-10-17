@@ -44,9 +44,13 @@ export const LoginPage = () => {
   useEffect(() => {
     !state.liffInitialized ? null : (
       !state.liffProfile ? (async () => {
-        const { getLiffProfile } = await import('../services/liff');
-        const profile = await getLiffProfile();
-        profile ? dispatch({ type: 'SET_LIFF_PROFILE', payload: profile }) : null;
+        try {
+          const { getLiffProfile } = await import('../services/liff');
+          const profile = await getLiffProfile();
+          profile ? dispatch({ type: 'SET_LIFF_PROFILE', payload: profile }) : null;
+        } catch (err) {
+          setError(err.message || 'ไม่สามารถยืนยันตัวตนกับ LINE ได้ กรุณาลองเปิด LIFF ใหม่');
+        }
       })() :
       state.parentUser ? route('/liff/dashboard', true) :
       needsPhone || binding ? null : bindParent()
