@@ -1,6 +1,6 @@
 # TiwHub Academy — Deploy Guide (VPS Ubuntu 22.04 LTS)
 
-> **Last updated:** 2026-09-05  
+> **Last updated:** 2026-10-17  
 > **Stack:** .NET 9 ASP.NET Core API + Preact (Vite) Frontend + TiDB (MySQL) + Nginx  
 > **VPS Spec:** Ubuntu 22.04 LTS, RAM 1GB (ต้องมี Swap 2GB)
 >
@@ -17,9 +17,10 @@
 3. [เตรียมระบบครั้งเดียว](#3-เตรียมระบบครั้งเดียว)
 4. [Deploy ครั้งแรก (Manual)](#4-deploy-ครั้งแรก-manual)
 5. [Deploy อัตโนมัติด้วย GitHub Actions](#5-deploy-อัตโนมัติด้วย-github-actions)
-6. [การอัปเดตระบบในอนาคต](#6-การอัปเดตระบบในอนาคต)
-7. [การแก้ไขปัญหา](#7-การแก้ไขปัญหา)
-8. [Security Checklist](#8-security-checklist)
+6. [Deploy Front และ LineLiff บน Vercel](#6-deploy-front-และ-lineliff-บน-vercel)
+7. [การอัปเดตระบบในอนาคต](#7-การอัปเดตระบบในอนาคต)
+8. [การแก้ไขปัญหา](#8-การแก้ไขปัญหา)
+9. [Security Checklist](#9-security-checklist)
 
 ---
 
@@ -240,9 +241,41 @@ git push origin main
 
 ---
 
-## 6. การอัปเดตระบบในอนาคต
+## 6. Deploy Front และ LineLiff บน Vercel
 
-### 6.1 ด้วย GitHub Actions (อัตโนมัติ)
+ปัจจุบัน VPS ให้บริการ API ที่ `http://165.101.65.84/api` ผ่าน Nginx และ health check ใช้ `http://165.101.65.84/api/health` ส่วนเว็บ Front และ LineLiff สามารถ deploy แยกเป็น Vercel projects ได้ โดยให้ browser เรียก `/api` บน origin ของ Vercel แล้ว rewrite/proxy จาก Vercel ไปยัง API บน VPS
+
+> **ข้อจำกัดด้านความปลอดภัย:** VPS API ยังใช้ HTTP และยังไม่มีโดเมน/HTTPS ที่ยืนยันแล้ว การ proxy จาก Vercel ไปยัง HTTP ไม่ได้เข้ารหัสช่วงระหว่าง Vercel กับ VPS จึงใช้ทดสอบชั่วคราวเท่านั้น ห้ามใช้ส่งข้อมูลสำคัญหรือเปิด production ให้ผู้ใช้จริงจนกว่าจะเปิด HTTPS ให้ API
+
+### 6.1 ตั้งค่า Vercel project
+
+สร้าง Vercel project แยกสำหรับแต่ละแอปจาก repository เดียวกัน:
+
+| แอป | Root Directory | Build Command | Output Directory | API URL |
+|---|---|---|---|---|
+| Front | `Front` | `npm run build` | `dist` | `VITE_API_URL=/api` |
+| LineLiff | `LineLiff` | `npm run build` | `dist` | `VITE_API_URL=/api` |
+
+ตั้ง `VITE_API_URL` ใน Vercel Project Settings → Environment Variables สำหรับ Production (และ Preview หากต้องการทดสอบ Preview) แล้ว redeploy หลังเปลี่ยนค่า เพราะ Vite ฝังค่านี้ตอน build
+
+`Front/vercel.json` และ `LineLiff/vercel.json` กำหนด rewrite ของ `/api` ไปที่ `http://165.101.65.84/api` เพื่อให้ browser ใช้ same-origin URL `/api` ส่วน `LineLiff/vercel.json` ยัง rewrite เส้นทาง SPA `/liff/...` ไปยัง `index.html` ด้วย ตั้ง LINE LIFF Endpoint URL เป็น URL HTTPS ของ Vercel ที่ลงท้ายด้วย `/liff/` เช่น `https://acadamy-frontend-3nao-mu.vercel.app/liff/`
+
+### 6.2 CORS และการตรวจสอบ
+
+เมื่อใช้ rewrite/proxy นี้ browser เรียก API ที่ origin ของเว็บ Vercel จึงไม่ต้องเพิ่ม Vercel origin ใน API CORS โดยเฉพาะ แต่ถ้าเปลี่ยนให้ browser เรียก API URL โดยตรง ต้องเปิด HTTPS ให้ API และเพิ่ม origin ของเว็บทุกตัวที่ใช้จริงใน `Cors:AllowedOrigins` จากนั้น restart/redeploy API
+
+หลัง deploy ให้ตรวจสอบ:
+
+1. เปิด `https://<vercel-domain>/api/health` ต้องได้ผล health check จาก API
+2. เปิดหน้าเว็บและตรวจ DevTools → Network ว่าคำขอ API ใช้ path `/api/...` และไม่มี mixed-content/CORS error
+3. ทดสอบ route `/liff/` และ refresh หน้ารองโดยตรง
+4. URL deployment แบบ Preview อาจถูก Vercel Deployment Protection บังคับ login; ให้ใช้ Production domain/alias สำหรับผู้ใช้ทั่วไป และตรวจการตั้งค่า Protection ใน Vercel
+
+หาก Vercel rewrite ไปยัง IP ปลายทางไม่ได้ หรือ health check ไม่ผ่าน อย่าพยายามแก้ด้วยการเปิด CORS แบบกว้าง ให้ตั้ง hostname ที่ควบคุมได้และ HTTPS สำหรับ API ก่อน แล้วเปลี่ยน destination ใน `vercel.json` ให้เป็น `https://<api-host>/api`
+
+## 7. การอัปเดตระบบในอนาคต
+
+### 7.1 ด้วย GitHub Actions (อัตโนมัติ)
 
 แค่ `git push` ขึ้น `main` branch — Actions จะ build + deploy ให้อัตโนมัติ
 
@@ -252,7 +285,7 @@ git commit -m "fix: something"
 git push origin main
 ```
 
-### 6.2 Manual (SSH เข้าไปรันเอง)
+### 7.2 Manual (SSH เข้าไปรันเอง)
 
 ```bash
 ssh deploy@<IP_VPS>
@@ -274,7 +307,7 @@ sudo chown -R www-data:www-data /var/www/my-app
 sudo systemctl restart nginx
 ```
 
-### 6.3 หรือใช้ Script (ไวที่สุด)
+### 7.3 หรือใช้ Script (ไวที่สุด)
 
 ```bash
 ssh deploy@<IP_VPS>
@@ -285,9 +318,9 @@ bash deploy/build-and-deploy.sh
 
 ---
 
-## 7. การแก้ไขปัญหา
+## 8. การแก้ไขปัญหา
 
-### 7.1 API 500 error หลัง deploy
+### 8.1 API 500 error หลัง deploy
 
 ```bash
 # ดู logs
@@ -302,7 +335,7 @@ sudo ls -l /etc/tiwhub/my-api.env
 sudo -u www-data dotnet /var/www/my-api/academy-API.dll
 ```
 
-### 7.2 Frontend 404 (เรียก refresh แล้วไม่เจอ)
+### 8.2 Frontend 404 (เรียก refresh แล้วไม่เจอ)
 
 ตรวจสอบ Nginx config: `try_files $uri $uri/ /index.html;` ต้องมี
 
@@ -311,14 +344,15 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 7.3 CORS Error
+### 8.3 CORS Error
 
-เพิ่ม HTTPS domain ของ production ใน `Program.cs`:
+ถ้า browser เรียก API URL โดยตรง (ไม่ผ่าน same-origin Vercel rewrite) ให้เพิ่ม HTTPS origin ของ production ใน `Cors:AllowedOrigins` ของ API configuration แล้ว restart/redeploy API:
 ```csharp
 policy.WithOrigins("https://<domain>")
 ```
+ห้ามใช้ `AllowAnyOrigin()` ร่วมกับ credentials; ถ้าเรียกผ่าน Vercel rewrite แบบ same-origin ปกติไม่ต้องเพิ่ม Vercel origin ใน CORS
 
-### 7.4 Build ใช้ RAM จนเครื่องค้าง
+### 8.4 Build ใช้ RAM จนเครื่องค้าง
 
 ต้องมี Swap 2GB:
 
@@ -331,7 +365,7 @@ mkswap /swapfile
 swapon /swapfile
 ```
 
-### 7.5 SSL Certificate (HTTPS) — จำเป็นสำหรับ production
+### 8.5 SSL Certificate (HTTPS) — จำเป็นสำหรับ production
 
 ใช้ Let's Encrypt + Certbot:
 
@@ -347,12 +381,12 @@ sudo certbot renew --dry-run
 
 ---
 
-## 8. Security Checklist
+## 9. Security Checklist
 
 > มาตรฐานขั้นต่ำก่อนนำระบบขึ้นใช้งานจริง ป้องกันการถูกเจาะ/แฮกในระดับพื้นฐาน
 > ควรทำตามหัวข้อนี้ทั้งหมดบน VPS ที่ deploy
 
-### 8.1 SSH Hardening (สำคัญที่สุด)
+### 9.1 SSH Hardening (สำคัญที่สุด)
 
 ห้ามรันระบบโดยใช้ root หรือให้ SSH ผ่าน password
 
@@ -382,7 +416,7 @@ sudo systemctl reload ssh
 sudo ufw allow from <IP_ที่ทำงาน/บ้าน> to any port 22 proto tcp
 ```
 
-### 8.2 Firewall (UFW) — deny by default
+### 9.2 Firewall (UFW) — deny by default
 
 ```bash
 sudo ufw default deny incoming
@@ -396,7 +430,7 @@ sudo ufw status verbose
 
 ให้เฉพาะ port ที่จำเป็นเท่านั้น เปิดจากภายนอก
 
-### 8.3 อัปเดตความปลอดภัยอัตโนมัติ
+### 9.3 อัปเดตความปลอดภัยอัตโนมัติ
 
 ```bash
 sudo apt install -y unattended-upgrades
@@ -407,7 +441,7 @@ sudo dpkg-reconfigure --priority=low unattended-upgrades
 sudo systemctl status unattended-upgrades --no-pager
 ```
 
-### 8.4 Fail2ban — กัน brute force SSH/Nginx
+### 9.4 Fail2ban — กัน brute force SSH/Nginx
 
 ```bash
 sudo apt install -y fail2ban
@@ -427,9 +461,9 @@ sudo systemctl restart fail2ban
 sudo fail2ban-client status sshd
 ```
 
-### 8.5 HTTPS บังคับทุกหน้า (ไม่เปิดเฉพาะ HTTP)
+### 9.5 HTTPS บังคับทุกหน้า (ไม่เปิดเฉพาะ HTTP)
 
-- ต้องติดตั้ง SSL ตาม [ข้อ 7.5](#75-ssl-certificate-https--จำเป็นสำหรับ-production) ก่อนประกาศใช้งานจริง
+- ต้องติดตั้ง SSL ตาม [ข้อ 8.5](#85-ssl-certificate-https--จำเป็นสำหรับ-production) ก่อนประกาศใช้งานจริง
 - Nginx ต้อง `return 301 https://$host$request_uri;` จาก port 80
 - ห้ามเรียกใช้งานจริงผ่าน `http://` หรือ IP เปล่า
 - หลัง Certbot สร้าง `server` block ของ HTTPS แล้ว ให้เพิ่ม HSTS ใน block นั้น:
@@ -442,7 +476,7 @@ add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" alway
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### 8.6 Nginx Security Headers และซ่อนเวอร์ชัน
+### 9.6 Nginx Security Headers และซ่อนเวอร์ชัน
 
 `deploy/nginx.conf` ที่แจกในโปรเจกต์นี้มีค่าดังต่อไปนี้แล้ว:
 
@@ -460,7 +494,7 @@ curl -I http://localhost/ | grep -i 'server:\|x-content-type\|x-frame'
 # server: ต้องไม่มี nginx/<version> ต่อท้าย
 ```
 
-### 8.7 Secret Management
+### 9.7 Secret Management
 
 - ค่าลับทั้งหมดอยู่ใน `/etc/tiwhub/my-api.env` เท่านั้น
 - ตรวจสอบ permission ทุกครั้ง:
@@ -475,7 +509,7 @@ sudo chgrp www-data /etc/tiwhub/my-api.env
 - ห้าม commit secret ลง Git (ดู [ข้อ 4.3](#43-ตั้งค่า-environment-variables))
 - หมุน JWT Key และ Access Key เป็นระยะ โดยเฉพาะเมื่อมีคนลาออกหรือ key รั่ว
 
-### 8.8 ตรวจสอบสิ่งที่เปิดเผยสู่ภายนอก
+### 9.8 ตรวจสอบสิ่งที่เปิดเผยสู่ภายนอก
 
 ```bash
 sudo ss -tulpn
@@ -489,7 +523,7 @@ sudo ss -tulpn
 
 ถ้าเห็น port อื่นเปิดสู่ `0.0.0.0` ให้ปิดด้วย UFW และแก้ config
 
-### 8.9 Backup ข้อมูลขั้นต่ำ
+### 9.9 Backup ข้อมูลขั้นต่ำ
 
 ทำ backup อัตโนมัติอย่างน้อยวันละ 1 ครั้ง เก็บนอกเครื่อง (เช่น OSS bucket เดิมที่ access key แยกจาก access key ของแอป):
 
@@ -499,7 +533,7 @@ sudo ss -tulpn
 
 ทดสอบ restore อย่างน้อยเดือนละครั้ง
 
-### 8.10 ตรวจ log สม่ำเสมอ
+### 9.10 ตรวจ log สม่ำเสมอ
 
 ```bash
 # SSH และ fail2ban
@@ -512,7 +546,7 @@ sudo tail -n 100 /var/log/nginx/error.log
 sudo journalctl -u my-api.service --since today
 ```
 
-### 8.11 Systemd service hardening
+### 9.11 Systemd service hardening
 
 `deploy/my-api.service` มีการจำกัดสิทธิ์ของ process API ไว้แล้ว:
 

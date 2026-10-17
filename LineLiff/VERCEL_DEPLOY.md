@@ -33,13 +33,13 @@ The existing `LineLiff/.env.production` uses `/api` for same-origin VPS hosting.
 
 ## 3. Allow the Vercel origin on the API
 
-Configure the API's production `Cors:AllowedOrigins` to include the exact HTTPS origin of the deployed LIFF app, such as `https://your-project.vercel.app` (no `/liff` path). Add the production custom domain origin too if you use one, then restart/redeploy the API. The API must itself be reachable over HTTPS from the public internet.
+Configure the API's production `Cors:AllowedOrigins` to include `https://acadamy-frontend-3nao-mu.vercel.app` (origin only; no `/liff` path). Add the production custom domain origin too if you use one, then restart/redeploy the API. The API must itself be reachable over HTTPS from the public internet.
 
 ## 4. Deploy and register the LIFF endpoint
 
 1. Click **Deploy** and wait for the build to finish.
-2. Open `https://your-project.vercel.app/liff/` and test direct reloads of routes such as `/liff/login`.
-3. In LINE Developers, set the LIFF app's **Endpoint URL** to `https://your-project.vercel.app/liff/` (or the corresponding custom-domain URL).
+2. Open `https://acadamy-frontend-3nao-mu.vercel.app/liff/` and test direct reloads of routes such as `/liff/login`. The bare domain redirects to `/liff/`.
+3. In LINE Developers, set the LIFF app's **Endpoint URL** to `https://acadamy-frontend-3nao-mu.vercel.app/liff/` (or the corresponding custom-domain URL). Replace the old ngrok endpoint; LIFF warns when the current page URL is outside the registered endpoint URL.
 4. Test the flow inside LINE: LIFF initialization, login, child data loading, and payment API requests.
 
 After changing a Vercel environment variable, redeploy so Vite rebuilds the client bundle with the updated value.
