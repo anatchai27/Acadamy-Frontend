@@ -10,7 +10,8 @@ namespace academy_API.Controllers;
 
 public static class ParentEndpoints
 {
-    private const string LineVerifyEndpoint = "https://api.line.me/oauth2/v2.1/verify";
+    private const string LineIdTokenVerifyEndpoint = "https://api.line.me/oauth2/v2.1/verify";
+    private static readonly HttpClient LineHttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     public static IEndpointRouteBuilder MapParentEndpoints(this IEndpointRouteBuilder app)
     {
@@ -37,15 +38,19 @@ public static class ParentEndpoints
         BindLineRequest request,
         IParentService service,
         ITokenService tokenService,
+        IConfiguration configuration,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(request.LineUserId) || string.IsNullOrWhiteSpace(request.AccessToken))
-            return Results.BadRequest(new { error = "lineUserId and accessToken are required." });
+        if (string.IsNullOrWhiteSpace(request.IdToken))
+            return Results.BadRequest(new { error = "idToken is required." });
 
-        var verifiedUserId = await VerifyLineAccessToken(request.AccessToken, ct);
-        if (string.IsNullOrEmpty(verifiedUserId) && request.AccessToken.Length >= 20)
-            verifiedUserId = request.LineUserId;
-        if (string.IsNullOrWhiteSpace(verifiedUserId)) return Results.Unauthorized();
+        var channelId = configuration["Line:LoginChannelId"];
+        if (string.IsNullOrWhiteSpace(channelId))
+            return Results.Problem("LINE login channel ID is not configured.", statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var verifiedUserId = await GetVerifiedLineUserId(request.IdToken, channelId, ct);
+        if (string.IsNullOrWhiteSpace(verifiedUserId))
+            return Results.Unauthorized();
 
         var result = await service.BindLineAsync(verifiedUserId, request.Phone, ct);
         if (result is null)
@@ -350,25 +355,37 @@ public static class ParentEndpoints
         return int.TryParse(value, out var userId) ? userId : null;
     }
 
-    private static async Task<string?> VerifyLineAccessToken(string accessToken, CancellationToken ct)
+    private static async Task<string?> GetVerifiedLineUserId(string idToken, string channelId, CancellationToken ct)
     {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-            var response = await client.GetAsync(
-                $"{LineVerifyEndpoint}?access_token={Uri.EscapeDataString(accessToken)}", ct);
+            using var request = new HttpRequestMessage(HttpMethod.Post, LineIdTokenVerifyEndpoint)
+            {
+                Content = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["id_token"] = idToken,
+                    ["client_id"] = channelId
+                })
+            };
+            using var response = await LineHttpClient.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode) return null;
             using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
-            if (doc.RootElement.TryGetProperty("sub", out var sub)) return sub.GetString();
-            if (doc.RootElement.TryGetProperty("client_id", out var clientId)) return clientId.GetString();
+            return doc.RootElement.TryGetProperty("sub", out var subject) ? subject.GetString() : null;
+        }
+        catch (HttpRequestException)
+        {
             return null;
         }
-        catch
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return null;
+        }
+        catch (JsonException)
         {
             return null;
         }
     }
 }
 
-public record BindLineRequest(string? LineUserId, string? AccessToken, string? Phone);
+public record BindLineRequest(string? IdToken, string? Phone);
 public record CreateParentPaymentBatchRequest(int EnrollmentId);

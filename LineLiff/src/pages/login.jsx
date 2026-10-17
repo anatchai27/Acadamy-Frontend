@@ -15,9 +15,10 @@ export const LoginPage = () => {
     setError(null);
 
     try {
-      const { getLiffAccessToken } = await import('../services/liff');
-      const accessToken = await getLiffAccessToken();
-      const res = await bindLineUserId(state.liffProfile.userId, accessToken, phoneNumber);
+      const { getLiffIdToken } = await import('../services/liff');
+      const idToken = await getLiffIdToken();
+      if (!idToken) throw new Error('ไม่พบ LINE ID token กรุณาปิดแล้วเปิด LIFF ใหม่');
+      const res = await bindLineUserId(idToken, phoneNumber);
       const token = res.data?.token || res.data?.accessToken;
       token ? ((() => {
         try {

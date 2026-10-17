@@ -22,6 +22,10 @@ export const getLiffAccessToken = async () => {
   return liff ? liff.getAccessToken() : (() => { throw new Error('LIFF not initialized'); })();
 };
 
+export const getLiffIdToken = async () => {
+  return liff ? liff.getIDToken() : (() => { throw new Error('LIFF not initialized'); })();
+};
+
 export const logoutLiff = () => {
   liff ? liff.logout() : null;
 };
