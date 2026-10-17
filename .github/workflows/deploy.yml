@@ -23,8 +23,7 @@ jobs:
 
       - name: Build .NET API
         run: |
-          cd API
-          dotnet publish -c Release -o ../publish/api --self-contained false
+          dotnet publish API/academy-API.csproj -c Release -o publish/api --self-contained false
 
       - name: Build Frontend (Admin App)
         run: |
