@@ -486,6 +486,7 @@ export function StudentControll({ path, id }) {
                     value={parent.fullName}
                     onInput={updateParent(parent._key, 'fullName')}
                   />
+                  
                    <SolidInput
                      label="เบอร์โทรศัพท์"
                     placeholder="08XXXXXXXX"
