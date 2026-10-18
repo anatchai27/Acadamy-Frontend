@@ -70,6 +70,19 @@ export const LoginPage = () => {
     bindParent(normalizedPhone);
   };
 
+  const handleLeaveLogin = async () => {
+    try {
+      const { getLiff } = await import('../services/liff');
+      const liff = getLiff();
+      if (liff?.isInClient()) {
+        liff.closeWindow();
+        return;
+      }
+    } catch {}
+
+    window.history.length > 1 ? window.history.back() : window.location.assign('/');
+  };
+
   return (
     <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-700 text-white p-6">
       <div class="text-center">
@@ -86,7 +99,7 @@ export const LoginPage = () => {
                 autoComplete="tel"
                 placeholder="กรอกเบอร์โทรศัพท์ 10 หลัก"
                 value={phone}
-                onInput={event => setPhone(event.currentTarget.value.replace(/\D/g, '').slice(0, 10))}
+                onInput={event => (setPhone(event.currentTarget.value.replace(/\D/g, '').slice(0, 10)), setError(null))}
                 class="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none"
                 disabled={binding}
               />
@@ -106,6 +119,14 @@ export const LoginPage = () => {
             <p class="text-sm text-blue-100">กำลังเชื่อมต่อกับ LINE...</p>
           </div>
         )}
+        <button
+          type="button"
+          onClick={handleLeaveLogin}
+          disabled={binding}
+          class="mt-2 rounded-lg px-4 py-2 text-sm font-medium text-white/90 underline underline-offset-4 disabled:opacity-50"
+        >
+          ปิด LIFF และกลับไป LINE
+        </button>
       </div>
     </div>
   );
