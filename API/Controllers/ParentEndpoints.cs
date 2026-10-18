@@ -39,6 +39,7 @@ public static class ParentEndpoints
         IParentService service,
         ITokenService tokenService,
         IConfiguration configuration,
+        IWebHostEnvironment environment,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.IdToken))
@@ -52,7 +53,9 @@ public static class ParentEndpoints
         if (string.IsNullOrWhiteSpace(verifiedUserId))
             return Results.Unauthorized();
 
-        var outcome = await service.BindLineAsync(verifiedUserId, request.Phone, ct);
+        var allowTestPhoneBinding = environment.IsDevelopment() &&
+            configuration.GetValue<bool>("MODE_TEST_AUTH");
+        var outcome = await service.BindLineAsync(verifiedUserId, request.Phone, allowTestPhoneBinding, ct);
         if (outcome.Status == ParentBindingStatus.NotFound)
             return Results.Json(new { code = "PARENT_NOT_FOUND", error = "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }, statusCode: 404);
         if (outcome.Status == ParentBindingStatus.VerificationRequired)

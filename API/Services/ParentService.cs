@@ -11,7 +11,11 @@ public sealed class ParentService(IParentRepository repository) : IParentService
 {
     private readonly IParentRepository _repository = repository;
 
-    public async Task<ParentBindingOutcome> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default)
+    public async Task<ParentBindingOutcome> BindLineAsync(
+        string verifiedUserId,
+        string? phone,
+        bool allowTestPhoneBinding = false,
+        CancellationToken ct = default)
     {
         var lineMatches = await _repository.FindByLineUserAsync(verifiedUserId, ct);
         Parent parent;
@@ -48,9 +52,26 @@ public sealed class ParentService(IParentRepository repository) : IParentService
                 phoneMatches.Any(p => p.User is not null && !string.IsNullOrEmpty(p.User.LineUserId) && p.User.LineUserId != verifiedUserId))
                 return new ParentBindingOutcome(ParentBindingStatus.Conflict);
 
-            // A phone match—even a unique one—is not proof that this LINE user owns the number.
-            // Keep binding fail-closed until an OTP or school-issued verification flow is available.
-            return new ParentBindingOutcome(ParentBindingStatus.VerificationRequired);
+            // Phone-only linking is permitted exclusively in explicitly enabled local test mode.
+            if (!allowTestPhoneBinding)
+                return new ParentBindingOutcome(ParentBindingStatus.VerificationRequired);
+
+            parent = phoneMatches[0];
+            user = parent.User ?? (parent.UserId.HasValue
+                ? await _repository.FindUserByIdAsync(parent.UserId.Value, ct)
+                : null);
+            if (parent.UserId.HasValue && user is null)
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+            if (!IsCompatibleBinding(parent, user, verifiedUserId))
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+        }
+
+        if (user is null)
+        {
+            if (!allowTestPhoneBinding)
+                return new ParentBindingOutcome(ParentBindingStatus.VerificationRequired);
+            user = await CreateParentUserAsync(parent, verifiedUserId, ct);
+            parent.UserId = user.Id;
         }
 
         user.LineUserId = verifiedUserId;
@@ -113,6 +134,19 @@ public sealed class ParentService(IParentRepository repository) : IParentService
         (string.IsNullOrEmpty(parent.LineUserId) || parent.LineUserId == lineUserId) &&
         (user is null || (user.Role == UserRole.parent &&
             (string.IsNullOrEmpty(user.LineUserId) || user.LineUserId == lineUserId)));
+
+    private Task<User> CreateParentUserAsync(Parent parent, string lineUserId, CancellationToken ct) =>
+        _repository.CreateUserAsync(new User
+        {
+            InstituteId = parent.InstituteId,
+            Email = $"{lineUserId}@line.parent",
+            Phone = parent.Phone,
+            Role = UserRole.parent,
+            LineUserId = lineUserId,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        }, ct);
 
 }
 

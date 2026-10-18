@@ -3,6 +3,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { bindLineUserId } from '../services/parent-service';
 
+const testAuthMode = import.meta.env.MODE_TEST_AUTH === 'true';
+
 export const LoginPage = () => {
   const { state, dispatch } = useLiffContext();
   const [error, setError] = useState(null);
@@ -93,6 +95,7 @@ export const LoginPage = () => {
           <form onSubmit={handlePhoneSubmit} class="w-full max-w-xs text-left">
             <div class="bg-white/10 rounded-xl p-4 mb-4">
               <p class="text-sm mb-3">ไม่พบข้อมูลผู้ปกครอง กรุณากรอกเบอร์โทรศัพท์เพื่อเชื่อมต่อข้อมูล</p>
+              {testAuthMode && <p class="text-xs text-amber-100 mb-3">โหมดทดสอบ: ใช้เบอร์จากชุดข้อมูลทดสอบเท่านั้น</p>}
               <input
                 type="tel"
                 inputMode="numeric"
