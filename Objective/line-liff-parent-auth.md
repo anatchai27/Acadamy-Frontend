@@ -81,10 +81,11 @@ This flag intentionally relaxes **only the phone ownership proof** for test data
 
 ### LIFF-side display flag (not a security control)
 
-- `LineLiff/.env` can set `MODE_TEST_AUTH=true` to show the test-mode hint in the login screen.
+- `LineLiff/.env` can set `MODE_TEST_AUTH=true` to show the test-mode hint and raw LINE profile payload in the login screen.
 - `LineLiff/vite.config.js` exposes this variable to Vite via `envPrefix`.
 - Restart Vite after changing `.env`; Vite reads env files at startup/build.
-- This browser flag is informational only. Never use it as the API's authorization decision.
+- `.env` is local to the developer machine. For a temporary Vercel Preview, set `MODE_TEST_AUTH=true` in that Vercel project's Preview build environment and redeploy; local `.env` does not affect the hosted app.
+- The frontend flag only controls a debug display. It is informational only and never controls API authorization. Do not leave profile debugging enabled on a public Production deployment because the profile payload contains personal data.
 
 ### Safe test procedure
 

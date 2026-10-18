@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { bindLineUserId } from '../services/parent-service';
 
-const testAuthMode = import.meta.env.DEV && import.meta.env.MODE_TEST_AUTH === 'true';
+const testAuthMode = import.meta.env.MODE_TEST_AUTH === 'true';
 
 export const LoginPage = () => {
   const { state, dispatch } = useLiffContext();
@@ -122,18 +122,28 @@ export const LoginPage = () => {
             <p class="text-sm text-blue-100">กำลังเชื่อมต่อกับ LINE...</p>
           </div>
         )}
-        {testAuthMode && state.liffProfile && (
-          <details class="mx-auto mt-4 w-full max-w-sm rounded-xl border border-white/20 bg-slate-950/20 p-4 text-left">
-            <summary class="cursor-pointer text-sm font-semibold text-white">
-              ข้อมูล LINE Profile ที่ได้รับ
-            </summary>
-            <p class="mt-2 text-xs text-blue-100">
-              จาก <code>liff.getProfile()</code> — แสดงเฉพาะในโหมด Development สำหรับทดสอบ
+        {testAuthMode && (
+          <section class="mx-auto mt-4 w-full max-w-sm rounded-xl border border-white/20 bg-slate-950/20 p-4 text-left" aria-live="polite">
+            <h2 class="text-sm font-semibold text-white">ข้อมูล LINE Profile ที่ได้รับ</h2>
+            <p class="mt-1 text-xs text-blue-100">
+              จาก <code>liff.getProfile()</code> — ใช้ตรวจสอบข้อมูลในโหมดทดสอบเท่านั้น
             </p>
-            <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-950/40 p-3 text-left text-xs leading-relaxed text-white" dir="ltr">
-              {JSON.stringify(state.liffProfile, null, 2)}
-            </pre>
-          </details>
+            {state.liffProfile ? (
+              <>
+                <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-white">
+                  <dt class="text-blue-100">ชื่อ</dt>
+                  <dd class="break-all">{state.liffProfile.displayName || '-'}</dd>
+                  <dt class="text-blue-100">LINE userId</dt>
+                  <dd class="break-all font-mono">{state.liffProfile.userId || '-'}</dd>
+                </dl>
+                <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-950/40 p-3 text-left text-xs leading-relaxed text-white" dir="ltr">
+                  {JSON.stringify(state.liffProfile, null, 2)}
+                </pre>
+              </>
+            ) : (
+              <p class="mt-3 text-xs text-amber-100">ยังไม่ได้รับ LINE Profile — กำลังรอ LIFF ยืนยันตัวตน</p>
+            )}
+          </section>
         )}
         <button
           type="button"
