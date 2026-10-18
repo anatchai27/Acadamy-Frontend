@@ -17,6 +17,7 @@ public static class ParentEndpoints
     {
         var group = app.MapGroup("/api/parents").WithTags("Parents").WithOpenApi();
         group.MapPost("/bind-line", BindLine).AllowAnonymous();
+        group.MapPost("/{parentId:int}/line-link-code", IssueLineLinkCode).RequireAuthorization();
         group.MapGet("/me/dashboard", GetDashboard).RequireAuthorization();
         group.MapGet("/me/profile", GetProfile).RequireAuthorization();
         group.MapPatch("/me/profile", UpdateProfile).RequireAuthorization();
@@ -37,9 +38,9 @@ public static class ParentEndpoints
     private static async Task<IResult> BindLine(
         BindLineRequest request,
         IParentService service,
+        IParentLineLinkService linkService,
         ITokenService tokenService,
         IConfiguration configuration,
-        IWebHostEnvironment environment,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.IdToken))
@@ -53,17 +54,29 @@ public static class ParentEndpoints
         if (string.IsNullOrWhiteSpace(verifiedUserId))
             return Results.Unauthorized();
 
-        var allowTestPhoneBinding = environment.IsDevelopment() &&
-            configuration.GetValue<bool>("MODE_TEST_AUTH");
-        var outcome = await service.BindLineAsync(verifiedUserId, request.Phone, allowTestPhoneBinding, ct);
-        if (outcome.Status == ParentBindingStatus.NotFound)
-            return Results.Json(new { code = "PARENT_NOT_FOUND", error = "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }, statusCode: 404);
-        if (outcome.Status == ParentBindingStatus.VerificationRequired)
-            return Results.Json(new { code = "PHONE_VERIFICATION_REQUIRED", error = "กรุณายืนยันความเป็นเจ้าของเบอร์โทรกับโรงเรียนก่อนเชื่อมต่อ LINE" }, statusCode: 409);
-        if (outcome.Status is ParentBindingStatus.Ambiguous or ParentBindingStatus.Conflict)
-            return Results.Json(new { code = "PARENT_BINDING_REQUIRES_REVIEW", error = "ไม่สามารถยืนยันบัญชีจากข้อมูลนี้ได้ กรุณาติดต่อโรงเรียนเพื่อตรวจสอบ" }, statusCode: 409);
+        var existingBinding = await service.BindLineAsync(verifiedUserId, ct);
+        if (existingBinding.Status == ParentBindingStatus.Conflict)
+            return Results.Json(new { code = "PARENT_BINDING_REQUIRES_REVIEW", error = "บัญชี LINE นี้มีข้อมูลผูกที่ขัดแย้ง กรุณาติดต่อโรงเรียน" }, statusCode: 409);
 
-        var result = outcome.Binding!;
+        var result = existingBinding.Binding;
+        if (result is null)
+        {
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return Results.Json(new { code = "LINK_CODE_REQUIRED", error = "กรุณากรอกรหัสเชื่อมบัญชีที่ได้รับจากโรงเรียน" }, statusCode: 404);
+
+            var redeemed = await linkService.RedeemAsync(request.Code, verifiedUserId, ct);
+            if (redeemed.Status != ParentLineLinkStatus.Success)
+                return redeemed.Status switch
+                {
+                    ParentLineLinkStatus.Expired => Results.Json(new { code = "LINK_CODE_EXPIRED", error = "รหัสหมดอายุแล้ว กรุณาขอรหัสใหม่จากโรงเรียน" }, statusCode: 409),
+                    ParentLineLinkStatus.AlreadyUsed => Results.Json(new { code = "LINK_CODE_USED", error = "รหัสนี้ถูกใช้หรือยกเลิกแล้ว กรุณาขอรหัสใหม่จากโรงเรียน" }, statusCode: 409),
+                    ParentLineLinkStatus.Conflict => Results.Json(new { code = "PARENT_BINDING_REQUIRES_REVIEW", error = "บัญชี LINE นี้มีข้อมูลผูกที่ขัดแย้ง กรุณาติดต่อโรงเรียน" }, statusCode: 409),
+                    _ => Results.Json(new { code = "LINK_CODE_INVALID", error = "รหัสไม่ถูกต้อง กรุณาตรวจสอบหรือขอรหัสใหม่จากโรงเรียน" }, statusCode: 400)
+                };
+
+            var binding = redeemed.Binding!;
+            result = new ParentBindingResult(binding.User, binding.Parent, binding.Children);
+        }
 
         return Results.Ok(new
         {
@@ -78,6 +91,26 @@ public static class ParentEndpoints
             },
             children = result.Children
         });
+    }
+
+    private static async Task<IResult> IssueLineLinkCode(
+        int parentId,
+        HttpContext context,
+        IParentLineLinkService service,
+        CancellationToken ct)
+    {
+        var role = context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (role is not ("admin" or "staff")) return Results.Forbid();
+
+        var instituteId = context.User.FindFirst("institute_id")?.Value;
+        var userId = GetUserId(context);
+        if (!int.TryParse(instituteId, out var parsedInstituteId) || !userId.HasValue)
+            return Results.Forbid();
+
+        var issued = await service.IssueAsync(parentId, parsedInstituteId, userId.Value, ct);
+        return issued is null
+            ? Results.NotFound(new { code = "PARENT_NOT_FOUND_OR_ALREADY_LINKED", error = "ไม่พบผู้ปกครอง หรือบัญชีนี้เชื่อม LINE แล้ว" })
+            : Results.Ok(new { code = issued.Code, expiresAt = issued.ExpiresAt });
     }
 
     private static async Task<IResult> GetDashboard(HttpContext httpContext, IParentService service, CancellationToken ct)
@@ -396,5 +429,5 @@ public static class ParentEndpoints
     }
 }
 
-public record BindLineRequest(string? IdToken, string? Phone);
+public record BindLineRequest(string? IdToken, string? Code);
 public record CreateParentPaymentBatchRequest(int EnrollmentId);

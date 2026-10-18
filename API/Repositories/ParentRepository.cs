@@ -11,12 +11,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
     private readonly TutoringDbContext _context = context;
 
     public Task<List<Parent>> FindByLineUserAsync(string lineUserId, CancellationToken ct = default) =>
-        _context.Parents.Include(p => p.Student).Include(p => p.User)
+        _context.Parents.IgnoreQueryFilters().Include(p => p.Student).Include(p => p.User)
             .Where(p => p.LineUserId == lineUserId).ToListAsync(ct);
-
-    public Task<List<Parent>> FindByPhoneAsync(string phone, CancellationToken ct = default) =>
-        _context.Parents.Include(p => p.Student).Include(p => p.User)
-            .Where(p => p.Phone.Replace("-", "").Replace(" ", "") == phone).ToListAsync(ct);
 
     public Task<Parent?> FindByUserIdAsync(int userId, CancellationToken ct = default) =>
         _context.Parents.Include(p => p.Student).FirstOrDefaultAsync(p => p.UserId == userId, ct);
@@ -44,8 +40,8 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
             .ToListAsync(ct);
 
     public Task<List<ChildSummary>> GetChildrenForInstituteAsync(int userId, int instituteId, CancellationToken ct = default) =>
-        _context.Parents
-            .Where(p => p.UserId == userId && p.InstituteId == instituteId)
+        _context.Parents.IgnoreQueryFilters()
+            .Where(p => p.UserId == userId && p.InstituteId == instituteId && p.Student.InstituteId == instituteId)
             .Select(p => new ChildSummary(
                 p.Student.Id,
                 p.Student.FullName,

@@ -7,8 +7,9 @@
 - LIFF ส่ง **LINE ID Token** (`idToken`) ให้ API ไม่ส่ง LINE profile หรือ `lineUserId` ที่ client อ้างเอง
 - API ตรวจ ID Token กับ LINE Verify API โดยใช้ `Line:LoginChannelId` แล้วใช้ `sub` ที่ LINE ยืนยันเป็น LINE user ID
 - ถ้า LINE ID นี้ผูกกับบัญชีผู้ปกครองแล้ว API ออก JWT ของระบบให้
-- การค้นด้วยเบอร์อย่างเดียวไม่ใช่หลักฐานว่าเป็นเจ้าของบัญชี: ในโหมดปกติ API ต้องไม่ผูกบัญชีด้วยเบอร์ล้วน
-- `MODE_TEST_AUTH=true` ใช้ได้เฉพาะ local Development/test data เท่านั้น ห้ามเปิดใน production
+- การค้นด้วยเบอร์อย่างเดียวไม่ใช่หลักฐานว่าเป็นเจ้าของบัญชี: API ไม่ผูกบัญชีด้วยเบอร์ล้วน
+- First-time parent linking uses a school-issued one-time code, scoped to one parent-child relationship and institute, expiring after 5 days.
+- `MODE_TEST_AUTH=true` is a LIFF client-side diagnostic display only; the API has no test-auth bypass.
 - ถ้าเบอร์ซ้ำหรือพบ LINE binding ที่ขัดแย้งกัน ให้ปฏิเสธการผูก ห้ามเลือกแถวแรกแบบเงียบ ๆ
 
 ## Flow ปัจจุบัน
@@ -19,7 +20,7 @@ sequenceDiagram
     participant A as .NET API
     participant L as LINE Verify API
     participant D as Database
-    P->>A: POST /parents/bind-line { idToken, phone? }
+    P->>A: POST /parents/bind-line { idToken }
     A->>L: Verify id_token + client_id
     L-->>A: verified sub (LINE user ID)
     A->>D: Find parent by verified LINE user ID
@@ -27,20 +28,18 @@ sequenceDiagram
         D-->>A: Existing parent/user
         A-->>P: 200 + app JWT + children in account institute
     else No existing LINE link
-        A->>D: Find phone matches (only if phone supplied)
-        alt Local Development and MODE_TEST_AUTH=true, one safe match
-            A->>D: Link verified LINE ID and save
-            A-->>P: 200 + app JWT + children
-        else Ambiguous, conflicting, or production/non-test phone-only match
-            A-->>P: 404 or 409; do not issue JWT or mutate binding
-        end
+        A-->>P: 404 LINK_CODE_REQUIRED
+        P->>A: POST /parents/bind-line { idToken, code }
+        A->>D: Validate hash, expiry, institute scope, and unused state
+        A->>D: Atomically consume code and bind parent to verified sub
+        A-->>P: 200 + app JWT + authorized children
     end
 ```
 
 ### 1. LIFF client
 
 - `LineLiff/src/services/liff.js` obtains the token with `liff.getIDToken()`.
-- `LineLiff/src/pages/login.jsx` posts `{ idToken, phone }` to `POST /parents/bind-line`.
+- `LineLiff/src/pages/login.jsx` posts `{ idToken, code }` to `POST /parents/bind-line` for first-time binding.
 - The client must not send a profile-supplied LINE user ID as proof of identity.
 - The app JWT is stored as `parent_token`; it is separate from the LINE ID Token.
 
@@ -50,8 +49,8 @@ sequenceDiagram
 - Only the verified `sub` is passed to the parent service.
 - `API/Services/ParentService.cs` first looks up records associated with that LINE user ID.
 - A previously linked LINE ID must resolve consistently to one parent account. Conflicting account IDs, missing users, or different existing LINE IDs fail closed.
-- Phone lookup returns candidates, not an arbitrary first result. Duplicate/conflicting candidates fail closed.
-- A phone-only lookup in normal mode returns `PHONE_VERIFICATION_REQUIRED`; implementing real first-time production binding requires OTP or a school-issued linking code.
+- Phone-based matching has been removed from the LINE binding flow.
+- First-time binding requires a school-issued one-time code. The raw code is shown once when issued; only a SHA-256 hash is stored. It expires after five days and is single-use.
 - After successful existing-link authentication, returned children are scoped to the selected account's institute. This does not yet implement a general multi-institute institute-switching flow.
 
 ### 3. API response behavior
@@ -59,25 +58,23 @@ sequenceDiagram
 | Situation | HTTP | Code/behavior |
 |---|---:|---|
 | Verified LINE already linked to a consistent parent account | 200 | Returns app JWT, parent summary, and children |
-| No LINE or phone record found | 404 | `PARENT_NOT_FOUND`; client may request phone input |
-| Phone match without verified phone ownership in normal mode | 409 | `PHONE_VERIFICATION_REQUIRED`; no binding write, no app JWT |
-| Duplicate phone candidates or conflicting LINE/account mapping | 409 | `PARENT_BINDING_REQUIRES_REVIEW`; no binding write, no app JWT |
+| No existing LINE binding and no code supplied | 404 | `LINK_CODE_REQUIRED`; client displays the school-issued code form |
+| Invalid, expired, or already used/revoked code | 400 / 409 | Specific code error; no binding write or app JWT |
+| Conflicting LINE/account mapping | 409 | `PARENT_BINDING_REQUIRES_REVIEW`; no binding write, no app JWT |
 | Missing ID token / invalid ID token | 400 / 401 | Authentication denied |
 
-The server, not the client, is authoritative for whether test phone binding is enabled.
+The server verifies both LINE identity and the one-time code; frontend profile fields are display-only.
 
-## `MODE_TEST_AUTH` local testing
+## `MODE_TEST_AUTH` local diagnostics
 
-This flag intentionally relaxes **only the phone ownership proof** for test data. It does not skip LINE ID Token verification and does not bypass duplicate/conflict checks.
+This flag only exposes client-side LINE profile diagnostics and a test hint. It does **not** relax authentication or bypass the school-issued-code requirement. Phone-based test binding has been removed.
 
-### API-side guard (authoritative)
+### Required database and API setup
 
-- `API/appsettings.Development.json` sets `MODE_TEST_AUTH` for local Development.
-- `API/Controllers/ParentEndpoints.cs` enables test phone binding only when both conditions are true:
-  - `IWebHostEnvironment.IsDevelopment()` is true; and
-  - server configuration `MODE_TEST_AUTH` is true.
-- Production must run with a non-Development environment and must not set `MODE_TEST_AUTH=true`. A frontend environment variable alone cannot enable the server-side bypass.
-- Restart the API after changing settings.
+- Create and apply `API/Database/2026-10-18-parent-line-link-codes.sql` before deploying the API or issuing linking codes.
+- The staff UI issues the code from the target student's profile; API access is restricted to authenticated `admin` or `staff` claims in the active institute.
+- Codes use 60 bits of random entropy, are stored only as hashes, and are consumed atomically once. Add request rate limiting only after configuring trusted client-IP forwarding through the Vercel/Nginx proxy chain; a naive remote-IP limiter may throttle all users behind the same proxy.
+- `MODE_TEST_AUTH=true` in Vite may be used to inspect profile data locally; it is never an API authorization setting.
 
 ### LIFF-side display flag (not a security control)
 
@@ -89,14 +86,14 @@ This flag intentionally relaxes **only the phone ownership proof** for test data
 
 ### Safe test procedure
 
-1. Use a local Development API connected to a non-production/test database.
-2. Use a LINE account whose ID Token verifies against the configured LINE Login channel.
-3. Enter a known test parent phone number that resolves to exactly one eligible account.
-4. Confirm successful binding and that the expected parent/child records are returned.
-5. Try a duplicate phone or a phone already linked to a different LINE ID; confirm a 409 and verify no database write occurred.
-6. Before deploying, ensure the API environment is Production and `MODE_TEST_AUTH` is absent/false. Rebuild/redeploy after environment changes.
+1. Apply the linking-code SQL to the intended database and deploy the API.
+2. From an authorized admin/staff account, open the correct student's profile and issue a code for the intended parent row.
+3. Deliver the code privately to that parent. The code is bearer material; anyone possessing it can redeem it until expiry/revocation.
+4. In LIFF, use a LINE account whose ID Token verifies against the configured Login channel, then enter the code.
+5. Confirm the intended parent row and only authorized child/institute data are returned.
+6. Retry the code; confirm reuse is rejected. Test expired/revoked/invalid code and a LINE ID already linked to another institute; confirm no unintended write occurs.
 
-> Warning: with the server flag enabled, possession of a valid LINE session plus knowledge of a test parent phone can bind that LINE ID. Never enable this against production data, even temporarily.
+> Warning: treat the issued code like a password until redeemed. Deliver it only to the verified parent, do not put raw codes in logs, and do not leave codes exposed in screenshots or chat.
 
 ## Data model and multi-child/multi-institute limits
 
@@ -104,7 +101,7 @@ This flag intentionally relaxes **only the phone ownership proof** for test data
 - Same-account sibling rows may be returned together where they are associated to the same user and selected institute.
 - A phone number is not a stable guardian identifier: it can be shared, duplicated across students/institutes, changed, or recycled.
 - The current token contains one `institute_id`; it is not a complete multi-institute authorization design. Do not broaden global tenant filters or return all institutes' children without explicit per-request authorization.
-- Production linking a new phone/account needs proof (OTP or school-issued code), a defined institute-selection/verification policy, explicit ambiguity handling, and tests before enabling it.
+- Linking a parent account across multiple institutes is not implemented. Each code is limited to its issuing institute; do not treat the current single-institute token as multi-institute authorization.
 
 ## Security invariants / regression checks
 
@@ -112,10 +109,10 @@ Keep these true when changing the flow:
 
 - Trust LINE `sub` only after server-side verification for the expected channel ID.
 - Never overwrite a different existing `Parent.LineUserId` or `User.LineUserId`.
-- Never use `FirstOrDefault` as the conflict policy for phone matches.
-- Ambiguous/conflicting matches must not mutate records or return an app JWT.
-- Test phone binding is opt-in in server configuration and gated by Development environment.
-- Phone-only binding is denied outside test mode until phone ownership verification is implemented.
+- Invalid/expired/used/revoked/conflicting code attempts must not mutate a binding or return an app JWT.
+- First-time binding requires an unexpired, unused, non-revoked code scoped to the intended parent and institute.
+- Store only a one-way hash of a high-entropy code; show the raw code only once at issuance.
+- Consume the code and save the LINE binding atomically; a code must not succeed twice, including concurrent attempts.
 - Keep institute isolation when returning parent/child data.
 
 ## Troubleshooting API 502 during local LIFF testing
@@ -125,15 +122,14 @@ Keep these true when changing the flow:
 - Production LineLiff uses same-origin `/api` and the `LineLiff/vercel.json` rewrite to the VPS. The VPS health endpoint has been confirmed to return Healthy. If health is healthy but `/api/parents/bind-line` returns 502, inspect Vercel function/proxy logs and API/Nginx logs at the request timestamp. Do not infer that LINE token verification failed from a 502; invalid LINE tokens should return 401.
 - A `VITE_API_URL` change is compiled into the Vite build. Redeploy/rebuild production after changing Vercel environment variables.
 
-> The Vite development proxy target is the shared VPS. It uses the configured remote API/database, so do not run write tests against real accounts or production records. For isolated phone-binding tests, use a local API plus a non-production database and change the proxy target intentionally.
+> The Vite development proxy target is the shared VPS. It uses the configured remote API/database, so do not run write tests against real accounts or production records. For isolated linking-code tests, use a local API plus a non-production database and change the proxy target intentionally.
 
-Regression tests live in `API/academy-API.Tests/unitTest/ParentServiceTests.cs`; run the backend test project after changing binding behavior. LIFF tests/build live under `LineLiff`.
+Binding regression coverage lives in `API/academy-API.Tests/unitTest/ParentServiceTests.cs` and `API/academy-API.Tests/integration/ParentLineLinkServiceTests.cs`. The link-code integration tests cover hashed storage, single-use redemption, institute scoping, invalid/expired codes, and cross-institute LINE-account conflicts. Run the backend test project after changing binding behavior. LIFF tests/build live under `LineLiff`.
 
 ## Source of truth
 
 - Endpoint + LINE token verification: `API/Controllers/ParentEndpoints.cs`
 - Binding decisions and status results: `API/Services/ParentService.cs`, `API/Services/Contracts/ParentServiceResults.cs`
 - Candidate lookup and institute-specific children: `API/Repositories/ParentRepository.cs`
-- Local API flag: `API/appsettings.Development.json`
 - LIFF login and display hint: `LineLiff/src/pages/login.jsx`, `LineLiff/vite.config.js`, `LineLiff/.env`
 - API contract summary: `Objective/specAPI.md`, section 13, Parents / LINE LIFF

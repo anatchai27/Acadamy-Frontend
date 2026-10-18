@@ -1,7 +1,7 @@
 import { api } from './api';
 
-export const bindLineUserId = (idToken, phone = '') => {
-  return api.post('/parents/bind-line', { idToken, phone });
+export const bindLineUserId = (idToken, code = '') => {
+  return api.post('/parents/bind-line', { idToken, code });
 }
 
 export const getParentDashboard = () => {

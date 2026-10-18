@@ -4,6 +4,7 @@ import { QRCode } from 'react-qr-code';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, showToast } from '../../components/ui';
 import { studentService } from '../../services';
+import { issueParentLineLinkCode } from '../../services/parent-service';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
@@ -36,6 +37,8 @@ export const StudentProfilePage = ({ path, id }) => {
   const [qrToken, setQrToken] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
+  const [linkCode, setLinkCode] = useState(null);
+  const [linkCodeLoadingId, setLinkCodeLoadingId] = useState(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
@@ -88,6 +91,32 @@ export const StudentProfilePage = ({ path, id }) => {
       showToast(err?.data?.message || err?.data?.error || err.message || 'สร้างบัตรนักเรียนไม่สำเร็จ', 'error');
     } finally {
       setCardLoading(false);
+    }
+  };
+
+  const handleIssueParentLineCode = async parent => {
+    if (!parent?.id || linkCodeLoadingId) return;
+    if (!window.confirm(`สร้างรหัสเชื่อม LINE สำหรับ ${parent.fullName || 'ผู้ปกครอง'}? รหัสเดิมที่ยังไม่ใช้จะถูกยกเลิก`)) return;
+    setLinkCodeLoadingId(parent.id);
+    setLinkCode(null);
+    try {
+      const { data } = await issueParentLineLinkCode(parent.id);
+      setLinkCode({ parentId: parent.id, code: data.code, expiresAt: data.expiresAt });
+      showToast('สร้างรหัสเชื่อม LINE แล้ว ส่งรหัสนี้ให้ผู้ปกครอง', 'success');
+    } catch (err) {
+      showToast(err?.data?.error || 'สร้างรหัสเชื่อม LINE ไม่สำเร็จ', 'error');
+    } finally {
+      setLinkCodeLoadingId(null);
+    }
+  };
+
+  const handleCopyParentLineCode = async () => {
+    if (!linkCode?.code) return;
+    try {
+      await navigator.clipboard.writeText(linkCode.code);
+      showToast('คัดลอกรหัสแล้ว', 'success');
+    } catch {
+      showToast('คัดลอกไม่ได้ กรุณาเลือกและคัดลอกรหัสด้วยตนเอง', 'error');
     }
   };
 
@@ -252,6 +281,31 @@ export const StudentProfilePage = ({ path, id }) => {
                             </span>
                           )}
                         </div>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                          {p.lineUserId ? (
+                            <span class="text-xs font-medium text-emerald-700">เชื่อม LINE แล้ว</span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleIssueParentLineCode(p)}
+                              loading={linkCodeLoadingId === p.id}
+                              disabled={!p.id || linkCodeLoadingId !== null}
+                            >
+                              สร้างรหัสเชื่อม LINE
+                            </Button>
+                          )}
+                        </div>
+                        {linkCode?.parentId === p.id && (
+                          <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3" role="status" aria-live="polite">
+                            <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <code class="select-all rounded bg-white px-3 py-2 text-base font-bold tracking-widest text-zinc-900">{linkCode.code}</code>
+                              <Button variant="outline" size="sm" onClick={handleCopyParentLineCode}>คัดลอกรหัส</Button>
+                            </div>
+                            <p class="mt-2 break-all text-xs text-emerald-800">หมดอายุ {new Date(linkCode.expiresAt).toLocaleString('th-TH')}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

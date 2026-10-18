@@ -166,6 +166,7 @@ builder.Services.AddScoped<ISkillScoreRepository, SkillScoreRepository>();
 builder.Services.AddScoped<ISkillScoreService, SkillScoreService>();
 builder.Services.AddScoped<IParentRepository, ParentRepository>();
 builder.Services.AddScoped<IParentService, ParentService>();
+builder.Services.AddScoped<IParentLineLinkService, ParentLineLinkService>();
 builder.Services.AddScoped<IMakeupRepository, MakeupRepository>();
 builder.Services.AddScoped<IMakeupService, MakeupService>();
 builder.Services.AddScoped<IBackgroundNotificationRepository, BackgroundNotificationRepository>();

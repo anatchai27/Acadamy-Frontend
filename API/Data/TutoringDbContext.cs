@@ -23,6 +23,7 @@ public class TutoringDbContext(
     public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<PdpaConsent> PdpaConsents => Set<PdpaConsent>();
     public DbSet<Parent> Parents => Set<Parent>();
+      public DbSet<ParentLineLinkCode> ParentLineLinkCodes => Set<ParentLineLinkCode>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
@@ -244,6 +245,32 @@ public class TutoringDbContext(
             entity.Property(e => e.IsPrimary).HasColumnName("is_primary");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
         });
+
+            modelBuilder.Entity<ParentLineLinkCode>(entity =>
+            {
+                  entity.ToTable("parent_line_link_codes");
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.ParentId).HasColumnName("parent_id");
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
+                  entity.Property(e => e.CodeHash).HasMaxLength(64).HasColumnName("code_hash").IsRequired();
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                  entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                  entity.Property(e => e.RedeemedAt).HasColumnName("redeemed_at");
+                  entity.Property(e => e.RedeemedByLineUserId).HasMaxLength(255).HasColumnName("redeemed_by_line_user_id");
+                  entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
+                  entity.HasIndex(e => e.CodeHash).IsUnique();
+                  entity.HasIndex(e => new { e.ParentId, e.RedeemedAt, e.RevokedAt });
+                  entity.HasIndex(e => new { e.InstituteId, e.ExpiresAt });
+                  entity.HasOne(e => e.Parent)
+                        .WithMany()
+                        .HasForeignKey(e => e.ParentId)
+                        .OnDelete(DeleteBehavior.Cascade);
+                  entity.HasOne<Institute>()
+                        .WithMany()
+                        .HasForeignKey(e => e.InstituteId)
+                        .OnDelete(DeleteBehavior.Restrict);
+            });
 
         modelBuilder.Entity<Session>(entity =>
         {
@@ -1257,6 +1284,7 @@ public class TutoringDbContext(
         modelBuilder.Entity<WalletTransaction>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Parent>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<ParentLineLinkCode>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Lead>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<PublicWebsiteContent>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<TeacherPayrollPeriod>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

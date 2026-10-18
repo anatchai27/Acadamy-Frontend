@@ -1720,20 +1720,20 @@ Parent binding is used by the LINE LIFF app. The initial bind endpoint is public
 
 ### POST `/parents/bind-line` ⃝ Public
 
-Verify the supplied LINE ID token, then authenticate an already-linked parent account using LINE's verified `sub`. A phone number may be used to locate a candidate only; in normal operation it is not proof of phone ownership and must not, by itself, link an account. Phone-only binding is allowed only in server-side Development test mode with `MODE_TEST_AUTH=true`. Ambiguous matches and conflicting existing links fail closed.
+Verify the supplied LINE ID token, then authenticate an already-linked parent account using LINE's verified `sub`. For first-time binding, redeem a school-issued one-time code scoped to one parent-child relationship and institute. The code is stored as a hash, expires after five days, and can only be redeemed once. Phone alone never links an account.
 
 **Request Body**
 ```json
 {
   "idToken": "LINE ID token from liff.getIDToken()",
-  "phone": "0812345678"
+  "code": "ABCD2345EFGH"
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `idToken` | `string` | Yes | ID token from LIFF; API verifies it with LINE and uses the verified `sub` |
-| `phone` | `string?` | No | Candidate lookup for initial binding; phone alone is not ownership verification outside local test mode |
+| `code` | `string?` | No | One-time code issued by authorized school staff; required when no LINE binding already exists |
 
 **Response** `200 OK`
 ```json
@@ -1763,9 +1763,16 @@ Verify the supplied LINE ID token, then authenticate an already-linked parent ac
 |-----------|--------|------|
 | Missing `idToken` | 400 | `{ "error": "idToken is required." }` |
 | Invalid LINE token | 401 | Empty body |
-| No matching parent record | 404 | `{ "code": "PARENT_NOT_FOUND", "error": "..." }` |
-| Phone ownership proof required | 409 | `{ "code": "PHONE_VERIFICATION_REQUIRED", "error": "..." }`; no binding write or app JWT |
-| Ambiguous/conflicting parent or LINE mapping | 409 | `{ "code": "PARENT_BINDING_REQUIRES_REVIEW", "error": "..." }`; no binding write or app JWT |
+| No linked LINE account and no code supplied | 404 | `{ "code": "LINK_CODE_REQUIRED", "error": "..." }` |
+| Invalid code | 400 | `{ "code": "LINK_CODE_INVALID", "error": "..." }`; no binding write or app JWT |
+| Expired or already used/revoked code | 409 | `LINK_CODE_EXPIRED` / `LINK_CODE_USED`; no binding write or app JWT |
+| Conflicting existing parent/LINE mapping | 409 | `{ "code": "PARENT_BINDING_REQUIRES_REVIEW", "error": "..." }`; no binding write or app JWT |
+
+### POST `/parents/{parentId}/line-link-code` 🔒 Staff/Admin
+
+Issue a one-time LINE linking code for a parent row in the authenticated user's institute. Only `admin` and `staff` role claims are accepted. Issuing a replacement revokes previous unused codes for that parent. The raw code is returned only once and must be delivered privately. See [line-liff-parent-auth.md](line-liff-parent-auth.md#L69-L105) and apply [the schema SQL](../API/Database/2026-10-18-parent-line-link-codes.sql) before deployment.
+
+**Response** `200 OK`: `{ "code": "ABCD2345EFGH", "expiresAt": "..." }`
 
 ### GET `/parents/me/dashboard` 🔒
 
@@ -2031,7 +2038,8 @@ Allowed origins are configured in `API/appsettings.json` under `Cors:AllowedOrig
 | `POST` | `/skill-scores/batch-update` | 🔒 | Batch upsert skill scores (insert or update in loop) |
 | `GET` | `/skill-scores/topics` | 🔒 | List skill topics by courseId |
 | `POST` | `/skill-scores/topics` | 🔒 | Create skill topic for course |
-| `POST` | `/parents/bind-line` | ⃝ | Bind LINE account by LINE ID or fallback phone mapping |
+| `POST` | `/parents/bind-line` | ⃝ | Bind LINE account using a verified LINE ID token; first-time binding requires a school-issued one-time code |
+| `POST` | `/parents/{parentId}/line-link-code` | 🔒 | Issue a one-time LINE link code for a parent in the authenticated institute (admin/staff) |
 | `GET` | `/parents/me/dashboard` | 🔒 | Parent dashboard summary and linked children |
 | `GET` | `/parents/me/profile` | 🔒 | Parent profile and linked children |
 | `PATCH` | `/parents/me/profile` | 🔒 | Update parent profile |

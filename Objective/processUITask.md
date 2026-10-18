@@ -139,9 +139,12 @@ Definition of Done: ครูสร้างงาน/หัวข้อ ให�
 
 - [x] มี LIFF init/login และ parent token context
 - [x] ตรวจ LINE ID Token ที่ API และใช้ LINE `sub` ที่ Verify API ยืนยันแล้ว
-- [x] ปฏิเสธ phone-only binding ในโหมดปกติ; `MODE_TEST_AUTH` ถูกจำกัดที่ server-side Development configuration
-- [x] ปฏิเสธ phone matches ที่กำกวมหรือมี LINE binding ขัดแย้ง และมี regression tests
-- [/] เพิ่ม OTP หรือรหัสเชื่อมจากโรงเรียนสำหรับ first-time parent binding ใน production
+- [x] ผูกบัญชีครั้งแรกด้วย school-issued one-time code (hash-at-rest, expiry 5 วัน, single use)
+- [x] Staff/Admin ออกรหัสจาก parent card บนหน้าโปรไฟล์นักเรียน; ออกรหัสใหม่แล้ว revoke code เก่า
+- [x] ปฏิเสธ LINE/account conflict และไม่เก็บ/ไม่ใช้เบอร์โทรเป็นหลักฐาน auth
+- [x] เพิ่ม API/UI และ integration regression tests สำหรับ code issue/redeem
+- [/] Apply `API/Database/2026-10-18-parent-line-link-codes.sql` กับฐานข้อมูลเป้าหมายก่อน deploy/use จริง
+- [/] ทดสอบ E2E บน staging: staff issue → LIFF redeem → reject reuse/expired/conflict
 - [x] Dashboard เรียก `getParentDashboard()`
 - [x] Dashboard เรียก `getChildSessions(childId)` เพื่อดึงตารางเรียนจริงของลูกที่เลือก
 - [x] มี child switcher เมื่อผู้ปกครองมีหลายคนในบัญชี

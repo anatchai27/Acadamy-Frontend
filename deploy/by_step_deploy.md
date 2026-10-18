@@ -275,6 +275,8 @@ git push origin main
 
 ## 7. การอัปเดตระบบในอนาคต
 
+> **Schema dependency สำหรับ LINE parent linking code:** ก่อน deploy API ที่มี `POST /api/parents/{parentId}/line-link-code` หรือรับ code ใน `POST /api/parents/bind-line` ให้ apply `API/Database/2026-10-18-parent-line-link-codes.sql` กับฐานข้อมูลเป้าหมายก่อนเสมอ จากนั้นตรวจ health/API แล้วจึง deploy frontend/LIFF ที่เปิดใช้ flow นี้ ห้ามทดสอบ issue/redeem กับบัญชีจริงโดยไม่ผ่าน staging
+
 ### 7.1 ด้วย GitHub Actions (อัตโนมัติ)
 
 แค่ `git push` ขึ้น `main` branch — Actions จะ build + deploy ให้อัตโนมัติ

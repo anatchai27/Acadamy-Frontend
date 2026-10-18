@@ -11,101 +11,50 @@ namespace academy_API.Tests.unitTest;
 public class ParentServiceTests
 {
     [Fact]
-    public async Task BindLineAsync_ReturnsAmbiguousForDuplicatePhoneWithoutWriting()
+    public async Task BindLineAsync_RequiresSchoolCodeWhenNoExistingLineBinding()
     {
         var repository = new Mock<IParentRepository>();
         repository.Setup(r => r.FindByLineUserAsync("line-user", It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        repository.Setup(r => r.FindByPhoneAsync("0812345678", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([
-                new Parent { Id = 1, InstituteId = 1, Phone = "0812345678" },
-                new Parent { Id = 2, InstituteId = 2, Phone = "0812345678" }
-            ]);
         var sut = new ParentService(repository.Object);
 
-        var result = await sut.BindLineAsync("line-user", "081-234-5678");
+        var result = await sut.BindLineAsync("line-user");
 
-        Assert.Equal(ParentBindingStatus.Ambiguous, result.Status);
+        Assert.Equal(ParentBindingStatus.NotFound, result.Status);
         repository.Verify(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task BindLineAsync_RejectsPhoneMatchAlreadyBoundToAnotherLineUser()
+    public async Task BindLineAsync_RejectsConflictingExistingLineMapping()
     {
-        var existingUser = new User
+        var user = new User
         {
             Id = 10,
             Role = UserRole.parent,
-            LineUserId = "different-line-user"
+            InstituteId = 1,
+            LineUserId = "line-user"
         };
         var parent = new Parent
         {
             Id = 1,
-            UserId = existingUser.Id,
-            User = existingUser,
+            UserId = user.Id,
+            User = user,
             InstituteId = 1,
             Phone = "0812345678",
             LineUserId = "different-line-user"
         };
         var repository = new Mock<IParentRepository>();
-        repository.Setup(r => r.FindByLineUserAsync("new-line-user", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        repository.Setup(r => r.FindByPhoneAsync("0812345678", It.IsAny<CancellationToken>()))
+        repository.Setup(r => r.FindByLineUserAsync("line-user", It.IsAny<CancellationToken>()))
             .ReturnsAsync([parent]);
         var sut = new ParentService(repository.Object);
 
-        var result = await sut.BindLineAsync("new-line-user", "0812345678");
+        var result = await sut.BindLineAsync("line-user");
 
         Assert.Equal(ParentBindingStatus.Conflict, result.Status);
         Assert.Equal("different-line-user", parent.LineUserId);
-        Assert.Equal("different-line-user", existingUser.LineUserId);
-        repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task BindLineAsync_RequiresVerificationForUniquePhoneMatch()
-    {
-        var parent = new Parent { Id = 1, InstituteId = 1, Phone = "0812345678" };
-        var repository = new Mock<IParentRepository>();
-        repository.Setup(r => r.FindByLineUserAsync("line-user", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        repository.Setup(r => r.FindByPhoneAsync("0812345678", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([parent]);
-        var sut = new ParentService(repository.Object);
-
-        var result = await sut.BindLineAsync("line-user", "0812345678");
-
-        Assert.Equal(ParentBindingStatus.VerificationRequired, result.Status);
-        Assert.Null(parent.LineUserId);
-        Assert.Null(parent.UserId);
-        repository.Verify(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
-        repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task BindLineAsync_AllowsUniquePhoneBindingOnlyWhenTestModeIsEnabled()
-    {
-        var parent = new Parent { Id = 1, InstituteId = 1, Phone = "0812345678" };
-        var user = new User { Id = 10, Role = UserRole.parent, InstituteId = 1 };
-        var repository = new Mock<IParentRepository>();
-        repository.Setup(r => r.FindByLineUserAsync("line-user", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        repository.Setup(r => r.FindByPhoneAsync("0812345678", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([parent]);
-        repository.Setup(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-        repository.Setup(r => r.GetChildrenForInstituteAsync(user.Id, parent.InstituteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        var sut = new ParentService(repository.Object);
-
-        var result = await sut.BindLineAsync("line-user", "0812345678", allowTestPhoneBinding: true);
-
-        Assert.Equal(ParentBindingStatus.Success, result.Status);
-        Assert.Equal(user.Id, parent.UserId);
-        Assert.Equal("line-user", parent.LineUserId);
         Assert.Equal("line-user", user.LineUserId);
-        repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -129,7 +78,7 @@ public class ParentServiceTests
             .ReturnsAsync([new ChildSummary(20, "Child", "G1", 2)]);
         var sut = new ParentService(repository.Object);
 
-        var result = await sut.BindLineAsync("line-user", null);
+        var result = await sut.BindLineAsync("line-user");
 
         Assert.Equal(ParentBindingStatus.Success, result.Status);
         Assert.Same(accountInstituteParent, result.Binding!.Parent);

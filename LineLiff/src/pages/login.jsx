@@ -9,10 +9,10 @@ export const LoginPage = () => {
   const { state, dispatch } = useLiffContext();
   const [error, setError] = useState(null);
   const [binding, setBinding] = useState(false);
-  const [needsPhone, setNeedsPhone] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [needsCode, setNeedsCode] = useState(false);
+  const [linkCode, setLinkCode] = useState('');
 
-  const bindParent = async (phoneNumber = '') => {
+  const bindParent = async (code = '') => {
     setBinding(true);
     setError(null);
 
@@ -20,7 +20,7 @@ export const LoginPage = () => {
       const { getLiffIdToken } = await import('../services/liff');
       const idToken = await getLiffIdToken();
       if (!idToken) throw new Error('ไม่พบ LINE ID token กรุณาปิดแล้วเปิด LIFF ใหม่');
-      const res = await bindLineUserId(idToken, phoneNumber);
+      const res = await bindLineUserId(idToken, code);
       const token = res.data?.token || res.data?.accessToken;
       token ? ((() => {
         try {
@@ -34,8 +34,8 @@ export const LoginPage = () => {
       children.length > 0 ? dispatch({ type: 'SET_ACTIVE_CHILD', payload: children[0].id }) : null;
       route('/liff/dashboard', true);
     } catch (err) {
-      if (err.status === 404 && !phoneNumber) {
-        setNeedsPhone(true);
+      if (err.status === 404 && err.data?.code === 'LINK_CODE_REQUIRED' && !code) {
+        setNeedsCode(true);
         return;
       }
       setError(err.status === 409
@@ -58,18 +58,18 @@ export const LoginPage = () => {
         }
       })() :
       state.parentUser ? route('/liff/dashboard', true) :
-      needsPhone || binding ? null : bindParent()
+      needsCode || binding ? null : bindParent()
     );
-  }, [state.liffInitialized, state.liffProfile, state.parentUser, needsPhone]);
+  }, [state.liffInitialized, state.liffProfile, state.parentUser, needsCode]);
 
-  const handlePhoneSubmit = event => {
+  const handleCodeSubmit = event => {
     event.preventDefault();
-    const normalizedPhone = phone.replace(/\D/g, '');
-    if (!/^\d{10}$/.test(normalizedPhone)) {
-      setError('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก');
+    const normalizedCode = linkCode.replace(/[^a-z0-9]/gi, '').toUpperCase();
+    if (normalizedCode.length !== 12) {
+      setError('กรุณากรอกรหัสเชื่อม 12 ตัวอักษรที่ได้รับจากโรงเรียน');
       return;
     }
-    bindParent(normalizedPhone);
+    bindParent(normalizedCode);
   };
 
   const handleLeaveLogin = async () => {
@@ -91,19 +91,20 @@ export const LoginPage = () => {
         <div class="text-5xl mb-4">📚</div>
         <h1 class="text-2xl font-bold mb-2">TiwHub</h1>
         <p class="text-blue-100 mb-8">ระบบจัดการเรียนการสอน</p>
-        {needsPhone ? (
-          <form onSubmit={handlePhoneSubmit} class="w-full max-w-xs text-left">
+        {needsCode ? (
+          <form onSubmit={handleCodeSubmit} class="w-full max-w-xs text-left">
             <div class="bg-white/10 rounded-xl p-4 mb-4">
-              <p class="text-sm mb-3">ไม่พบข้อมูลผู้ปกครอง กรุณากรอกเบอร์โทรศัพท์เพื่อเชื่อมต่อข้อมูล</p>
-              {testAuthMode && <p class="text-xs text-amber-100 mb-3">โหมดทดสอบ: ใช้เบอร์จากชุดข้อมูลทดสอบเท่านั้น</p>}
+              <p class="text-sm mb-3">กรอกรหัสเชื่อม LINE ที่ได้รับจากโรงเรียน รหัสใช้ได้ครั้งเดียวและหมดอายุใน 5 วัน</p>
+              {testAuthMode && <p class="text-xs text-amber-100 mb-3">โหมดทดสอบ: รหัสต้องออกจากโปรไฟล์นักเรียนในระบบโรงเรียน</p>}
               <input
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="กรอกเบอร์โทรศัพท์ 10 หลัก"
-                value={phone}
-                onInput={event => (setPhone(event.currentTarget.value.replace(/\D/g, '').slice(0, 10)), setError(null))}
-                class="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none"
+                type="text"
+                inputMode="text"
+                autoComplete="one-time-code"
+                maxLength={16}
+                placeholder="เช่น ABCD2345EFGH"
+                value={linkCode}
+                onInput={event => (setLinkCode(event.currentTarget.value.toUpperCase().slice(0, 16)), setError(null))}
+                class="w-full rounded-lg px-3 py-2 text-center font-mono text-base tracking-widest text-slate-900 outline-none"
                 disabled={binding}
               />
               {error && <p class="text-sm text-red-200 mt-2">{error}</p>}

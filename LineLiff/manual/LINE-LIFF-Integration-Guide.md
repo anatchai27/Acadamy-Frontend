@@ -30,15 +30,15 @@ LINE App
   │   LINE LIFF Browser (WebView ใน LINE)
   │       │
   │       ├── 1. liff.init({ liffId: "..." })
-  │       │       └── LINE SDK → ได้ accessToken, profile
+  │       │       └── LINE SDK → ได้ ID Token และ profile
   │       │
   │       ├── 2. liff.isLoggedIn() → true
   │       │       └── liff.getProfile() → { userId, displayName, pictureUrl }
   │       │
-  │       ├── 3. POST /api/parents/bind-line
-  │       │       ├── Body: { lineUserId, accessToken }
-  │       │       ├── Backend: verify accessToken กับ LINE API
-  │       │       ├── Backend: หา parent record จาก lineUserId
+  │       ├── 3. POST /api/parents/bind-line { idToken, code? }
+  │       │       ├── Backend: verify ID Token กับ LINE Verify API
+  │       │       ├── Backend: ใช้ sub ที่ verify แล้วหา LINE binding เดิม
+  │       │       ├── First-time: redeem school-issued one-time code
   │       │       └── Response: { token, user, children[] }
   │       │
   │       └── 4. localStorage.setItem('parent_token', token)
@@ -134,11 +134,11 @@ INITIAL → LIFF_INIT_SUCCESS (หรือ ERROR)
 │      │           User กด "อนุญาต" → LINE redirect กลับมาที่ LIFF URL   │
 │      │           liff.init() รอบ 2 → isLoggedIn() = true              │
 │      │                                                                 │
-│      └── NO  → liff.getProfile() → { userId, displayName }            │
+│      └── NO  → liff.getIDToken() + optional profile for display        │
 │                  │                                                     │
 │                  ▼                                                     │
-│           GET /api/parents/bind-line                                   │
-│           { lineUserId, accessToken }                                  │
+│           POST /api/parents/bind-line                                  │
+│           { idToken } then { idToken, code } if code is required        │
 │                  │                                                     │
 │                  ▼                                                     │
 │           Response: { token, user, children[] }                        │
@@ -177,32 +177,31 @@ INITIAL → LIFF_INIT_SUCCESS (หรือ ERROR)
 
 ### 4.2 `POST /api/parents/bind-line` — หัวใจของระบบ
 
+> **Contract ปัจจุบัน:** ส่วนตัวอย่างเก่าที่กล่าวถึง `lineUserId`, `accessToken`, ตาราง `parent_students` หรือการจับคู่ด้วยเบอร์โทรด้านล่างถูกเลิกใช้แล้ว ให้ยึดตัวอย่างใหม่นี้และ [คู่มือ Parent Auth](../../Objective/line-liff-parent-auth.md) เป็นหลัก
+
 ```
 Request:
 {
-  "lineUserId": "U4c8c3e...",       // จาก liff.getProfile().userId
-  "accessToken": "eyJhbGciOi..."     // จาก liff.getAccessToken()
+  "idToken": "eyJhbGciOi...",       // จาก liff.getIDToken()
+  "code": "ABCD2345EFGH"             // required for first-time linking
 }
 
 Backend Logic:
-1. Verify accessToken กับ LINE API:
-   GET https://api.line.me/oauth2/v2.1/verify?access_token=...
+1. Verify ID Token กับ LINE API:
+  POST https://api.line.me/oauth2/v2.1/verify (id_token + client_id)
    → ถ้าไม่ valid → return 401
 
-2. หา Parent record จาก lineUserId:
-   SELECT * FROM parents WHERE line_user_id = @lineUserId
-   → ถ้าไม่เจอ → return 404 "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน"
+2. ใช้ `sub` ที่ LINE ยืนยันแล้วค้น binding เดิม:
+  → พบ mapping เดิมที่สอดคล้องกัน → login และออก app JWT
+  → ไม่พบ → return 404 `LINK_CODE_REQUIRED`
 
-3. สร้าง/หา JWT token สำหรับ LIFF session:
-   - claims: { parentId, instituteId, role: "parent" }
-   - expires: 30 วัน
+3. First-time binding ตรวจ hash, expiry (5 วัน), institute/parent scope,
+  สถานะ unused และ LINE/account conflicts; consume code + bind ใน transaction
+  → invalid/expired/used/conflict: fail closed, ไม่แก้ binding และไม่ออก JWT
 
-4. หา children ที่ผูกกับ parent:
-   SELECT s.* FROM students s
-   JOIN parent_students ps ON s.id = ps.student_id
-   WHERE ps.parent_id = @parentId
+4. ออก app JWT หลัง login/redeem สำเร็จ และคืน children ที่ได้รับอนุญาต
 
-5. Response:
+Response:
 {
   "token": "eyJhbGciOi...",
   "user": { "id": 1, "fullName": "สมชาย", "phone": "0812345678" },
@@ -212,39 +211,11 @@ Backend Logic:
 }
 ```
 
+Staff/Admin ออกรหัสจากการ์ดผู้ปกครองในหน้าโปรไฟล์นักเรียนผ่าน `POST /api/parents/{parentId}/line-link-code`; รหัสแทน bearer credential ให้ส่งส่วนตัวและใช้ครั้งเดียวเท่านั้น ต้อง apply `API/Database/2026-10-18-parent-line-link-codes.sql` ก่อนใช้ API รุ่นนี้
+
 ### 4.3 Model ที่เกี่ยวข้องใน Database
 
-```sql
--- ============================
--- ตารางที่ต้องมีใน TiDB
--- ============================
-
--- 1. parents (อาจซ้อนใน users หรือแยก)
-CREATE TABLE IF NOT EXISTS parents (
-    id BIGINT AUTO_RANDOM PRIMARY KEY,
-    user_id BIGINT NOT NULL,              -- FK → users.id
-    line_user_id VARCHAR(255) DEFAULT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) DEFAULT NULL,
-    email VARCHAR(255) DEFAULT NULL,
-    institute_id BIGINT NOT NULL,          -- ตาม multi-tenant pattern
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_parents_line_user (line_user_id),
-    INDEX idx_parents_institute (institute_id)
-);
-
--- 2. parent_students (many-to-many)
-CREATE TABLE IF NOT EXISTS parent_students (
-    id BIGINT AUTO_RANDOM PRIMARY KEY,
-    parent_id BIGINT NOT NULL,
-    student_id BIGINT NOT NULL,
-    relationship VARCHAR(50) DEFAULT 'parent',  -- parent, guardian, etc.
-    institute_id BIGINT NOT NULL,
-    INDEX idx_parent_students_parent (parent_id),
-    INDEX idx_parent_students_student (student_id, parent_id)
-);
-```
+ใช้ schema และความสัมพันธ์ Parent/Student/User ที่มีอยู่จริงใน API นี้ ห้ามสร้างตาราง `parent_students` จากตัวอย่างเอกสารรุ่นเก่าเพื่อรองรับ flow นี้โดยไม่ตรวจ schema ปัจจุบันก่อน ตารางใหม่ที่จำเป็นสำหรับการเชื่อมบัญชีคือ `parent_line_link_codes` ตามไฟล์ SQL ด้านบนเท่านั้น โดยเก็บ code hash, institute/parent scope, วันหมดอายุ และสถานะการใช้/เพิกถอน
 
 ### 4.4 Security
 
@@ -329,7 +300,7 @@ public async Task<IActionResult> HandleWebhook(
         {
             case "follow":
                 // User เพิ่มเพื่อน LINE Official Account
-                // บันทึก lineUserId → รอผูกกับ parent ตอนเข้า LIFF
+                // ห้ามใช้ webhook profile เป็นหลักฐานผูก parent; binding ทำผ่าน ID Token + school code ใน LIFF
                 await _lineService.HandleFollow(evt.Source.UserId);
                 break;
 
@@ -405,7 +376,7 @@ public async Task NotifyAttendance(
    - npm run build → dist/ assets ทั้งหมด path ขึ้นต้น /liff/
 
 ✅ Backend API:
-   - POST /api/parents/bind-line (verify accessToken กับ LINE API)
+  - POST /api/parents/bind-line (verify ID Token; school code required for first-time binding)
    - GET /api/parents/me/dashboard
    - GET /api/parents/children/{id}/attendance
    - GET /api/parents/children/{id}/payments
@@ -416,8 +387,8 @@ public async Task NotifyAttendance(
    - Nginx: location /api/ → proxy_pass localhost:5000
 
 ✅ Database:
-   - ตาราง parents (มีคอลัมน์ line_user_id)
-   - ตาราง parent_students (ผูก parent ↔ student)
+  - ใช้ Parent/Student/User schema ปัจจุบันของ API
+  - Apply API/Database/2026-10-18-parent-line-link-codes.sql ก่อน deploy API รุ่นที่รองรับรหัส
 ```
 
 ---
