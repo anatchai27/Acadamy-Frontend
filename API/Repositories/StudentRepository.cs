@@ -28,6 +28,7 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
     {
         return await _context.Students
             .Include(s => s.Parents)
+            .ThenInclude(p => p.User)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
     }
 

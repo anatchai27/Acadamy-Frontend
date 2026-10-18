@@ -214,7 +214,8 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
                     p.FullName,
                     p.Phone,
                     p.Relationship,
-                    p.LineUserId,
+                    p.UserId.HasValue && p.User is not null &&
+                    !string.IsNullOrWhiteSpace(p.User.LineUserId) && p.User.LineUserId == p.LineUserId,
                     p.IsPrimary,
                     p.IsActive
                 ))

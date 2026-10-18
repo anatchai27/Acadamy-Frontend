@@ -7,7 +7,7 @@ import { studentService } from '../../services';
 import { issueParentLineLinkCode } from '../../services/parent-service';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
+import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus } from 'react-icons/hi2';
 import { formatPhoneNumber } from '../../utils/phone';
 
 const relationshipLabels = {
@@ -274,15 +274,9 @@ export const StudentProfilePage = ({ path, id }) => {
                               {formatPhoneNumber(p.phone)}
                             </span>
                           )}
-                          {p.lineUserId && (
-                            <span class="inline-flex min-w-0 items-start gap-1 break-all">
-                              <HiOutlineChatBubbleLeftRight class="h-3 w-3" />
-                              {p.lineUserId}
-                            </span>
-                          )}
                         </div>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
-                          {p.lineUserId ? (
+                          {p.isLineLinked ? (
                             <span class="text-xs font-medium text-emerald-700">เชื่อม LINE แล้ว</span>
                           ) : (
                             <Button
@@ -296,6 +290,11 @@ export const StudentProfilePage = ({ path, id }) => {
                             </Button>
                           )}
                         </div>
+                        {!p.isLineLinked && (
+                          <p class="mt-2 text-xs text-zinc-500">
+                            สร้างรหัสแล้วส่งให้ผู้ปกครอง เพื่อให้เชื่อมบัญชีจากหน้า LINE LIFF
+                          </p>
+                        )}
                         {linkCode?.parentId === p.id && (
                           <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3" role="status" aria-live="polite">
                             <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>

@@ -23,10 +23,11 @@ public sealed class ParentLineLinkService(TutoringDbContext context) : IParentLi
     {
         var parent = await _context.Parents
             .FirstOrDefaultAsync(p => p.Id == parentId && p.InstituteId == instituteId, ct);
-        if (parent is null || !string.IsNullOrWhiteSpace(parent.LineUserId)) return null;
+        if (parent is null) return null;
+        User? linkedUser = null;
         if (parent.UserId.HasValue)
         {
-            var linkedUser = await _context.Users.IgnoreQueryFilters()
+            linkedUser = await _context.Users.IgnoreQueryFilters()
                 .FirstOrDefaultAsync(u => u.Id == parent.UserId.Value && u.InstituteId == instituteId, ct);
             if (linkedUser is null || !string.IsNullOrWhiteSpace(linkedUser.LineUserId)) return null;
         }
@@ -35,6 +36,10 @@ public sealed class ParentLineLinkService(TutoringDbContext context) : IParentLi
         var code = GenerateCode();
         var codeHash = HashCode(code);
         await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
+        // Legacy/manual LINE IDs are not verified bindings. Clear them before issuing a code.
+        if (!string.IsNullOrWhiteSpace(parent.LineUserId))
+            parent.LineUserId = null;
 
         await _context.ParentLineLinkCodes
             .Where(c => c.ParentId == parentId && c.RedeemedAt == null && c.RevokedAt == null)

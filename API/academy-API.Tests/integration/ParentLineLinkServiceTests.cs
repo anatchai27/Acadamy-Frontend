@@ -62,6 +62,24 @@ public sealed class ParentLineLinkServiceTests
     }
 
     [Fact]
+    public async Task IssueAsync_ClearsLegacyUnverifiedLineIdAndIssuesCode()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var context = CreateContext(connection, 1);
+        await context.Database.EnsureCreatedAsync();
+        var parent = await SeedParentAsync(context, 1);
+        parent.LineUserId = "manually-entered-not-verified";
+        await context.SaveChangesAsync();
+
+        var issued = await new ParentLineLinkService(context).IssueAsync(parent.Id, 1, actorUserId: 99);
+
+        Assert.NotNull(issued);
+        Assert.Null(parent.LineUserId);
+        Assert.Single(await context.ParentLineLinkCodes.ToListAsync());
+    }
+
+    [Fact]
     public async Task RedeemAsync_RejectsInvalidAndExpiredCodesWithoutBinding()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

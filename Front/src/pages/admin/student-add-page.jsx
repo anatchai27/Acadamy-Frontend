@@ -4,6 +4,7 @@ import { HiOutlineArrowLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutline
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, Checkbox, Textarea, showToast, ImageUpload } from '../../components/ui';
 import { studentService, uploadService } from '../../services';
+import { issueParentLineLinkCode } from '../../services/parent-service';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
@@ -34,11 +35,11 @@ export function StudentControll({ path, id }) {
   const [loading, setLoading] = useState(isEdit);
   const parentIdCounter = useRef(0);
   const [parents, setParents] = useState([
-    { _key: ++parentIdCounter.current, fullName: '', phone: '', lineUserId: '', relationship: 'แม่' },
+    { _key: ++parentIdCounter.current, fullName: '', phone: '', relationship: 'แม่' },
   ]);
   const pickupIdCounter = useRef(0);
   const [pickupPeople, setPickupPeople] = useState([
-    { _key: ++pickupIdCounter.current, fullName: '', phone: '', relationship: 'ผู้ปกครอง', idCardLast4: '' },
+    { _key: ++pickupIdCounter.current, fullName: '', phone: '', relationship: 'ผู้ปกครอง', idCardLast4: '', isActive: true },
   ]);
   const [consent, setConsent] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
@@ -48,12 +49,17 @@ export function StudentControll({ path, id }) {
   const [parentSearchResults, setParentSearchResults] = useState([]);
   const [parentSearching, setParentSearching] = useState(false);
   const parentSearchTimer = useRef(null);
+  const [linkCode, setLinkCode] = useState(null);
+  const [linkCodeLoadingId, setLinkCodeLoadingId] = useState(null);
 
   useEffect(() => {
     if (!isEdit || !id) return;
     setLoading(true);
-    studentService.getStudentById(id, { signal: getSignal() })
-      .then((res) => {
+    Promise.all([
+      studentService.getStudentById(id, { signal: getSignal() }),
+      studentService.getPickupAuthorizations(id, { signal: getSignal() }),
+    ])
+      .then(([res, pickupRes]) => {
         const s = res.data?.data || res.data || {};
         setForm({
           fullName: s.fullName || '',
@@ -68,12 +74,23 @@ export function StudentControll({ path, id }) {
           setParents(s.parents.map((p) => ({
             _key: ++parentIdCounter.current,
             id: p.id,
-             fullName: p.fullName || '',
-             phone: p.phone || '',
-             lineUserId: p.lineUserId || '',
-             relationship: normalizeRelationship(p.relationship),
+            fullName: p.fullName || '',
+            phone: p.phone || '',
+            isLineLinked: p.isLineLinked === true,
+            relationship: normalizeRelationship(p.relationship),
           })));
         }
+        const pickupRows = pickupRes.data?.data || pickupRes.data || [];
+        pickupIdCounter.current = pickupRows.length;
+        setPickupPeople(pickupRows.map((person) => ({
+          _key: ++pickupIdCounter.current,
+          id: person.id,
+          fullName: person.fullName || '',
+          phone: person.phone || '',
+          relationship: person.relationship || 'ผู้ปกครอง',
+          idCardLast4: person.idCardLast4 || '',
+          isActive: person.isActive,
+        })));
         setConsent(true);
       })
       .catch(() => showToast('ไม่สามารถโหลดข้อมูลนักเรียน', 'error'))
@@ -91,7 +108,33 @@ export function StudentControll({ path, id }) {
   };
 
   const addParent = () => {
-    setParents((prev) => [...prev, { _key: ++parentIdCounter.current, fullName: '', phone: '', lineUserId: '', relationship: 'พ่อ' }]);
+    setParents((prev) => [...prev, { _key: ++parentIdCounter.current, fullName: '', phone: '', isLineLinked: false, relationship: 'พ่อ' }]);
+  };
+
+  const handleIssueParentLineCode = async (parent) => {
+    if (!parent.id || linkCodeLoadingId) return;
+    if (!window.confirm(`สร้างรหัสเชื่อม LINE สำหรับ ${parent.fullName || 'ผู้ปกครอง'}? รหัสเดิมที่ยังไม่ใช้จะถูกยกเลิก`)) return;
+    setLinkCodeLoadingId(parent.id);
+    setLinkCode(null);
+    try {
+      const { data } = await issueParentLineLinkCode(parent.id);
+      setLinkCode({ parentId: parent.id, code: data.code, expiresAt: data.expiresAt });
+      showToast('สร้างรหัสแล้ว ส่งให้ผู้ปกครองนำไปเชื่อมใน LINE LIFF', 'success');
+    } catch (error) {
+      showToast(error?.data?.error || 'สร้างรหัสเชื่อม LINE ไม่สำเร็จ', 'error');
+    } finally {
+      setLinkCodeLoadingId(null);
+    }
+  };
+
+  const handleCopyParentLineCode = async () => {
+    if (!linkCode?.code) return;
+    try {
+      await navigator.clipboard.writeText(linkCode.code);
+      showToast('คัดลอกรหัสแล้ว', 'success');
+    } catch {
+      showToast('คัดลอกไม่ได้ กรุณาเลือกและคัดลอกรหัสด้วยตนเอง', 'error');
+    }
   };
 
   const removeParent = (key) => {
@@ -115,7 +158,21 @@ export function StudentControll({ path, id }) {
   };
 
   const removePickupPerson = (key) => {
-    setPickupPeople((prev) => prev.filter((person) => person._key !== key));
+    const person = pickupPeople.find((item) => item._key === key);
+    if (!person) return;
+    const remove = async () => {
+      if (isEdit && person.id) {
+        try {
+          await studentService.deletePickupAuthorization(id, person.id);
+          showToast('นำผู้รับเด็กออกแล้ว', 'success');
+        } catch (error) {
+          showToast(error?.data?.error || 'นำผู้รับเด็กออกไม่สำเร็จ', 'error');
+          return;
+        }
+      }
+      setPickupPeople((prev) => prev.filter((item) => item._key !== key));
+    };
+    remove();
   };
 
   const handleParentSearch = (e) => {
@@ -169,16 +226,11 @@ export function StudentControll({ path, id }) {
       showToast('กรุณาระบุเบอร์โทรศัพท์ผู้ปกครองให้ครบถ้วน (10 หลัก)', 'error');
       return;
     }
-    const invalidLineUserId = parents.find((p) => !p.lineUserId.trim());
-    if (invalidLineUserId) {
-      showToast('กรุณาระบุ LINE User ID ผู้ปกครองให้ครบถ้วน', 'error');
-      return;
-    }
     if (!isEdit && !consent) {
       showToast('กรุณายอมรับข้อตกลง PDPA', 'error');
       return;
     }
-    if (!isEdit && pickupPeople.some((person) => !person.fullName.trim())) {
+    if (pickupPeople.some((person) => !person.fullName.trim())) {
       showToast('กรุณาระบุชื่อผู้รับเด็กให้ครบ หรือกดลบรายการที่ไม่ใช้', 'error');
       return;
     }
@@ -201,10 +253,22 @@ export function StudentControll({ path, id }) {
               id: p.id || 0,
               fullName: p.fullName.trim(),
                phone: p.phone.trim(),
-               lineUserId: p.lineUserId.trim(),
                relationship: p.relationship,
             })),
         });
+
+        await Promise.all(pickupPeople.map((person) => {
+          const payload = {
+            fullName: person.fullName.trim(),
+            phone: person.phone.trim() || null,
+            relationship: person.relationship,
+            idCardLast4: person.idCardLast4.trim() || null,
+            isActive: person.isActive,
+          };
+          return person.id
+            ? studentService.updatePickupAuthorization(id, person.id, payload)
+            : studentService.createPickupAuthorization(id, payload);
+        }));
 
         if (photoFile) {
           await uploadService.uploadStudentPhoto(photoFile, id);
@@ -227,7 +291,6 @@ export function StudentControll({ path, id }) {
             .map((p) => ({
               fullName: p.fullName.trim(),
                phone: p.phone.trim(),
-               lineUserId: p.lineUserId.trim(),
                relationship: p.relationship,
             })),
           pdpa: {
@@ -430,18 +493,6 @@ export function StudentControll({ path, id }) {
                     value={parent.phone}
                      onInput={updateParent(parent._key, 'phone')}
                    />
-                   <div class="md:col-span-3">
-                     <SolidInput
-                       label="LINE User ID"
-                       placeholder="เช่น U1234567890abcdef"
-                       required
-                       value={parent.lineUserId}
-                       onInput={updateParent(parent._key, 'lineUserId')}
-                     />
-                     <p class="mt-1.5 text-xs text-zinc-500">
-                       ใช้สำหรับเชื่อมต่อกับระบบ LINE เพื่อแสดงข้อมูลของบุตรหลานของท่าน
-                     </p>
-                   </div>
                    <div class="flex flex-col gap-1.5">
                     <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ความสัมพันธ์</label>
                     <select
@@ -454,31 +505,71 @@ export function StudentControll({ path, id }) {
                       ))}
                     </select>
                   </div>
+                  <div class="md:col-span-3 rounded-xl bg-emerald-50/70 p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p class="text-sm font-medium text-zinc-800">เชื่อมบัญชีผู้ปกครองกับ LINE</p>
+                        <p class="mt-0.5 text-xs text-zinc-600">
+                          {parent.isLineLinked
+                            ? 'ผู้ปกครองเชื่อม LINE แล้ว'
+                            : parent.id
+                              ? 'สร้างรหัสแล้วส่งให้ผู้ปกครองกรอกในหน้า LINE LIFF'
+                              : 'บันทึกข้อมูลผู้ปกครองก่อน แล้วจึงสร้างรหัสได้'}
+                        </p>
+                      </div>
+                      {parent.isLineLinked ? (
+                        <span class="text-xs font-semibold text-emerald-800">เชื่อมแล้ว</span>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIssueParentLineCode(parent)}
+                          loading={linkCodeLoadingId === parent.id}
+                          disabled={!parent.id || linkCodeLoadingId !== null}
+                        >
+                          สร้างรหัสเชื่อม LINE
+                        </Button>
+                      )}
+                    </div>
+                    {linkCode?.parentId === parent.id && (
+                      <div class="mt-3 border-t border-emerald-200 pt-3" role="status" aria-live="polite">
+                        <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                          <code class="select-all rounded bg-white px-3 py-2 text-base font-bold tracking-widest text-zinc-900">{linkCode.code}</code>
+                          <Button type="button" variant="outline" size="sm" onClick={handleCopyParentLineCode}>คัดลอกรหัส</Button>
+                        </div>
+                        <p class="mt-2 text-xs text-emerald-800">หมดอายุ {new Date(linkCode.expiresAt).toLocaleString('th-TH')}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {!isEdit && (
           <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
             <div class="flex items-center justify-between mb-2">
               <div>
                 <h3 class="text-base font-semibold text-zinc-900">รายชื่อผู้รับเด็กกลับ</h3>
-                <p class="mt-1 text-xs text-zinc-500">เพิ่มรายชื่อคนที่ได้รับอนุญาตให้รับเด็กกลับบ้าน</p>
+                <p class="mt-1 text-xs text-zinc-500">จัดการรายชื่อคนที่ได้รับอนุญาตให้รับเด็กกลับบ้าน</p>
               </div>
               <button type="button" onClick={addPickupPerson} class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark">
                 + เพิ่มผู้รับเด็ก
               </button>
             </div>
+            {pickupPeople.length === 0 && (
+              <p class="mt-4 rounded-xl bg-zinc-50 px-4 py-5 text-center text-sm text-zinc-500">
+                ยังไม่มีรายชื่อผู้รับเด็ก เพิ่มรายชื่อเพื่อให้ครูตรวจสอบตอนรับกลับ
+              </p>
+            )}
             <div class="space-y-4 mt-4">
               {pickupPeople.map((person, index) => (
                 <div key={person._key} class="relative rounded-xl border border-zinc-200 p-4">
-                  {pickupPeople.length > 1 && (
-                    <button type="button" onClick={() => removePickupPerson(person._key)} class="absolute right-2 top-2 text-zinc-400 hover:text-oasis-danger">
-                      <HiOutlineXMark class="h-4 w-4" />
-                    </button>
-                  )}
+                  <button type="button" onClick={() => removePickupPerson(person._key)} class="absolute right-2 top-2 text-zinc-400 hover:text-oasis-danger" aria-label={`นำ ${person.fullName || `ผู้รับเด็กคนที่ ${index + 1}`} ออก`}>
+                    <HiOutlineXMark class="h-4 w-4" />
+                  </button>
                   <p class="mb-3 text-xs font-medium text-zinc-500">ผู้รับเด็กคนที่ {index + 1}</p>
                   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <SolidInput label="ชื่อ-นามสกุล" placeholder="ชื่อผู้รับเด็ก" required value={person.fullName} onInput={updatePickupPerson(person._key, 'fullName')} />
@@ -490,13 +581,23 @@ export function StudentControll({ path, id }) {
                         {['แม่', 'พ่อ', 'ญาติ', 'รถรับส่ง', 'อื่นๆ'].map((relationship) => <option key={relationship} value={relationship}>{relationship}</option>)}
                       </select>
                     </div>
+                    {isEdit && (
+                      <label class="flex items-center gap-2 text-sm text-zinc-700 md:col-span-3">
+                        <input
+                          type="checkbox"
+                          checked={person.isActive !== false}
+                          onChange={(event) => setPickupPeople((prev) => prev.map((item) => (
+                            item._key === person._key ? { ...item, isActive: event.currentTarget.checked } : item
+                          )))}
+                        />
+                        อนุญาตให้รับเด็กกลับได้
+                      </label>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
         {!isEdit && (
 <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
             <h3 class="text-base font-semibold text-zinc-900 mb-4">การยินยอม PDPA</h3>

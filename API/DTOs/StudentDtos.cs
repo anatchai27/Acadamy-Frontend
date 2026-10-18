@@ -121,7 +121,7 @@ public record ParentProfileInfo(
     string FullName,
     string? Phone,
     string? Relationship,
-    string? LineUserId,
+    bool IsLineLinked,
     bool IsPrimary,
     bool IsActive
 );

@@ -72,7 +72,7 @@ This flag only exposes client-side LINE profile diagnostics and a test hint. It 
 ### Required database and API setup
 
 - Create and apply `API/Database/2026-10-18-parent-line-link-codes.sql` before deploying the API or issuing linking codes.
-- The staff UI issues the code from the target student's profile; API access is restricted to authenticated `admin` or `staff` claims in the active institute.
+- The staff UI issues the code from the target student's profile or edit form; API access is restricted to authenticated `admin` or `staff` claims in the active institute. Staff never enter or copy a LINE user ID manually; the API marks a parent as linked only after verified LINE token redemption.
 - Codes use 60 bits of random entropy, are stored only as hashes, and are consumed atomically once. Add request rate limiting only after configuring trusted client-IP forwarding through the Vercel/Nginx proxy chain; a naive remote-IP limiter may throttle all users behind the same proxy.
 - `MODE_TEST_AUTH=true` in Vite may be used to inspect profile data locally; it is never an API authorization setting.
 

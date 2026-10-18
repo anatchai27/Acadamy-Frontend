@@ -16,6 +16,18 @@ export const updateStudent = (id, payload) => {
   return api.put(`/students/${id}`, payload);
 }
 
+export const getPickupAuthorizations = (studentId, options = {}) =>
+  api.get(`/students/${studentId}/pickup-authorizations`, options);
+
+export const createPickupAuthorization = (studentId, payload) =>
+  api.post(`/students/${studentId}/pickup-authorizations`, payload);
+
+export const updatePickupAuthorization = (studentId, authorizationId, payload) =>
+  api.patch(`/students/${studentId}/pickup-authorizations/${authorizationId}`, payload);
+
+export const deletePickupAuthorization = (studentId, authorizationId) =>
+  api.delete(`/students/${studentId}/pickup-authorizations/${authorizationId}`);
+
 export const getStudentQR = id => {
   return api.get(`/students/${id}/qr`);
 }
@@ -26,9 +38,6 @@ export const getStudentCardPdf = id => {
 
 export const downloadStudentCsv = () => api.download('/students/export', { params: { format: 'csv' } });
 
-export const createPickupAuthorization = (studentId, payload) =>
-  api.post(`/students/${studentId}/pickup-authorizations`, payload);
-
 export const studentService = {
   getStudents,
   getStudentById,
@@ -37,5 +46,8 @@ export const studentService = {
   getStudentQR,
   getStudentCardPdf,
   downloadStudentCsv,
+  getPickupAuthorizations,
   createPickupAuthorization,
+  updatePickupAuthorization,
+  deletePickupAuthorization,
 };
