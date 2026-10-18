@@ -10,21 +10,19 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
 {
     private readonly TutoringDbContext _context = context;
 
-    public Task<Parent?> FindByLineUserAsync(string lineUserId, CancellationToken ct = default) =>
-        _context.Parents.Include(p => p.Student).FirstOrDefaultAsync(p => p.LineUserId == lineUserId, ct);
+    public Task<List<Parent>> FindByLineUserAsync(string lineUserId, CancellationToken ct = default) =>
+        _context.Parents.Include(p => p.Student).Include(p => p.User)
+            .Where(p => p.LineUserId == lineUserId).ToListAsync(ct);
 
-    public Task<Parent?> FindByPhoneAsync(string phone, CancellationToken ct = default) =>
-        _context.Parents.Include(p => p.Student).FirstOrDefaultAsync(
-            p => p.Phone.Replace("-", "").Replace(" ", "") == phone, ct);
+    public Task<List<Parent>> FindByPhoneAsync(string phone, CancellationToken ct = default) =>
+        _context.Parents.Include(p => p.Student).Include(p => p.User)
+            .Where(p => p.Phone.Replace("-", "").Replace(" ", "") == phone).ToListAsync(ct);
 
     public Task<Parent?> FindByUserIdAsync(int userId, CancellationToken ct = default) =>
         _context.Parents.Include(p => p.Student).FirstOrDefaultAsync(p => p.UserId == userId, ct);
 
     public Task<User?> FindUserByIdAsync(int userId, CancellationToken ct = default) =>
         _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
-
-    public Task<User?> FindUserByPhoneAsync(string phone, CancellationToken ct = default) =>
-        _context.Users.FirstOrDefaultAsync(u => u.Phone == phone, ct);
 
     public async Task<User> CreateUserAsync(User user, CancellationToken ct = default)
     {
@@ -38,6 +36,16 @@ public sealed class ParentRepository(TutoringDbContext context) : IParentReposit
     public Task<List<ChildSummary>> GetChildrenAsync(int userId, CancellationToken ct = default) =>
         _context.Parents
             .Where(p => p.UserId == userId)
+            .Select(p => new ChildSummary(
+                p.Student.Id,
+                p.Student.FullName,
+                p.Student.Grade ?? string.Empty,
+                p.Student.InstituteId))
+            .ToListAsync(ct);
+
+    public Task<List<ChildSummary>> GetChildrenForInstituteAsync(int userId, int instituteId, CancellationToken ct = default) =>
+        _context.Parents
+            .Where(p => p.UserId == userId && p.InstituteId == instituteId)
             .Select(p => new ChildSummary(
                 p.Student.Id,
                 p.Student.FullName,

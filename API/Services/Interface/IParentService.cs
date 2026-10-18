@@ -6,7 +6,7 @@ namespace academy_API.Services.Interface;
 
 public interface IParentService
 {
-    Task<ParentBindingResult?> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default);
+    Task<ParentBindingOutcome> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default);
     Task<Parent?> ResolveAsync(int userId, CancellationToken ct = default);
     Task<ParentDashboardSnapshot> GetDashboardAsync(int userId, CancellationToken ct = default);
     Task<ParentProfileResult?> GetProfileAsync(int userId, CancellationToken ct = default);

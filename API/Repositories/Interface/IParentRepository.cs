@@ -5,14 +5,14 @@ namespace academy_API.Repositories.Interface;
 
 public interface IParentRepository
 {
-    Task<Parent?> FindByLineUserAsync(string lineUserId, CancellationToken ct = default);
-    Task<Parent?> FindByPhoneAsync(string phone, CancellationToken ct = default);
+    Task<List<Parent>> FindByLineUserAsync(string lineUserId, CancellationToken ct = default);
+    Task<List<Parent>> FindByPhoneAsync(string phone, CancellationToken ct = default);
     Task<Parent?> FindByUserIdAsync(int userId, CancellationToken ct = default);
     Task<User?> FindUserByIdAsync(int userId, CancellationToken ct = default);
-    Task<User?> FindUserByPhoneAsync(string phone, CancellationToken ct = default);
     Task<User> CreateUserAsync(User user, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
     Task<List<ChildSummary>> GetChildrenAsync(int userId, CancellationToken ct = default);
+    Task<List<ChildSummary>> GetChildrenForInstituteAsync(int userId, int instituteId, CancellationToken ct = default);
     Task<ParentDashboardSnapshot> GetDashboardAsync(int userId, CancellationToken ct = default);
     Task<List<AttendanceRecord>> GetAttendanceAsync(int studentId, CancellationToken ct = default);
     Task<List<PaymentListItem>> GetPaymentsAsync(int studentId, CancellationToken ct = default);

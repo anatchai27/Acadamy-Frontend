@@ -52,9 +52,15 @@ public static class ParentEndpoints
         if (string.IsNullOrWhiteSpace(verifiedUserId))
             return Results.Unauthorized();
 
-        var result = await service.BindLineAsync(verifiedUserId, request.Phone, ct);
-        if (result is null)
-            return Results.Json(new { error = "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }, statusCode: 404);
+        var outcome = await service.BindLineAsync(verifiedUserId, request.Phone, ct);
+        if (outcome.Status == ParentBindingStatus.NotFound)
+            return Results.Json(new { code = "PARENT_NOT_FOUND", error = "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }, statusCode: 404);
+        if (outcome.Status == ParentBindingStatus.VerificationRequired)
+            return Results.Json(new { code = "PHONE_VERIFICATION_REQUIRED", error = "กรุณายืนยันความเป็นเจ้าของเบอร์โทรกับโรงเรียนก่อนเชื่อมต่อ LINE" }, statusCode: 409);
+        if (outcome.Status is ParentBindingStatus.Ambiguous or ParentBindingStatus.Conflict)
+            return Results.Json(new { code = "PARENT_BINDING_REQUIRES_REVIEW", error = "ไม่สามารถยืนยันบัญชีจากข้อมูลนี้ได้ กรุณาติดต่อโรงเรียนเพื่อตรวจสอบ" }, statusCode: 409);
+
+        var result = outcome.Binding!;
 
         return Results.Ok(new
         {

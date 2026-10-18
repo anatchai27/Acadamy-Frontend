@@ -11,29 +11,56 @@ public sealed class ParentService(IParentRepository repository) : IParentService
 {
     private readonly IParentRepository _repository = repository;
 
-    public async Task<ParentBindingResult?> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default)
+    public async Task<ParentBindingOutcome> BindLineAsync(string verifiedUserId, string? phone, CancellationToken ct = default)
     {
-        var parent = await _repository.FindByLineUserAsync(verifiedUserId, ct);
-        if (parent is null && !string.IsNullOrWhiteSpace(phone))
-            parent = await _repository.FindByPhoneAsync(new string(phone.Where(char.IsDigit).ToArray()), ct);
-        if (parent is null)
-            return null;
+        var lineMatches = await _repository.FindByLineUserAsync(verifiedUserId, ct);
+        Parent parent;
+        User? user;
 
-        var user = parent.UserId.HasValue
-            ? await _repository.FindUserByIdAsync(parent.UserId.Value, ct)
-            : null;
-        if (user is null)
+        if (lineMatches.Count > 0)
         {
-            user = await FindOrCreateUserAsync(parent, verifiedUserId, ct);
-            parent.UserId = user.Id;
+            var userIds = lineMatches.Select(p => p.UserId).Distinct().ToList();
+            if (userIds.Count != 1 || userIds[0] is null)
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+
+            user = lineMatches[0].User ?? await _repository.FindUserByIdAsync(userIds[0]!.Value, ct);
+            if (user is null)
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+            parent = lineMatches.FirstOrDefault(p => p.InstituteId == user.InstituteId)!;
+            if (parent is null || !IsCompatibleBinding(parent, user, verifiedUserId))
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return new ParentBindingOutcome(ParentBindingStatus.NotFound);
+
+            var normalizedPhone = new string(phone.Where(char.IsDigit).ToArray());
+            var phoneMatches = await _repository.FindByPhoneAsync(normalizedPhone, ct);
+            if (phoneMatches.Count == 0)
+                return new ParentBindingOutcome(ParentBindingStatus.NotFound);
+
+            var userIds = phoneMatches.Select(p => p.UserId).Distinct().ToList();
+            if (userIds.Count > 1 || (userIds.Count == 1 && userIds[0] is null && phoneMatches.Count > 1))
+                return new ParentBindingOutcome(ParentBindingStatus.Ambiguous);
+
+            if (phoneMatches.Any(p => !string.IsNullOrEmpty(p.LineUserId) && p.LineUserId != verifiedUserId) ||
+                phoneMatches.Any(p => p.User is not null && !string.IsNullOrEmpty(p.User.LineUserId) && p.User.LineUserId != verifiedUserId))
+                return new ParentBindingOutcome(ParentBindingStatus.Conflict);
+
+            // A phone match—even a unique one—is not proof that this LINE user owns the number.
+            // Keep binding fail-closed until an OTP or school-issued verification flow is available.
+            return new ParentBindingOutcome(ParentBindingStatus.VerificationRequired);
         }
 
-        if (string.IsNullOrEmpty(user.LineUserId)) user.LineUserId = verifiedUserId;
+        user.LineUserId = verifiedUserId;
         parent.LineUserId = verifiedUserId;
         parent.IsActive = true;
         await _repository.SaveChangesAsync(ct);
 
-        return new ParentBindingResult(user, parent, await _repository.GetChildrenAsync(user.Id, ct));
+        return new ParentBindingOutcome(ParentBindingStatus.Success,
+            new ParentBindingResult(user, parent,
+                await _repository.GetChildrenForInstituteAsync(user.Id, parent.InstituteId, ct)));
     }
 
     public Task<Parent?> ResolveAsync(int userId, CancellationToken ct = default) =>
@@ -82,25 +109,10 @@ public sealed class ParentService(IParentRepository repository) : IParentService
     public Task<HomeworkSubmission?> CreateOrGetHomeworkSubmissionAsync(int userId, int studentId, int homeworkId, CancellationToken ct = default) => _repository.CreateOrGetHomeworkSubmissionAsync(userId, studentId, homeworkId, ct);
     public Task<bool> IsParentOfHomeworkSubmissionAsync(int userId, int submissionId, CancellationToken ct = default) => _repository.IsParentOfHomeworkSubmissionAsync(userId, submissionId, ct);
 
-    private async Task<User> FindOrCreateUserAsync(Parent parent, string lineUserId, CancellationToken ct)
-    {
-        if (!string.IsNullOrWhiteSpace(parent.Phone))
-        {
-            var existing = await _repository.FindUserByPhoneAsync(parent.Phone, ct);
-            if (existing is not null) return existing;
-        }
+    private static bool IsCompatibleBinding(Parent parent, User? user, string lineUserId) =>
+        (string.IsNullOrEmpty(parent.LineUserId) || parent.LineUserId == lineUserId) &&
+        (user is null || (user.Role == UserRole.parent &&
+            (string.IsNullOrEmpty(user.LineUserId) || user.LineUserId == lineUserId)));
 
-        return await _repository.CreateUserAsync(new User
-        {
-            InstituteId = parent.InstituteId,
-            Email = $"{lineUserId}@line.parent",
-            Phone = parent.Phone,
-            Role = UserRole.parent,
-            LineUserId = lineUserId,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        }, ct);
-    }
 }
 

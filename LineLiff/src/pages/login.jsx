@@ -36,7 +36,9 @@ export const LoginPage = () => {
         setNeedsPhone(true);
         return;
       }
-      setError(err.data?.error || err.message || 'ไม่สามารถเชื่อมต่อกับ LINE ได้');
+      setError(err.status === 409
+        ? (err.data?.error || 'ไม่สามารถยืนยันบัญชีได้ กรุณาติดต่อโรงเรียนเพื่อตรวจสอบ')
+        : (err.data?.error || err.message || 'ไม่สามารถเชื่อมต่อกับ LINE ได้'));
     } finally {
       setBinding(false);
     }
