@@ -67,6 +67,7 @@ export function StudentControll({ path, id }) {
           parentIdCounter.current = s.parents.length;
           setParents(s.parents.map((p) => ({
             _key: ++parentIdCounter.current,
+            id: p.id,
              fullName: p.fullName || '',
              phone: p.phone || '',
              lineUserId: p.lineUserId || '',

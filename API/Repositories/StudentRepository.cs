@@ -99,6 +99,25 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
         {
             foreach (var parentUpdate in request.Parents)
             {
+                if (parentUpdate.Id <= 0)
+                {
+                    if (string.IsNullOrWhiteSpace(parentUpdate.FullName))
+                        continue;
+
+                    student.Parents.Add(new Parent
+                    {
+                        StudentId = student.Id,
+                        InstituteId = student.InstituteId,
+                        FullName = parentUpdate.FullName.Trim(),
+                        Phone = parentUpdate.Phone?.Trim() ?? string.Empty,
+                        Relationship = parentUpdate.Relationship?.Trim(),
+                        LineUserId = parentUpdate.LineUserId?.Trim(),
+                        IsPrimary = false,
+                        IsActive = true
+                    });
+                    continue;
+                }
+
                 var parent = student.Parents.FirstOrDefault(p => p.Id == parentUpdate.Id);
                 if (parent is null)
                     continue;

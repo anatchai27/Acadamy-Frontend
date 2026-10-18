@@ -110,6 +110,27 @@ public class StudentRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateAsync_AddsParentWhenRequestUsesZeroId()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        context.Students.Add(new Student { Id = 10, InstituteId = 0, FullName = "Student" });
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+        await repository.UpdateAsync(10, new UpdateStudentRequest(
+            null,
+            [new ParentUpdate(0, "New parent", "0911111111", "แม่", "line-user")]));
+
+        var parent = await context.Parents.SingleAsync();
+        Assert.Equal(10, parent.StudentId);
+        Assert.Equal(0, parent.InstituteId);
+        Assert.Equal("New parent", parent.FullName);
+        Assert.Equal("0911111111", parent.Phone);
+        Assert.Equal("line-user", parent.LineUserId);
+    }
+
+    [Fact]
     public async Task StreamExportAsync_UsesTenantFilter()
     {
         // Arrange
