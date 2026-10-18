@@ -8,6 +8,7 @@ public static class AttendanceEndpoints
 {
     public static IEndpointRouteBuilder MapAttendanceEndpoints(this IEndpointRouteBuilder app)
     {
+        
         var group = app.MapGroup("/api/attendance")
             .WithTags("Attendance")
             .WithOpenApi()
