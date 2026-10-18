@@ -1716,26 +1716,24 @@ Create a new skill topic for a course.
 
 ## 13. Parents / LINE LIFF  🔒 Protected parent endpoints
 
-Parent binding is used by the LINE LIFF app. The initial bind endpoint is public because the LINE access token is verified against LINE's token verification endpoint. All other parent endpoints require the parent JWT returned by the bind operation.
+Parent binding is used by the LINE LIFF app. The initial bind endpoint is public because the LINE ID token is verified server-side against LINE's ID Token Verify API. All other parent endpoints require the parent JWT returned by a successful bind. The current implementation, test-mode rules, response errors, and security invariants are documented in [line-liff-parent-auth.md](line-liff-parent-auth.md).
 
 ### POST `/parents/bind-line` ⃝ Public
 
-Bind the current LINE account to a parent record. The API first searches by verified `lineUserId`. If no record is found and `phone` is supplied, it searches by the normalized parent phone number and then stores the verified LINE user ID on that parent record.
+Verify the supplied LINE ID token, then authenticate an already-linked parent account using LINE's verified `sub`. A phone number may be used to locate a candidate only; in normal operation it is not proof of phone ownership and must not, by itself, link an account. Phone-only binding is allowed only in server-side Development test mode with `MODE_TEST_AUTH=true`. Ambiguous matches and conflicting existing links fail closed.
 
 **Request Body**
 ```json
 {
-  "lineUserId": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "accessToken": "LINE access token",
+  "idToken": "LINE ID token from liff.getIDToken()",
   "phone": "0812345678"
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `lineUserId` | `string` | Yes | LINE user ID from LIFF profile |
-| `accessToken` | `string` | Yes | LINE access token used for verification |
-| `phone` | `string?` | No | Parent phone used as fallback mapping key; digits, spaces and hyphens are accepted |
+| `idToken` | `string` | Yes | ID token from LIFF; API verifies it with LINE and uses the verified `sub` |
+| `phone` | `string?` | No | Candidate lookup for initial binding; phone alone is not ownership verification outside local test mode |
 
 **Response** `200 OK`
 ```json
@@ -1763,9 +1761,11 @@ Bind the current LINE account to a parent record. The API first searches by veri
 
 | Condition | Status | Body |
 |-----------|--------|------|
-| Missing `lineUserId` or `accessToken` | 400 | `{ "error": "lineUserId and accessToken are required." }` |
+| Missing `idToken` | 400 | `{ "error": "idToken is required." }` |
 | Invalid LINE token | 401 | Empty body |
-| Parent not found by LINE ID or phone | 404 | `{ "error": "ไม่พบข้อมูลผู้ปกครอง กรุณาติดต่อโรงเรียน" }` |
+| No matching parent record | 404 | `{ "code": "PARENT_NOT_FOUND", "error": "..." }` |
+| Phone ownership proof required | 409 | `{ "code": "PHONE_VERIFICATION_REQUIRED", "error": "..." }`; no binding write or app JWT |
+| Ambiguous/conflicting parent or LINE mapping | 409 | `{ "code": "PARENT_BINDING_REQUIRES_REVIEW", "error": "..." }`; no binding write or app JWT |
 
 ### GET `/parents/me/dashboard` 🔒
 

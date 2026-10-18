@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { bindLineUserId } from '../services/parent-service';
 
-const testAuthMode = import.meta.env.MODE_TEST_AUTH === 'true';
+const testAuthMode = import.meta.env.DEV && import.meta.env.MODE_TEST_AUTH === 'true';
 
 export const LoginPage = () => {
   const { state, dispatch } = useLiffContext();
@@ -121,6 +121,19 @@ export const LoginPage = () => {
             <div class="h-8 w-8 rounded-full border-3 border-white/30 border-t-white animate-spin" />
             <p class="text-sm text-blue-100">กำลังเชื่อมต่อกับ LINE...</p>
           </div>
+        )}
+        {testAuthMode && state.liffProfile && (
+          <details class="mx-auto mt-4 w-full max-w-sm rounded-xl border border-white/20 bg-slate-950/20 p-4 text-left">
+            <summary class="cursor-pointer text-sm font-semibold text-white">
+              ข้อมูล LINE Profile ที่ได้รับ
+            </summary>
+            <p class="mt-2 text-xs text-blue-100">
+              จาก <code>liff.getProfile()</code> — แสดงเฉพาะในโหมด Development สำหรับทดสอบ
+            </p>
+            <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-950/40 p-3 text-left text-xs leading-relaxed text-white" dir="ltr">
+              {JSON.stringify(state.liffProfile, null, 2)}
+            </pre>
+          </details>
         )}
         <button
           type="button"

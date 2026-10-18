@@ -4,16 +4,18 @@ Target Audience: ผู้ปกครอง (Parents) และ นักเร
 Platform: LINE LIFF (Mini App ภายในแอป LINE)
 Core Concept: Zero-Password, Zero-Friction (ไม่ต้องโหลดแอป ไม่ต้องจำรหัสผ่าน)
 
+> **Security/implementation note (2026-10):** The phone-only auto-assignment flow below is a legacy proposal, not the current production contract. LINE identity must be verified server-side from the LIFF ID Token. A phone match alone must not bind a production account; first-time production linking needs OTP or a school-issued code. `MODE_TEST_AUTH` is permitted only for local Development/test data. See [line-liff-parent-auth.md](line-liff-parent-auth.md) and the API contract in [specAPI.md](specAPI.md#L1718).
+
 👥 1. Role Management (การแบ่ง Role และจัดการสิทธิ์ใน LIFF)
 
 ระบบ LIFF จะไม่มีการให้ผู้ใช้มากดเลือก Role เอง (เพื่อลดความสับสน) แต่ระบบจะจัดการสิทธิ์ให้ "อัตโนมัติ" ผ่านกระบวนการหลังบ้าน ดังนี้:
 
 The Binding Process (การผูกบัญชีครั้งแรก):
-เมื่อผู้ใช้กด Rich Menu เข้ามาครั้งแรก ระบบจะอ่าน line_user_id และให้กรอก "เบอร์โทรศัพท์"
+เมื่อผู้ใช้กด Rich Menu เข้ามา LIFF ส่ง ID Token ให้ API ตรวจสอบกับ LINE และ API ใช้ LINE `sub` ที่ยืนยันแล้วค้นหาบัญชีที่ผูกไว้
 
-ถ้าเบอร์โทรตรงกับตาราง parents -> ระบบจะ Assign Role เป็น "ผู้ปกครอง" ทันที
+การกรอกเบอร์เพื่อค้นหาบัญชีไม่ถือเป็นการยืนยันเจ้าของบัญชี ใน production ต้องยืนยันเบอร์ด้วย OTP หรือรหัสเชื่อมบัญชีจากโรงเรียนก่อนจึงจะผูกได้ ส่วนการผูกด้วยเบอร์ใน `MODE_TEST_AUTH` ใช้ได้เฉพาะ Development และฐานข้อมูลทดสอบเท่านั้น
 
-ถ้าเบอร์โทรตรงกับตาราง students -> ระบบจะ Assign Role เป็น "นักเรียน" ทันที
+การผูกบัญชีนักเรียนอัตโนมัติจากเบอร์ยังไม่ถือว่า implement แล้ว ห้ามแสดงหรือเปิดใช้เป็นความสามารถจริงจนกว่าจะมี flow ยืนยันตัวตนและ authorization แยกต่างหาก
 
 Parent Role (สิทธิ์ผู้ปกครอง):
 สามารถทำได้ทุก Transaction (แจ้งลา, จ่ายเงิน, ดูเกรดลูก)

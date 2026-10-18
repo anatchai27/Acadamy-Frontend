@@ -138,6 +138,10 @@ Definition of Done: ครูสร้างงาน/หัวข้อ ให�
 สถานะ: `[/]`
 
 - [x] มี LIFF init/login และ parent token context
+- [x] ตรวจ LINE ID Token ที่ API และใช้ LINE `sub` ที่ Verify API ยืนยันแล้ว
+- [x] ปฏิเสธ phone-only binding ในโหมดปกติ; `MODE_TEST_AUTH` ถูกจำกัดที่ server-side Development configuration
+- [x] ปฏิเสธ phone matches ที่กำกวมหรือมี LINE binding ขัดแย้ง และมี regression tests
+- [/] เพิ่ม OTP หรือรหัสเชื่อมจากโรงเรียนสำหรับ first-time parent binding ใน production
 - [x] Dashboard เรียก `getParentDashboard()`
 - [x] Dashboard เรียก `getChildSessions(childId)` เพื่อดึงตารางเรียนจริงของลูกที่เลือก
 - [x] มี child switcher เมื่อผู้ปกครองมีหลายคนในบัญชี
@@ -149,6 +153,8 @@ Definition of Done: ครูสร้างงาน/หัวข้อ ให�
 - [/] ตรวจซ้ำว่า API ของทุก child-specific endpoint reject `childId` ที่ไม่ใช่ของ parent ใน runtime จริง
 
 อ้างอิง: `LineLiff/src/pages/dashboard.jsx`, `LineLiff/src/components/child-switcher.jsx`, `LineLiff/src/store/LiffContext.jsx`, `LineLiff/src/services/parent-service.js`
+
+รายละเอียด LINE authentication, ข้อจำกัด test mode และ invariants: [line-liff-parent-auth.md](line-liff-parent-auth.md)
 
 Definition of Done: Parent เห็นเฉพาะลูกที่ผูกกับบัญชี และทุก card มาจาก API จริง ไม่มี fallback เป็นข้อมูลเด็กตัวอย่าง
 
