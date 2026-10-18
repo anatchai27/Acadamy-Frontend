@@ -117,6 +117,15 @@ Keep these true when changing the flow:
 - Phone-only binding is denied outside test mode until phone ownership verification is implemented.
 - Keep institute isolation when returning parent/child data.
 
+## Troubleshooting API 502 during local LIFF testing
+
+- The public VPS API base is `http://165.101.65.84/api` on **port 80** (HTTP; omitted ports default to 80). Nginx receives public traffic on port 80 and proxies internally to the .NET service at `localhost:5000`. Port 5000 is an internal upstream port; clients should not need to connect to it directly.
+- Local LineLiff uses `VITE_API_URL=/api`; the Vite dev server proxies `/api/*` to `http://165.101.65.84` so the browser does not make a cross-origin HTTP request. Restart Vite after editing `.env` or `vite.config.js`.
+- Production LineLiff uses same-origin `/api` and the `LineLiff/vercel.json` rewrite to the VPS. The VPS health endpoint has been confirmed to return Healthy. If health is healthy but `/api/parents/bind-line` returns 502, inspect Vercel function/proxy logs and API/Nginx logs at the request timestamp. Do not infer that LINE token verification failed from a 502; invalid LINE tokens should return 401.
+- A `VITE_API_URL` change is compiled into the Vite build. Redeploy/rebuild production after changing Vercel environment variables.
+
+> The Vite development proxy target is the shared VPS. It uses the configured remote API/database, so do not run write tests against real accounts or production records. For isolated phone-binding tests, use a local API plus a non-production database and change the proxy target intentionally.
+
 Regression tests live in `API/academy-API.Tests/unitTest/ParentServiceTests.cs`; run the backend test project after changing binding behavior. LIFF tests/build live under `LineLiff`.
 
 ## Source of truth

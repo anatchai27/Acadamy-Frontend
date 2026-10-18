@@ -12,6 +12,12 @@ export default defineConfig({
     // ngrok assigns a different public hostname when a tunnel starts.
     allowedHosts: true,
     host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: 'http://165.101.65.84',
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {
