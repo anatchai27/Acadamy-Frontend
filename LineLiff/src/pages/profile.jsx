@@ -10,6 +10,7 @@ export const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({});
 
@@ -40,13 +41,16 @@ export const ProfilePage = () => {
     })();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
     reset();
-    (async () => {
+    try {
       const { logoutLiff } = await import('../services/liff');
       logoutLiff();
-    })();
-    route('/liff/login', true);
+    } finally {
+      window.location.replace('/liff/login');
+    }
   };
 
   return loading ? (
@@ -122,9 +126,10 @@ export const ProfilePage = () => {
 
         <button
           onClick={handleLogout}
+          disabled={loggingOut}
           class="w-full bg-red-50 text-red-600 rounded-xl py-3 font-semibold border border-red-200"
         >
-          ออกจากระบบ
+          {loggingOut ? 'กำลังออกจากระบบ LINE...' : 'ออกจากระบบ LINE และเชื่อมใหม่'}
         </button>
       </div>
     </LiffLayout>
