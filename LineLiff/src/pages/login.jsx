@@ -2,6 +2,7 @@ import { route } from 'preact-router';
 import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { bindLineUserId } from '../services/parent-service';
+import { normalizeParentLinkCode, validateParentLinkCode } from '../utils/parent-link-code';
 
 const testAuthMode = import.meta.env.MODE_TEST_AUTH === 'true';
 
@@ -64,9 +65,10 @@ export const LoginPage = () => {
 
   const handleCodeSubmit = event => {
     event.preventDefault();
-    const normalizedCode = linkCode.replace(/[^a-z0-9]/gi, '').toUpperCase();
-    if (normalizedCode.length !== 12) {
-      setError('กรุณากรอกรหัสเชื่อม 12 ตัวอักษรที่ได้รับจากโรงเรียน');
+    const normalizedCode = normalizeParentLinkCode(linkCode);
+    const validationError = validateParentLinkCode(normalizedCode);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     bindParent(normalizedCode);
@@ -104,9 +106,11 @@ export const LoginPage = () => {
                 placeholder="เช่น ABCD2345EFGH"
                 value={linkCode}
                 onInput={event => (setLinkCode(event.currentTarget.value.toUpperCase().slice(0, 16)), setError(null))}
+                aria-describedby="link-code-hint"
                 class="w-full rounded-lg px-3 py-2 text-center font-mono text-base tracking-widest text-slate-900 outline-none"
                 disabled={binding}
               />
+              <p id="link-code-hint" class="mt-2 text-xs text-blue-100">รหัสมี 12 ตัว ไม่ใช้ตัว I, O, 0 หรือ 1</p>
               {error && <p class="text-sm text-red-200 mt-2">{error}</p>}
               <button type="submit" class="w-full mt-3 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-blue-700 disabled:opacity-50" disabled={binding}>
                 {binding ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อข้อมูล'}
