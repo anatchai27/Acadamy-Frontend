@@ -1,5 +1,12 @@
 namespace academy_API.Repositories.Interface;
 
+public enum StudentDeleteResult
+{
+    Deleted,
+    NotFound,
+    OutstandingPayment
+}
+
 public interface IStudentRepository
 {
     Task<IEnumerable<Models.Student>> GetAllWithUserAsync(CancellationToken ct = default);
@@ -9,6 +16,7 @@ public interface IStudentRepository
     Task<Models.Student> CreateAsync(Models.Student student, CancellationToken ct = default);
     Task<Models.Student> CreateWithTransactionAsync(Models.Student student, List<Models.Parent> parents, Models.PdpaConsent pdpa, CancellationToken ct = default);
     Task<Models.Student?> UpdateAsync(int id, DTOs.UpdateStudentRequest request, CancellationToken ct = default);
+    Task<StudentDeleteResult> SoftDeleteAsync(int id, CancellationToken ct = default);
     Task<Models.Student?> RotateQrTokenAsync(int id, CancellationToken ct = default);
     Task<(List<DTOs.StudentListItem> Items, int TotalCount)> SearchAsync(string? search, int page, int limit, CancellationToken ct = default);
     IAsyncEnumerable<DTOs.StudentExportRow> StreamExportAsync(CancellationToken ct = default);

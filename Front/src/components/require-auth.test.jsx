@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hasAllowedRole, normalizeRole } from './require-auth';
-import { canReadPage, getPagePermission, setRolePermissions } from '../config/permissions';
+import { canEditPage, canReadPage, getPagePermission, setRolePermissions } from '../config/permissions';
 
 describe('admin role guard', () => {
   it('normalizes role values from the API', () => {
@@ -21,5 +21,15 @@ describe('admin role guard', () => {
     });
     expect(canReadPage('admin', '/admin/dashboard')).toBe(true);
     expect(getPagePermission('ADMIN', '/admin/users').read).toBe(false);
+  });
+
+  it('requires edit permission for add and edit routes', () => {
+    setRolePermissions('staff', {
+      '/admin/students': { read: false, edit: true, delete: false },
+    });
+
+    expect(canReadPage('staff', '/admin/students')).toBe(false);
+    expect(canEditPage('staff', '/admin/students/add')).toBe(true);
+    expect(canEditPage('staff', '/admin/students/64002/edit')).toBe(true);
   });
 });

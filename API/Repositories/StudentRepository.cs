@@ -134,6 +134,42 @@ public class StudentRepository(TutoringDbContext context) : IStudentRepository
         return student;
     }
 
+    public async Task<StudentDeleteResult> SoftDeleteAsync(int id, CancellationToken ct = default)
+    {
+        var student = await _context.Students.FirstOrDefaultAsync(s => s.Id == id, ct);
+        if (student is null)
+            return StudentDeleteResult.NotFound;
+
+        var hasOutstandingPayment = await _context.Enrollments
+            .Where(enrollment => enrollment.StudentId == id)
+            .AnyAsync(enrollment =>
+                enrollment.Course.Price >
+                    ((_context.Payments
+                        .Where(payment => payment.EnrollmentId == enrollment.Id
+                            && payment.Status == PaymentStatus.Succeeded)
+                        .Sum(payment => (decimal?)payment.Amount) ?? 0m)
+                    + (_context.PaymentBatchAllocations
+                        .Where(allocation => allocation.EnrollmentId == enrollment.Id
+                            && allocation.PaymentBatch.Status == PaymentStatus.Succeeded)
+                        .Sum(allocation => (decimal?)allocation.Amount) ?? 0m))
+                || _context.Payments.Any(payment => payment.EnrollmentId == enrollment.Id
+                    && payment.Amount > 0
+                    && (payment.Status == PaymentStatus.Pending || payment.Status == null))
+                || _context.PaymentBatchAllocations.Any(allocation => allocation.EnrollmentId == enrollment.Id
+                    && allocation.Amount > 0
+                    && (allocation.PaymentBatch.Status == PaymentStatus.Pending || allocation.PaymentBatch.Status == null)),
+                ct);
+
+        if (hasOutstandingPayment)
+            return StudentDeleteResult.OutstandingPayment;
+
+        student.DeletedAt = DateTime.UtcNow;
+        student.QrToken = null;
+        student.QrTokenVersion++;
+        await _context.SaveChangesAsync(ct);
+        return StudentDeleteResult.Deleted;
+    }
+
     public async Task<Student?> RotateQrTokenAsync(int id, CancellationToken ct = default)
     {
         var student = await _context.Students.FirstOrDefaultAsync(s => s.Id == id, ct);

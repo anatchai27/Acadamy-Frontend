@@ -62,6 +62,9 @@ public class StudentService(IStudentRepository studentRepository) : IStudentServ
         }
     }
 
+    public Task<StudentDeleteResult> DeleteAsync(int id, CancellationToken ct = default) =>
+        _studentRepository.SoftDeleteAsync(id, ct);
+
     public async Task<QrTokenResponse> GetQrTokenAsync(int id, CancellationToken ct = default)
     {
         var student = await _studentRepository.RotateQrTokenAsync(id, ct);

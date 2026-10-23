@@ -15,11 +15,21 @@ public sealed class ParentLineLinkService(TutoringDbContext context) : IParentLi
     private const string CodeAlphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
     private readonly TutoringDbContext _context = context;
 
-    public async Task<IssuedParentLineLinkCode?> IssueAsync(
+    public Task<IssuedParentLineLinkCode?> IssueAsync(
         int parentId,
         int instituteId,
         int actorUserId,
         CancellationToken ct = default)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(() => IssueWithTransactionAsync(parentId, instituteId, actorUserId, ct));
+    }
+
+    private async Task<IssuedParentLineLinkCode?> IssueWithTransactionAsync(
+        int parentId,
+        int instituteId,
+        int actorUserId,
+        CancellationToken ct)
     {
         var parent = await _context.Parents
             .FirstOrDefaultAsync(p => p.Id == parentId && p.InstituteId == instituteId, ct);
@@ -60,15 +70,24 @@ public sealed class ParentLineLinkService(TutoringDbContext context) : IParentLi
         return new IssuedParentLineLinkCode(code, now.AddDays(CodeLifetimeDays));
     }
 
-    public async Task<ParentLineLinkOutcome> RedeemAsync(
+    public Task<ParentLineLinkOutcome> RedeemAsync(
         string code,
         string verifiedLineUserId,
         CancellationToken ct = default)
     {
         var normalizedCode = NormalizeCode(code);
         if (normalizedCode.Length != 12 || normalizedCode.Any(character => !CodeAlphabet.Contains(character)))
-            return new ParentLineLinkOutcome(ParentLineLinkStatus.InvalidCode);
+            return Task.FromResult(new ParentLineLinkOutcome(ParentLineLinkStatus.InvalidCode));
 
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(() => RedeemWithTransactionAsync(normalizedCode, verifiedLineUserId, ct));
+    }
+
+    private async Task<ParentLineLinkOutcome> RedeemWithTransactionAsync(
+        string normalizedCode,
+        string verifiedLineUserId,
+        CancellationToken ct)
+    {
         await using var transaction = await _context.Database.BeginTransactionAsync(ct);
         var link = await _context.ParentLineLinkCodes
             .IgnoreQueryFilters()

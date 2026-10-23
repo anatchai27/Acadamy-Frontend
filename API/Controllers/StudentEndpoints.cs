@@ -106,6 +106,25 @@ public static class StudentEndpoints
             }
         });
 
+        group.MapDelete("/{id:int}", async (
+            int id,
+            IStudentService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.DeleteAsync(id, ct);
+            return result switch
+            {
+                StudentDeleteResult.Deleted => Results.NoContent(),
+                StudentDeleteResult.OutstandingPayment => Results.Conflict(new
+                {
+                    Status = "error",
+                    Code = "OUTSTANDING_PAYMENT",
+                    Message = "ไม่สามารถลบนักเรียนได้ เนื่องจากยังมียอดชำระเงินค้างอยู่"
+                }),
+                _ => Results.NotFound(new { Status = "error", Message = "ไม่พบข้อมูลนักเรียน" })
+            };
+        }).RequireAuthorization(policy => policy.RequireRole("admin"));
+
         group.MapGet("/{id:int}/qr", async (
             int id,
             IStudentService service,

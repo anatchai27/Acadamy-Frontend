@@ -208,6 +208,19 @@ public class StudentServiceTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public async Task DeleteAsync_DelegatesToRepository()
+    {
+        var repository = CreateMockRepo();
+        repository.Setup(r => r.SoftDeleteAsync(105, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StudentDeleteResult.Deleted);
+
+        var service = new StudentService(repository.Object);
+
+        Assert.Equal(StudentDeleteResult.Deleted, await service.DeleteAsync(105));
+        repository.Verify(r => r.SoftDeleteAsync(105, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     // 13 ──────────────────── GetAllAsync ────────────────────
 
     [Fact]

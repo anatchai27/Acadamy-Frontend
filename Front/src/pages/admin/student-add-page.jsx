@@ -38,9 +38,7 @@ export function StudentControll({ path, id }) {
     { _key: ++parentIdCounter.current, fullName: '', phone: '', relationship: 'แม่' },
   ]);
   const pickupIdCounter = useRef(0);
-  const [pickupPeople, setPickupPeople] = useState([
-    { _key: ++pickupIdCounter.current, fullName: '', phone: '', relationship: 'ผู้ปกครอง', idCardLast4: '', isActive: true },
-  ]);
+  const [pickupPeople, setPickupPeople] = useState([]);
   const [consent, setConsent] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -230,10 +228,11 @@ export function StudentControll({ path, id }) {
       showToast('กรุณายอมรับข้อตกลง PDPA', 'error');
       return;
     }
-    if (pickupPeople.some((person) => !person.fullName.trim())) {
-      showToast('กรุณาระบุชื่อผู้รับเด็กให้ครบ หรือกดลบรายการที่ไม่ใช้', 'error');
+    if (pickupPeople.some((person) => !person.fullName.trim() && (person.id || person.phone.trim() || person.idCardLast4.trim()))) {
+      showToast('กรุณาระบุชื่อผู้รับเด็กให้ครบ หรือ ลบข้อมูลที่กรอกไว้', 'error');
       return;
     }
+    const completedPickupPeople = pickupPeople.filter((person) => person.fullName.trim());
 
     setIsSubmitting(true);
     try {
@@ -257,7 +256,7 @@ export function StudentControll({ path, id }) {
             })),
         });
 
-        await Promise.all(pickupPeople.map((person) => {
+        await Promise.all(completedPickupPeople.map((person) => {
           const payload = {
             fullName: person.fullName.trim(),
             phone: person.phone.trim() || null,
@@ -307,7 +306,7 @@ export function StudentControll({ path, id }) {
         }
 
         if (studentId) {
-          await Promise.all(pickupPeople.map((person) => studentService.createPickupAuthorization(studentId, {
+          await Promise.all(completedPickupPeople.map((person) => studentService.createPickupAuthorization(studentId, {
             fullName: person.fullName.trim(),
             phone: person.phone.trim() || null,
             relationship: person.relationship,
@@ -533,7 +532,7 @@ export function StudentControll({ path, id }) {
                         </Button>
                       )}
                     </div>
-                    {linkCode?.parentId === parent.id && (
+                    {linkCode && linkCode.parentId === parent.id && (
                       <div class="mt-3 border-t border-emerald-200 pt-3" role="status" aria-live="polite">
                         <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
@@ -553,8 +552,8 @@ export function StudentControll({ path, id }) {
           <div class={`${isNeo ? 'neo-card bg-white p-5' : 'bg-white rounded-2xl border border-zinc-200/80 p-5'} mb-6`}>
             <div class="flex items-center justify-between mb-2">
               <div>
-                <h3 class="text-base font-semibold text-zinc-900">รายชื่อผู้รับเด็กกลับ</h3>
-                <p class="mt-1 text-xs text-zinc-500">จัดการรายชื่อคนที่ได้รับอนุญาตให้รับเด็กกลับบ้าน</p>
+                <h3 class="text-base font-semibold text-zinc-900">รายชื่อผู้รับเด็กกลับ (ไม่บังคับ)</h3>
+                <p class="mt-1 text-xs text-zinc-500">เพิ่มรายชื่อไว้ล่วงหน้าได้ หรือเว้นว่างแล้วเพิ่มภายหลังก็ได้</p>
               </div>
               <button type="button" onClick={addPickupPerson} class="text-sm font-medium text-oasis-primary hover:text-oasis-primary-dark">
                 + เพิ่มผู้รับเด็ก
@@ -562,7 +561,7 @@ export function StudentControll({ path, id }) {
             </div>
             {pickupPeople.length === 0 && (
               <p class="mt-4 rounded-xl bg-zinc-50 px-4 py-5 text-center text-sm text-zinc-500">
-                ยังไม่มีรายชื่อผู้รับเด็ก เพิ่มรายชื่อเพื่อให้ครูตรวจสอบตอนรับกลับ
+                ยังไม่มีรายชื่อผู้รับเด็ก สามารถเพิ่มภายหลังได้
               </p>
             )}
             <div class="space-y-4 mt-4">
@@ -573,7 +572,7 @@ export function StudentControll({ path, id }) {
                   </button>
                   <p class="mb-3 text-xs font-medium text-zinc-500">ผู้รับเด็กคนที่ {index + 1}</p>
                   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <SolidInput label="ชื่อ-นามสกุล" placeholder="ชื่อผู้รับเด็ก" required value={person.fullName} onInput={updatePickupPerson(person._key, 'fullName')} />
+                    <SolidInput label="ชื่อ-นามสกุล" placeholder="ชื่อผู้รับเด็ก" value={person.fullName} onInput={updatePickupPerson(person._key, 'fullName')} />
                     <SolidInput label="เบอร์โทรศัพท์" placeholder="08XXXXXXXX" value={person.phone} onInput={updatePickupPerson(person._key, 'phone')} />
                     <SolidInput label="เลขบัตรประชาชน 4 ตัวท้าย" placeholder="ถ้ามี" value={person.idCardLast4} onInput={updatePickupPerson(person._key, 'idCardLast4')} />
                     <div class="flex flex-col gap-1.5 md:col-span-3">

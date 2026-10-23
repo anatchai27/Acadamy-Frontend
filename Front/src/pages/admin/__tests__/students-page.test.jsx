@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getStudentEmptyMessage, StudentsPage } from '../students-page';
 import { studentService } from '../../../services';
+import { showConfirm } from '../../../components/ui';
 
 vi.mock('../../../layouts/admin-layout', () => ({
   AdminLayout: ({ children }) => <div>{children}</div>,
@@ -16,10 +17,11 @@ vi.mock('../../../components/ui', () => ({
     </label>
   ),
   showToast: vi.fn(),
+  showConfirm: vi.fn(),
 }));
 
 vi.mock('../../../services', () => ({
-  studentService: { getStudents: vi.fn(), downloadStudentCsv: vi.fn() },
+  studentService: { getStudents: vi.fn(), downloadStudentCsv: vi.fn(), deleteStudent: vi.fn() },
 }));
 
 vi.mock('../../../hooks', () => ({ useAbortController: () => () => undefined }));
@@ -29,6 +31,7 @@ vi.mock('react-icons/hi2', () => ({
   HiOutlinePlus: () => <span aria-hidden="true" />,
   HiOutlineEye: () => <span aria-hidden="true" />,
   HiOutlinePencil: () => <span aria-hidden="true" />,
+  HiOutlineTrash: () => <span aria-hidden="true" />,
   HiOutlineUserGroup: () => <span aria-hidden="true" />,
   HiOutlineTag: () => <span aria-hidden="true" />,
   HiOutlinePhone: () => <span aria-hidden="true" />,
@@ -40,6 +43,7 @@ vi.mock('react-icons/hi2', () => ({
 describe('student list states', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('auth_user', JSON.stringify({ role: 'teacher' }));
     studentService.getStudents.mockResolvedValue({
       data: {
         data: {
@@ -106,5 +110,32 @@ describe('student list states', () => {
     await waitFor(() =>
       expect(studentService.getStudents).toHaveBeenLastCalledWith({ page: 2, limit: 20 }, { signal: undefined }),
     );
+  });
+
+  it('shows the delete action only to admins', async () => {
+    const { unmount } = render(<StudentsPage path="/admin/students" />);
+    await screen.findByRole('heading', { name: 'มะลิ ใจดี' });
+    expect(screen.queryByRole('button', { name: 'ลบนักเรียน มะลิ ใจดี' })).not.toBeInTheDocument();
+    unmount();
+
+    localStorage.setItem('auth_user', JSON.stringify({ role: 'admin' }));
+    render(<StudentsPage path="/admin/students" />);
+    expect(await screen.findByRole('button', { name: 'ลบนักเรียน มะลิ ใจดี' })).toBeInTheDocument();
+  });
+
+  it('deletes a student only after an admin confirms', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ role: 'admin' }));
+    showConfirm.mockResolvedValue(true);
+    studentService.deleteStudent.mockResolvedValue({});
+
+    render(<StudentsPage path="/admin/students" />);
+    await screen.findByRole('heading', { name: 'มะลิ ใจดี' });
+    fireEvent.click(screen.getByRole('button', { name: 'ลบนักเรียน มะลิ ใจดี' }));
+
+    await waitFor(() => expect(studentService.deleteStudent).toHaveBeenCalledWith(42));
+    expect(showConfirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'นำออกจากรายชื่อนักเรียน',
+      yesLabel: 'ยืนยันลบ',
+    }));
   });
 });

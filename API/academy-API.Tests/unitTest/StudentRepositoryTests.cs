@@ -110,6 +110,140 @@ public class StudentRepositoryTests
     }
 
     [Fact]
+    public async Task SoftDeleteAsync_ArchivesStudentAndInvalidatesQrToken()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var student = new Student
+        {
+            Id = 10,
+            FullName = "Archived student",
+            QrToken = "active-qr-token",
+            QrTokenVersion = 2
+        };
+        context.Students.Add(student);
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+        var deleted = await repository.SoftDeleteAsync(student.Id);
+
+        Assert.Equal(StudentDeleteResult.Deleted, deleted);
+        Assert.NotNull(student.DeletedAt);
+        Assert.Null(student.QrToken);
+        Assert.Equal(3, student.QrTokenVersion);
+    }
+
+    [Fact]
+    public async Task SoftDeleteAsync_MissingStudent_ReturnsFalse()
+    {
+        await using var context = CreateInMemoryDbContext(Guid.NewGuid().ToString());
+        var repository = new StudentRepository(context);
+
+        Assert.Equal(StudentDeleteResult.NotFound, await repository.SoftDeleteAsync(404));
+    }
+
+    [Fact]
+    public async Task SoftDeleteAsync_UnpaidEnrollment_BlocksDeletion()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var student = new Student { Id = 20, FullName = "Has balance" };
+        var course = new Course { Id = 30, Name = "Course", Subject = "Math", Price = 100m };
+        context.Students.Add(student);
+        context.Courses.Add(course);
+        context.Enrollments.Add(new Enrollment
+        {
+            Id = 40,
+            StudentId = student.Id,
+            Student = student,
+            CourseId = course.Id,
+            Course = course,
+            PaidAmount = 0m
+        });
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+        var result = await repository.SoftDeleteAsync(student.Id);
+
+        Assert.Equal(StudentDeleteResult.OutstandingPayment, result);
+        Assert.Null(student.DeletedAt);
+    }
+
+    [Fact]
+    public async Task SoftDeleteAsync_FullyPaidEnrollment_ArchivesStudent()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var student = new Student { Id = 20, FullName = "Paid" };
+        var course = new Course { Id = 30, Name = "Course", Subject = "Math", Price = 100m };
+        var enrollment = new Enrollment
+        {
+            Id = 40,
+            StudentId = student.Id,
+            Student = student,
+            CourseId = course.Id,
+            Course = course,
+            PaidAmount = 100m
+        };
+        context.Students.Add(student);
+        context.Courses.Add(course);
+        context.Enrollments.Add(enrollment);
+        context.Payments.Add(new Payment
+        {
+            Id = 50,
+            EnrollmentId = enrollment.Id,
+            Enrollment = enrollment,
+            Amount = 100m,
+            Status = PaymentStatus.Succeeded,
+            Method = "cash",
+            InvoiceNo = "INV-50"
+        });
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+        var result = await repository.SoftDeleteAsync(student.Id);
+
+        Assert.Equal(StudentDeleteResult.Deleted, result);
+        Assert.NotNull(student.DeletedAt);
+    }
+
+    [Fact]
+    public async Task SoftDeleteAsync_PendingPayment_BlocksEvenWhenNoCourseBalance()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateInMemoryDbContext(dbName);
+        var student = new Student { Id = 20, FullName = "Pending transfer" };
+        var course = new Course { Id = 30, Name = "Course", Subject = "Math", Price = 0m };
+        var enrollment = new Enrollment
+        {
+            Id = 40,
+            StudentId = student.Id,
+            Student = student,
+            CourseId = course.Id,
+            Course = course
+        };
+        context.Students.Add(student);
+        context.Courses.Add(course);
+        context.Enrollments.Add(enrollment);
+        context.Payments.Add(new Payment
+        {
+            Id = 50,
+            EnrollmentId = enrollment.Id,
+            Enrollment = enrollment,
+            Amount = 10m,
+            Status = PaymentStatus.Pending,
+            Method = "transfer",
+            InvoiceNo = "INV-50"
+        });
+        await context.SaveChangesAsync();
+
+        var repository = new StudentRepository(context);
+
+        Assert.Equal(StudentDeleteResult.OutstandingPayment, await repository.SoftDeleteAsync(student.Id));
+        Assert.Null(student.DeletedAt);
+    }
+
+    [Fact]
     public async Task UpdateAsync_AddsParentWhenRequestUsesZeroId()
     {
         var dbName = Guid.NewGuid().ToString();

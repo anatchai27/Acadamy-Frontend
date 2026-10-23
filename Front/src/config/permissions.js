@@ -102,6 +102,7 @@ export const getPagePermission = (role, path) => {
 };
 
 export const canReadPage = (role, path) => getPagePermission(role, path).read;
+export const canEditPage = (role, path) => getPagePermission(role, path).edit;
 
 export const setRolePermissions = (role, permissions) => {
   const normalizedRole = String(role || '').trim().toLowerCase();

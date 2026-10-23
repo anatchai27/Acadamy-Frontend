@@ -1274,7 +1274,7 @@ public class TutoringDbContext(
       modelBuilder.Entity<MakeupCreditTransaction>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
       modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
       modelBuilder.Entity<StudentPickupAuthorization>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
-        modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId && e.DeletedAt == null);
         modelBuilder.Entity<Teacher>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Course>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Product>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);

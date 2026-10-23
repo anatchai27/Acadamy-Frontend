@@ -16,6 +16,8 @@ export const updateStudent = (id, payload) => {
   return api.put(`/students/${id}`, payload);
 }
 
+export const deleteStudent = id => api.delete(`/students/${id}`);
+
 export const getPickupAuthorizations = (studentId, options = {}) =>
   api.get(`/students/${studentId}/pickup-authorizations`, options);
 
@@ -43,6 +45,7 @@ export const studentService = {
   getStudentById,
   createStudent,
   updateStudent,
+  deleteStudent,
   getStudentQR,
   getStudentCardPdf,
   downloadStudentCsv,

@@ -2,7 +2,7 @@ import { route } from 'preact-router';
 import { useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
 import { clearAuthStorage } from '../services/auth-service';
-import { canReadPage } from '../config/permissions';
+import { canEditPage, canReadPage } from '../config/permissions';
 import { LanguageSwitcher } from './ui/language-switcher';
 export const normalizeRole = role => String(role || '').trim().toLowerCase();
 
@@ -35,19 +35,23 @@ export const requireAuth = (Component, allowedRoles = []) => {
     } = useAppContext();
     const role = normalizeRole(state.userProfile?.role || state.user?.role);
     const currentPath = props.path || window.location.pathname;
-    const hasPageReadAccess = !currentPath || canReadPage(role, currentPath);
+    const requiresEditPermission = /(?:^|\/)add\/?$/.test(currentPath)
+      || /(?:^|\/)(?:[^/]+|:id)\/edit\/?$/.test(currentPath);
+    const hasPageAccess = !currentPath || (requiresEditPermission
+      ? canEditPage(role, currentPath)
+      : canReadPage(role, currentPath));
     useEffect(() => {
       return !state.isAuthenticated && !state.isAuthLoading ? (() => {
         route('/login', true);
       })() : undefined;
     }, [state.isAuthenticated, state.isAuthLoading]);
     useEffect(() => {
-      return state.isAuthenticated && !state.isAuthLoading && (!hasAllowedRole(role, allowedRoles) || !hasPageReadAccess)
+      return state.isAuthenticated && !state.isAuthLoading && (!hasAllowedRole(role, allowedRoles) || !hasPageAccess)
         ? (() => route('/forbidden', true))()
         : undefined;
-    }, [state.isAuthenticated, state.isAuthLoading, role, hasPageReadAccess]);
+    }, [state.isAuthenticated, state.isAuthLoading, role, hasPageAccess]);
     return state.isAuthLoading ? <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
         <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
-      </div> : !state.isAuthenticated || !hasAllowedRole(role, allowedRoles) || !hasPageReadAccess ? null : <Component {...props} />;
+      </div> : !state.isAuthenticated || !hasAllowedRole(role, allowedRoles) || !hasPageAccess ? null : <Component {...props} />;
   };
 };

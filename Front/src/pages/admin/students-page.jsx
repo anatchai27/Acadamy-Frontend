@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { SolidInput, Button, showToast } from '../../components/ui';
+import { SolidInput, Button, showConfirm, showToast } from '../../components/ui';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService } from '../../services';
+import { getStoredUser } from '../../services/auth-service';
 import { useAbortController } from '../../hooks';
-import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineTrash, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
 import { formatPhoneNumber } from '../../utils/phone';
 
 export const getStudentEmptyMessage = (loadError, search) => loadError
@@ -18,12 +19,14 @@ export function StudentsPage({ path }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [deletingStudentId, setDeletingStudentId] = useState(null);
   const [search, setSearch] = useState('');
   const pageSize = 20;
   const debounceRef = useRef(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+  const isAdmin = String(getStoredUser()?.role || '').trim().toLowerCase() === 'admin';
 
   const fetchStudents = async (page = 1, query = '') => {
     setLoading(true);
@@ -77,6 +80,27 @@ export function StudentsPage({ path }) {
       showToast(error.message || 'ส่งออก CSV ไม่สำเร็จ', 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDeleteStudent = async (student) => {
+    const confirmed = await showConfirm({
+      title: 'นำออกจากรายชื่อนักเรียน',
+      message: `ยืนยันนำ "${student.fullName || 'นักเรียน'}" ออกจากรายชื่อนักเรียน? ประวัติที่เกี่ยวข้องจะยังคงอยู่ในระบบ`,
+      yesLabel: 'ยืนยันลบ',
+      cancelLabel: 'ยกเลิก',
+    });
+    if (!confirmed) return;
+
+    setDeletingStudentId(student.id);
+    try {
+      await studentService.deleteStudent(student.id);
+      showToast('นำข้อมูลนักเรียนออกจากรายชื่อแล้ว', 'success');
+      await fetchStudents(pagination.currentPage, search);
+    } catch (error) {
+      showToast(error?.data?.message || error?.data?.Message || 'ลบนักเรียนไม่สำเร็จ', 'error');
+    } finally {
+      setDeletingStudentId(null);
     }
   };
 
@@ -262,6 +286,18 @@ export function StudentsPage({ path }) {
                   >
                     <HiOutlinePencil class="h-4 w-4" />
                   </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      aria-label={`ลบนักเรียน ${student.fullName || ''}`.trim()}
+                      title="นำออกจากรายชื่อนักเรียน"
+                      disabled={deletingStudentId === student.id}
+                      onClick={() => handleDeleteStudent(student)}
+                      class="rounded-lg p-2 text-zinc-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <HiOutlineTrash class="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </article>
             ))}
