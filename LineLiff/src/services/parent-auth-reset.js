@@ -1,4 +1,4 @@
-const RESET_MARKER = 'liff_parent_auth_reset_v1';
+const RESET_MARKER = 'liff_parent_auth_reset_v2';
 
 export const resetParentAuthForRollout = ({ enabled, storage, liff }) => {
   if (!enabled) {
