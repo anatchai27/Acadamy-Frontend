@@ -48,6 +48,7 @@ export const LiffProvider = ({ children }) => {
       try {
         const { initLiff } = await import('../services/liff');
         const liff = await initLiff();
+        if (!liff) return;
         cancelled ? null : (dispatch({ type: 'LIFF_INIT_SUCCESS' }), liff.isLoggedIn() ? (async () => {
           const profile = await liff.getProfile();
           cancelled ? null : dispatch({ type: 'SET_LIFF_PROFILE', payload: profile });

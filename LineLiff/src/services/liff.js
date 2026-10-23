@@ -6,19 +6,19 @@ const FORCE_LOGOUT = import.meta.env.VITE_FORCE_LOGOUT === 'true';
 let liff = null;
 
 export const initLiff = async () => {
-  return liff || (async () => {
+  if (!liff) {
     const mod = await import('@line/liff');
     liff = mod.default;
     await liff.init({ liffId: LIFF_ID });
-    return liff;
-  })();
+    if (resetParentAuthForRollout({ enabled: FORCE_LOGOUT, storage: window.localStorage, liff })) return null;
+  }
+  return liff;
 };
 
 export const getLiff = () => liff;
 
 export const getLiffProfile = async () => {
   if (!liff) throw new Error('LIFF not initialized');
-  if (resetParentAuthForRollout({ enabled: FORCE_LOGOUT, storage: window.localStorage, liff })) return null;
   return !liff.isLoggedIn() ? (liff.login(), null) : liff.getProfile();
 };
 
