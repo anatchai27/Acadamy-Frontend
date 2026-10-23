@@ -4,6 +4,7 @@ import { useLiffContext } from '../store/LiffContext';
 import { getParentProfile, updateParentProfile } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 import { formatPhoneNumber } from '../utils/phone';
+import { APP_VERSION } from '../utils/app-version';
 
 export const ProfilePage = () => {
   const { state, dispatch, reset } = useLiffContext();
@@ -131,6 +132,7 @@ export const ProfilePage = () => {
         >
           {loggingOut ? 'กำลังออกจากระบบ LINE...' : 'ออกจากระบบ LINE และเชื่อมใหม่'}
         </button>
+        <p class="text-center text-xs text-gray-400">เวอร์ชัน {APP_VERSION}</p>
       </div>
     </LiffLayout>
   );

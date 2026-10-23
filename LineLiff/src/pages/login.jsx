@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { bindLineUserId } from '../services/parent-service';
 import { normalizeParentLinkCode, validateParentLinkCode } from '../utils/parent-link-code';
+import { APP_VERSION } from '../utils/app-version';
 
 const testAuthMode = import.meta.env.MODE_TEST_AUTH === 'true';
 
@@ -93,6 +94,7 @@ export const LoginPage = () => {
         <div class="text-5xl mb-4">📚</div>
         <h1 class="text-2xl font-bold mb-2">TiwHub</h1>
         <p class="text-blue-100 mb-8">ระบบจัดการเรียนการสอน</p>
+        <p class="text-xs text-blue-100/80 mb-4">เวอร์ชัน {APP_VERSION}</p>
         {needsCode ? (
           <form onSubmit={handleCodeSubmit} class="w-full max-w-xs text-left">
             <div class="bg-white/10 rounded-xl p-4 mb-4">
