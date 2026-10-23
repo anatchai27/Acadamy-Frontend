@@ -1,3 +1,5 @@
+import { resetParentAuthForRollout } from './parent-auth-reset';
+
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || '';
 const FORCE_LOGOUT = import.meta.env.VITE_FORCE_LOGOUT === 'true';
 
@@ -15,7 +17,9 @@ export const initLiff = async () => {
 export const getLiff = () => liff;
 
 export const getLiffProfile = async () => {
-  return liff ? (FORCE_LOGOUT ? liff.logout() : null, !liff.isLoggedIn() ? (liff.login(), null) : liff.getProfile()) : (() => { throw new Error('LIFF not initialized'); })();
+  if (!liff) throw new Error('LIFF not initialized');
+  if (resetParentAuthForRollout({ enabled: FORCE_LOGOUT, storage: window.localStorage, liff })) return null;
+  return !liff.isLoggedIn() ? (liff.login(), null) : liff.getProfile();
 };
 
 export const getLiffAccessToken = async () => {

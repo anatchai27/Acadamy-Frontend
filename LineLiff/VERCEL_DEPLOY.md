@@ -25,7 +25,7 @@ In **Project → Settings → Environment Variables**, add these for Production 
 | --- | --- |
 | `VITE_LIFF_ID` | The LIFF ID configured in LINE Developers |
 | `VITE_API_URL` | The public HTTPS API base URL ending in `/api`, e.g. `https://api.example.com/api` |
-| `VITE_FORCE_LOGOUT` | `false` for normal sign-in; set `true` only temporarily when intentionally forcing users to re-authenticate |
+| `VITE_FORCE_LOGOUT` | Keep `false` for normal sign-in. Temporarily set `true` and redeploy to clear each browser's stored parent token and force one fresh LINE sign-in; set it back to `false` and redeploy afterward. This does not remove LINE-to-parent links in the database. |
 
 `VITE_` values are embedded in browser JavaScript. Do not put passwords, private API keys, or other secrets in them. The LIFF ID is a client-side identifier, not a secret.
 
