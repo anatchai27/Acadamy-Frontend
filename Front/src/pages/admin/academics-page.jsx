@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
-import { courseService, homeworkService, skillScoreService, studentService } from '../../services';
+import { courseService, homeworkService, skillScoreService, studentService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
@@ -105,6 +105,11 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
   const [submissions, setSubmissions] = useState({});
   const [submissionsLoading, setSubmissionsLoading] = useState({});
   const [submissionsErrors, setSubmissionsErrors] = useState({});
+  const [submissionRosters, setSubmissionRosters] = useState({});
+  const [rosterLoading, setRosterLoading] = useState({});
+  const [rosterErrors, setRosterErrors] = useState({});
+  const [selectedStudents, setSelectedStudents] = useState({});
+  const [uploadingFor, setUploadingFor] = useState(null);
   const [skillTopics, setSkillTopics] = useState([]);
   const [skillTopicsLoading, setSkillTopicsLoading] = useState(true);
   const [homeworkMappings, setHomeworkMappings] = useState({});
@@ -238,6 +243,55 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
     }
   };
 
+  const loadSubmissionRoster = async (hwId) => {
+    setRosterLoading(previous => ({ ...previous, [hwId]: true }));
+    setRosterErrors(previous => ({ ...previous, [hwId]: false }));
+    try {
+      const response = await homeworkService.getSubmissionRoster(hwId);
+      const payload = response.data?.data || response.data || {};
+      setSubmissionRosters(previous => ({ ...previous, [hwId]: payload.students || [] }));
+    } catch (error) {
+      setRosterErrors(previous => ({ ...previous, [hwId]: true }));
+      showToast(error?.data?.error || 'โหลดรายชื่อนักเรียนไม่สำเร็จ', 'error');
+    } finally {
+      setRosterLoading(previous => ({ ...previous, [hwId]: false }));
+    }
+  };
+
+  const handleTeacherSubmission = async (homework, event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    const studentId = selectedStudents[homework.id];
+    if (!file || !studentId) return;
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!['jpg', 'jpeg', 'png', 'webp', 'pdf'].includes(extension)) {
+      showToast('รองรับเฉพาะไฟล์ JPG, PNG, WEBP และ PDF', 'error');
+      input.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('ไฟล์ต้องมีขนาดไม่เกิน 10 MB', 'error');
+      input.value = '';
+      return;
+    }
+
+    const uploadKey = `${homework.id}:${studentId}`;
+    setUploadingFor(uploadKey);
+    try {
+      const response = await homeworkService.createStudentSubmission(homework.id, studentId);
+      const payload = response.data?.data || response.data || {};
+      await uploadService.uploadHomeworkSubmission(file, payload.submissionId);
+      showToast('ส่งงานแทนนักเรียนสำเร็จ', 'success');
+      await Promise.all([loadSubmissions(homework.id), loadSubmissionRoster(homework.id)]);
+      setSelectedStudents(previous => ({ ...previous, [homework.id]: '' }));
+    } catch (error) {
+      showToast(error?.data?.error || error?.data?.message || error.message || 'ส่งงานไม่สำเร็จ', 'error');
+    } finally {
+      setUploadingFor(null);
+      input.value = '';
+    }
+  };
+
   const loadSkillMapping = async (hwId) => {
     setHomeworkMappingsLoading(previous => ({ ...previous, [hwId]: true }));
     setHomeworkMappingsErrors(previous => ({ ...previous, [hwId]: false }));
@@ -260,7 +314,7 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
     }
     setExpandedHw(hwId);
     const mappingRequest = homeworkMappings[hwId] ? Promise.resolve() : loadSkillMapping(hwId);
-    await Promise.all([mappingRequest, loadSubmissions(hwId)]);
+    await Promise.all([mappingRequest, loadSubmissions(hwId), loadSubmissionRoster(hwId)]);
   };
 
   const saveSkillMapping = async (homeworkId) => {
@@ -580,6 +634,49 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
                   </button>
                 )}
               </section>
+              <section class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4" aria-label="ส่งงานแทนนักเรียน">
+                <h4 class="text-sm font-semibold text-slate-900">ส่งงานแทนนักเรียน</h4>
+                <p class="mt-1 text-xs text-slate-600">เลือกนักเรียนที่ยังไม่ส่ง แล้วแนบไฟล์ JPG, PNG, WEBP หรือ PDF (ไม่เกิน 10 MB)</p>
+                {rosterLoading[hw.id] ? (
+                  <p class="mt-3 text-sm text-slate-500" role="status">กำลังโหลดรายชื่อนักเรียน...</p>
+                ) : rosterErrors[hw.id] ? (
+                  <div class="mt-3 flex items-center gap-3 text-sm text-red-700" role="alert">
+                    <span>โหลดรายชื่อไม่สำเร็จ</span>
+                    <button type="button" class="font-semibold underline" onClick={() => loadSubmissionRoster(hw.id)}>ลองอีกครั้ง</button>
+                  </div>
+                ) : (submissionRosters[hw.id] || []).length === 0 ? (
+                  <p class="mt-3 text-sm text-slate-500">ไม่มีนักเรียนที่ลงทะเบียนในคอร์สนี้</p>
+                ) : (submissionRosters[hw.id] || []).filter(student => !student.submittedAt && !student.fileUrl).length === 0 ? (
+                  <p class="mt-3 text-sm text-slate-500">นักเรียนที่ลงทะเบียนในคอร์สนี้ส่งงานครบแล้ว</p>
+                ) : (
+                  <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <label class="min-w-0 flex-1 text-sm font-medium text-slate-700">
+                      นักเรียน
+                      <select
+                        class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-oasis-primary focus:outline-none focus:ring-2 focus:ring-oasis-primary/20"
+                        value={selectedStudents[hw.id] || ''}
+                        onChange={event => setSelectedStudents(previous => ({ ...previous, [hw.id]: event.currentTarget.value }))}
+                        disabled={uploadingFor?.startsWith(`${hw.id}:`)}
+                      >
+                        <option value="">เลือกนักเรียน...</option>
+                        {(submissionRosters[hw.id] || []).filter(student => !student.submittedAt && !student.fileUrl).map(student => (
+                          <option key={student.studentId} value={student.studentId}>{student.studentName}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label class="flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+                      {uploadingFor?.startsWith(`${hw.id}:`) ? 'กำลังอัปโหลด...' : 'เลือกไฟล์และส่ง'}
+                      <input
+                        class="sr-only"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                        disabled={!selectedStudents[hw.id] || uploadingFor?.startsWith(`${hw.id}:`)}
+                        onChange={event => handleTeacherSubmission(hw, event)}
+                      />
+                    </label>
+                  </div>
+                )}
+              </section>
               {submissionsLoading[hw.id] ? (
                 <p class="py-4 text-center text-sm text-slate-500">กำลังโหลดรายการส่งงาน...</p>
               ) : submissionsErrors[hw.id] ? (
@@ -618,6 +715,9 @@ function SubmissionsList({ submissions, onGrade }) {
             <p class="text-sm font-medium text-slate-700">{sub.studentName || `นักเรียน #${sub.studentId}`}</p>
             {sub.submittedAt && (
               <p class="text-xs text-slate-500">ส่งเมื่อ {new Date(sub.submittedAt).toLocaleDateString('th-TH')}</p>
+            )}
+            {sub.submittedByRole && sub.submittedByRole !== 'student' && (
+              <p class="text-xs text-slate-500">ส่งแทนโดย{sub.submittedByRole === 'teacher' ? 'ครู' : sub.submittedByRole === 'parent' ? 'ผู้ปกครอง' : 'ผู้ดูแลระบบ'} (บัญชี #{sub.submittedByUserId})</p>
             )}
             {sub.fileUrl && (
               <a class="mt-1 inline-block text-xs font-medium text-blue-600 hover:underline" href={sub.fileUrl} target="_blank" rel="noopener noreferrer">เปิดไฟล์งานที่ส่ง</a>

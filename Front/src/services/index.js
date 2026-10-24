@@ -48,7 +48,7 @@ export {
   approveLeaveRequest,
   rejectLeaveRequest,
 } from './leave-request-service';
-export { homeworkService, getHomeworks, createHomework, getSubmissions, gradeSubmission } from './homework-service';
+export { homeworkService, getHomeworks, createHomework, getSubmissions, getSubmissionRoster, createStudentSubmission, gradeSubmission } from './homework-service';
 export {
   skillScoreService,
   getSkillTopics,

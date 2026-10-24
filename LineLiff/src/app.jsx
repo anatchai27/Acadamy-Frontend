@@ -9,6 +9,7 @@ import { ProfilePage } from './pages/profile';
 import { LeaveMakeupPage } from './pages/leave-makeup';
 import { HomeworkPage } from './pages/homework';
 import { ScoresPage } from './pages/scores';
+import { CourseMaterialsPage } from './pages/course-materials';
 
 export const App = () => {
   const { state } = useLiffContext();
@@ -24,6 +25,7 @@ export const App = () => {
         <LeaveMakeupPage path="/liff/leave-makeup/:childId" />
         <HomeworkPage path="/liff/homework/:childId" />
         <ScoresPage path="/liff/scores/:childId" />
+        <CourseMaterialsPage path="/liff/materials/:childId" />
         <ProfilePage path="/liff/profile" />
       </Router>
     </div>

@@ -4,6 +4,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService, studentService, enrollmentService } from '../../services';
+import { getCourseMaterials, uploadCourseMaterial, deleteCourseMaterial, downloadCourseMaterial } from '../../services/course-material-service';
 import { useAbortController } from '../../hooks';
 import { formatPhoneNumber } from '../../utils/phone';
 import {
@@ -90,6 +91,10 @@ export function CoursesPage({ path }) {
   const [courseEnrollments, setCourseEnrollments] = useState([]);
   const [courseEnrollmentsLoading, setCourseEnrollmentsLoading] = useState(false);
   const [courseEnrollmentsError, setCourseEnrollmentsError] = useState(false);
+  const [materialCourse, setMaterialCourse] = useState(null);
+  const [materials, setMaterials] = useState([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
+  const [materialsBusy, setMaterialsBusy] = useState(false);
   const getSignal = useAbortController();
   const debounceRef = useRef(null);
   const enrollmentSearchRef = useRef(null);
@@ -328,6 +333,65 @@ export function CoursesPage({ path }) {
     setCourseEnrollments([]);
     setCourseEnrollmentsError(false);
     setCourseEnrollmentsLoading(false);
+  };
+
+  const openCourseMaterials = async (course) => {
+    setMaterialCourse(course);
+    setMaterials([]);
+    setMaterialsLoading(true);
+    try {
+      const response = await getCourseMaterials(course.id);
+      setMaterials(response.data?.data || []);
+    } catch {
+      showToast('โหลดเอกสารประกอบการสอนไม่สำเร็จ', 'error');
+    } finally {
+      setMaterialsLoading(false);
+    }
+  };
+
+  const uploadMaterials = async (event) => {
+    const input = event.currentTarget;
+    const files = Array.from(input.files || []);
+    if (!files.length || !materialCourse) return;
+    setMaterialsBusy(true);
+    try {
+      for (const file of files) await uploadCourseMaterial(materialCourse.id, file);
+      const response = await getCourseMaterials(materialCourse.id);
+      setMaterials(response.data?.data || []);
+      showToast(`อัปโหลดเอกสาร ${files.length} ไฟล์สำเร็จ`, 'success');
+    } catch (error) {
+      showToast(error?.data?.message || 'อัปโหลดเอกสารไม่สำเร็จ', 'error');
+      const response = await getCourseMaterials(materialCourse.id).catch(() => null);
+      if (response) setMaterials(response.data?.data || []);
+    } finally {
+      setMaterialsBusy(false);
+      input.value = '';
+    }
+  };
+
+  const removeMaterial = async (material) => {
+    if (!window.confirm(`ลบไฟล์ “${material.fileName}” หรือไม่?`)) return;
+    try {
+      await deleteCourseMaterial(material.id);
+      setMaterials((current) => current.filter((item) => item.id !== material.id));
+      showToast('ลบเอกสารแล้ว', 'success');
+    } catch {
+      showToast('ลบเอกสารไม่สำเร็จ', 'error');
+    }
+  };
+
+  const downloadMaterial = async (material) => {
+    try {
+      const result = await downloadCourseMaterial(material.id);
+      const anchor = document.createElement('a');
+      anchor.href = result.data.url;
+      anchor.download = material.fileName;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+      anchor.click();
+    } catch {
+      showToast('ดาวน์โหลดเอกสารไม่สำเร็จ', 'error');
+    }
   };
 
   const eligibleCourses = courses.filter((course) => Number(course.totalSessions) > 0);
@@ -665,12 +729,62 @@ export function CoursesPage({ path }) {
                       <HiOutlineUserGroup class="h-4 w-4" />
                       ดูผู้ลงทะเบียน
                     </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openCourseMaterials(course);
+                      }}
+                      class="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-indigo-200 px-2.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                    >
+                      <HiOutlineBookOpen class="h-4 w-4" />
+                      เอกสาร
+                    </button>
                   </div>
                 </div>
               </article>
             ))}
           </div>
         </>
+      )}
+
+      {materialCourse && (
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" role="presentation">
+          <button type="button" aria-label="ปิดหน้าต่าง" class="absolute inset-0 bg-zinc-950/55 backdrop-blur-sm" onClick={() => setMaterialCourse(null)} />
+          <section role="dialog" aria-modal="true" aria-labelledby="course-materials-title" class={`relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden ${isNeo ? 'neo-card bg-white' : 'rounded-2xl bg-white shadow-2xl'}`}>
+            <header class="flex items-start justify-between border-b border-zinc-100 px-5 py-4 sm:px-6">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">Course resources</p>
+                <h2 id="course-materials-title" class="mt-1 text-xl font-bold text-zinc-900">เอกสารประกอบ · {materialCourse.name}</h2>
+                <p class="mt-1 text-sm text-zinc-500">ผู้ปกครองของนักเรียนที่ลงทะเบียนจะเปิดเอกสารได้</p>
+              </div>
+              <button type="button" aria-label="ปิด" onClick={() => setMaterialCourse(null)} class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100">×</button>
+            </header>
+            <div class="overflow-y-auto p-5 sm:p-6">
+              <label class={`flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/60 px-4 text-center transition hover:border-indigo-400 ${materialsBusy ? 'pointer-events-none opacity-60' : ''}`}>
+                <HiOutlineBookOpen class="h-7 w-7 text-indigo-600" />
+                <span class="mt-2 text-sm font-bold text-indigo-900">{materialsBusy ? 'กำลังอัปโหลด...' : 'เลือกเอกสารได้หลายไฟล์'}</span>
+                <span class="mt-1 text-xs text-zinc-500">PDF, DOCX, PPTX, XLSX, JPG, PNG หรือ WEBP · ไม่เกิน 20 MB/ไฟล์</span>
+                <input class="sr-only" type="file" multiple accept=".pdf,.docx,.pptx,.xlsx,.jpg,.jpeg,.png,.webp" disabled={materialsBusy} onChange={uploadMaterials} />
+              </label>
+              <div class="mt-5 space-y-2">
+                {materialsLoading && <p class="py-6 text-center text-sm text-zinc-500">กำลังโหลดเอกสาร...</p>}
+                {!materialsLoading && materials.length === 0 && <p class="rounded-xl bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">ยังไม่มีเอกสารสำหรับคอร์สนี้</p>}
+                {materials.map((material) => (
+                  <article key={material.id} class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-3">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700"><HiOutlineBookOpen class="h-5 w-5" /></span>
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-semibold text-zinc-800">{material.fileName}</p>
+                      <p class="mt-0.5 text-xs text-zinc-500">{(material.sizeBytes / 1024 / 1024).toFixed(2)} MB · {new Date(material.createdAt).toLocaleDateString('th-TH')}</p>
+                    </div>
+                    <button type="button" onClick={() => downloadMaterial(material)} aria-label={`ดาวน์โหลด ${material.fileName}`} class="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100"><HiOutlineArrowUpRight class="h-4 w-4" /></button>
+                    <button type="button" onClick={() => removeMaterial(material)} aria-label={`ลบ ${material.fileName}`} class="rounded-lg p-2 text-red-500 hover:bg-red-50"><HiOutlineXMark class="h-4 w-4" /></button>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
       )}
 
       {showEnrollment && (

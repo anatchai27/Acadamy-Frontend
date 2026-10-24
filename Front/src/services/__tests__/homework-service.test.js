@@ -5,6 +5,8 @@ import {
   getHomeworks,
   createHomework,
   getSubmissions,
+  getSubmissionRoster,
+  createStudentSubmission,
   gradeSubmission,
   getSkillMapping,
   setSkillMapping,
@@ -70,6 +72,20 @@ describe('Homework Service', () => {
     });
   });
 
+  describe('teacher submissions', () => {
+    it('loads the enrolled student roster for a homework', async () => {
+      api.get.mockResolvedValue({ data: { data: { students: [] } }, status: 200 });
+      await getSubmissionRoster(10);
+      expect(api.get).toHaveBeenCalledWith('/homeworks/10/submission-roster', {});
+    });
+
+    it('creates or returns the submission for a selected student', async () => {
+      api.post.mockResolvedValue({ data: { data: { submissionId: 20 } }, status: 200 });
+      await createStudentSubmission(10, 7);
+      expect(api.post).toHaveBeenCalledWith('/homeworks/10/students/7/submission', {});
+    });
+  });
+
   describe('gradeSubmission (spec: PUT /homeworks/submissions/{submissionId}/grade)', () => {
     it('calls PUT with correct URL path', async () => {
       api.put.mockResolvedValue({ data: {}, status: 200 });
@@ -103,6 +119,8 @@ describe('Homework Service', () => {
       expect(homeworkService.getHomeworks).toBe(getHomeworks);
       expect(homeworkService.createHomework).toBe(createHomework);
       expect(homeworkService.getSubmissions).toBe(getSubmissions);
+      expect(homeworkService.getSubmissionRoster).toBe(getSubmissionRoster);
+      expect(homeworkService.createStudentSubmission).toBe(createStudentSubmission);
       expect(homeworkService.gradeSubmission).toBe(gradeSubmission);
       expect(homeworkService.getSkillMapping).toBe(getSkillMapping);
       expect(homeworkService.setSkillMapping).toBe(setSkillMapping);

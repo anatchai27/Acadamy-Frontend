@@ -2,6 +2,7 @@ using academy_API.Services;
 using academy_API.Services.Interface;
 using academy_API.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace academy_API.Controllers;
 
@@ -21,15 +22,27 @@ public static class FileUploadEndpoints
         MapPaymentBatchSlipUploadEndpoint(group);
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
-        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, CancellationToken ct) =>
+        group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, [FromServices] IHomeworkService homeworkService, CancellationToken ct) =>
         {
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userId, out var parsedUserId)) return Results.Unauthorized();
+            var role = context.User.FindFirst(ClaimTypes.Role)?.Value;
             if (context.User.IsInRole("parent"))
             {
-                var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userId, out var parsedUserId) || !await parentService.IsParentOfHomeworkSubmissionAsync(parsedUserId, submissionId, ct))
+                if (!await parentService.IsParentOfHomeworkSubmissionAsync(parsedUserId, submissionId, ct))
                     return Results.Forbid();
             }
-            return await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkSubmissionAsync(instituteId, submissionId, uploadedFile, ct));
+            else if (context.User.IsInRole("teacher"))
+            {
+                var instituteId = context.GetInstituteId();
+                if (!instituteId.HasValue) return Results.BadRequest(new { error = "User not associated with any institute." });
+                if (!await homeworkService.CanManageSubmissionAsync(submissionId, instituteId.Value, parsedUserId, ct))
+                    return Results.Forbid();
+            }
+            else if (!context.User.IsInRole("admin")) return Results.Forbid();
+
+            return await Execute(context, file, (instituteId, uploadedFile) =>
+                service.UploadHomeworkSubmissionAsync(instituteId, submissionId, uploadedFile, ct, parsedUserId, role));
         });
         group.MapPost("/student-photo", async (HttpContext context, IFormFile file, int studentId, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadStudentPhotoAsync(instituteId, studentId, uploadedFile, ct)));

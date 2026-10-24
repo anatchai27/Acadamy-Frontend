@@ -56,4 +56,17 @@ export const api = {
   patch: (endpoint, data, options = {}) =>
     fetcher(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
   delete: (endpoint, options = {}) => fetcher(endpoint, { ...options, method: 'DELETE' }),
+  download: async (endpoint, options = {}) => {
+    const token = (() => {
+      try { return window.localStorage.getItem('parent_token'); } catch { return null; }
+    })();
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal: options.signal,
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return { blob: await response.blob() };
+  },
 };

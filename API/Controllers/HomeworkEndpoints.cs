@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using academy_API.DTOs;
 using academy_API.Services;
+using academy_API.Utilities;
 
 namespace academy_API.Controllers;
 
@@ -61,6 +62,60 @@ public static class HomeworkEndpoints
             }
         });
 
+        group.MapGet("/{homeworkId:int}/submission-roster", async (
+            int homeworkId,
+            IHomeworkService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            if (!TryGetStaffIdentity(context, out var userId, out var isAdmin))
+                return context.User.Identity?.IsAuthenticated == true ? Results.Forbid() : Results.Unauthorized();
+            var instituteId = context.GetInstituteId();
+            if (!instituteId.HasValue) return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            try
+            {
+                var students = await service.GetSubmissionRosterAsync(homeworkId, instituteId.Value, userId, isAdmin, ct);
+                return Results.Ok(new { status = "success", data = new { students } });
+            }
+            catch (HomeworkValidationException ex)
+            {
+                return ex.ErrorCode == "FORBIDDEN"
+                    ? Results.Forbid()
+                    : Results.NotFound(new { status = "error", code = ex.ErrorCode, error = ex.Message });
+            }
+        });
+
+        group.MapPost("/{homeworkId:int}/students/{studentId:int}/submission", async (
+            int homeworkId,
+            int studentId,
+            IHomeworkService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            if (!TryGetStaffIdentity(context, out var userId, out var isAdmin))
+                return context.User.Identity?.IsAuthenticated == true ? Results.Forbid() : Results.Unauthorized();
+            var instituteId = context.GetInstituteId();
+            if (!instituteId.HasValue) return Results.BadRequest(new { error = "User not associated with any institute." });
+
+            try
+            {
+                var submission = await service.CreateOrGetSubmissionForStudentAsync(
+                    homeworkId, studentId, instituteId.Value, userId, isAdmin, ct);
+                return Results.Ok(new
+                {
+                    status = "success",
+                    data = new { submissionId = submission.Id, fileUrl = submission.FileUrl, submittedAt = submission.SubmittedAt }
+                });
+            }
+            catch (HomeworkValidationException ex)
+            {
+                return ex.ErrorCode == "FORBIDDEN"
+                    ? Results.Forbid()
+                    : Results.NotFound(new { status = "error", code = ex.ErrorCode, error = ex.Message });
+            }
+        });
+
         group.MapPut("/submissions/{submissionId:int}/grade", async (
             int submissionId,
             GradeSubmissionRequest request,
@@ -99,5 +154,15 @@ public static class HomeworkEndpoints
         });
 
         return app;
+    }
+
+    private static bool TryGetStaffIdentity(HttpContext context, out int userId, out bool isAdmin)
+    {
+        userId = 0;
+        isAdmin = context.User.IsInRole("admin");
+        var isTeacher = context.User.IsInRole("teacher");
+        return (isAdmin || isTeacher)
+            && int.TryParse(context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out userId)
+            && userId > 0;
     }
 }

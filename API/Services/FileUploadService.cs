@@ -42,15 +42,22 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
     }
 
     public Task<FileUploadResponse> UploadHomeworkAsync(int instituteId, int homeworkId, IFormFile file, CancellationToken ct) => UploadAsync(file, 10, false, $"homeworks/homework_{homeworkId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "file", Task.FromResult, ct);
-    public async Task<FileUploadResponse> UploadHomeworkSubmissionAsync(int instituteId, int submissionId, IFormFile file, CancellationToken ct)
+    public async Task<FileUploadResponse> UploadHomeworkSubmissionAsync(
+        int instituteId, int submissionId, IFormFile file, CancellationToken ct,
+        int? submittedByUserId = null, string? submittedByRole = null)
     {
+        ValidateHomeworkSubmissionFile(file);
         ValidateFile(file, 10, false);
         var submission = await repository.GetHomeworkSubmissionAsync(submissionId, instituteId, ct)
             ?? throw new FileUploadValidationException("NOT_FOUND", "Homework submission not found.");
+        if (submittedByRole is "admin" or "teacher" && submission.SubmittedAt.HasValue)
+            throw new FileUploadValidationException("ALREADY_SUBMITTED", "นักเรียนส่งงานนี้แล้ว ไม่สามารถส่งแทนซ้ำได้");
         return await UploadAsync(file, 10, false, $"submissions/submission_{submissionId}_{DateTime.UtcNow:yyyyMMddHHmmss}", "file", async url =>
         {
             submission.FileUrl = url;
             submission.SubmittedAt = DateTime.UtcNow;
+            submission.SubmittedByUserId = submittedByUserId;
+            submission.SubmittedByRole = submittedByRole;
             await repository.SaveAsync(ct);
             return url;
         }, ct);
@@ -115,6 +122,17 @@ public sealed class FileUploadService(IFileUploadRepository repository, IFileSto
         if (file is null || file.Length == 0) throw new FileUploadValidationException("FILE_REQUIRED", "No file uploaded.");
         if (imageOnly && !file.ContentType.StartsWith("image/")) throw new FileUploadValidationException("FILE_TYPE_NOT_ALLOWED", "Only image files are allowed.");
         if (file.Length > maxMb * 1024L * 1024L) throw new FileUploadValidationException("FILE_TOO_LARGE", $"File size must not exceed {maxMb}MB.");
+    }
+
+    private static void ValidateHomeworkSubmissionFile(IFormFile file)
+    {
+        if (file is null || file.Length == 0) throw new FileUploadValidationException("FILE_REQUIRED", "No file uploaded.");
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var isPdf = extension == ".pdf";
+        var isImage = extension is ".jpg" or ".jpeg" or ".png" or ".webp";
+        if ((!isPdf && !isImage) || (isPdf && file.ContentType is not ("application/pdf" or "application/octet-stream"))
+            || (isImage && !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)))
+            throw new FileUploadValidationException("FILE_TYPE_NOT_ALLOWED", "รองรับเฉพาะไฟล์ JPG, PNG, WEBP และ PDF");
     }
 }
 

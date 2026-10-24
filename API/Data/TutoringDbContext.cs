@@ -28,6 +28,7 @@ public class TutoringDbContext(
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Course> Courses => Set<Course>();
+      public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentBatch> PaymentBatches => Set<PaymentBatch>();
     public DbSet<PaymentBatchAllocation> PaymentBatchAllocations => Set<PaymentBatchAllocation>();
@@ -437,6 +438,24 @@ public class TutoringDbContext(
             entity.HasIndex(e => e.TeacherId);
         });
 
+            modelBuilder.Entity<CourseMaterial>(entity =>
+            {
+                  entity.ToTable("course_materials");
+                  entity.HasKey(e => e.Id);
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.InstituteId).HasColumnName("institute_id");
+                  entity.Property(e => e.CourseId).HasColumnName("course_id");
+                  entity.Property(e => e.ObjectKey).HasMaxLength(500).HasColumnName("object_key");
+                  entity.Property(e => e.OriginalFileName).HasMaxLength(255).HasColumnName("original_file_name");
+                  entity.Property(e => e.ContentType).HasMaxLength(100).HasColumnName("content_type");
+                  entity.Property(e => e.FileSizeBytes).HasColumnName("file_size_bytes");
+                  entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by");
+                  entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                  entity.HasOne(e => e.Course).WithMany().HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+                  entity.HasOne<Institute>().WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
+                  entity.HasIndex(e => new { e.InstituteId, e.CourseId });
+            });
+
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.ToTable("payments");
@@ -656,6 +675,8 @@ public class TutoringDbContext(
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.SubmittedAt).HasColumnName("submitted_at");
+            entity.Property(e => e.SubmittedByUserId).HasColumnName("submitted_by_user_id");
+            entity.Property(e => e.SubmittedByRole).HasMaxLength(20).HasColumnName("submitted_by_role");
             entity.Property(e => e.FileUrl).HasMaxLength(1000).HasColumnName("file_url");
             entity.Property(e => e.Score).HasColumnName("score").HasColumnType("decimal(5,2)");
             entity.Property(e => e.Feedback).HasColumnName("feedback");
@@ -1277,6 +1298,7 @@ public class TutoringDbContext(
       modelBuilder.Entity<Student>().HasQueryFilter(e => e.InstituteId == _currentInstituteId && e.DeletedAt == null);
         modelBuilder.Entity<Teacher>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Course>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
+      modelBuilder.Entity<CourseMaterial>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
         modelBuilder.Entity<Product>().HasQueryFilter(e => e.InstituteId == _currentInstituteId);
             modelBuilder.Entity<User>().HasQueryFilter(e =>
                   e.InstituteId == _currentInstituteId || e.Teachers.Any(t => t.InstituteId == _currentInstituteId));

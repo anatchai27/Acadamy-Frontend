@@ -243,6 +243,8 @@ app.MapUserEndpoints();
 app.MapAttendanceEndpoints();
 app.MapMakeupEndpoints();
 app.MapCourseEndpoints();
+app.MapCourseMaterialEndpoints();
+app.MapParentCourseMaterialEndpoints();
 app.MapSessionEndpoints();
 app.MapEnrollmentEndpoints();
 app.MapPaymentEndpoints();

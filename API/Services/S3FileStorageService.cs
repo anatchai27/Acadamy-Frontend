@@ -41,6 +41,36 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         return $"{_publicUrl}/{_bucketName}/{fileName}";
     }
 
+    public async Task UploadPrivateAsync(Stream fileStream, string key, string contentType, CancellationToken ct = default)
+    {
+        if (_ossClient is null)
+            throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
+
+        var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        buffer.Position = 0;
+        var metadata = new ObjectMetadata { ContentType = contentType };
+        await Task.Run(() => _ossClient.PutObject(_bucketName, key, buffer, metadata), ct);
+        await Task.Run(() => _ossClient.SetObjectAcl(new SetObjectAclRequest(_bucketName, key, CannedAccessControlList.Private)), ct);
+    }
+
+    public string GetSignedUrl(string key, string contentType, string fileName, TimeSpan lifetime)
+    {
+        if (_ossClient is null)
+            throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
+
+        var request = new GeneratePresignedUriRequest(_bucketName, key, SignHttpMethod.Get)
+        {
+            Expiration = DateTime.UtcNow.Add(lifetime),
+            ResponseHeaders = new ResponseHeaderOverrides
+            {
+                ContentType = contentType,
+                ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(fileName)}"
+            }
+        };
+        return _ossClient.GeneratePresignedUri(request).ToString();
+    }
+
     public async Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default)
     {
         if (_ossClient is null)

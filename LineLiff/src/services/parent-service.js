@@ -46,6 +46,10 @@ export const getChildHomework = childId => {
   return api.get(`/parents/children/${childId}/homework`);
 }
 
+export const getChildCourseMaterials = childId => api.get(`/parents/children/${childId}/materials`);
+
+export const downloadChildCourseMaterial = materialId => api.get(`/course-materials/${materialId}/download`);
+
 export const createHomeworkSubmission = (childId, homeworkId) => {
   return api.post(`/parents/children/${childId}/homework/${homeworkId}/submission`, {});
 }

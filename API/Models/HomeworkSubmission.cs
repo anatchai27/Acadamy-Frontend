@@ -7,6 +7,8 @@ public class HomeworkSubmission : IMultiTenantEntity
     public int StudentId { get; set; }
     public int InstituteId { get; set; }
     public DateTime? SubmittedAt { get; set; }
+    public int? SubmittedByUserId { get; set; }
+    public string? SubmittedByRole { get; set; }
     public string? FileUrl { get; set; }
     public decimal? Score { get; set; }
     public string? Feedback { get; set; }

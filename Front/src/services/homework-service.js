@@ -12,6 +12,12 @@ export const getSubmissions = (homeworkId, params = {}, options = {}) => {
   return api.get(`/homeworks/${homeworkId}/submissions`, { params, ...options });
 }
 
+export const getSubmissionRoster = (homeworkId, options = {}) =>
+  api.get(`/homeworks/${homeworkId}/submission-roster`, options);
+
+export const createStudentSubmission = (homeworkId, studentId) =>
+  api.post(`/homeworks/${homeworkId}/students/${studentId}/submission`, {});
+
 export const gradeSubmission = (submissionId, payload) => {
   return api.put(`/homeworks/submissions/${submissionId}/grade`, payload);
 }
@@ -24,6 +30,8 @@ export const homeworkService = {
   getHomeworks,
   createHomework,
   getSubmissions,
+  getSubmissionRoster,
+  createStudentSubmission,
   gradeSubmission,
   getSkillMapping,
   setSkillMapping,

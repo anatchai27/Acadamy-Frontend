@@ -108,6 +108,37 @@ public class HomeworkServiceTests
         Assert.Equal("NOT_FOUND", ex.ErrorCode);
     }
 
+    [Fact]
+    public async Task GetSubmissionRosterAsync_UnauthorizedTeacher_IsRejected()
+    {
+        var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.CanManageHomeworkAsync(1, 7, 42, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var sut = new HomeworkService(repoMock.Object);
+
+        var exception = await Assert.ThrowsAsync<HomeworkValidationException>(() =>
+            sut.GetSubmissionRosterAsync(1, 7, 42, false));
+
+        Assert.Equal("FORBIDDEN", exception.ErrorCode);
+        repoMock.Verify(r => r.GetSubmissionRosterAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateOrGetSubmissionForStudentAsync_RequiresCourseAccessAndEnrollment()
+    {
+        var repoMock = CreateMockRepo();
+        repoMock.Setup(r => r.CanManageHomeworkAsync(1, 7, 42, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        repoMock.Setup(r => r.CreateOrGetSubmissionForStudentAsync(1, 10, 7, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HomeworkSubmission { Id = 99, HomeworkId = 1, StudentId = 10, InstituteId = 7 });
+        var sut = new HomeworkService(repoMock.Object);
+
+        var submission = await sut.CreateOrGetSubmissionForStudentAsync(1, 10, 7, 42, true);
+
+        Assert.Equal(99, submission.Id);
+        repoMock.Verify(r => r.CreateOrGetSubmissionForStudentAsync(1, 10, 7, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     // 5
     [Fact]
     public async Task GradeSubmissionAsync_ValidRequest_ReturnsSuccess()

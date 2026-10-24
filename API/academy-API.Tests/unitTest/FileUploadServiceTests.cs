@@ -115,6 +115,42 @@ public class FileUploadServiceTests
         storage.Verify(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task UploadHomeworkSubmission_ValidPdf_StoresSubmitterAudit()
+    {
+        var submission = new HomeworkSubmission { Id = 15, InstituteId = 1 };
+        var repository = new Mock<IFileUploadRepository>();
+        var storage = new Mock<IFileStorageService>();
+        repository.Setup(x => x.GetHomeworkSubmissionAsync(15, 1, It.IsAny<CancellationToken>())).ReturnsAsync(submission);
+        storage.Setup(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), "application/pdf", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.test/submission.pdf");
+        var sut = new FileUploadService(repository.Object, storage.Object);
+
+        var result = await sut.UploadHomeworkSubmissionAsync(1, 15, CreateFile("work.pdf", "application/pdf", 20), CancellationToken.None, 42, "teacher");
+
+        Assert.Equal("https://storage.test/submission.pdf", result.FileUrl);
+        Assert.Equal(42, submission.SubmittedByUserId);
+        Assert.Equal("teacher", submission.SubmittedByRole);
+        Assert.NotNull(submission.SubmittedAt);
+        repository.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UploadHomeworkSubmission_TeacherCannotReplaceSubmittedWork()
+    {
+        var submission = new HomeworkSubmission { Id = 15, InstituteId = 1, SubmittedAt = DateTime.UtcNow };
+        var repository = new Mock<IFileUploadRepository>();
+        var storage = new Mock<IFileStorageService>();
+        repository.Setup(x => x.GetHomeworkSubmissionAsync(15, 1, It.IsAny<CancellationToken>())).ReturnsAsync(submission);
+        var sut = new FileUploadService(repository.Object, storage.Object);
+
+        var exception = await Assert.ThrowsAsync<FileUploadValidationException>(() =>
+            sut.UploadHomeworkSubmissionAsync(1, 15, CreateFile("work.png", "image/png", 20), CancellationToken.None, 42, "teacher"));
+
+        Assert.Equal("ALREADY_SUBMITTED", exception.Code);
+        storage.Verify(x => x.UploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static FormFile CreateFile(string name, string contentType, int length)
     {
         var stream = new MemoryStream(new byte[length]);

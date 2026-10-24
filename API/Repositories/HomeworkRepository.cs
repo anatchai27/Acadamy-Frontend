@@ -59,7 +59,9 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
                 s.SubmittedAt,
                 s.FileUrl,
                 s.Score,
-                s.Feedback
+                s.Feedback,
+                s.SubmittedByUserId,
+                s.SubmittedByRole
             ))
             .ToListAsync(ct);
     }
@@ -75,6 +77,89 @@ public class HomeworkRepository(TutoringDbContext context) : IHomeworkRepository
         return await _context.Homeworks
             .Include(h => h.Course)
             .FirstOrDefaultAsync(h => h.Id == homeworkId, ct);
+    }
+
+    public Task<bool> CanManageHomeworkAsync(int homeworkId, int instituteId, int userId, bool isAdmin, CancellationToken ct = default) =>
+        _context.Homeworks.AnyAsync(homework => homework.Id == homeworkId
+            && homework.InstituteId == instituteId
+            && (isAdmin || (homework.Course.TeacherId.HasValue
+                && _context.Teachers.Any(teacher => teacher.Id == homework.Course.TeacherId && teacher.UserId == userId && teacher.InstituteId == instituteId))), ct);
+
+    public Task<bool> CanManageSubmissionAsync(int submissionId, int instituteId, int userId, CancellationToken ct = default) =>
+        _context.HomeworkSubmissions.AnyAsync(submission => submission.Id == submissionId
+            && submission.InstituteId == instituteId
+            && submission.Homework.Course.TeacherId.HasValue
+            && _context.Teachers.Any(teacher => teacher.Id == submission.Homework.Course.TeacherId
+                && teacher.UserId == userId && teacher.InstituteId == instituteId), ct);
+
+    public async Task<List<HomeworkStudentRosterItem>> GetSubmissionRosterAsync(int homeworkId, int instituteId, CancellationToken ct = default)
+    {
+        var courseId = await _context.Homeworks
+            .Where(homework => homework.Id == homeworkId && homework.InstituteId == instituteId)
+            .Select(homework => (int?)homework.CourseId)
+            .FirstOrDefaultAsync(ct);
+        if (!courseId.HasValue) return [];
+
+        var students = await _context.Enrollments
+            .Where(enrollment => enrollment.CourseId == courseId.Value
+                && enrollment.InstituteId == instituteId
+                && enrollment.Student.InstituteId == instituteId
+                && enrollment.Student.DeletedAt == null)
+            .Select(enrollment => new { enrollment.StudentId, enrollment.Student.FullName })
+            .Distinct()
+            .OrderBy(student => student.FullName)
+            .ToListAsync(ct);
+        if (students.Count == 0) return [];
+
+        var studentIds = students.Select(student => student.StudentId).ToList();
+        var submissions = await _context.HomeworkSubmissions
+            .Where(submission => submission.HomeworkId == homeworkId
+                && submission.InstituteId == instituteId
+                && studentIds.Contains(submission.StudentId))
+            .Select(submission => new { submission.StudentId, submission.Id, submission.SubmittedAt, submission.FileUrl })
+            .ToListAsync(ct);
+        var byStudent = submissions.ToDictionary(submission => submission.StudentId);
+
+        return students.Select(student => byStudent.TryGetValue(student.StudentId, out var submission)
+            ? new HomeworkStudentRosterItem(student.StudentId, student.FullName, submission.Id, submission.SubmittedAt, submission.FileUrl)
+            : new HomeworkStudentRosterItem(student.StudentId, student.FullName, null, null, null))
+            .ToList();
+    }
+
+    public async Task<HomeworkSubmission?> CreateOrGetSubmissionForStudentAsync(int homeworkId, int studentId, int instituteId, CancellationToken ct = default)
+    {
+        var enrolled = await _context.Homeworks.AnyAsync(homework => homework.Id == homeworkId
+            && homework.InstituteId == instituteId
+            && _context.Enrollments.Any(enrollment => enrollment.CourseId == homework.CourseId
+                && enrollment.StudentId == studentId
+                && enrollment.InstituteId == instituteId
+                && enrollment.Student.InstituteId == instituteId
+                && enrollment.Student.DeletedAt == null), ct);
+        if (!enrolled) return null;
+
+        var existing = await _context.HomeworkSubmissions.FirstOrDefaultAsync(submission =>
+            submission.HomeworkId == homeworkId && submission.StudentId == studentId && submission.InstituteId == instituteId, ct);
+        if (existing is not null) return existing;
+
+        var created = new HomeworkSubmission
+        {
+            HomeworkId = homeworkId,
+            StudentId = studentId,
+            InstituteId = instituteId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.HomeworkSubmissions.Add(created);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+            return created;
+        }
+        catch (DbUpdateException)
+        {
+            _context.Entry(created).State = EntityState.Detached;
+            return await _context.HomeworkSubmissions.FirstOrDefaultAsync(submission =>
+                submission.HomeworkId == homeworkId && submission.StudentId == studentId && submission.InstituteId == instituteId, ct);
+        }
     }
 
     public async Task UpdateSubmissionGradeAsync(HomeworkSubmission submission, CancellationToken ct = default)

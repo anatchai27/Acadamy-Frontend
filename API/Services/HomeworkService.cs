@@ -1,4 +1,5 @@
 using academy_API.DTOs;
+using academy_API.Models;
 
 namespace academy_API.Services;
 
@@ -48,6 +49,26 @@ public class HomeworkService(IHomeworkRepository repository) : IHomeworkService
         var submissions = await _repository.GetSubmissionsAsync(homeworkId, ct);
         return new HomeworkSubmissionsResponse("success", new HomeworkSubmissionsData(submissions));
     }
+
+    public async Task<List<HomeworkStudentRosterItem>> GetSubmissionRosterAsync(
+        int homeworkId, int instituteId, int userId, bool isAdmin, CancellationToken ct = default)
+    {
+        if (!await _repository.CanManageHomeworkAsync(homeworkId, instituteId, userId, isAdmin, ct))
+            throw new HomeworkValidationException("FORBIDDEN", "ไม่มีสิทธิ์จัดการการบ้านนี้");
+        return await _repository.GetSubmissionRosterAsync(homeworkId, instituteId, ct);
+    }
+
+    public async Task<HomeworkSubmission> CreateOrGetSubmissionForStudentAsync(
+        int homeworkId, int studentId, int instituteId, int userId, bool isAdmin, CancellationToken ct = default)
+    {
+        if (!await _repository.CanManageHomeworkAsync(homeworkId, instituteId, userId, isAdmin, ct))
+            throw new HomeworkValidationException("FORBIDDEN", "ไม่มีสิทธิ์จัดการการบ้านนี้");
+        return await _repository.CreateOrGetSubmissionForStudentAsync(homeworkId, studentId, instituteId, ct)
+            ?? throw new HomeworkValidationException("STUDENT_NOT_ENROLLED", "ไม่พบนักเรียนในคอร์สที่สั่งการบ้านนี้");
+    }
+
+    public Task<bool> CanManageSubmissionAsync(int submissionId, int instituteId, int userId, CancellationToken ct = default) =>
+        _repository.CanManageSubmissionAsync(submissionId, instituteId, userId, ct);
 
     public async Task<GradeSubmissionResponse> GradeSubmissionAsync(int submissionId, GradeSubmissionRequest request, CancellationToken ct = default)
     {

@@ -202,7 +202,17 @@ public record HomeworkSubmissionItem(
     DateTime? SubmittedAt,
     string? FileUrl,
     decimal? Score,
-    string? Feedback
+    string? Feedback,
+    int? SubmittedByUserId = null,
+    string? SubmittedByRole = null
+);
+
+public record HomeworkStudentRosterItem(
+    int StudentId,
+    string StudentName,
+    long? SubmissionId,
+    DateTime? SubmittedAt,
+    string? FileUrl
 );
 
 public record HomeworkSubmissionsResponse(
