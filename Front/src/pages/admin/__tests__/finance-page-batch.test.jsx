@@ -148,7 +148,29 @@ describe('finance batch payment form', () => {
         method: 'cash',
       }),
     );
+
     expect(await screen.findByText(/INV-BATCH-50/)).toBeInTheDocument();
+  });
+
+  it('loads students from later API pages so older students with balances remain selectable', async () => {
+    const firstPageStudents = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      fullName: `นักเรียน ${index + 1}`,
+    }));
+    studentService.getStudents
+      .mockReset()
+      .mockResolvedValueOnce({
+        data: { data: { students: firstPageStudents, pagination: { totalPages: 2 } } },
+      })
+      .mockResolvedValueOnce({
+        data: { data: { students: [{ id: 101, fullName: 'นักเรียนมียอดค้าง' }], pagination: { totalPages: 2 } } },
+      });
+
+    render(<FinancePage path="/admin/finance" />);
+
+    expect(await screen.findByRole('option', { name: 'นักเรียนมียอดค้าง' })).toBeInTheDocument();
+    expect(studentService.getStudents).toHaveBeenNthCalledWith(1, { page: 1, limit: 100 }, { signal: undefined });
+    expect(studentService.getStudents).toHaveBeenNthCalledWith(2, { page: 2, limit: 100 }, { signal: undefined });
   });
 
   it('uploads and verifies one slip against the combined transfer amount', async () => {

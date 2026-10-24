@@ -25,6 +25,7 @@ export function FinancePage({ path }) {
   const [payments, setPayments] = useState([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
   const [paymentGroups, setPaymentGroups] = useState([{ key: 0, studentId: '', enrollments: [], loading: false }]);
   const [allocations, setAllocations] = useState({});
   const [paymentMethod, setPaymentMethod] = useState('transfer');
@@ -55,13 +56,40 @@ export function FinancePage({ path }) {
   const [slipUploadKey, setSlipUploadKey] = useState(0);
 
   useEffect(() => {
-    studentService
-      .getStudents({ page: 1, limit: 200 }, { signal: getSignal() })
-      .then((res) => {
-        const payload = res.data?.data || res.data || {};
-        setStudents(payload.students || (Array.isArray(payload) ? payload : []));
-      })
-      .catch(() => showToast('ไม่สามารถโหลดรายชื่อนักเรียนได้', 'error'));
+    let cancelled = false;
+    const loadStudents = async () => {
+      setStudentsLoading(true);
+      try {
+        const limit = 100;
+        const firstResponse = await studentService.getStudents({ page: 1, limit }, { signal: getSignal() });
+        const firstPayload = firstResponse.data?.data || firstResponse.data || {};
+        const allStudents = firstPayload.students || (Array.isArray(firstPayload) ? firstPayload : []);
+        const totalPages = Math.max(1, Number(firstPayload.pagination?.totalPages) || 1);
+
+        for (let startPage = 2; startPage <= totalPages; startPage += 5) {
+          const pages = Array.from(
+            { length: Math.min(5, totalPages - startPage + 1) },
+            (_, index) => startPage + index,
+          );
+          const responses = await Promise.all(pages.map((page) =>
+            studentService.getStudents({ page, limit }, { signal: getSignal() }),
+          ));
+          responses.forEach((response) => {
+            const payload = response.data?.data || response.data || {};
+            allStudents.push(...(payload.students || (Array.isArray(payload) ? payload : [])));
+          });
+        }
+
+        if (!cancelled) setStudents(allStudents);
+      } catch (error) {
+        if (!cancelled) showToast(formatError(error, 'ไม่สามารถโหลดรายชื่อนักเรียนได้'), 'error');
+      } finally {
+        if (!cancelled) setStudentsLoading(false);
+      }
+    };
+
+    loadStudents();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -199,7 +227,7 @@ export function FinancePage({ path }) {
       setPaymentGroups((previous) => previous.map((group) => group.key === groupKey
         ? { ...group, enrollments: payload.enrollments || [], loading: false }
         : group));
-    } catch {
+    } catch (error) {
       if (requestId === enrollmentRequestIds.current.get(groupKey)) {
         showToast(formatError(error, 'ไม่สามารถโหลดรายการลงทะเบียนของนักเรียนได้'), 'error');
         setPaymentGroups((previous) => previous.map((group) => group.key === groupKey
@@ -596,10 +624,10 @@ export function FinancePage({ path }) {
                           id={`payment-student-${group.key}`}
                           value={group.studentId}
                           onChange={(event) => handleStudentChange(group.key, event)}
-                          disabled={Boolean(pendingBatchId) || students.length === 0}
+                          disabled={Boolean(pendingBatchId) || studentsLoading || students.length === 0}
                           class={`w-full bg-white px-4 py-2.5 text-sm text-zinc-800 focus:outline-none ${isNeo ? 'neo-select' : 'rounded-xl border border-zinc-200 focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
                         >
-                          <option value="">-- ค้นหา/เลือกนักเรียน --</option>
+                          <option value="">{studentsLoading ? 'กำลังโหลดรายชื่อนักเรียน...' : '-- ค้นหา/เลือกนักเรียน --'}</option>
                           {students.map((student) => (
                             <option key={student.id} value={student.id} disabled={usedStudentIds.includes(String(student.id))}>
                               {student.fullName}{student.nickname ? ` (${student.nickname})` : ''}{student.grade ? ` · ${student.grade}` : ''}
