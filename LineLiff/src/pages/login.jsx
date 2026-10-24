@@ -13,10 +13,12 @@ export const LoginPage = () => {
   const [binding, setBinding] = useState(false);
   const [needsCode, setNeedsCode] = useState(false);
   const [linkCode, setLinkCode] = useState('');
+  const [lineAuthFailed, setLineAuthFailed] = useState(false);
 
   const bindParent = async (code = '') => {
     setBinding(true);
     setError(null);
+    setLineAuthFailed(false);
 
     try {
       const { getLiffIdToken } = await import('../services/liff');
@@ -40,6 +42,7 @@ export const LoginPage = () => {
         setNeedsCode(true);
         return;
       }
+      setLineAuthFailed(err.status === 401);
       setError(err.status === 409
         ? (err.data?.error || 'ไม่สามารถยืนยันบัญชีได้ กรุณาติดต่อโรงเรียนเพื่อตรวจสอบ')
         : (err.data?.error || err.message || 'ไม่สามารถเชื่อมต่อกับ LINE ได้'));
@@ -47,6 +50,33 @@ export const LoginPage = () => {
       setBinding(false);
     }
   };
+
+  const restartLineAuth = async () => {
+    setBinding(true);
+    setError(null);
+    try {
+      const { getLiff } = await import('../services/liff');
+      const liff = getLiff();
+      if (!liff) throw new Error('LIFF ยังไม่พร้อม กรุณาปิดแล้วเปิดใหม่');
+      liff.logout();
+      liff.login();
+    } catch (err) {
+      setBinding(false);
+      setError(err.message || 'เริ่มยืนยัน LINE ใหม่ไม่สำเร็จ กรุณาปิดแล้วเปิด LIFF ใหม่');
+    }
+  };
+
+  const recoveryActions = lineAuthFailed && (
+    <div class="mt-3 grid gap-2">
+      <button type="button" onClick={() => bindParent(needsCode ? normalizeParentLinkCode(linkCode) : '')} disabled={binding} class="min-h-11 w-full rounded-xl border border-sage-300 bg-white px-3 py-2 text-sm font-bold text-sage-700 transition hover:bg-sage-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700 disabled:opacity-50">
+        ลองตรวจสอบอีกครั้ง
+      </button>
+      <button type="button" onClick={restartLineAuth} disabled={binding} class="min-h-11 w-full rounded-xl bg-sage-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-sage-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700 disabled:opacity-50">
+        เริ่มยืนยัน LINE ใหม่
+      </button>
+      <p class="text-center text-xs leading-5 text-ink-500">หากยังไม่ผ่าน ให้ผู้ดูแลตรวจว่า LINE Login channel ID ในระบบตรงกับ LIFF</p>
+    </div>
+  );
 
   useEffect(() => {
     !state.liffInitialized ? null : (
@@ -115,6 +145,7 @@ export const LoginPage = () => {
               />
               <p id="link-code-hint" class="mt-2 text-xs text-ink-500">รหัสมี 12 ตัว ไม่ใช้ตัว I, O, 0 หรือ 1</p>
               {error && <p role="alert" class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+              {recoveryActions}
               <button type="submit" class="mt-4 min-h-11 w-full rounded-xl bg-sage-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-sage-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700 disabled:opacity-50" disabled={binding}>
                 {binding ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อข้อมูล'}
               </button>
@@ -123,6 +154,7 @@ export const LoginPage = () => {
         ) : error ? (
           <div role="alert" class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
             <p class="text-sm">{error}</p>
+            {recoveryActions}
           </div>
         ) : (
           <div class="flex flex-col items-center gap-3">

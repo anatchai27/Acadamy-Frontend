@@ -41,6 +41,7 @@ public static class ParentEndpoints
         IParentLineLinkService linkService,
         ITokenService tokenService,
         IConfiguration configuration,
+        ILoggerFactory loggerFactory,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.IdToken))
@@ -50,9 +51,13 @@ public static class ParentEndpoints
         if (string.IsNullOrWhiteSpace(channelId))
             return Results.Problem("LINE login channel ID is not configured.", statusCode: StatusCodes.Status503ServiceUnavailable);
 
-        var verifiedUserId = await GetVerifiedLineUserId(request.IdToken, channelId, ct);
+        var verifiedUserId = await GetVerifiedLineUserId(request.IdToken, channelId, loggerFactory.CreateLogger("ParentEndpoints"), ct);
         if (string.IsNullOrWhiteSpace(verifiedUserId))
-            return Results.Unauthorized();
+            return Results.Json(new
+            {
+                code = "LINE_ID_TOKEN_REJECTED",
+                error = "LINE ยืนยันตัวตนไม่ผ่าน กรุณาลองใหม่หรือเริ่มยืนยัน LINE อีกครั้ง หากยังไม่สำเร็จให้ตรวจสอบ LINE Login channel ID"
+            }, statusCode: StatusCodes.Status401Unauthorized);
 
         var existingBinding = await service.BindLineAsync(verifiedUserId, ct);
         if (existingBinding.Status == ParentBindingStatus.Conflict)
@@ -397,7 +402,7 @@ public static class ParentEndpoints
         return int.TryParse(value, out var userId) ? userId : null;
     }
 
-    private static async Task<string?> GetVerifiedLineUserId(string idToken, string channelId, CancellationToken ct)
+    private static async Task<string?> GetVerifiedLineUserId(string idToken, string channelId, ILogger logger, CancellationToken ct)
     {
         try
         {
@@ -410,20 +415,27 @@ public static class ParentEndpoints
                 })
             };
             using var response = await LineHttpClient.SendAsync(request, ct);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("LINE ID token verification was rejected with status {StatusCode}", (int)response.StatusCode);
+                return null;
+            }
             using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
             return doc.RootElement.TryGetProperty("sub", out var subject) ? subject.GetString() : null;
         }
         catch (HttpRequestException)
         {
+            logger.LogError("Could not reach LINE ID token verification endpoint");
             return null;
         }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested)
         {
+            logger.LogError("LINE ID token verification timed out");
             return null;
         }
         catch (JsonException)
         {
+            logger.LogWarning("LINE ID token verification returned an invalid response body");
             return null;
         }
     }
