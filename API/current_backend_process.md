@@ -476,4 +476,4 @@ return Results.Json(new
 | **Password Hashing** | BCrypt (BCrypt.Net-Next) |
 | **Architecture** | Repository + Service pattern |
 | **DI Pattern** | Scoped (DbContext, Services, Repositories) |
-| **File Storage** | AWS S3 SDK (THAI DATA CLOUD) |
+| **File Storage** | Provider adapters via `IFileStorageService`: Aliyun OSS (default) or Azure Blob (`FileStorage:Provider`) |

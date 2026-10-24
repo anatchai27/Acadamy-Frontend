@@ -11,7 +11,6 @@ using academy_API.Services.Contracts;
 using academy_API.Services.Interface;
 using academy_API.Controllers;
 using academy_API.Utilities;
-using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -185,10 +184,24 @@ builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["Line:ChannelAccessToken"]}");
 });
 
-// Register THAI DATA CLOUD S3-compatible storage
-builder.Services.Configure<ThaiDataCloudOptions>(
-    builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
-builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
+// Select a storage provider without coupling application services to its SDK.
+var fileStorageProvider = builder.Configuration["FileStorage:Provider"] ?? "AliyunOss";
+switch (fileStorageProvider.Trim().ToLowerInvariant())
+{
+    case "aliyunoss":
+        builder.Services.Configure<ThaiDataCloudOptions>(
+            builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
+        builder.Services.AddSingleton<IFileStorageService, AliyunOssFileStorageService>();
+        break;
+    case "azureblob":
+        builder.Services.Configure<AzureBlobOptions>(
+            builder.Configuration.GetSection(AzureBlobOptions.SectionName));
+        builder.Services.AddSingleton<IFileStorageService, AzureBlobFileStorageService>();
+        break;
+    default:
+        throw new InvalidOperationException(
+            $"Unsupported file storage provider '{fileStorageProvider}'. Use 'AliyunOss' or 'AzureBlob'.");
+}
 
 // Register tenant provider
 builder.Services.AddHttpContextAccessor();

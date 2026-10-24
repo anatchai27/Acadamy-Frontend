@@ -73,7 +73,7 @@ public static class CourseMaterialEndpoints
             }
             catch
             {
-                await storage.DeleteAsync(storage.GetPublicUrl(key), ct);
+                await storage.DeleteAsync(key, FileVisibility.Private, ct);
                 throw;
             }
         }).DisableAntiforgery();
@@ -83,7 +83,7 @@ public static class CourseMaterialEndpoints
             var material = await db.CourseMaterials.FirstOrDefaultAsync(m => m.Id == materialId, ct);
             if (material is null) return Results.NotFound();
             if (!await CanManageCourseAsync(db, http, material.CourseId, ct)) return ForbiddenOrUnauthorized(http);
-            await storage.DeleteAsync(storage.GetPublicUrl(material.ObjectKey), ct);
+            await storage.DeleteAsync(material.ObjectKey, FileVisibility.Private, ct);
             db.CourseMaterials.Remove(material);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();

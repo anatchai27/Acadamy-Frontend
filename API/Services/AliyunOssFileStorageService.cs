@@ -5,13 +5,13 @@ using academy_API.Services.Interface;
 
 namespace academy_API.Services;
 
-public class S3FileStorageService : IFileStorageService, IDisposable
+public sealed class AliyunOssFileStorageService : IFileStorageService, IDisposable
 {
     private readonly OssClient? _ossClient;
     private readonly string _bucketName;
     private readonly string _publicUrl;
 
-    public S3FileStorageService(IOptions<ThaiDataCloudOptions> options)
+    public AliyunOssFileStorageService(IOptions<ThaiDataCloudOptions> options)
     {
         var config = options.Value;
         _bucketName = config.BucketName;
@@ -32,7 +32,7 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         if (_ossClient is null)
             throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
 
-        var buffer = new MemoryStream();
+        await using var buffer = new MemoryStream();
         await fileStream.CopyToAsync(buffer, ct);
         buffer.Position = 0;
 
@@ -46,7 +46,7 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         if (_ossClient is null)
             throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
 
-        var buffer = new MemoryStream();
+        await using var buffer = new MemoryStream();
         await fileStream.CopyToAsync(buffer, ct);
         buffer.Position = 0;
         var metadata = new ObjectMetadata { ContentType = contentType };
@@ -71,29 +71,21 @@ public class S3FileStorageService : IFileStorageService, IDisposable
         return _ossClient.GeneratePresignedUri(request).ToString();
     }
 
-    public async Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(string key, FileVisibility visibility, CancellationToken ct = default)
     {
         if (_ossClient is null)
             throw new InvalidOperationException("Thai Data Cloud storage is not configured.");
 
-        var key = ExtractKeyFromUrl(fileUrl);
-        if (string.IsNullOrEmpty(key)) return false;
         var result = await Task.Run(() => _ossClient.DeleteObject(_bucketName, key), ct);
         return result.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
     public string GetPublicUrl(string key) => $"{_publicUrl}/{_bucketName}/{key}";
 
-    private string? ExtractKeyFromUrl(string fileUrl)
-    {
-        var prefix = $"{_publicUrl}/{_bucketName}/";
-        return fileUrl.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? fileUrl[prefix.Length..] : null;
-    }
-
     public void Dispose() { }
 }
 
-public class ThaiDataCloudOptions
+public sealed class ThaiDataCloudOptions
 {
     public const string SectionName = "ThaiDataCloud";
     public string ServiceUrl { get; set; } = string.Empty;
