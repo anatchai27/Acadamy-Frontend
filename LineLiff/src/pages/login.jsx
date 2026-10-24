@@ -89,17 +89,18 @@ export const LoginPage = () => {
   };
 
   return (
-    <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-700 text-white p-6">
-      <div class="text-center">
-        <div class="text-5xl mb-4">📚</div>
-        <h1 class="text-2xl font-bold mb-2">TiwHub</h1>
-        <p class="text-blue-100 mb-8">ระบบจัดการเรียนการสอน</p>
-        <p class="text-xs text-blue-100/80 mb-4">เวอร์ชัน {APP_VERSION}</p>
+    <div class="flex min-h-[100dvh] flex-col items-center justify-center bg-sage-50 p-5 text-ink-900 sm:p-6">
+      <div class="w-full max-w-sm text-center">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-700 text-2xl text-white shadow-soft" aria-hidden="true">📚</div>
+        <h1 class="text-2xl font-bold tracking-tight text-ink-900">TiwHub</h1>
+        <p class="mt-1 text-ink-500">ระบบจัดการเรียนการสอน</p>
+        <p class="mb-5 mt-2 text-xs text-ink-500">เวอร์ชัน {APP_VERSION}</p>
         {needsCode ? (
-          <form onSubmit={handleCodeSubmit} class="w-full max-w-xs text-left">
-            <div class="bg-white/10 rounded-xl p-4 mb-4">
-              <p class="text-sm mb-3">กรอกรหัสเชื่อม LINE ที่ได้รับจากโรงเรียน รหัสใช้ได้ครั้งเดียวและหมดอายุใน 5 วัน</p>
-              {testAuthMode && <p class="text-xs text-amber-100 mb-3">โหมดทดสอบ: รหัสต้องออกจากโปรไฟล์นักเรียนในระบบโรงเรียน</p>}
+          <form onSubmit={handleCodeSubmit} class="text-left">
+            <div class="mb-4 rounded-2xl border border-sage-200 bg-white p-5 shadow-soft">
+              <h2 class="text-lg font-bold text-ink-900">เชื่อมบัญชีผู้ปกครอง</h2>
+              <p class="mb-4 mt-1 text-sm leading-6 text-ink-500">กรอกรหัสที่ได้รับจากโรงเรียน รหัสใช้ได้ครั้งเดียวและหมดอายุใน 5 วัน</p>
+              {testAuthMode && <p class="mb-3 rounded-xl bg-gold-50 p-3 text-xs text-gold-600">โหมดทดสอบ: รหัสต้องออกจากโปรไฟล์นักเรียนในระบบโรงเรียน</p>}
               <input
                 type="text"
                 inputMode="text"
@@ -109,46 +110,46 @@ export const LoginPage = () => {
                 value={linkCode}
                 onInput={event => (setLinkCode(event.currentTarget.value.toUpperCase().slice(0, 16)), setError(null))}
                 aria-describedby="link-code-hint"
-                class="w-full rounded-lg px-3 py-2 text-center font-mono text-base tracking-widest text-slate-900 outline-none"
+                class="min-h-12 w-full rounded-xl border border-sage-200 bg-sage-50 px-3 py-2 text-center font-mono text-base tracking-widest text-ink-900 outline-none transition focus:border-sage-600 focus:ring-2 focus:ring-sage-100"
                 disabled={binding}
               />
-              <p id="link-code-hint" class="mt-2 text-xs text-blue-100">รหัสมี 12 ตัว ไม่ใช้ตัว I, O, 0 หรือ 1</p>
-              {error && <p class="text-sm text-red-200 mt-2">{error}</p>}
-              <button type="submit" class="w-full mt-3 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-blue-700 disabled:opacity-50" disabled={binding}>
+              <p id="link-code-hint" class="mt-2 text-xs text-ink-500">รหัสมี 12 ตัว ไม่ใช้ตัว I, O, 0 หรือ 1</p>
+              {error && <p role="alert" class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+              <button type="submit" class="mt-4 min-h-11 w-full rounded-xl bg-sage-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-sage-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700 disabled:opacity-50" disabled={binding}>
                 {binding ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อข้อมูล'}
               </button>
             </div>
           </form>
         ) : error ? (
-          <div class="bg-red-500/20 rounded-xl p-4 mb-4">
+          <div role="alert" class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
             <p class="text-sm">{error}</p>
           </div>
         ) : (
           <div class="flex flex-col items-center gap-3">
-            <div class="h-8 w-8 rounded-full border-3 border-white/30 border-t-white animate-spin" />
-            <p class="text-sm text-blue-100">กำลังเชื่อมต่อกับ LINE...</p>
+            <div class="h-8 w-8 animate-spin rounded-full border-3 border-sage-200 border-t-sage-700" />
+            <p class="text-sm text-ink-500">กำลังเชื่อมต่อกับ LINE...</p>
           </div>
         )}
         {testAuthMode && (
-          <section class="mx-auto mt-4 w-full max-w-sm rounded-xl border border-white/20 bg-slate-950/20 p-4 text-left" aria-live="polite">
-            <h2 class="text-sm font-semibold text-white">ข้อมูล LINE Profile ที่ได้รับ</h2>
-            <p class="mt-1 text-xs text-blue-100">
+          <section class="mx-auto mt-4 w-full rounded-2xl border border-sage-200 bg-white p-4 text-left shadow-soft" aria-live="polite">
+            <h2 class="text-sm font-semibold text-ink-900">ข้อมูล LINE Profile ที่ได้รับ</h2>
+            <p class="mt-1 text-xs text-ink-500">
               จาก <code>liff.getProfile()</code> — ใช้ตรวจสอบข้อมูลในโหมดทดสอบเท่านั้น
             </p>
             {state.liffProfile ? (
               <>
-                <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-white">
-                  <dt class="text-blue-100">ชื่อ</dt>
+                <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-ink-900">
+                  <dt class="text-ink-500">ชื่อ</dt>
                   <dd class="break-all">{state.liffProfile.displayName || '-'}</dd>
-                  <dt class="text-blue-100">LINE userId</dt>
+                  <dt class="text-ink-500">LINE userId</dt>
                   <dd class="break-all font-mono">{state.liffProfile.userId || '-'}</dd>
                 </dl>
-                <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-950/40 p-3 text-left text-xs leading-relaxed text-white" dir="ltr">
+                <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-sage-50 p-3 text-left text-xs leading-relaxed text-ink-700" dir="ltr">
                   {JSON.stringify(state.liffProfile, null, 2)}
                 </pre>
               </>
             ) : (
-              <p class="mt-3 text-xs text-amber-100">ยังไม่ได้รับ LINE Profile — กำลังรอ LIFF ยืนยันตัวตน</p>
+              <p class="mt-3 text-xs text-gold-600">ยังไม่ได้รับ LINE Profile — กำลังรอ LIFF ยืนยันตัวตน</p>
             )}
           </section>
         )}
@@ -156,7 +157,7 @@ export const LoginPage = () => {
           type="button"
           onClick={handleLeaveLogin}
           disabled={binding}
-          class="mt-2 rounded-lg px-4 py-2 text-sm font-medium text-white/90 underline underline-offset-4 disabled:opacity-50"
+          class="mt-2 min-h-11 rounded-full px-4 py-2 text-sm font-semibold text-sage-700 underline underline-offset-4 transition hover:text-sage-600 disabled:opacity-50"
         >
           ปิด LIFF และกลับไป LINE
         </button>
