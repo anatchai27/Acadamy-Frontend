@@ -118,6 +118,10 @@ describe('finance batch payment form', () => {
   it('combines multiple courses and siblings into one cash batch', async () => {
     render(<FinancePage path="/admin/finance" />);
 
+    expect(screen.getByRole('heading', { name: 'เงื่อนไขการชำระเงิน' })).toBeInTheDocument();
+    expect(screen.getByText(/ระบบไม่กำหนดจำนวนงวด/)).toBeInTheDocument();
+    expect(screen.getByText(/ต้องเป็นของสถาบันเดียวกัน/)).toBeInTheDocument();
+
     const firstStudent = await screen.findByLabelText('เลือกนักเรียน');
     fireEvent.change(firstStudent, { target: { value: '1' } });
     const mathCourse = await screen.findByRole('checkbox', { name: /คณิตศาสตร์/ });

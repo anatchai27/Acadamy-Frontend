@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
 import { financeService, studentService, enrollmentService, uploadService, reportService } from '../../services';
+import { instituteService } from '../../services/institute-service';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 
@@ -41,6 +42,7 @@ export function FinancePage({ path }) {
   const [revenueLoaded, setRevenueLoaded] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [paymentSetupComplete, setPaymentSetupComplete] = useState(null);
 
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState(null);
@@ -60,6 +62,22 @@ export function FinancePage({ path }) {
         setStudents(payload.students || (Array.isArray(payload) ? payload : []));
       })
       .catch(() => showToast('ไม่สามารถโหลดรายชื่อนักเรียนได้', 'error'));
+  }, []);
+
+  useEffect(() => {
+    instituteService.getInstitute({ signal: getSignal() })
+      .then((res) => {
+        const institute = res.data?.data || res.data || {};
+        const hasBankAccount = Boolean(
+          institute.bankName?.trim()
+          && institute.bankAccountName?.trim()
+          && institute.bankAccountNumber?.trim(),
+        );
+        const hasPromptPay = Boolean(institute.promptPayId?.trim());
+        const hasQrCode = Boolean(institute.paymentQrImageUrl?.trim());
+        setPaymentSetupComplete(hasBankAccount || hasPromptPay || hasQrCode);
+      })
+      .catch(() => setPaymentSetupComplete(null));
   }, []);
 
   const fetchPayments = async (page = historyPage) => {
@@ -477,6 +495,21 @@ export function FinancePage({ path }) {
         <p class="text-sm text-zinc-500 mt-1 sm:mt-0">จัดการบันทึกรายรับและดูประวัติการเงิน</p>
       </div>
 
+      {paymentSetupComplete === false && (
+        <aside class={`mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${isNeo ? 'neo-card border-2 border-black bg-[#fff7d6]' : 'rounded-2xl border border-amber-200 bg-amber-50'}`}>
+          <div>
+            <h3 class="font-semibold text-zinc-900">ตั้งค่าบัญชีรับชำระเงินของสถาบันให้เรียบร้อย</h3>
+            <p class="mt-1 text-sm leading-relaxed text-zinc-700">เพิ่มบัญชีธนาคาร พร้อมเพย์ หรือ QR เพื่อให้ผู้ปกครองเห็นช่องทางโอนเงินของสถาบัน</p>
+          </div>
+          <a
+            href="/admin/settings?tab=payment"
+            class={`inline-flex min-h-11 shrink-0 items-center justify-center px-4 text-sm font-semibold transition ${isNeo ? 'neo-btn border-2 border-black bg-white text-zinc-900' : 'rounded-xl bg-amber-700 text-white shadow-sm hover:bg-amber-800'}`}
+          >
+            ไปตั้งค่าบัญชีรับเงิน
+          </a>
+        </aside>
+      )}
+
       {/* Mode Switcher */}
       <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
         <button
@@ -509,6 +542,19 @@ export function FinancePage({ path }) {
 
       {mode === 'form' ? (
         <div class="max-w-6xl">
+          <aside
+            aria-labelledby="payment-conditions-title"
+            class={`mb-5 p-4 sm:p-5 ${isNeo ? 'neo-card border-2 border-black bg-[#fff7d6]' : 'rounded-2xl border border-blue-200 bg-blue-50/80'}`}
+          >
+            <h3 id="payment-conditions-title" class="text-sm font-bold text-zinc-900">เงื่อนไขการชำระเงิน</h3>
+            <ul class="mt-2 grid gap-1.5 text-xs leading-relaxed text-zinc-700 sm:grid-cols-2">
+              <li>แบ่งชำระได้หลายครั้ง ระบบไม่กำหนดจำนวนงวด แต่ยอดแต่ละครั้งต้องมากกว่า 0 และไม่เกินยอดค้าง</li>
+              <li>ยอดบิลโอนที่รอตรวจจะถูกนับแล้ว จึงไม่สามารถนำยอดเดียวกันมาสร้างบิลซ้ำได้</li>
+              <li>โอนเงินแนบสลิปยอดรวม 1 ใบต่อบิล และยอดในสลิปต้องตรงกับยอดบิล</li>
+              <li>รวมได้สูงสุด 100 รายการคอร์สในบิลเดียว และต้องเป็นของสถาบันเดียวกัน</li>
+            </ul>
+            <p class="mt-2 text-xs font-medium text-zinc-600">เงินสดบันทึกเป็นชำระสำเร็จทันที ส่วนยอดโอนจะสำเร็จหลังตรวจสอบสลิปผ่าน</p>
+          </aside>
           <form onSubmit={handleSubmitPayment} noValidate>
             <div class="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
               <section class={`${isNeo ? 'neo-card bg-white p-5' : 'rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm'}`}>

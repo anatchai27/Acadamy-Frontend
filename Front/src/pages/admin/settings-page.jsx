@@ -21,7 +21,7 @@ export function SettingsPage({ path }) {
   const [logoFile, setLogoFile] = useState(null);
   const [changelog, setChangelog] = useState([]);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('institute');
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get('tab') === 'payment' ? 'payment' : 'institute');
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [paymentQrFile, setPaymentQrFile] = useState(null);
   const [paymentQrPreview, setPaymentQrPreview] = useState(null);
