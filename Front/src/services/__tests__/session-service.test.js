@@ -4,6 +4,8 @@ import {
   sessionService,
   getSessions,
   createSession,
+  updateSession,
+  replaceFutureSessions,
 } from '../session-service';
 
 vi.mock('../api', () => ({
@@ -54,18 +56,34 @@ describe('Session Service', () => {
     });
   });
 
-  describe('sessionService object', () => {
-    it('exposes getSessions and createSession', () => {
-      expect(sessionService.getSessions).toBe(getSessions);
-      expect(sessionService.createSession).toBe(createSession);
+  describe('updateSession', () => {
+    it('calls PUT /courses/{courseId}/sessions/{sessionId} with updated schedule', async () => {
+      const payload = { scheduledAt: '2026-07-02T10:00:00Z', durationMin: 90, roomId: 'Room A' };
+      api.put.mockResolvedValue({ data: {}, status: 200 });
+      await updateSession(5, 42, payload);
+      expect(api.put).toHaveBeenCalledWith('/courses/5/sessions/42', payload);
     });
   });
 
-  describe('no PUT/DELETE endpoints', () => {
-    it('does not export updateSession', () => {
-      expect(sessionService).not.toHaveProperty('updateSession');
+  describe('replaceFutureSessions', () => {
+    it('calls PUT /courses/{courseId}/sessions/replace-future with recurring rules', async () => {
+      const payload = { startDate: '2026-07-01', endDate: '2026-07-31', rules: [] };
+      api.put.mockResolvedValue({ data: {}, status: 200 });
+      await replaceFutureSessions(5, payload);
+      expect(api.put).toHaveBeenCalledWith('/courses/5/sessions/replace-future', payload);
     });
+  });
 
+  describe('sessionService object', () => {
+    it('exposes session list, create, update, and replacement operations', () => {
+      expect(sessionService.getSessions).toBe(getSessions);
+      expect(sessionService.createSession).toBe(createSession);
+      expect(sessionService.updateSession).toBe(updateSession);
+      expect(sessionService.replaceFutureSessions).toBe(replaceFutureSessions);
+    });
+  });
+
+  describe('no DELETE endpoint', () => {
     it('does not export deleteSession', () => {
       expect(sessionService).not.toHaveProperty('deleteSession');
     });

@@ -394,12 +394,12 @@ export function CoursesPage({ path }) {
     }
   };
 
-  const eligibleCourses = courses.filter((course) => Number(course.totalSessions) > 0);
-  const visibleEnrollmentCourses = eligibleCourses.filter((course) =>
+  const enrollableCourses = courses.filter((course) => Number(course.totalSessions) > 0);
+  const visibleEnrollmentCourses = courses.filter((course) =>
     `${course.name || ''} ${course.subject || ''}`.toLowerCase().includes(courseSearch.trim().toLowerCase()),
   );
   const activeCourseIds = new Set(studentEnrollments.filter((item) => Number(item.sessionsRemaining) > 0).map((item) => String(item.courseId)));
-  const selectedEnrollmentCourse = eligibleCourses.find((course) => String(course.id) === selectedCourseId);
+  const selectedEnrollmentCourse = enrollableCourses.find((course) => String(course.id) === selectedCourseId);
   const pricePerSession = selectedEnrollmentCourse && Number(selectedEnrollmentCourse.totalSessions) > 0
     ? Number(selectedEnrollmentCourse.price || 0) / Number(selectedEnrollmentCourse.totalSessions)
     : 0;
@@ -885,13 +885,13 @@ export function CoursesPage({ path }) {
                         <button
                           key={course.id}
                           type="button"
-                          disabled={!selectedStudent || studentEnrollmentsLoading || !studentEnrollmentsLoaded || isAlreadyEnrolled}
+                          disabled={!Number(course.totalSessions) || !selectedStudent || studentEnrollmentsLoading || !studentEnrollmentsLoaded || isAlreadyEnrolled}
                           onClick={() => setSelectedCourseId(String(course.id))}
                           class={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${isSelected ? 'border-oasis-primary bg-oasis-primary/5 ring-2 ring-oasis-primary/10' : 'border-zinc-200 hover:border-zinc-300'}`}
                         >
                           <span class="min-w-0">
                             <span class="block truncate text-sm font-semibold text-zinc-900">{course.name}</span>
-                            <span class="mt-0.5 block text-xs text-zinc-500">{Number(course.totalSessions)} คาบในตาราง · ฿{Number(course.price || 0).toLocaleString()}</span>
+                            <span class="mt-0.5 block text-xs text-zinc-500">{Number(course.totalSessions) > 0 ? `${Number(course.totalSessions)} คาบในอนาคต` : 'ยังไม่มีคาบเรียนในอนาคต · จัดตารางเรียนก่อนลงทะเบียน'} · ฿{Number(course.price || 0).toLocaleString()}</span>
                             {isAlreadyEnrolled && <span class="mt-1 block text-xs font-medium text-amber-700">ลงทะเบียนแล้ว · เหลือ {studentEnrollments.find((item) => String(item.courseId) === String(course.id))?.sessionsRemaining || 0} คาบ</span>}
                           </span>
                           {isSelected && <HiOutlineCheckCircle class="h-5 w-5 shrink-0 text-oasis-primary" />}
@@ -900,8 +900,8 @@ export function CoursesPage({ path }) {
                     })}
                     {visibleEnrollmentCourses.length === 0 && (
                       <p class="py-6 text-center text-sm text-zinc-400">
-                        {eligibleCourses.length === 0
-                          ? 'ยังไม่มีคาบเรียนในอนาคต กรุณาจัดตารางเรียนของคอร์สก่อน'
+                        {courses.length === 0
+                          ? 'ยังไม่มีคอร์สเรียนในสถาบัน'
                           : 'ไม่พบคอร์สที่ตรงกับคำค้นหา'}
                       </p>
                     )}

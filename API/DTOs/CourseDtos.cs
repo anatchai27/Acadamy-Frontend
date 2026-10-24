@@ -92,6 +92,14 @@ public record CreateRecurringSessionsResponse(
     int CreatedCount
 );
 
+public record ReplaceFutureSessionsResponse(
+    string Status,
+    string Message,
+    int CancelledCount,
+    int PreservedCount,
+    int CreatedCount
+);
+
 public record CreateSessionResponse(
     string Status,
     string Message,

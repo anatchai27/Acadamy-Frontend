@@ -191,6 +191,85 @@ public class CourseServiceTests
         sessionRepoMock.Verify(r => r.CreateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task UpdateSessionAsync_ValidScheduledSession_UpdatesSchedule()
+    {
+        var scheduledSession = new Session
+        {
+            Id = 5,
+            CourseId = 1,
+            InstituteId = 1,
+            ScheduledAt = DateTime.UtcNow,
+            DurationMin = 60,
+            RoomId = "R1",
+            Status = "scheduled"
+        };
+        var sessionRepoMock = CreateMockSessionRepo();
+        sessionRepoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(scheduledSession);
+        sessionRepoMock.Setup(r => r.HasAttendanceAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        sessionRepoMock.Setup(r => r.HasRoomOverlapExcludingAsync(1, "R2", It.IsAny<DateTime>(), It.IsAny<DateTime>(), 5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var sut = new SessionService(sessionRepoMock.Object);
+        var newStart = new DateTime(2026, 7, 2, 11, 0, 0, DateTimeKind.Utc);
+        await sut.UpdateAsync(1, 5, new CreateSessionRequest(newStart, 90, "R2"), 1);
+
+        Assert.Equal(newStart, scheduledSession.ScheduledAt);
+        Assert.Equal(90, scheduledSession.DurationMin);
+        Assert.Equal("R2", scheduledSession.RoomId);
+        sessionRepoMock.Verify(r => r.UpdateAsync(scheduledSession, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateSessionAsync_HasAttendance_RejectsScheduleChange()
+    {
+        var sessionRepoMock = CreateMockSessionRepo();
+        sessionRepoMock.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(new Session
+        {
+            Id = 5,
+            CourseId = 1,
+            InstituteId = 1,
+            ScheduledAt = DateTime.UtcNow,
+            DurationMin = 60,
+            Status = "scheduled"
+        });
+        sessionRepoMock.Setup(r => r.HasAttendanceAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new SessionService(sessionRepoMock.Object);
+        var error = await Assert.ThrowsAsync<SessionValidationException>(() =>
+            sut.UpdateAsync(1, 5, new CreateSessionRequest(DateTime.UtcNow.AddDays(1), 90, null), 1));
+
+        Assert.Equal("SESSION_HAS_ATTENDANCE", error.ErrorCode);
+        sessionRepoMock.Verify(r => r.UpdateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReplaceFutureAsync_UsesFutureScheduleAndReturnsReplacementCounts()
+    {
+        var sessionRepoMock = CreateMockSessionRepo();
+        sessionRepoMock.Setup(r => r.GetCourseByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Course { Id = 1, InstituteId = 7, Name = "Math" });
+        sessionRepoMock.Setup(r => r.ReplaceFutureSessionsAsync(
+                1,
+                7,
+                It.IsAny<DateTime>(),
+                It.Is<IReadOnlyCollection<Session>>(items => items.Count == 1 && items.Single().InstituteId == 7),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((2, 1));
+
+        var sut = new SessionService(sessionRepoMock.Object);
+        var start = DateTime.UtcNow.Date.AddDays(1);
+        var dayOfWeek = (int)start.DayOfWeek;
+        var result = await sut.ReplaceFutureAsync(1, new CreateRecurringSessionsRequest(
+            start,
+            start,
+            [new RecurringSessionRule(dayOfWeek, "10:00", 90, "R1")]), 7);
+
+        Assert.Equal(2, result.CancelledCount);
+        Assert.Equal(1, result.PreservedCount);
+        Assert.Equal(1, result.CreatedCount);
+    }
+
     // 12
     [Fact]
     public async Task GetByCourseIdAsync_ReturnsSessionsList()

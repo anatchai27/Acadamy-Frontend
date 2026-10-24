@@ -68,6 +68,63 @@ public static class SessionEndpoints
             }
         });
 
+        group.MapPut("/{sessionId:int}", async (
+            int courseId,
+            int sessionId,
+            CreateSessionRequest request,
+            ISessionService service,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var instituteIdClaim = httpContext.User.FindFirst("institute_id")?.Value;
+                if (string.IsNullOrEmpty(instituteIdClaim) || !int.TryParse(instituteIdClaim, out var instituteId))
+                    return Results.BadRequest(new { Status = "error", Message = "Institute not identified." });
+
+                await service.UpdateAsync(courseId, sessionId, request, instituteId, ct);
+                return Results.Ok(new { Status = "success", Message = "อัปเดตตารางเรียนสำเร็จ" });
+            }
+            catch (SessionValidationException ex)
+            {
+                var statusCode = ex.ErrorCode switch
+                {
+                    "SESSION_NOT_FOUND" => StatusCodes.Status404NotFound,
+                    "SESSION_NOT_EDITABLE" or "SESSION_HAS_ATTENDANCE" or "ROOM_OVERLAP" => StatusCodes.Status409Conflict,
+                    _ => StatusCodes.Status400BadRequest
+                };
+                return Results.Json(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }, statusCode: statusCode);
+            }
+        });
+
+        group.MapPut("/replace-future", async (
+            int courseId,
+            CreateRecurringSessionsRequest request,
+            ISessionService service,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var instituteIdClaim = httpContext.User.FindFirst("institute_id")?.Value;
+                if (string.IsNullOrEmpty(instituteIdClaim) || !int.TryParse(instituteIdClaim, out var instituteId))
+                    return Results.BadRequest(new { Status = "error", Message = "Institute not identified." });
+
+                var result = await service.ReplaceFutureAsync(courseId, request, instituteId, ct);
+                return Results.Ok(result);
+            }
+            catch (SessionValidationException ex)
+            {
+                var statusCode = ex.ErrorCode switch
+                {
+                    "COURSE_NOT_FOUND" => StatusCodes.Status404NotFound,
+                    "ROOM_OVERLAP" => StatusCodes.Status409Conflict,
+                    _ => StatusCodes.Status400BadRequest
+                };
+                return Results.Json(new { Status = "error", ErrorCode = ex.ErrorCode, Message = ex.Message }, statusCode: statusCode);
+            }
+        });
+
         return app;
     }
 }

@@ -6,5 +6,7 @@ public interface ISessionService
 {
     Task<SessionListResponse> GetByCourseIdAsync(int courseId, CancellationToken ct = default);
     Task<CreateSessionResponse> CreateAsync(int courseId, CreateSessionRequest request, int instituteId, CancellationToken ct = default);
+    Task UpdateAsync(int courseId, int sessionId, CreateSessionRequest request, int instituteId, CancellationToken ct = default);
     Task<CreateRecurringSessionsResponse> CreateRecurringAsync(int courseId, CreateRecurringSessionsRequest request, int instituteId, CancellationToken ct = default);
+    Task<ReplaceFutureSessionsResponse> ReplaceFutureAsync(int courseId, CreateRecurringSessionsRequest request, int instituteId, CancellationToken ct = default);
 }

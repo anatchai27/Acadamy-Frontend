@@ -65,11 +65,94 @@ public class SessionService(ISessionRepository repository) : ISessionService
         );
     }
 
+    public async Task UpdateAsync(int courseId, int sessionId, CreateSessionRequest request, int instituteId, CancellationToken ct = default)
+    {
+        var session = await _repository.GetByIdAsync(sessionId, ct);
+        if (session is null || session.CourseId != courseId || session.InstituteId != instituteId)
+            throw new SessionValidationException("SESSION_NOT_FOUND", "ไม่พบคาบเรียนหรือไม่มีสิทธิ์เข้าถึง");
+        if (!string.Equals(session.Status, "scheduled", StringComparison.OrdinalIgnoreCase))
+            throw new SessionValidationException("SESSION_NOT_EDITABLE", "แก้ไขได้เฉพาะคาบเรียนที่ยังไม่เริ่มและไม่ถูกยกเลิก");
+        if (await _repository.HasAttendanceAsync(sessionId, ct))
+            throw new SessionValidationException("SESSION_HAS_ATTENDANCE", "คาบนี้มีข้อมูลเช็คชื่อแล้ว จึงไม่สามารถแก้ไขตารางได้");
+        if (request.DurationMin <= 0)
+            throw new SessionValidationException("INVALID_DURATION", "ระยะเวลาคาบเรียนต้องมากกว่า 0 นาที");
+
+        var roomId = request.RoomId?.Trim();
+        if (!string.IsNullOrWhiteSpace(roomId) && await _repository.HasRoomOverlapExcludingAsync(
+            instituteId, roomId, request.ScheduledAt, request.ScheduledAt.AddMinutes(request.DurationMin), sessionId, ct))
+            throw new SessionValidationException("ROOM_OVERLAP", "ห้องเรียนมีคาบเรียนทับซ้อนในช่วงเวลานี้");
+
+        session.ScheduledAt = request.ScheduledAt;
+        session.DurationMin = request.DurationMin;
+        session.RoomId = roomId;
+        await _repository.UpdateAsync(session, ct);
+    }
+
     public async Task<CreateRecurringSessionsResponse> CreateRecurringAsync(int courseId, CreateRecurringSessionsRequest request, int instituteId, CancellationToken ct = default)
     {
         _ = await _repository.GetCourseByIdAsync(courseId, ct)
             ?? throw new SessionValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนหรือไม่มีสิทธิ์เข้าถึง");
 
+        var generated = GenerateRecurringSessions(request);
+
+        foreach (var item in generated.Where(x => !string.IsNullOrWhiteSpace(x.RoomId)))
+        {
+            if (await _repository.HasRoomOverlapAsync(instituteId, item.RoomId!, item.ScheduledAt, item.ScheduledAt.AddMinutes(item.DurationMin), ct))
+                throw new SessionValidationException("ROOM_OVERLAP", "มีคาบเรียนในห้องที่เลือกทับซ้อนอยู่แล้ว");
+        }
+
+        foreach (var item in generated)
+            await CreateAsync(courseId, item, instituteId, ct);
+
+        return new CreateRecurringSessionsResponse("success", "สร้างตารางเรียนแบบ recurring สำเร็จ", generated.Count);
+    }
+
+    public async Task<ReplaceFutureSessionsResponse> ReplaceFutureAsync(
+        int courseId,
+        CreateRecurringSessionsRequest request,
+        int instituteId,
+        CancellationToken ct = default)
+    {
+        var course = await _repository.GetCourseByIdAsync(courseId, ct);
+        if (course is null || course.InstituteId != instituteId)
+            throw new SessionValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนหรือไม่มีสิทธิ์เข้าถึง");
+
+        var now = DateTime.UtcNow;
+        var generated = GenerateRecurringSessions(request)
+            .Where(session => session.ScheduledAt >= now)
+            .Select(session => new Models.Session
+            {
+                CourseId = courseId,
+                InstituteId = instituteId,
+                ScheduledAt = session.ScheduledAt,
+                DurationMin = session.DurationMin,
+                RoomId = session.RoomId,
+                Status = "scheduled"
+            })
+            .ToList();
+
+        if (generated.Count == 0)
+            throw new SessionValidationException("NO_FUTURE_SESSIONS", "ตารางใหม่ไม่มีคาบเรียนในอนาคต กรุณาปรับช่วงวันที่");
+
+        try
+        {
+            var (cancelledCount, preservedCount) = await _repository.ReplaceFutureSessionsAsync(
+                courseId, instituteId, now, generated, ct);
+            return new ReplaceFutureSessionsResponse(
+                "success",
+                "แทนที่ตารางเรียนในอนาคตสำเร็จ โดยคงคาบที่ผ่านมาและคาบที่มีข้อมูลเช็คชื่อไว้",
+                cancelledCount,
+                preservedCount,
+                generated.Count);
+        }
+        catch (Repositories.RoomBookingConflictException ex)
+        {
+            throw new SessionValidationException("ROOM_OVERLAP", ex.Message);
+        }
+    }
+
+    private static List<CreateSessionRequest> GenerateRecurringSessions(CreateRecurringSessionsRequest request)
+    {
         if (request.StartDate.Date > request.EndDate.Date)
             throw new SessionValidationException("INVALID_DATE_RANGE", "วันเริ่มต้นต้องไม่เกินวันสิ้นสุด");
         if (request.Rules is null || request.Rules.Count == 0)
@@ -85,7 +168,8 @@ public class SessionService(ISessionRepository repository) : ISessionService
                 if (rule.DayOfWeek is < 0 or > 6 || !TimeOnly.TryParse(rule.StartTime, CultureInfo.InvariantCulture, out var startTime))
                     throw new SessionValidationException("INVALID_RULE", "วันหรือเวลาในกฎตารางเรียนไม่ถูกต้อง");
                 if ((int)day.DayOfWeek != rule.DayOfWeek) continue;
-                if (rule.DurationMin <= 0) throw new SessionValidationException("INVALID_DURATION", "ระยะเวลาคาบเรียนต้องมากกว่า 0 นาที");
+                if (rule.DurationMin <= 0)
+                    throw new SessionValidationException("INVALID_DURATION", "ระยะเวลาคาบเรียนต้องมากกว่า 0 นาที");
                 generated.Add(new CreateSessionRequest(day.Add(startTime.ToTimeSpan()), rule.DurationMin, rule.RoomId?.Trim()));
             }
         }
@@ -106,16 +190,7 @@ public class SessionService(ISessionRepository repository) : ISessionService
             }
         }
 
-        foreach (var item in generated.Where(x => !string.IsNullOrWhiteSpace(x.RoomId)))
-        {
-            if (await _repository.HasRoomOverlapAsync(instituteId, item.RoomId!, item.ScheduledAt, item.ScheduledAt.AddMinutes(item.DurationMin), ct))
-                throw new SessionValidationException("ROOM_OVERLAP", "มีคาบเรียนในห้องที่เลือกทับซ้อนอยู่แล้ว");
-        }
-
-        foreach (var item in generated)
-            await CreateAsync(courseId, item, instituteId, ct);
-
-        return new CreateRecurringSessionsResponse("success", "สร้างตารางเรียนแบบ recurring สำเร็จ", generated.Count);
+        return generated;
     }
 }
 

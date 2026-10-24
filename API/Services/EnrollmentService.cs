@@ -13,6 +13,10 @@ public class EnrollmentService(IEnrollmentRepository repository) : IEnrollmentSe
         if (course is null)
             throw new EnrollmentValidationException("COURSE_NOT_FOUND", "ไม่พบคอร์สเรียนที่ระบุ");
 
+        var student = await _repository.GetStudentByIdAsync(request.StudentId, ct);
+        if (student is null || student.InstituteId != course.InstituteId)
+            throw new EnrollmentValidationException("STUDENT_NOT_FOUND", "ไม่พบนักเรียนในสถาบันนี้");
+
         var upcomingSessionCount = await _repository.GetUpcomingSessionCountAsync(request.CourseId, now, ct);
         if (upcomingSessionCount == 0)
             throw new EnrollmentValidationException("NO_UPCOMING_SESSIONS", "คอร์สนี้ยังไม่มีคาบเรียนในอนาคต กรุณาจัดตารางเรียนก่อนลงทะเบียน");
@@ -25,6 +29,7 @@ public class EnrollmentService(IEnrollmentRepository repository) : IEnrollmentSe
         {
             StudentId = request.StudentId,
             CourseId = request.CourseId,
+            InstituteId = course.InstituteId,
             SessionsRemaining = upcomingSessionCount,
             PaidAmount = 0,
             ExpiresAt = now.AddMonths(6),

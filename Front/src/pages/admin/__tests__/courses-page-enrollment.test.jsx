@@ -76,13 +76,15 @@ describe('course enrollment flow', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'ลงทะเบียนนักเรียน' }));
     fireEvent.click(await screen.findByRole('button', { name: /น้องสมชาย/ }));
-    const courseButton = await screen.findByRole('button', { name: /20 คาบในตาราง/ });
+    const courseButton = await screen.findByRole('button', { name: /20 คาบในอนาคต/ });
     await waitFor(() => expect(courseButton).toBeEnabled());
     fireEvent.click(courseButton);
 
     expect(screen.queryByText('6 เดือนนับจากวันที่ลงทะเบียน')).not.toBeInTheDocument();
     expect(screen.getAllByText('฿250')).toHaveLength(1);
-    expect(within(screen.getByRole('dialog')).queryByText('คอร์สที่ยังไม่พร้อม')).not.toBeInTheDocument();
+    const unavailableCourse = within(screen.getByRole('dialog')).getByRole('button', { name: /คอร์สที่ยังไม่พร้อม/ });
+    expect(unavailableCourse).toBeDisabled();
+    expect(within(unavailableCourse).getByText(/ยังไม่มีคาบเรียนในอนาคต/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'ยืนยันลงทะเบียน' }));
 

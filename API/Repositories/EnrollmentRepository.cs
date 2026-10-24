@@ -13,6 +13,11 @@ public class EnrollmentRepository(TutoringDbContext context) : IEnrollmentReposi
         return await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId, ct);
     }
 
+    public async Task<Student?> GetStudentByIdAsync(int studentId, CancellationToken ct = default)
+    {
+        return await _context.Students.FirstOrDefaultAsync(student => student.Id == studentId, ct);
+    }
+
     public Task<int> GetUpcomingSessionCountAsync(int courseId, DateTime from, CancellationToken ct = default)
     {
         return _context.Sessions.CountAsync(s =>
