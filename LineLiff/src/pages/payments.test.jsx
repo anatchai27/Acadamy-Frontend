@@ -130,6 +130,8 @@ describe('LIFF payment payload', () => {
 
     expect(screen.queryByRole('button', { name: 'ชำระเงิน' })).not.toBeInTheDocument();
     expect(screen.getByText('สถาบันยังไม่ได้ตั้งค่าบัญชีรับโอน')).toHaveAttribute('role', 'status');
+    expect(screen.getByText('สถาบันยังไม่ได้ตั้งค่าช่องทางรับชำระเงิน')).toBeInTheDocument();
+    expect(screen.getByText(/จึงยังชำระรายการที่มียอดค้างผ่านระบบไม่ได้/)).toBeInTheDocument();
   });
 
   it('lets a parent pay with a static QR as the only configured transfer destination', async () => {

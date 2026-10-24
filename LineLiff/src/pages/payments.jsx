@@ -14,6 +14,7 @@ import { validatePaymentSlip } from '../utils/validation';
 import { formatPhoneNumber } from '../utils/phone';
 
 const formatBaht = amount => `฿${Number(amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const hasPaymentDestination = payment => Boolean(payment.bankAccountNumber || payment.promptPayId || payment.paymentQrImageUrl);
 
 export const normalizePayment = (payment) => ({
   id: payment.id ?? payment.Id ?? payment.invoiceNo,
@@ -251,6 +252,13 @@ export const PaymentsPage = ({ childId }) => {
               <p class="mt-1 text-2xl font-bold">{formatBaht(totalDue)}</p>
             </section>
 
+            {balances.some(balance => balance.amountDue > 0 && !hasPaymentDestination(balance)) && (
+              <aside role="status" class="rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+                <p class="font-bold">สถาบันยังไม่ได้ตั้งค่าช่องทางรับชำระเงิน</p>
+                <p class="mt-1">จึงยังชำระรายการที่มียอดค้างผ่านระบบไม่ได้ กรุณาติดต่อสถาบันเพื่อสอบถามช่องทางชำระเงิน</p>
+              </aside>
+            )}
+
             {activeBatch && (
               <section class="rounded-card border border-sage-200 bg-white p-5 shadow-soft" aria-labelledby="active-payment-title">
                 <div class="flex items-start justify-between gap-3">
@@ -333,7 +341,7 @@ export const PaymentsPage = ({ childId }) => {
                         <p class="truncate font-bold text-ink-900">{balance.courseName}</p>
                         <p class="mt-1 font-semibold text-sage-700">{formatBaht(balance.amountDue)}</p>
                       </div>
-                      {balance.bankAccountNumber || balance.promptPayId || balance.paymentQrImageUrl ? (
+                      {hasPaymentDestination(balance) ? (
                         <button
                           type="button"
                           onClick={() => startPayment(balance)}
