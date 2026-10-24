@@ -2,6 +2,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'auth_token';
 
 let onUnauthorized = null;
+let refreshPromise = null;
 
 export const setOnUnauthorized = handler => {
   onUnauthorized = handler;
@@ -16,6 +17,34 @@ const buildQuery = params => {
     const qs = search.toString();
     return qs ? `?${qs}` : '';
   })();
+};
+
+const refreshAccessToken = token => {
+  if (!token) return Promise.resolve(null);
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = fetch(`${API_BASE}/auth/refresh-token`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  })
+    .then(async response => {
+      if (!response.ok) return null;
+      const data = await response.json().catch(() => null);
+      const newToken = data?.data?.token || data?.token;
+      if (!newToken) return null;
+      try {
+        window.localStorage.setItem(TOKEN_KEY, newToken);
+      } catch {}
+      return newToken;
+    })
+    .catch(() => null)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
 };
 
 const fetcher = async (endpoint, options = {}) => {
@@ -37,12 +66,27 @@ const fetcher = async (endpoint, options = {}) => {
   !isFormData ? (headers['Content-Type'] = 'application/json') : null;
 
   const url = `${API_BASE}${endpoint}${buildQuery(params)}`;
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     ...fetchOptions,
     headers,
     credentials: 'include',
     signal,
   });
+
+  let refreshAttempted = false;
+  if (response.status === 401 && storedToken && !endpoint.startsWith('/auth/refresh-token')) {
+    refreshAttempted = true;
+    const refreshedToken = await refreshAccessToken(storedToken);
+    if (refreshedToken) {
+      headers.Authorization = `Bearer ${refreshedToken}`;
+      response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+        credentials: 'include',
+        signal,
+      });
+    }
+  }
 
   const data = response.headers.get('content-type')?.includes('application/json')
     ? await response.json().catch(() => null)
@@ -57,7 +101,7 @@ const fetcher = async (endpoint, options = {}) => {
       && /tenant validation failed|invalid or missing institute context/i.test(String(serverMessage));
     const isUnauthorized = response.status === 401 || isTenantContextInvalid;
 
-    isUnauthorized && onUnauthorized
+    isUnauthorized && onUnauthorized && (isTenantContextInvalid || !storedToken || endpoint.startsWith('/auth/refresh-token') || refreshAttempted)
       ? onUnauthorized(isTenantContextInvalid ? 'session-expired' : 'unauthorized')
       : null;
 
