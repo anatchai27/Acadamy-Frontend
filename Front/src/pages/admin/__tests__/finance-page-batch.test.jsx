@@ -169,8 +169,8 @@ describe('finance batch payment form', () => {
     render(<FinancePage path="/admin/finance" />);
 
     expect(await screen.findByRole('option', { name: 'นักเรียนมียอดค้าง' })).toBeInTheDocument();
-    expect(studentService.getStudents).toHaveBeenNthCalledWith(1, { page: 1, limit: 100 }, { signal: undefined });
-    expect(studentService.getStudents).toHaveBeenNthCalledWith(2, { page: 2, limit: 100 }, { signal: undefined });
+    expect(studentService.getStudents).toHaveBeenNthCalledWith(1, { page: 1, limit: 100 });
+    expect(studentService.getStudents).toHaveBeenNthCalledWith(2, { page: 2, limit: 100 });
   });
 
   it('uploads and verifies one slip against the combined transfer amount', async () => {

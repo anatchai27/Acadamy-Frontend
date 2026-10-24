@@ -56,12 +56,11 @@ export function FinancePage({ path }) {
   const [slipUploadKey, setSlipUploadKey] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
     const loadStudents = async () => {
       setStudentsLoading(true);
       try {
         const limit = 100;
-        const firstResponse = await studentService.getStudents({ page: 1, limit }, { signal: getSignal() });
+        const firstResponse = await studentService.getStudents({ page: 1, limit });
         const firstPayload = firstResponse.data?.data || firstResponse.data || {};
         const allStudents = firstPayload.students || (Array.isArray(firstPayload) ? firstPayload : []);
         const totalPages = Math.max(1, Number(firstPayload.pagination?.totalPages) || 1);
@@ -71,29 +70,26 @@ export function FinancePage({ path }) {
             { length: Math.min(5, totalPages - startPage + 1) },
             (_, index) => startPage + index,
           );
-          const responses = await Promise.all(pages.map((page) =>
-            studentService.getStudents({ page, limit }, { signal: getSignal() }),
-          ));
+          const responses = await Promise.all(pages.map((page) => studentService.getStudents({ page, limit })));
           responses.forEach((response) => {
             const payload = response.data?.data || response.data || {};
             allStudents.push(...(payload.students || (Array.isArray(payload) ? payload : [])));
           });
         }
 
-        if (!cancelled) setStudents(allStudents);
+        setStudents(allStudents);
       } catch (error) {
-        if (!cancelled) showToast(formatError(error, 'ไม่สามารถโหลดรายชื่อนักเรียนได้'), 'error');
+        showToast(formatError(error, 'ไม่สามารถโหลดรายชื่อนักเรียนได้'), 'error');
       } finally {
-        if (!cancelled) setStudentsLoading(false);
+        setStudentsLoading(false);
       }
     };
 
     loadStudents();
-    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    instituteService.getInstitute({ signal: getSignal() })
+    instituteService.getInstitute()
       .then((res) => {
         const institute = res.data?.data || res.data || {};
         const hasBankAccount = Boolean(
