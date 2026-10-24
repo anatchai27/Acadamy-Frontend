@@ -90,8 +90,15 @@ public sealed class BackgroundNotificationRepository(TutoringDbContext context) 
 
     public Task<Notification?> FindByIdempotencyKeyAsync(string notificationType, string idempotencyKey, CancellationToken ct = default) =>
         _context.Notifications
-            .Where(n => n.NotificationType == notificationType && n.Payload != null && n.Payload.Contains(idempotencyKey))
-            .OrderByDescending(n => n.Id)
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM `notifications`
+                WHERE `notification_type` = {notificationType}
+                    AND `payload` IS NOT NULL
+                    AND JSON_UNQUOTE(JSON_EXTRACT(`payload`, '$.idempotencyKey')) = {idempotencyKey}
+                ORDER BY `id` DESC
+                LIMIT 1
+                """)
             .FirstOrDefaultAsync(ct);
 
     public async Task<Notification> CreatePendingAsync(Notification notification, CancellationToken ct = default)
