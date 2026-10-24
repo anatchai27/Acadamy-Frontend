@@ -1,5 +1,22 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+export const recoverExpiredParentSession = (
+  status,
+  endpoint,
+  { storage = window.localStorage, location = window.location } = {},
+) => {
+  if (status !== 401 || endpoint === '/parents/bind-line' || endpoint.startsWith('/parents/bind-line?')) return false;
+
+  try {
+    storage.removeItem('parent_token');
+  } catch {}
+
+  if (location.pathname?.startsWith('/liff') && location.pathname !== '/liff/login') {
+    location.assign('/liff/login');
+  }
+  return true;
+};
+
 const buildQuery = params => {
   return !params ? '' : (() => {
     const search = new URLSearchParams();
@@ -37,6 +54,7 @@ const fetcher = async (endpoint, options = {}) => {
     : null;
 
   return response.ok ? { data, status: response.status } : (() => {
+    recoverExpiredParentSession(response.status, endpoint);
     const msg = data?.message || data?.error || `API Error: ${response.status}`;
     const error = new Error(msg);
     error.status = response.status;
@@ -66,7 +84,12 @@ export const api = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       signal: options.signal,
     });
-    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    if (!response.ok) {
+      recoverExpiredParentSession(response.status, endpoint);
+      const error = new Error(`API Error: ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
     return { blob: await response.blob() };
   },
 };

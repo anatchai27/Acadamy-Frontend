@@ -330,7 +330,7 @@ export function SessionsPage({ path, courseId }) {
       )}
 
       {!loading && sessions.length > 0 && (
-        <section class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <section class="overflow-hidden border border-zinc-200 bg-white">
           <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <div>
               <h3 class="font-semibold text-zinc-900">รายละเอียดการสอน</h3>
@@ -339,7 +339,7 @@ export function SessionsPage({ path, courseId }) {
           </div>
           <div class="overflow-x-auto">
             <table class="w-full min-w-[680px] text-left text-sm">
-              <thead class="bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <thead class="bg-zinc-50 text-xs font-semibold text-zinc-600">
                 <tr><th class="px-5 py-3">วันสอน</th><th class="px-5 py-3">เวลาเรียน</th><th class="px-5 py-3">ระยะเวลา</th><th class="px-5 py-3">สถานที่เรียน</th><th class="px-5 py-3">สถานะการสอน</th></tr>
               </thead>
               <tbody class="divide-y divide-zinc-100">
@@ -352,7 +352,7 @@ export function SessionsPage({ path, courseId }) {
               <td class="px-5 py-4 text-zinc-600">{formatTime(session.scheduledAt)} น.</td>
               <td class="px-5 py-4 text-zinc-600">{session.durationMin} นาที</td>
               <td class="px-5 py-4 text-zinc-600">{getRoomName(session.roomId)}</td>
-              <td class="px-5 py-4"><span class={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${STATUS_MAP[session.status]?.color || 'bg-zinc-100 text-zinc-600'}`}>
+              <td class="px-5 py-4"><span class={`inline-flex rounded-sm px-2.5 py-1 text-xs font-semibold ${STATUS_MAP[session.status]?.color || 'bg-zinc-100 text-zinc-600'}`}>
                 {STATUS_MAP[session.status]?.label || session.status || 'ตามตาราง'}
               </span></td>
             </tr>
