@@ -571,11 +571,11 @@ export function FinancePage({ path }) {
             class={`mb-5 p-4 sm:p-5 ${isNeo ? 'neo-card border-2 border-black bg-[#fff7d6]' : 'rounded-2xl border border-blue-200 bg-blue-50/80'}`}
           >
             <h3 id="payment-conditions-title" class="text-sm font-bold text-zinc-900">เงื่อนไขการชำระเงิน</h3>
-            <ul class="mt-2 grid gap-1.5 text-xs leading-relaxed text-zinc-700 sm:grid-cols-2">
-              <li>แบ่งชำระได้หลายครั้ง ระบบไม่กำหนดจำนวนงวด แต่ยอดแต่ละครั้งต้องมากกว่า 0 และไม่เกินยอดค้าง</li>
-              <li>ยอดบิลโอนที่รอตรวจจะถูกนับแล้ว จึงไม่สามารถนำยอดเดียวกันมาสร้างบิลซ้ำได้</li>
-              <li>โอนเงินแนบสลิปยอดรวม 1 ใบต่อบิล และยอดในสลิปต้องตรงกับยอดบิล</li>
-              <li>รวมได้สูงสุด 100 รายการคอร์สในบิลเดียว และต้องเป็นของสถาบันเดียวกัน</li>
+            <ul class="mt-2 grid gap-x-5 gap-y-2 text-xs leading-5 text-zinc-700 sm:grid-cols-2">
+              <li class="flex items-start gap-2"><span aria-hidden="true" class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-oasis-primary" /><span>แบ่งชำระได้หลายครั้ง ระบบไม่กำหนดจำนวนงวด แต่ยอดแต่ละครั้งต้องมากกว่า 0 และไม่เกินยอดค้าง</span></li>
+              <li class="flex items-start gap-2"><span aria-hidden="true" class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-oasis-primary" /><span>ยอดบิลโอนที่รอตรวจจะถูกนับแล้ว จึงไม่สามารถนำยอดเดียวกันมาสร้างบิลซ้ำได้</span></li>
+              <li class="flex items-start gap-2"><span aria-hidden="true" class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-oasis-primary" /><span>โอนเงินแนบสลิปยอดรวม 1 ใบต่อบิล และยอดในสลิปต้องตรงกับยอดบิล</span></li>
+              <li class="flex items-start gap-2"><span aria-hidden="true" class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-oasis-primary" /><span>รวมได้สูงสุด 100 รายการคอร์สในบิลเดียว และต้องเป็นของสถาบันเดียวกัน</span></li>
             </ul>
             <p class="mt-2 text-xs font-medium text-zinc-600">เงินสดบันทึกเป็นชำระสำเร็จทันที ส่วนยอดโอนจะสำเร็จหลังตรวจสอบสลิปผ่าน</p>
           </aside>

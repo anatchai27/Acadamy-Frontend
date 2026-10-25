@@ -100,22 +100,24 @@ public class PaymentService(
         int page, int limit, CancellationToken ct = default)
     {
         var fetchLimit = Math.Max(page * limit, limit);
-        var paymentsTask = _repository.GetPaymentsAsync(startDate, endDate, method, 1, fetchLimit, ct);
-        var totalAmountTask = _repository.GetTotalAmountAsync(startDate, endDate, method, ct);
-        var countTask = _repository.GetPaymentCountAsync(startDate, endDate, method, ct);
-        var batchesTask = _batchRepository?.GetHistoryAsync(startDate, endDate, method, fetchLimit, ct)
-            ?? Task.FromResult(new List<PaymentBatch>());
-        var batchTotalTask = _batchRepository?.GetTotalAmountAsync(startDate, endDate, method, ct)
-            ?? Task.FromResult(0m);
-        var batchCountTask = _batchRepository?.GetBatchCountAsync(startDate, endDate, method, ct)
-            ?? Task.FromResult(0);
 
-        var payments = await paymentsTask;
-        var batches = await batchesTask;
-        var paymentTotalAmount = await totalAmountTask;
-        var batchTotalAmount = await batchTotalTask;
+        // Both repositories share the request-scoped EF Core DbContext. Do not
+        // run these queries concurrently: DbContext does not support parallel operations.
+        var payments = await _repository.GetPaymentsAsync(startDate, endDate, method, 1, fetchLimit, ct);
+        var paymentTotalAmount = await _repository.GetTotalAmountAsync(startDate, endDate, method, ct);
+        var paymentCount = await _repository.GetPaymentCountAsync(startDate, endDate, method, ct);
+        var batches = _batchRepository is null
+            ? new List<PaymentBatch>()
+            : await _batchRepository.GetHistoryAsync(startDate, endDate, method, fetchLimit, ct);
+        var batchTotalAmount = _batchRepository is null
+            ? 0m
+            : await _batchRepository.GetTotalAmountAsync(startDate, endDate, method, ct);
+        var batchCount = _batchRepository is null
+            ? 0
+            : await _batchRepository.GetBatchCountAsync(startDate, endDate, method, ct);
+
         var totalAmount = paymentTotalAmount + batchTotalAmount;
-        var totalCount = await countTask + await batchCountTask;
+        var totalCount = paymentCount + batchCount;
 
         var totalPages = totalCount > 0
             ? (int)Math.Ceiling((double)totalCount / limit)
