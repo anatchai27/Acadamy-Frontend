@@ -41,6 +41,16 @@ jobs:
           target: "/var/www/my-api"
           strip_components: 2
 
+      - name: Upload VPS service and Nginx configuration
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "deploy/my-api.service,deploy/nginx.conf"
+          target: "/tmp/tiwhub-deploy"
+          strip_components: 1
+
       - name: Fix permissions and restart services
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -48,9 +58,34 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            sudo install -D -m 644 /tmp/tiwhub-deploy/my-api.service /etc/systemd/system/my-api.service
+            sudo install -D -m 644 /tmp/tiwhub-deploy/nginx.conf /etc/nginx/sites-available/tiwhub
+            sudo ln -sfn /etc/nginx/sites-available/tiwhub /etc/nginx/sites-enabled/tiwhub
+
+            sudo install -d -m 700 /etc/tiwhub
+            sudo touch /etc/tiwhub/api.env
+            if ! sudo grep -q '^LocalFileStorage__SigningKey=.' /etc/tiwhub/api.env 2>/dev/null; then
+              key="$(openssl rand -base64 48)"
+              printf 'LocalFileStorage__SigningKey=%s\n' "$key" | sudo tee -a /etc/tiwhub/api.env >/dev/null
+              unset key
+            fi
+            sudo sed -i '/^FileStorage__Provider=/d' /etc/tiwhub/api.env
+            printf 'FileStorage__Provider=Local\n' | sudo tee -a /etc/tiwhub/api.env >/dev/null
+            sudo chmod 600 /etc/tiwhub/api.env
+
+            sudo mkdir -p /var/lib/tiwhub-storage/public /var/lib/tiwhub-storage/private
+            sudo chown -R www-data:www-data /var/lib/tiwhub-storage
+            sudo chmod 750 /var/lib/tiwhub-storage /var/lib/tiwhub-storage/private
+            sudo chmod 755 /var/lib/tiwhub-storage/public
+
+            sudo systemctl daemon-reload
+            sudo nginx -t
+            sudo systemctl reload nginx
+
             # Backend: service runs as www-data in this project.
             sudo chown -R www-data:www-data /var/www/my-api
             sudo find /var/www/my-api -type d -exec chmod 755 {} \;
             sudo find /var/www/my-api -type f -exec chmod 644 {} \;
 
             sudo systemctl start my-api.service
+            curl --fail --retry 10 --retry-delay 2 http://127.0.0.1:5000/api/version

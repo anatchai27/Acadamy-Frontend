@@ -5,6 +5,7 @@
   "rewrites": [
     { "source": "/api", "destination": "http://165.101.65.84/api" },
     { "source": "/api/:path*", "destination": "http://165.101.65.84/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "http://165.101.65.84/uploads/:path*" },
     { "source": "/liff", "destination": "/index.html" },
     { "source": "/liff/", "destination": "/index.html" },
     { "source": "/liff/:path*", "destination": "/index.html" },
