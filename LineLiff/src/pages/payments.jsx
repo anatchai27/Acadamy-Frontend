@@ -56,6 +56,7 @@ export const PaymentsPage = ({ childId }) => {
   const { state } = useLiffContext();
   const [payments, setPayments] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [paymentAmounts, setPaymentAmounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
@@ -112,12 +113,12 @@ export const PaymentsPage = ({ childId }) => {
   const settledPayments = payments.filter(payment => payment.status !== 'pending');
   const totalDue = balances.reduce((total, balance) => total + balance.amountDue, 0);
 
-  const startPayment = async balance => {
+  const startPayment = async (balance, amount) => {
     setActionError('');
     setNotice('');
     setCreatingEnrollmentId(balance.enrollmentId);
     try {
-      const response = await createChildPaymentBatch(selectedChildId, balance.enrollmentId);
+      const response = await createChildPaymentBatch(selectedChildId, balance.enrollmentId, amount);
       const batch = response.data?.data || response.data;
       setActiveBatch({
         batchId: batch.batchId ?? batch.BatchId,
@@ -335,26 +336,63 @@ export const PaymentsPage = ({ childId }) => {
               </div>
               {balances.length ? (
                 <div class="divide-y divide-sage-100 overflow-hidden rounded-card border border-sage-100 bg-white shadow-soft">
-                  {balances.map(balance => (
-                    <article key={balance.enrollmentId} class="flex items-center justify-between gap-3 p-4">
-                      <div class="min-w-0">
-                        <p class="truncate font-bold text-ink-900">{balance.courseName}</p>
-                        <p class="mt-1 font-semibold text-sage-700">{formatBaht(balance.amountDue)}</p>
-                      </div>
-                      {hasPaymentDestination(balance) ? (
-                        <button
-                          type="button"
-                          onClick={() => startPayment(balance)}
-                          disabled={creatingEnrollmentId !== null}
-                          class="min-h-11 shrink-0 rounded-xl bg-sage-700 px-4 text-sm font-bold text-white disabled:opacity-50"
-                        >
-                          {creatingEnrollmentId === balance.enrollmentId ? 'กำลังเตรียม…' : 'ชำระเงิน'}
-                        </button>
-                      ) : (
-                        <p class="max-w-40 text-right text-xs font-semibold leading-5 text-amber-900" role="status">สถาบันยังไม่ได้ตั้งค่าบัญชีรับโอน</p>
-                      )}
-                    </article>
-                  ))}
+                  {balances.map(balance => {
+                    const amountValue = paymentAmounts[balance.enrollmentId] ?? String(balance.amountDue);
+                    const selectedAmount = Number(amountValue);
+                    const amountIsValid = Number.isFinite(selectedAmount)
+                      && selectedAmount > 0
+                      && selectedAmount <= balance.amountDue;
+
+                    return (
+                      <article key={balance.enrollmentId} class="space-y-3 p-4">
+                        <div>
+                          <p class="truncate font-bold text-ink-900">{balance.courseName}</p>
+                          <p class="mt-1 text-sm text-ink-700">ยอดค้าง {formatBaht(balance.amountDue)}</p>
+                        </div>
+                        {hasPaymentDestination(balance) ? (
+                          <div class="flex flex-wrap items-end gap-2">
+                            <label class="min-w-40 flex-1 text-xs font-semibold text-ink-700">
+                              จำนวนเงินที่ต้องการชำระ
+                              <span class="mt-1 flex h-11 items-center rounded-xl border border-sage-200 bg-white px-3 focus-within:border-sage-600 focus-within:ring-2 focus-within:ring-sage-100">
+                                <span class="mr-2 text-ink-700">฿</span>
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min="0.01"
+                                  max={balance.amountDue}
+                                  step="0.01"
+                                  value={amountValue}
+                                  aria-label={`จำนวนเงินที่ต้องการชำระ ${balance.courseName}`}
+                                  onInput={event => setPaymentAmounts(previous => ({ ...previous, [balance.enrollmentId]: event.currentTarget.value }))}
+                                  disabled={creatingEnrollmentId !== null}
+                                  class="min-w-0 flex-1 bg-transparent text-base font-bold text-ink-900 outline-none"
+                                />
+                              </span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setPaymentAmounts(previous => ({ ...previous, [balance.enrollmentId]: String(balance.amountDue) }))}
+                              disabled={creatingEnrollmentId !== null}
+                              class="min-h-11 rounded-xl border border-sage-200 px-3 text-xs font-bold text-sage-700 disabled:opacity-50"
+                            >
+                              จ่ายเต็มยอด
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => startPayment(balance, selectedAmount)}
+                              disabled={creatingEnrollmentId !== null || !amountIsValid}
+                              class="min-h-11 shrink-0 rounded-xl bg-sage-700 px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {creatingEnrollmentId === balance.enrollmentId ? 'กำลังเตรียม…' : 'ชำระเงิน'}
+                            </button>
+                            {!amountIsValid && <p class="w-full text-xs font-semibold text-red-700" role="alert">กรอกยอดมากกว่า 0 และไม่เกินยอดค้าง</p>}
+                          </div>
+                        ) : (
+                          <p class="text-xs font-semibold leading-5 text-amber-900" role="status">สถาบันยังไม่ได้ตั้งค่าบัญชีรับโอน</p>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               ) : (
                 <p class="rounded-2xl bg-white px-4 py-5 text-sm text-ink-700">ไม่มียอดค้างที่ต้องชำระ</p>

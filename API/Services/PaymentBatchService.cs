@@ -93,7 +93,8 @@ public sealed class PaymentBatchService(
         int parentUserId,
         int studentId,
         int enrollmentId,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        decimal? requestedAmount = null)
     {
         var enrollment = await repository.GetEnrollmentAsync(enrollmentId, ct);
         if (enrollment is null
@@ -107,8 +108,14 @@ public sealed class PaymentBatchService(
         if (amountDue <= 0m)
             throw new PaymentValidationException("BALANCE_ALREADY_RESERVED", "ยอดนี้ถูกชำระหรืออยู่ระหว่างตรวจสอบแล้ว");
 
+        var amount = decimal.Round(requestedAmount ?? amountDue, 2, MidpointRounding.AwayFromZero);
+        if (amount <= 0m)
+            throw new PaymentValidationException("INVALID_AMOUNT", "จำนวนเงินต้องมากกว่า 0");
+        if (amount > amountDue + 0.001m)
+            throw new PaymentValidationException("AMOUNT_EXCEEDS_BALANCE", "ยอดชำระเกินยอดคงเหลือของรายการนี้");
+
         return await CreateAsync(new CreatePaymentBatchRequest(
-            [new PaymentBatchAllocationRequest(enrollmentId, amountDue)],
+            [new PaymentBatchAllocationRequest(enrollmentId, amount)],
             "transfer"), ct);
     }
 

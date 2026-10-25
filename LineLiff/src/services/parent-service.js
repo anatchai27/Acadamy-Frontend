@@ -19,8 +19,8 @@ export const getChildPayments = (childId, params = {}) => {
 export const getChildPayableBalances = childId =>
   api.get(`/parents/children/${childId}/payable-balances`);
 
-export const createChildPaymentBatch = (childId, enrollmentId) =>
-  api.post(`/parents/children/${childId}/payment-batches`, { enrollmentId });
+export const createChildPaymentBatch = (childId, enrollmentId, amount) =>
+  api.post(`/parents/children/${childId}/payment-batches`, { enrollmentId, amount });
 
 export const uploadPaymentBatchSlip = (batchId, file) => {
   const formData = new FormData();

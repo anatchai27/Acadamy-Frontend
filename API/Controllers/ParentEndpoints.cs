@@ -273,7 +273,7 @@ public static class ParentEndpoints
         try
         {
             return Results.Ok(await paymentBatchService.CreateParentTransferAsync(
-                userId.Value, childId, request.EnrollmentId, ct));
+                userId.Value, childId, request.EnrollmentId, ct, request.Amount));
         }
         catch (PaymentValidationException ex) when (ex.ErrorCode == "BALANCE_ALREADY_RESERVED")
         {
@@ -442,4 +442,4 @@ public static class ParentEndpoints
 }
 
 public record BindLineRequest(string? IdToken, string? Code);
-public record CreateParentPaymentBatchRequest(int EnrollmentId);
+public record CreateParentPaymentBatchRequest(int EnrollmentId, decimal? Amount = null);

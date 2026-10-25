@@ -102,6 +102,45 @@ public class PaymentBatchServiceTests
     }
 
     [Fact]
+    public async Task CreateParentTransferAsync_CreatesBillForSelectedPartialAmount()
+    {
+        var enrollment = Enrollment(45, 20, 1000m);
+        enrollment.Student.Parents.Add(new Parent { UserId = 10, StudentId = 20 });
+        var batches = new Mock<IPaymentBatchRepository>();
+        var payments = new Mock<IPaymentRepository>();
+        SetupBalances(payments, batches);
+        batches.Setup(repository => repository.GetEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        batches.Setup(repository => repository.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync("INV-202610-B123456789");
+        batches.Setup(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PaymentBatch batch, CancellationToken _) => batch);
+
+        var result = await CreateSut(batches, payments).CreateParentTransferAsync(10, 20, 45, requestedAmount: 350m);
+
+        Assert.Equal(350m, result.Data.Amount);
+        batches.Verify(repository => repository.CreateAsync(It.Is<PaymentBatch>(batch =>
+            batch.Amount == 350m && batch.Allocations.Single().Amount == 350m), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateParentTransferAsync_RejectsAmountAboveRemainingBalance()
+    {
+        var enrollment = Enrollment(45, 20, 1000m);
+        enrollment.Student.Parents.Add(new Parent { UserId = 10, StudentId = 20 });
+        var batches = new Mock<IPaymentBatchRepository>();
+        var payments = new Mock<IPaymentRepository>();
+        SetupBalances(payments, batches);
+        batches.Setup(repository => repository.GetEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        payments.Setup(repository => repository.GetSucceededAmountByEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(200m);
+        payments.Setup(repository => repository.GetPendingAmountByEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(100m);
+
+        var exception = await Assert.ThrowsAsync<PaymentValidationException>(() =>
+            CreateSut(batches, payments).CreateParentTransferAsync(10, 20, 45, requestedAmount: 701m));
+
+        Assert.Equal("AMOUNT_EXCEEDS_BALANCE", exception.ErrorCode);
+        batches.Verify(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task VerifySlipAsync_VerifiesOneSlipAgainstCombinedBatchTotal()
     {
         var batch = new PaymentBatch

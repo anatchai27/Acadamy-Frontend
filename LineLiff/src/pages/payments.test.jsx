@@ -105,7 +105,7 @@ describe('LIFF payment payload', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ชำระเงิน' }));
 
     await screen.findByText('INV-81');
-    expect(services.createChildPaymentBatch).toHaveBeenCalledWith(20, 45);
+    expect(services.createChildPaymentBatch).toHaveBeenCalledWith(20, 45, 1250);
     expect(screen.getByText('ยอดโอน ฿1,250.00')).toBeInTheDocument();
     expect(screen.getByText('ธนาคารตัวอย่าง')).toBeInTheDocument();
     expect(screen.getByText('1234567890')).toBeInTheDocument();
@@ -121,6 +121,32 @@ describe('LIFF payment payload', () => {
 
     await screen.findByText('ส่งสลิปแล้ว รายการกำลังรอสถาบันตรวจสอบ');
     expect(services.uploadPaymentBatchSlip).toHaveBeenCalledWith(81, expect.any(File));
+  });
+
+  it('lets a parent create a bill for only part of the remaining balance', async () => {
+    services.getChildPayableBalances.mockResolvedValue({
+      data: {
+        data: [{
+          enrollmentId: 45,
+          studentId: 20,
+          courseName: 'คณิตศาสตร์ ป.4',
+          amountDue: 1250,
+          bankAccountNumber: '1234567890',
+        }],
+      },
+    });
+    services.createChildPaymentBatch.mockResolvedValue({
+      data: { data: { batchId: 82, invoiceNo: 'INV-82', amount: 400 } },
+    });
+    render(<PaymentsPage childId="20" />);
+
+    const amountInput = await screen.findByRole('spinbutton', { name: 'จำนวนเงินที่ต้องการชำระ คณิตศาสตร์ ป.4' });
+    expect(amountInput).toHaveValue(1250);
+    fireEvent.input(amountInput, { target: { value: '400' } });
+    fireEvent.click(screen.getByRole('button', { name: 'ชำระเงิน' }));
+
+    await screen.findByText('ยอดโอน ฿400.00');
+    expect(services.createChildPaymentBatch).toHaveBeenCalledWith(20, 45, 400);
   });
 
   it('does not create a payment batch before the institute configures a transfer destination', async () => {
