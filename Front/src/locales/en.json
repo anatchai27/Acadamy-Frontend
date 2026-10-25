@@ -116,6 +116,22 @@
       "durations": ["8 weeks", "10 sessions", "12 sessions"],
       "perCourse": "per course",
       "compare": "Compare course prices"
+    },
+    "mascot": {
+      "hero": "Start with what your child loves, then find a place that fits.",
+      "search": "Search by subject, location, or institute name.",
+      "communication": "A welcoming space can help every child find their voice.",
+      "foundation": "Build strong foundations, one confident step at a time.",
+      "futureSkills": "Try something new and discover what your child can create.",
+      "institutes": "Explore teaching styles, locations, and details to find your fit.",
+      "institute1": "Love structured thinking? Explore small-group classes.",
+      "institute2": "Explore language and speaking through activities.",
+      "institute3": "For builders at heart: explore coding and robotics.",
+      "courses": "Compare price, duration, and learning format before choosing.",
+      "emptyCourses": "Try another search or choose a different subject.",
+      "compare": "Pick courses you like and we’ll line them up for you.",
+      "compareReady": "Your picks are ready. Compare the details before deciding.",
+      "partner": "Have a class kids will love? Let more families discover it."
     }
   },
   "navigation": {

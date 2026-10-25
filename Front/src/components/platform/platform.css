@@ -759,6 +759,202 @@
   outline-offset: 3px;
 }
 
+/* Fox sticker trail: 13 small moments guide the visitor without crowding the choices. */
+.oasis-marketplace .market-hero,
+.oasis-marketplace .market-section,
+.oasis-marketplace .market-compare,
+.oasis-marketplace .market-partner,
+.oasis-marketplace .market-need-card,
+.oasis-marketplace .market-institute-wrap {
+  position: relative;
+}
+.oasis-marketplace .market-mascot {
+  z-index: 1;
+}
+.oasis-marketplace .market-mascot img {
+  width: 76px;
+  height: 76px;
+}
+.oasis-marketplace .market-mascot > span {
+  border-color: #c5e5f2;
+  background: #fff;
+  color: #17335c;
+  box-shadow: 0 5px 16px rgba(23, 53, 92, 0.1);
+}
+.oasis-marketplace .market-mascot-hero {
+  position: absolute;
+  top: 50px;
+  right: 12px;
+  width: 260px;
+  flex-direction: column;
+  text-align: center;
+}
+.oasis-marketplace .market-mascot-hero img {
+  width: 148px;
+  height: 148px;
+}
+.oasis-marketplace .market-mascot-hero > span,
+.oasis-marketplace .market-mascot-search > span,
+.oasis-marketplace .market-mascot-section > span,
+.oasis-marketplace .market-mascot-compare > span,
+.oasis-marketplace .market-mascot-partner > span {
+  border-radius: 18px 18px 18px 5px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.oasis-marketplace .market-hero h1,
+.oasis-marketplace .market-hero p,
+.oasis-marketplace .market-search,
+.oasis-marketplace .market-suggestions {
+  max-width: min(68%, 700px);
+}
+.oasis-marketplace .market-hero h1 {
+  font-size: clamp(46px, 5.7vw, 72px);
+  line-height: 1.12;
+}
+.oasis-marketplace .market-hero p {
+  font-size: 17px;
+  line-height: 1.75;
+}
+.oasis-marketplace .market-search input,
+.oasis-marketplace .market-search button,
+.oasis-marketplace .market-tabs button {
+  font-size: 15px;
+}
+.oasis-marketplace .market-mascot-search {
+  margin: 12px 0 0;
+}
+.oasis-marketplace .market-mascot-search img,
+.oasis-marketplace .market-mascot-trust img,
+.oasis-marketplace .market-mascot-section img,
+.oasis-marketplace .market-mascot-partner img,
+.oasis-marketplace .market-mascot-compare img {
+  width: 62px;
+  height: 62px;
+}
+.oasis-marketplace .market-mascot-trust {
+  flex: 0 0 auto;
+}
+.oasis-marketplace .market-mascot-trust img {
+  width: 56px;
+  height: 56px;
+}
+.oasis-marketplace .market-mascot-trust > span {
+  max-width: 180px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.oasis-marketplace .market-need-card {
+  padding-top: 82px;
+}
+.oasis-marketplace .market-need-mascot {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+.oasis-marketplace .market-need-mascot img {
+  width: 68px;
+  height: 68px;
+}
+.oasis-marketplace .market-institute-wrap {
+  padding-top: 44px;
+}
+.oasis-marketplace .market-mascot-card {
+  position: absolute;
+  top: 0;
+  left: 12px;
+}
+.oasis-marketplace .market-mascot-card img {
+  width: 58px;
+  height: 58px;
+}
+.oasis-marketplace .market-mascot-card > span {
+  max-width: 190px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.oasis-marketplace .market-institute-card h3 {
+  font-size: 22px;
+  letter-spacing: normal;
+}
+.oasis-marketplace .market-institute-card p,
+.oasis-marketplace .market-course-card p,
+.oasis-marketplace .market-partner p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.oasis-marketplace .market-tags span,
+.oasis-marketplace .market-kicker,
+.oasis-marketplace .market-provider,
+.oasis-marketplace .market-price span,
+.oasis-marketplace .market-rating small {
+  font-size: 13px;
+}
+.oasis-marketplace .market-card-link,
+.oasis-marketplace .market-compare-button,
+.oasis-marketplace .market-partner > a,
+.oasis-marketplace .market-compare button {
+  font-size: 15px;
+}
+.oasis-marketplace .market-mascot-section {
+  margin: -4px 0 18px;
+}
+.oasis-marketplace .market-mascot-section > span {
+  max-width: 430px;
+}
+.oasis-marketplace .market-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  border: 1px dashed #b8d8ed;
+  border-radius: 18px;
+  background: #eff9ff;
+  color: #294568;
+  font-size: 16px;
+}
+.oasis-marketplace .market-empty-state > p {
+  margin: 0;
+}
+.oasis-marketplace .market-mascot-compare {
+  margin-bottom: 12px;
+}
+.oasis-marketplace .market-mascot-partner {
+  margin-bottom: 16px;
+}
+.oasis-marketplace .market-trust strong {
+  font-size: 27px;
+}
+.oasis-marketplace .market-trust span,
+.oasis-marketplace .market-trust p,
+.oasis-marketplace .market-heading > span,
+.oasis-marketplace .market-heading > a {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.oasis-marketplace .market-heading h2 {
+  font-size: 32px;
+}
+.oasis-marketplace .market-compare h2,
+.oasis-marketplace .market-partner h2 {
+  font-size: 34px;
+}
+.oasis-marketplace .market-compare p,
+.oasis-marketplace .market-compare-list {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+@media (max-width: 900px) {
+  .oasis-marketplace .market-mascot-hero {
+    right: 0;
+    width: 210px;
+  }
+  .oasis-marketplace .market-mascot-hero img { width: 124px; height: 124px; }
+}
+
 @media (max-width: 760px) {
   .market-nav-links {
     display: none;
@@ -769,6 +965,19 @@
   .market-hero {
     padding: 55px 18px 70px;
   }
+  .oasis-marketplace .market-mascot-hero {
+    position: static;
+    width: auto;
+    align-items: flex-start;
+    flex-direction: row;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .oasis-marketplace .market-mascot-hero img { width: 86px; height: 86px; }
+  .oasis-marketplace .market-hero h1,
+  .oasis-marketplace .market-hero p,
+  .oasis-marketplace .market-search,
+  .oasis-marketplace .market-suggestions { max-width: 100%; }
   .market-trust {
     margin: -25px 18px 55px;
     padding: 18px;
@@ -780,6 +989,9 @@
     border-left: 0;
     border-top: 1px solid #dbe4df;
     padding: 12px 0 0;
+  }
+  .oasis-marketplace .market-mascot-trust {
+    grid-column: span 2;
   }
   .market-section {
     padding: 0 18px;
@@ -797,6 +1009,8 @@
   .market-need-card {
     min-height: 180px;
   }
+  .oasis-marketplace .market-mascot-card > span { max-width: 230px; }
+  .oasis-marketplace .market-empty-state { flex-direction: column; text-align: center; }
   .market-compare,
   .market-partner {
     margin-inline: 18px;

@@ -11,5 +11,6 @@ describe('Public home page', () => {
     expect(search.value).toBe('Coding');
     expect(screen.getByRole('heading', { name: 'สถาบันแนะนำประจำเดือน' })).toBeTruthy();
     expect(screen.getByRole('link', { name: /เปิดคอร์สกับเรา/ })).toHaveAttribute('href', '#for-institutes');
+    expect(document.querySelectorAll('.fox-sticker-pop')).toHaveLength(13);
   });
 });

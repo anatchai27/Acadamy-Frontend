@@ -4,6 +4,7 @@ import { CoursePlatformCard } from './CoursePlatformCard';
 import { InstituteCard } from './InstituteCard';
 import { useTranslation } from '../../hooks';
 import { LanguageSwitcher } from '../ui/language-switcher';
+import { FoxSticker } from '../ui/fox-sticker';
 import './platform.css';
 
 export function PlatformHome() {
@@ -50,6 +51,7 @@ export function PlatformHome() {
       </nav>
       <main>
         <section class="market-hero">
+          <FoxSticker action="hello" message={t('platform.mascot.hero')} className="market-mascot market-mascot-hero" />
           <span class="market-eyebrow">{t('hero.eyebrow')}</span>
           <h1>
             {t('hero.title')}
@@ -69,6 +71,7 @@ export function PlatformHome() {
               {t('common.search')}
             </button>
           </div>
+          <FoxSticker action="thinking" message={t('platform.mascot.search')} className="market-mascot market-mascot-search" />
           <div class="market-suggestions">
             <span>{t('hero.popularSearches')}</span>
             <button onClick={() => setQuery('Coding')}>Coding</button>
@@ -94,6 +97,7 @@ export function PlatformHome() {
             <br />
             {t('trust.decide')}
           </p>
+          <FoxSticker action="reading" compact message={t('platform.mascot.trust')} className="market-mascot market-mascot-trust" />
         </section>
         <section class="market-section" id="how-it-works">
           <div class="market-heading">
@@ -106,8 +110,15 @@ export function PlatformHome() {
           <div class="market-need-grid">
             {platformContent.problems.map((problem) => {
               const copy = t(`platform.problems.${problem.id}`, { returnObjects: true });
+              const mascotActions = { communication: 'love', foundation: 'reading', 'future-skills': 'idea' };
               return (
               <a href="#institutes" class={`market-need-card need-${problem.tone}`} key={problem.id}>
+                <FoxSticker
+                  action={mascotActions[problem.id]}
+                  message={t(`platform.mascot.${problem.id === 'future-skills' ? 'futureSkills' : problem.id}`)}
+                  compact
+                  className="market-need-mascot"
+                />
                 <span>{copy.eyebrow}</span>
                 <h3>
                   {copy.title.split('\n').map((line, index) => (
@@ -132,9 +143,13 @@ export function PlatformHome() {
             </div>
             <a href="#courses">{t('institutes.viewAll')}</a>
           </div>
+          <FoxSticker action="thinking" message={t('platform.mascot.institutes')} className="market-mascot market-mascot-section" />
           <div class="market-institute-grid">
             {platformContent.institutes.map((institute, index) => (
-              <InstituteCard key={institute.name} institute={institute} copy={t(`platform.institutes.items.${index}`, { returnObjects: true })} labels={t('platform.institutes', { returnObjects: true })} />
+              <div class="market-institute-wrap" key={institute.name}>
+                <FoxSticker action={['idea', 'love', 'celebrate'][index]} compact message={t(`platform.mascot.institute${index + 1}`)} className="market-mascot market-mascot-card" />
+                <InstituteCard institute={institute} copy={t(`platform.institutes.items.${index}`, { returnObjects: true })} labels={t('platform.institutes', { returnObjects: true })} />
+              </div>
             ))}
           </div>
         </section>
@@ -152,15 +167,17 @@ export function PlatformHome() {
               ))}
             </div>
           </div>
+          <FoxSticker action="reading" message={t('platform.mascot.courses')} className="market-mascot market-mascot-section" />
           <div class="market-course-grid">
             {courses.map((course) => (
               <CoursePlatformCard key={course.name} course={course} onCompare={addCompare} copy={t('platform.courses', { returnObjects: true })} index={platformContent.courses.indexOf(course)} />
             ))}
           </div>
-          {!courses.length && <p class="market-empty">{t('courses.empty')}</p>}
+          {!courses.length && <div class="market-empty-state"><p>{t('courses.empty')}</p><p>{t('platform.mascot.emptyCourses')}</p></div>}
         </section>
         <section class="market-compare">
           <div>
+            <FoxSticker action={compare.length ? 'thumbsUp' : 'thinking'} message={t(compare.length ? 'platform.mascot.compareReady' : 'platform.mascot.compare')} className="market-mascot market-mascot-compare" />
             <span class="market-eyebrow">{t('compare.eyebrow')}</span>
             <h2>{t('compare.title')}</h2>
             <p>{t('compare.description')}</p>
@@ -182,6 +199,7 @@ export function PlatformHome() {
         </section>
         <section class="market-partner" id="for-institutes">
           <div>
+            <FoxSticker action="celebrate" message={t('platform.mascot.partner')} className="market-mascot market-mascot-partner" />
             <span class="market-eyebrow">{t('partner.eyebrow')}</span>
             <h2>
               {t('partner.title')}
