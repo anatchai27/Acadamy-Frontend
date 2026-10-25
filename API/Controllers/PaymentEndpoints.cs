@@ -55,11 +55,18 @@ public static class PaymentEndpoints
 
         group.MapGet("/pending-slips", async (
             IPaymentService service,
+            ILeaveRequestService leaveRequestService,
             HttpContext context,
             CancellationToken ct) =>
         {
             if (!context.User.IsInRole("admin")) return Results.Forbid();
-            return Results.Ok(await service.GetPendingSlipReviewsAsync(ct));
+            var slipReviews = await service.GetPendingSlipReviewsAsync(ct);
+            var leaveRequests = await leaveRequestService.GetAllAsync("pending", 1, 50, ct);
+            return Results.Ok(slipReviews with
+            {
+                LeaveRequestCount = leaveRequests.Data.Pagination.TotalItems,
+                LeaveRequests = leaveRequests.Data.Requests
+            });
         });
 
         group.MapGet("/export", async (

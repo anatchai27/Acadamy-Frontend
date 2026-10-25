@@ -64,7 +64,9 @@ public record PaymentHistoryResponse(
 
 public sealed record PendingSlipReviewResponse(
     int Count,
-    List<PaymentHistoryItem> Items
+    List<PaymentHistoryItem> Items,
+    int LeaveRequestCount = 0,
+    List<LeaveRequestItem>? LeaveRequests = null
 );
 
 public record PaymentHistoryData(

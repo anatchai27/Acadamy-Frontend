@@ -45,6 +45,15 @@ export function RequestsPage({ path }) {
     fetchRequests();
   }, [fetchRequests]);
 
+  useEffect(() => {
+    const openPendingRequests = () => {
+      if (filter === 'pending') fetchRequests();
+      else setFilter('pending');
+    };
+    window.addEventListener('open-leave-request-queue', openPendingRequests);
+    return () => window.removeEventListener('open-leave-request-queue', openPendingRequests);
+  }, [fetchRequests, filter]);
+
   const handleApprove = async (id) => {
     const confirmed = await showConfirm({
       title: 'ยืนยันการอนุมัติ',
