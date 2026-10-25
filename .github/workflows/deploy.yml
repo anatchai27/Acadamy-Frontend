@@ -18,8 +18,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Build .NET API
-        run: |
-          dotnet publish API/academy-API.csproj -c Release -o publish/api --self-contained false
+        run: dotnet publish API/academy-API.csproj -c Release -o publish/api --self-contained false -p:InformationalVersion=${{ github.sha }} -p:ContinuousIntegrationBuild=true
 
       - name: Prepare Backend target on VPS
         uses: appleboy/ssh-action@v1.0.3

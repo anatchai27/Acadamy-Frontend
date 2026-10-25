@@ -316,4 +316,26 @@ app.MapGet("/api/health", async (TutoringDbContext db, CancellationToken ct) =>
 .WithName("HealthCheck")
 .WithOpenApi();
 
+app.MapGet("/api/version", (HttpContext context) =>
+{
+    context.Response.Headers.CacheControl = "no-store, no-cache, max-age=0";
+    context.Response.Headers.Pragma = "no-cache";
+
+    var assembly = typeof(TutoringDbContext).Assembly;
+    var informationalVersion = assembly
+        .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), inherit: false)
+        .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+        .FirstOrDefault()?.InformationalVersion;
+
+    return Results.Ok(new
+    {
+        version = informationalVersion ?? "unknown",
+        commit = informationalVersion ?? "unknown",
+        assemblyVersion = assembly.GetName().Version?.ToString() ?? "unknown"
+    });
+})
+.AllowAnonymous()
+.WithName("ApiVersion")
+.WithOpenApi();
+
 app.Run();
