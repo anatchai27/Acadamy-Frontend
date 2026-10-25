@@ -14,14 +14,17 @@ public static class FileUploadEndpoints
 
         group.MapPost("/payment-qr", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
             await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentQrAsync(instituteId, uploadedFile, ct)))
-            .RequireAuthorization(policy => policy.RequireRole("admin"));
+            .RequireAuthorization(policy => policy.RequireRole("admin"))
+            .DisableAntiforgery();
 
         group.MapPost("/logo", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadLogoAsync(instituteId, uploadedFile, ct)));
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadLogoAsync(instituteId, uploadedFile, ct)))
+            .DisableAntiforgery();
         MapPaymentSlipUploadEndpoint(group);
         MapPaymentBatchSlipUploadEndpoint(group);
         group.MapPost("/homework", async (HttpContext context, IFormFile file, int homeworkId, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)));
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadHomeworkAsync(instituteId, homeworkId, uploadedFile, ct)))
+            .DisableAntiforgery();
         group.MapPost("/homework-submission", async (HttpContext context, IFormFile file, int submissionId, IFileUploadService service, [FromServices] IParentService parentService, [FromServices] IHomeworkService homeworkService, CancellationToken ct) =>
         {
             var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -43,13 +46,16 @@ public static class FileUploadEndpoints
 
             return await Execute(context, file, (instituteId, uploadedFile) =>
                 service.UploadHomeworkSubmissionAsync(instituteId, submissionId, uploadedFile, ct, parsedUserId, role));
-        });
+        }).DisableAntiforgery();
         group.MapPost("/student-photo", async (HttpContext context, IFormFile file, int studentId, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadStudentPhotoAsync(instituteId, studentId, uploadedFile, ct)));
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadStudentPhotoAsync(instituteId, studentId, uploadedFile, ct)))
+            .DisableAntiforgery();
         group.MapPost("/teacher-photo", async (HttpContext context, IFormFile file, int teacherId, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadTeacherPhotoAsync(instituteId, teacherId, uploadedFile, ct)));
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadTeacherPhotoAsync(instituteId, teacherId, uploadedFile, ct)))
+            .DisableAntiforgery();
         group.MapPost("/website-media", async (HttpContext context, IFormFile file, IFileUploadService service, CancellationToken ct) =>
-            await Execute(context, file, (instituteId, uploadedFile) => service.UploadWebsiteMediaAsync(instituteId, uploadedFile, ct)));
+            await Execute(context, file, (instituteId, uploadedFile) => service.UploadWebsiteMediaAsync(instituteId, uploadedFile, ct)))
+            .DisableAntiforgery();
 
         return app;
     }
@@ -67,7 +73,7 @@ public static class FileUploadEndpoints
                     return Results.Forbid();
             }
             return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentSlipAsync(instituteId, paymentId, uploadedFile, ct));
-        });
+        }).DisableAntiforgery();
     }
 
     private static void MapPaymentBatchSlipUploadEndpoint(RouteGroupBuilder group)
@@ -83,7 +89,7 @@ public static class FileUploadEndpoints
                     return Results.Forbid();
             }
             return await Execute(context, file, (instituteId, uploadedFile) => service.UploadPaymentBatchSlipAsync(instituteId, batchId, uploadedFile, ct));
-        });
+        }).DisableAntiforgery();
     }
 
     private static async Task<IResult> Execute(HttpContext context, IFormFile file, Func<int, IFormFile, Task<DTOs.FileUploadResponse>> action)

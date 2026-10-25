@@ -188,6 +188,12 @@ builder.Services.AddHttpClient<ILineNotificationService, LineNotificationService
 var fileStorageProvider = builder.Configuration["FileStorage:Provider"] ?? "AliyunOss";
 switch (fileStorageProvider.Trim().ToLowerInvariant())
 {
+    case "local":
+        builder.Services.Configure<LocalFileStorageOptions>(
+            builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
+        builder.Services.AddSingleton<LocalFileStorageService>();
+        builder.Services.AddSingleton<IFileStorageService>(sp => sp.GetRequiredService<LocalFileStorageService>());
+        break;
     case "aliyunoss":
         builder.Services.Configure<ThaiDataCloudOptions>(
             builder.Configuration.GetSection(ThaiDataCloudOptions.SectionName));
@@ -268,6 +274,8 @@ app.MapHomeworkEndpoints();
 app.MapSkillScoreEndpoints();
 app.MapInstituteEndpoints();
 app.MapFileUploadEndpoints();
+if (fileStorageProvider.Trim().Equals("local", StringComparison.OrdinalIgnoreCase))
+    app.MapLocalFileStorageEndpoints();
 app.MapParentEndpoints();
 app.MapPublicLeadEndpoints();
 

@@ -26,6 +26,10 @@ echo "[3/8] Creating application directories..."
 sudo mkdir -p /var/www/my-app
 sudo mkdir -p /var/www/my-api
 sudo mkdir -p /var/www/temp-deploy
+sudo mkdir -p /var/lib/tiwhub-storage/public /var/lib/tiwhub-storage/private
+sudo chown -R www-data:www-data /var/lib/tiwhub-storage
+sudo chmod 750 /var/lib/tiwhub-storage /var/lib/tiwhub-storage/private
+sudo chmod 755 /var/lib/tiwhub-storage/public
 sudo chown -R root:root /var/www
 
 # ─── 4. Setup systemd service ───
@@ -69,6 +73,10 @@ echo "  Setup complete!"
 echo "=========================================="
 echo ""
 echo "Next steps:"
+echo "  0. Set a private storage signing key (required):"
+echo "     sudo install -d -m 700 /etc/tiwhub"
+echo "     sudo sh -c 'umask 077; printf \"LocalFileStorage__SigningKey=%s\\n\" \"\$(openssl rand -base64 48)\" > /etc/tiwhub/api.env'"
+echo "     Keep /etc/tiwhub/api.env private; back up /var/lib/tiwhub-storage with the database."
 echo "  1. Build & deploy the API:"
 echo "     cd ~/projects/tiwhub/API"
 echo "     dotnet publish -c Release -o /var/www/my-api --self-contained false"
