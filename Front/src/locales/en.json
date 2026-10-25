@@ -248,9 +248,7 @@
       "finance": "Manage Finance",
       "financeDescription": "Record payments and view history",
       "manageCourses": "Manage Courses",
-      "manageCoursesDescription": "View courses and schedules",
-      "products": "Manage Products",
-      "productsDescription": "View the institute's products and services"
+      "manageCoursesDescription": "View courses and schedules"
     },
     "stats": {
       "totalUsers": "Total Users",

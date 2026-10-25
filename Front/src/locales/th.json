@@ -248,9 +248,7 @@
       "finance": "ดูแลการเงิน",
       "financeDescription": "บันทึกรับชำระและดูประวัติ",
       "manageCourses": "จัดการคอร์สเรียน",
-      "manageCoursesDescription": "ดูคอร์สและตารางเรียน",
-      "products": "จัดการสินค้า",
-      "productsDescription": "ดูสินค้าและบริการของสถาบัน"
+      "manageCoursesDescription": "ดูคอร์สและตารางเรียน"
     },
     "stats": {
       "totalUsers": "ผู้ใช้ทั้งหมด",

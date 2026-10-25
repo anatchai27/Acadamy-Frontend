@@ -49,11 +49,6 @@ export const PAGE_PERMISSIONS = {
     admin: { read: true, edit: true, delete: true },
     staff: { read: true, edit: true, delete: false },
   },
-  '/admin/products': {
-    label: 'สินค้า',
-    admin: { read: true, edit: true, delete: true },
-    staff: { read: true, edit: true, delete: false },
-  },
   '/admin/users': {
     label: 'ผู้ใช้',
     admin: { read: true, edit: true, delete: true },

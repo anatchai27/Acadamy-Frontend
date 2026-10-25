@@ -14,7 +14,6 @@ import {
   HiOutlineBookOpen,
   HiOutlineClipboardDocumentCheck,
   HiOutlineQrCode,
-  HiOutlineShoppingBag,
   HiOutlineUserGroup,
 } from 'react-icons/hi2';
 
@@ -24,7 +23,6 @@ const dashboardActions = [
   { path: '/admin/requests', label: 'dashboard.quickActionsList.reviewRequests', description: 'dashboard.quickActionsList.reviewRequestsDescription', icon: HiOutlineClipboardDocumentCheck },
   { path: '/admin/finance', label: 'dashboard.quickActionsList.finance', description: 'dashboard.quickActionsList.financeDescription', icon: HiOutlineBanknotes },
   { path: '/admin/courses', label: 'dashboard.quickActionsList.manageCourses', description: 'dashboard.quickActionsList.manageCoursesDescription', icon: HiOutlineBookOpen },
-  { path: '/admin/products', label: 'dashboard.quickActionsList.products', description: 'dashboard.quickActionsList.productsDescription', icon: HiOutlineShoppingBag },
 ];
 
 export const getAvailableDashboardActions = (role) =>

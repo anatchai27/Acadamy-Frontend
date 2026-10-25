@@ -3,7 +3,7 @@ import { IndexPage } from './pages/index';
 import { NotFoundPage } from './pages/not-found-page';
 import { TrialClassPage } from './pages/trial-class-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, PermissionsPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, ProductsPage, MakeupSlotsPage, LeadsPage } from './pages/admin';
+import { DashboardPage, UsersPage, PermissionsPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, MakeupSlotsPage, LeadsPage } from './pages/admin';
 import { RoomsPage } from './pages/admin/rooms-page';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth, RoleForbidden } from './components/require-auth';
@@ -23,7 +23,6 @@ const AdminFinance = requireAuth(FinancePage, ['admin', 'staff']);
 const AdminUsers = requireAuth(UsersPage, ['admin']);
 const AdminPermissions = requireAuth(PermissionsPage, ['admin']);
 const AdminSettings = requireAuth(SettingsPage, ['admin']);
-const AdminProducts = requireAuth(ProductsPage, ['admin', 'staff']);
 const AdminMakeupSlots = requireAuth(MakeupSlotsPage, ['admin', 'teacher']);
 const AdminLeads = requireAuth(LeadsPage, ['admin']);
 const AdminRooms = requireAuth(RoomsPage, ['admin']);
@@ -56,7 +55,6 @@ export function App() {
         <AdminUsers path="/admin/users" />
         <AdminPermissions path="/admin/permissions" />
         <AdminSettings path="/admin/settings" />
-        <AdminProducts path="/admin/products" />
         <AdminMakeupSlots path="/admin/makeup-slots" />
         <AdminLeads path="/admin/leads" />
         <AdminRooms path="/admin/rooms" />

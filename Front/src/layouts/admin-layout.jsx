@@ -5,7 +5,7 @@ import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../se
 import { showConfirm, showToast, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
-import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon } from '../components/ui/icons';
+import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
 import { canReadPage } from '../config/permissions';
 import { useTranslation } from '../hooks';
@@ -72,11 +72,6 @@ const menuGroups = [{
     label: 'การเงิน',
     icon: FinanceIcon,
     roles: ['admin', 'staff']
-  }, {
-    path: '/admin/products',
-    label: 'สินค้า',
-    icon: PackageIcon,
-    roles: ['admin', 'staff']
   }]
 }, {
   key: 'system',
@@ -111,7 +106,7 @@ const navigationKeyByPath = {
   '/admin/dashboard': 'dashboard', '/admin/students': 'students', '/admin/teachers': 'teachers',
   '/admin/courses': 'courses', '/admin/attendance': 'attendance', '/admin/leads': 'leads',
   '/admin/makeup-slots': 'makeupSlots', '/admin/requests': 'requests', '/admin/academics': 'academics',
-  '/admin/finance': 'finance', '/admin/products': 'products', '/admin/users': 'users',
+  '/admin/finance': 'finance', '/admin/users': 'users',
   '/admin/permissions': 'permissions', '/admin/settings': 'settings', '/admin/rooms': 'rooms',
 };
 export const AdminLayout = ({
