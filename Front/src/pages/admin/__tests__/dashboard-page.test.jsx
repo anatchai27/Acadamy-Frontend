@@ -1,30 +1,45 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/preact';
-import { DashboardPage } from '../dashboard-page';
+import { DashboardPage, getAvailableDashboardActions } from '../dashboard-page';
 
 vi.mock('../../../store/AppContext', () => ({
-  useAppContext: () => ({ state: { designTheme: 'neobrutalism' }, dispatch: vi.fn() }),
+  useAppContext: () => ({ state: { user: { role: 'admin' } }, dispatch: vi.fn() }),
 }));
 vi.mock('../../../hooks/useDesignTheme', () => ({ useDesignTheme: () => ({ designTheme: 'neobrutalism' }) }));
 vi.mock('../../../layouts/admin-layout', () => ({ AdminLayout: ({ children }) => <div>{children}</div> }));
 vi.mock('../../../components/dashboard/dashboard-overview', () => ({ DashboardOverviewWidget: () => <div>Overview Widget</div> }));
 vi.mock('../../../components/dashboard/playful-greeting', () => ({ PlayfulGreeting: () => <div>สวัสดีตอนเช้า</div> }));
 vi.mock('../../../components/ui', () => ({
-  BentoGrid: ({ children }) => <div>{children}</div>,
-  BentoCell: ({ children }) => <div>{children}</div>,
   unlockBadge: vi.fn(),
 }));
 vi.mock('react-icons/hi2', () => ({
-  HiOutlineUserPlus: () => <svg />,
+  HiOutlineArrowRight: () => <svg />,
+  HiOutlineBanknotes: () => <svg />,
   HiOutlineBookOpen: () => <svg />,
-  HiOutlineChartBar: () => <svg />,
+  HiOutlineClipboardDocumentCheck: () => <svg />,
+  HiOutlineQrCode: () => <svg />,
+  HiOutlineShoppingBag: () => <svg />,
+  HiOutlineUserGroup: () => <svg />,
 }));
 
 describe('Owner dashboard', () => {
-  it('shows real-data empty states instead of hardcoded activity/course data', () => {
+  it('prioritizes useful shortcuts and does not show unavailable sample-data sections', () => {
     render(<DashboardPage path="/admin/dashboard" />);
-    expect(screen.getByText('ยังไม่มี API สำหรับกิจกรรมล่าสุด จึงยังไม่แสดงข้อมูลตัวอย่าง')).toBeInTheDocument();
-    expect(screen.getByText('ยังไม่มี API สำหรับจัดอันดับคอร์ส จึงยังไม่แสดงตัวเลขสมมติ')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /เช็คชื่อเข้าเรียน/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ค้นหานักเรียน/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ตรวจคำร้อง/ })).toBeInTheDocument();
+    expect(screen.queryByText(/ยังไม่มี API/)).not.toBeInTheDocument();
     expect(screen.queryByText('JavaScript Basics')).not.toBeInTheDocument();
+  });
+
+  it('only shows shortcuts the current role can access', () => {
+    render(<DashboardPage path="/admin/dashboard" />);
+    expect(screen.getByRole('button', { name: /ดูแลการเงิน/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /จัดการสินค้า/ })).toBeInTheDocument();
+    const teacherActions = getAvailableDashboardActions('teacher').map(({ path }) => path);
+    expect(teacherActions).toContain('/admin/attendance');
+    expect(teacherActions).toContain('/admin/requests');
+    expect(teacherActions).not.toContain('/admin/finance');
+    expect(teacherActions).not.toContain('/admin/products');
   });
 });

@@ -222,9 +222,9 @@
     "overview": {
       "ariaLabel": "Dashboard overview",
       "title": "Overview by Date",
-      "description": "All figures are from the API for the selected date",
+      "description": "Student and request totals are current; attendance and revenue use the selected date",
       "date": "Date",
-      "stats": { "students": "Students", "attendance": "Today's Attendance", "requests": "Leave/Makeup Requests", "revenue": "Revenue (This Month)" },
+      "stats": { "students": "Total Students", "attendance": "Attendance on Selected Date", "requests": "Pending Requests", "revenue": "Revenue on Selected Date" },
       "studentsCount": "{{count}} total",
       "attendanceBreakdown": "Present {{present}} · Late {{late}} · Absent {{absent}} · Leave {{leave}}",
       "pendingRequests": "Pending review",
@@ -233,13 +233,24 @@
     },
     "recentActivity": "Recent Activity",
     "topCourses": "Top Courses",
-    "quickActions": "Quick Actions",
+    "quickActions": "Get started quickly",
+    "quickActionsDescription": "Shortcuts available to your account",
+    "noQuickActions": "No shortcuts are available for this account yet.",
     "noActivityData": "No API available for recent activity yet, so no sample data is shown",
     "noCourseData": "No API available for course rankings yet, so no sample numbers are shown",
     "quickActionsList": {
-      "addUser": "Add New User",
-      "createCourse": "Create Course",
-      "viewReports": "View Reports"
+      "checkAttendance": "Take Attendance",
+      "checkAttendanceDescription": "Record today's attendance",
+      "manageStudents": "Find a Student",
+      "manageStudentsDescription": "Open student and guardian details",
+      "reviewRequests": "Review Requests",
+      "reviewRequestsDescription": "See items waiting for review",
+      "finance": "Manage Finance",
+      "financeDescription": "Record payments and view history",
+      "manageCourses": "Manage Courses",
+      "manageCoursesDescription": "View courses and schedules",
+      "products": "Manage Products",
+      "productsDescription": "View the institute's products and services"
     },
     "stats": {
       "totalUsers": "Total Users",
@@ -250,6 +261,10 @@
   },
   "users": {
     "loadError": "Unable to load users",
+    "loadErrorEmpty": "The user list could not be loaded. Try again using the button above.",
+    "loadErrorShowingPrevious": "Showing the previous results; they may not match your latest search.",
+    "retry": "Try again",
+    "retryLoading": "Loading...",
     "listTitle": "All Users",
     "title": "User Management",
     "subtitle": "Manage all user accounts in the system",
@@ -280,6 +295,7 @@
       "passwordPlaceholder": "Set password",
       "role": "Role",
       "roleAdmin": "System Admin",
+      "adminRoleWarning": "This account will have administrator access to sensitive institute data and settings.",
       "cancel": "Cancel",
       "submit": "Add User",
       "success": "User added successfully",
@@ -307,7 +323,8 @@
       "cancel": "Cancel",
       "submit": "Save",
       "success": "User updated successfully",
-      "error": "Failed to update user"
+      "error": "Failed to update user",
+      "partialError": "The role was updated, but the password change failed. The list was refreshed; try changing the password again."
     },
     "delete": {
       "title": "Delete User",

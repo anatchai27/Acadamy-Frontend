@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { AdminLayout } from '../../layouts/admin-layout';
-import { showToast, showConfirm } from '../../components/ui';
+import { showToast } from '../../components/ui';
 import { instituteService } from '../../services/institute-service';
 import { useAppContext } from '../../store/AppContext';
 import { useAbortController } from '../../hooks';
@@ -15,7 +15,10 @@ export function SettingsPage({ path }) {
   const isNeo = designTheme === 'neobrutalism';
   const fileInputRef = useRef(null);
   const paymentQrInputRef = useRef(null);
+  const instituteTabRef = useRef(null);
+  const paymentTabRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
@@ -53,32 +56,60 @@ export function SettingsPage({ path }) {
   const setField = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
   const setPaymentField = (field) => (e) => setPaymentForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const loadInstitute = async () => {
+    const signal = getSignal();
+    setLoading(true);
+    setLoadError('');
+    try {
+      const res = await instituteService.getInstitute({ signal });
+      if (signal.aborted) return;
+      const data = res.data?.data || {};
+      setForm({
+        name: data.name || '',
+        email: data.email || '',
+        contactPhone: data.contactPhone || '',
+        address: data.address || '',
+        taxId: data.taxId || '',
+        receiptNote: data.receiptNote || '',
+      });
+      setPaymentForm({
+        bankName: data.bankName || '',
+        bankAccountName: data.bankAccountName || '',
+        bankAccountNumber: data.bankAccountNumber || '',
+        promptPayId: data.promptPayId || '',
+        paymentInstructions: data.paymentInstructions || '',
+        paymentQrImageUrl: data.paymentQrImageUrl || '',
+      });
+      setPaymentQrPreview(data.paymentQrImageUrl || null);
+      setLogoPreview(data.logoUrl || null);
+    } catch {
+      if (!signal.aborted) setLoadError('โหลดข้อมูลสถาบันไม่สำเร็จ ข้อมูลเดิมยังไม่ถูกเปลี่ยน กรุณาลองอีกครั้ง');
+    } finally {
+      if (!signal.aborted) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    instituteService.getInstitute({ signal: getSignal() })
-      .then((res) => {
-        const data = res.data?.data || {};
-        setForm({
-          name: data.name || '',
-          email: data.email || '',
-          contactPhone: data.contactPhone || '',
-          address: data.address || '',
-          taxId: data.taxId || '',
-          receiptNote: data.receiptNote || '',
-        });
-        setPaymentForm({
-          bankName: data.bankName || '',
-          bankAccountName: data.bankAccountName || '',
-          bankAccountNumber: data.bankAccountNumber || '',
-          promptPayId: data.promptPayId || '',
-          paymentInstructions: data.paymentInstructions || '',
-          paymentQrImageUrl: data.paymentQrImageUrl || '',
-        });
-        setPaymentQrPreview(data.paymentQrImageUrl || null);
-        setLogoPreview(data.logoUrl || null);
-      })
-      .catch(() => showToast('ไม่สามารถโหลดข้อมูลสถาบันได้', 'error'))
-      .finally(() => setLoading(false));
+    loadInstitute();
   }, []);
+
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    if (tab === 'payment') url.searchParams.set('tab', 'payment');
+    else url.searchParams.delete('tab');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const handleTabKeyDown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const nextTab = event.key === 'Home' ? 'institute'
+      : event.key === 'End' ? 'payment'
+        : activeTab === 'institute' ? 'payment' : 'institute';
+    selectTab(nextTab);
+    (nextTab === 'institute' ? instituteTabRef : paymentTabRef).current?.focus();
+  };
 
   const handleLogoSelect = (e) => {
     const file = e.target.files?.[0];
@@ -187,22 +218,33 @@ export function SettingsPage({ path }) {
     if (paymentQrInputRef.current) paymentQrInputRef.current.value = '';
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmed = await showConfirm({
-      title: 'ลบบัญชีผู้ดูแลระบบ',
-      message: 'การลบบัญชีจะลบข้อมูลทั้งหมดอย่างถาวร ไม่สามารถกู้คืนได้ คุณแน่ใจ?',
-      yesLabel: 'ลบเลย',
-      cancelLabel: 'ยกเลิก',
-    });
-    if (!confirmed) return;
-    showToast('ฟังก์ชันลบบัญชีจะทำงานเมื่อเชื่อมต่อ API แล้ว', 'info');
-  };
-
-  if (loading) {
+  if (loading || loadError) {
     return (
       <AdminLayout path={path}>
-        <div class="flex items-center justify-center py-20">
-          <div class="h-8 w-8 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+        <div class="mx-auto max-w-3xl py-10 sm:py-16">
+          {loading ? (
+            <div class="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600" role="status">
+              <div class="h-6 w-6 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
+              กำลังโหลดการตั้งค่า...
+            </div>
+          ) : (
+            <section role="alert" class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-red-200 bg-white shadow-sm'} p-6 sm:p-8`}>
+              <div class="flex items-start gap-3">
+                <HiOutlineExclamationTriangle class="mt-0.5 h-6 w-6 shrink-0 text-red-700" aria-hidden="true" />
+                <div>
+                  <h1 class="text-xl font-semibold text-zinc-900">ยังเปิดการตั้งค่าไม่ได้</h1>
+                  <p class="mt-2 text-sm leading-6 text-zinc-600">{loadError}</p>
+                  <button
+                    type="button"
+                    onClick={loadInstitute}
+                    class={`mt-5 inline-flex min-h-11 items-center justify-center px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary focus-visible:ring-offset-2 ${isNeo ? 'neo-btn bg-oasis-primary text-white' : 'rounded-xl bg-oasis-primary text-white hover:bg-oasis-primary-dark'}`}
+                  >
+                    ลองโหลดอีกครั้ง
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </AdminLayout>
     );
@@ -216,33 +258,36 @@ export function SettingsPage({ path }) {
       </div>
 
       <div class="max-w-3xl space-y-6">
-        <div class={`${isNeo ? 'neo-tab-group w-full sm:w-auto' : 'grid w-full grid-cols-2 rounded-xl border border-zinc-200 bg-white p-1 sm:inline-flex sm:w-auto'}`} role="tablist" aria-label="หมวดตั้งค่าระบบ">
+        <div onKeyDown={handleTabKeyDown} class={`${isNeo ? 'neo-tab-group w-full sm:w-auto' : 'grid w-full grid-cols-2 rounded-xl border border-zinc-200 bg-white p-1 sm:inline-flex sm:w-auto'}`} role="tablist" aria-label="หมวดตั้งค่าระบบ">
           <button
             type="button"
+            ref={instituteTabRef}
             id="settings-tab-institute"
             role="tab"
             aria-selected={activeTab === 'institute'}
             aria-controls="settings-panel-institute"
-            onClick={() => setActiveTab('institute')}
+            tabIndex={activeTab === 'institute' ? 0 : -1}
+            onClick={() => selectTab('institute')}
             class={`flex-1 px-4 py-2 text-sm font-semibold transition-colors sm:flex-none ${isNeo ? (activeTab === 'institute' ? 'neo-tab-active' : 'neo-tab-inactive') : `rounded-lg ${activeTab === 'institute' ? 'bg-oasis-primary text-white' : 'text-zinc-700 hover:bg-zinc-100'}`}`}
           >
             ข้อมูลสถาบัน
           </button>
           <button
             type="button"
+            ref={paymentTabRef}
             id="settings-tab-payment"
             role="tab"
             aria-selected={activeTab === 'payment'}
             aria-controls="settings-panel-payment"
-            onClick={() => setActiveTab('payment')}
+            tabIndex={activeTab === 'payment' ? 0 : -1}
+            onClick={() => selectTab('payment')}
             class={`flex-1 px-4 py-2 text-sm font-semibold transition-colors sm:flex-none ${isNeo ? (activeTab === 'payment' ? 'neo-tab-active' : 'neo-tab-inactive') : `rounded-lg ${activeTab === 'payment' ? 'bg-oasis-primary text-white' : 'text-zinc-700 hover:bg-zinc-100'}`}`}
           >
             การรับชำระเงิน
           </button>
         </div>
 
-        {activeTab === 'institute' ? (
-          <section id="settings-panel-institute" role="tabpanel" aria-labelledby="settings-tab-institute" class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} overflow-hidden`}>
+        <section id="settings-panel-institute" role="tabpanel" aria-labelledby="settings-tab-institute" hidden={activeTab !== 'institute'} class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} overflow-hidden`}>
             <div class="border-b border-zinc-200 px-5 py-4 sm:px-6">
               <div class="flex items-center gap-3">
                 <div class={`flex h-10 w-10 shrink-0 items-center justify-center ${isNeo ? 'border-2 border-black bg-amber-100 text-black' : 'rounded-xl bg-oasis-primary/10 text-oasis-primary'}`}>
@@ -284,9 +329,8 @@ export function SettingsPage({ path }) {
                 </button>
               </div>
             </form>
-          </section>
-        ) : (
-          <section id="settings-panel-payment" role="tabpanel" aria-labelledby="settings-tab-payment" class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} overflow-hidden`}>
+        </section>
+        <section id="settings-panel-payment" role="tabpanel" aria-labelledby="settings-tab-payment" hidden={activeTab !== 'payment'} class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-zinc-200 bg-white shadow-sm'} overflow-hidden`}>
             <div class="border-b border-zinc-200 px-5 py-4 sm:px-6">
               <h3 class="font-semibold text-zinc-900">บัญชีรับโอนจากผู้ปกครอง</h3>
               <p class="mt-0.5 text-sm text-zinc-600">ข้อมูลนี้จะแสดงในหน้าชำระเงินของผู้ปกครองที่ผูกกับนักเรียนของสถาบัน</p>
@@ -327,8 +371,7 @@ export function SettingsPage({ path }) {
                 </button>
               </div>
             </form>
-          </section>
-        )}
+        </section>
 
         <div class={`${isNeo ? 'neo-card bg-white' : 'bg-zinc-50 rounded-2xl border border-oasis-danger/20'} overflow-hidden`}>
           <div class="flex items-center gap-4 px-6 py-5 border-b border-oasis-danger/10">
@@ -342,12 +385,12 @@ export function SettingsPage({ path }) {
           </div>
           <div class="px-6 py-4">
             <p class="text-sm text-zinc-600 mb-3">
-              การลบบัญชีผู้ดูแลระบบจะลบข้อมูลทั้งหมดอย่างถาวร ไม่สามารถกู้คืนได้
+              การลบบัญชีผู้ดูแลระบบยังไม่พร้อมใช้งาน ติดต่อผู้ดูแลระบบหากต้องการความช่วยเหลือ
             </p>
-            <button onClick={handleDeleteAccount} class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-oasis-danger bg-oasis-danger/5 hover:bg-oasis-danger/10 rounded-xl transition-colors border border-oasis-danger/20">
-              <HiOutlineTrash class="h-4 w-4" />
-              ลบบัญชีผู้ดูแลระบบ
-            </button>
+            <span class="inline-flex min-h-10 items-center gap-2 rounded-xl border border-zinc-300 bg-zinc-100 px-4 text-sm font-medium text-zinc-600" aria-disabled="true">
+              <HiOutlineTrash class="h-4 w-4" aria-hidden="true" />
+              ยังไม่เปิดให้ใช้งาน
+            </span>
           </div>
         </div>
 
@@ -371,14 +414,16 @@ export function SettingsPage({ path }) {
               <button
                 type="button"
                 onClick={() => setChangelogOpen(!changelogOpen)}
+                aria-expanded={changelogOpen}
+                aria-controls="settings-changelog"
                 class="w-full flex items-center justify-between px-6 py-4 gap-4 hover:bg-zinc-50 transition-colors text-left"
               >
                 <span class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ประวัติการอัปเดต</span>
-                <HiOutlineChevronDown class={`h-4 w-4 text-zinc-400 transition-transform ${changelogOpen ? 'rotate-180' : ''}`} />
+                <HiOutlineChevronDown aria-hidden="true" class={`h-4 w-4 text-zinc-400 transition-transform ${changelogOpen ? 'rotate-180' : ''}`} />
               </button>
               {changelogOpen && (
-                <div class="px-6 pb-4 space-y-4">
-                  {changelog.map((release) => (
+                <div id="settings-changelog" class="px-6 pb-4 space-y-4">
+                  {changelog.length ? changelog.map((release) => (
                     <div key={release.version} class={`${isNeo ? 'border-l-2 border-black pl-4' : 'border-l-2 border-oasis-primary/30 pl-4'}`}>
                       <div class="flex items-center gap-2 mb-1">
                         <span class="text-xs font-mono font-semibold text-oasis-primary">v{release.version}</span>
@@ -397,7 +442,7 @@ export function SettingsPage({ path }) {
                         ))}
                       </ul>
                     </div>
-                  ))}
+                  )) : <p class="text-sm text-zinc-600">ยังไม่มีข้อมูลประวัติการอัปเดต</p>}
                 </div>
               )}
             </div>
