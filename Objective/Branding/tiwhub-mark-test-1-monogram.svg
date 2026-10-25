@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub mark test 1 — connected monogram</title>
+  <desc id="desc">Compact connected TH monogram on a rounded Sage square with a small gold hub point.</desc>
+  <rect x="12" y="12" width="232" height="232" rx="58" fill="#718C76" />
+  <path d="M60 78H196M128 78V180" stroke="#FFFDF6" stroke-width="19" stroke-linecap="round" />
+  <path d="M88 180V128C88 117.507 96.507 109 107 109H149C159.493 109 168 117.507 168 128V180" stroke="#FFFDF6" stroke-width="19" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="195" cy="195" r="16" fill="#D5B66B" />
+</svg>

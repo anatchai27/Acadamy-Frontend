@@ -1,5 +1,5 @@
 export const platformContent = {
-  brand: { name: 'acadamy', tagline: 'ศูนย์กลางค้นหาและเปรียบเทียบสถาบันเรียนพิเศษสำหรับเด็ก' },
+  brand: { name: 'tiwhub', tagline: 'ศูนย์กลางค้นหาและเปรียบเทียบสถาบันเรียนพิเศษสำหรับเด็ก' },
   hero: {
     eyebrow: 'THE SMART WAY TO CHOOSE TUTORING',
     title: 'ค้นพบที่เรียนที่',
@@ -37,7 +37,7 @@ export const platformContent = {
       description: 'ห้องเรียนกลุ่มเล็กที่ช่วยให้เด็กคิดเป็นระบบและกล้าลองผิดลองถูก',
       rating: 4.9,
       reviews: 248,
-      accent: '#d7e5ff',
+      accent: '#dbeafe',
       tags: ['ทดลองเรียนฟรี', 'กลุ่มเล็ก'],
     },
     {
@@ -47,7 +47,7 @@ export const platformContent = {
       description: 'ภาษาอังกฤษและ Public Speaking ผ่านกิจกรรมที่เด็กสนุกและมีส่วนร่วม',
       rating: 4.8,
       reviews: 186,
-      accent: '#ffe2b8',
+      accent: '#cffafe',
       tags: ['ครูเจ้าของภาษา', 'เด็กชอบมาก'],
     },
     {
@@ -57,7 +57,7 @@ export const platformContent = {
       description: 'Coding, Robotics และทักษะอนาคตสำหรับนักเรียนที่ชอบสร้างสรรค์',
       rating: 4.7,
       reviews: 129,
-      accent: '#d5f1df',
+      accent: '#eaf2fb',
       tags: ['ลงมือทำจริง', 'มีอุปกรณ์ให้'],
     },
   ],
@@ -71,7 +71,7 @@ export const platformContent = {
       price: 2890,
       duration: '8 สัปดาห์',
       format: 'Live',
-      accent: '#ffe8c9',
+      accent: '#cffafe',
       rating: 4.9,
     },
     {
@@ -83,7 +83,7 @@ export const platformContent = {
       price: 3490,
       duration: '10 ครั้ง',
       format: 'Live + VDO',
-      accent: '#dbe7ff',
+      accent: '#dbeafe',
       rating: 4.8,
     },
     {
@@ -95,7 +95,7 @@ export const platformContent = {
       price: 1990,
       duration: '12 ครั้ง',
       format: 'Live',
-      accent: '#d9f2e2',
+      accent: '#eaf2fb',
       rating: 4.7,
     },
   ],

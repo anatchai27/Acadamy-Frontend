@@ -3,7 +3,6 @@ import { useState, useEffect } from 'preact/hooks';
 import { useAppContext } from '../store/AppContext';
 import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../services/auth-service';
 import { showConfirm, showToast, BadgeSticker } from '../components/ui';
-import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
 import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
@@ -122,10 +121,7 @@ export const AdminLayout = ({
   const currentTitle = t(`navigation.${navigationKeyByPath[currentPath] || 'dashboard'}`);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [switchingInstituteId, setSwitchingInstituteId] = useState(null);
-  const {
-    designTheme
-  } = useDesignTheme();
-  const isNeo = designTheme === 'neobrutalism';
+  const isNeo = false;
   const {
     badges
   } = useBadges();
@@ -225,12 +221,10 @@ export const AdminLayout = ({
   return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-slate-50 text-slate-700'}`}>
       <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-white border-r border-slate-200 shadow-sm'}`}>
         <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-slate-100'}`}>
-          {state.instituteLogo ? <img src={state.instituteLogo} alt="logo" class={`h-9 w-9 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <div class={`flex h-9 w-9 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-sm shrink-0 ${isNeo ? 'rounded-xl border-2 border-black shadow-[2px_2px_0px_#000]' : 'rounded-xl shadow-sm'}`}>
-              {currentLanguage === 'th' ? 'TH' : 'EN'}
-            </div>}
+          {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class={`h-9 w-9 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-9 w-9 shrink-0 rounded-xl" />}
           <div class="flex flex-col">
             <span class="text-lg font-bold text-slate-900 leading-tight tracking-tight">
-              {state.instituteName || 'TiwHub'}
+              {state.instituteName || 'tiwhub'}
             </span>
             <span class="text-xs text-slate-400 leading-tight">Admin Panel</span>
           </div>
@@ -276,9 +270,7 @@ export const AdminLayout = ({
       {/* Mobile Header */}
       <header class={`lg:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200'}`}>
         <div class="flex items-center gap-2">
-          {state.instituteLogo ? <img src={state.instituteLogo} alt="logo" class="h-7 w-7 rounded-lg object-cover shrink-0" /> : <div class={`flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-xs shrink-0 ${isNeo ? 'border-2 border-black' : ''}`}>
-              {currentLanguage === 'th' ? 'TH' : 'EN'}
-            </div>}
+          {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class="h-7 w-7 rounded-lg object-cover shrink-0" /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-7 w-7 shrink-0 rounded-lg" />}
           <span class="text-base font-semibold text-slate-900">{currentTitle}</span>
         </div>
         <LanguageSwitcher class="mr-2" />

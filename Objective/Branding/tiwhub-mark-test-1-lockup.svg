@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub — mark test 1</title>
+  <desc id="desc">The original tiwhub wordmark paired with a connected TH monogram mark.</desc>
+  <rect x="16" y="20" width="220" height="220" rx="54" fill="#718C76" />
+  <path d="M60 78H196M128 78V180" stroke="#FFFDF6" stroke-width="19" stroke-linecap="round" />
+  <path d="M88 180V128C88 117.507 96.507 109 107 109H149C159.493 109 168 117.507 168 128V180" stroke="#FFFDF6" stroke-width="19" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="195" cy="195" r="16" fill="#D5B66B" />
+  <text x="280" y="179" fill="#304535" font-family="Arial, 'Segoe UI', sans-serif" font-size="132" font-weight="700" letter-spacing="-7">tiwhub</text>
+  <path d="M283 211H482" stroke="#D5B66B" stroke-width="8" stroke-linecap="round" />
+</svg>

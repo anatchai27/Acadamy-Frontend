@@ -15,7 +15,8 @@ export const LiffLayout = ({ children, showBack }) => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <p class="ml-1 text-sm font-bold tracking-tight text-ink-900">TiwHub <span class="font-medium text-ink-500">สำหรับครอบครัว</span></p>
+            <img src="/tiwhub-mark.svg" alt="tiwhub" class="ml-1 h-7 w-7 rounded-lg" />
+            <p class="ml-1 text-sm font-bold tracking-tight text-ink-900">tiwhub <span class="font-medium text-ink-500">สำหรับครอบครัว</span></p>
           </div>
         </header>
       )}

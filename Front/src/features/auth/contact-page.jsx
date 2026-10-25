@@ -2,13 +2,9 @@ import { route } from 'preact-router';
 import { useForm } from 'react-hook-form';
 import { Button, Input, Textarea } from '../../components/ui';
 import { showToast } from '../../components/ui';
-import { useDesignTheme } from '../../hooks/useDesignTheme';
 const emailRules = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const ContactPage = () => {
-  const {
-    designTheme
-  } = useDesignTheme();
-  const isNeo = designTheme === 'neobrutalism';
+  const isNeo = false;
   const {
     register,
     handleSubmit,
@@ -31,7 +27,7 @@ export const ContactPage = () => {
       <nav class={isNeo ? 'bg-white border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-zinc-200/60'}>
         <div class="container mx-auto px-6 py-4 flex items-center justify-between">
           <span class="flex items-center gap-2 text-xl font-semibold text-zinc-900 tracking-tight cursor-pointer" onClick={() => route('/')}>
-            <span class={'w-6 h-6 inline-block ' + (isNeo ? 'bg-black border-2 border-black' : 'bg-oasis-primary rounded-full')} />TiwHub
+            <img src="/tiwhub-mark.svg" alt="" class="h-7 w-7 rounded-lg" />tiwhub
           </span>
           <div class="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => route('/login')}>เข้าสู่ระบบ</Button>
@@ -43,7 +39,7 @@ export const ContactPage = () => {
       <div class="container mx-auto px-6 py-12">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
           <div>
-            <h2 class={'text-2xl font-semibold tracking-tight mb-6 ' + (isNeo ? 'text-black' : 'text-zinc-900')}>ติดต่อทีมงาน TiwHub</h2>
+            <h2 class={'text-2xl font-semibold tracking-tight mb-6 ' + (isNeo ? 'text-black' : 'text-zinc-900')}>ติดต่อทีมงาน tiwhub</h2>
             <div class="space-y-6">
               {[{
               label: 'เบอร์โทรศัพท์',

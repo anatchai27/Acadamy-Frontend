@@ -32,10 +32,10 @@ export function PlatformHome() {
   const addCompare = (course) =>
     setCompare((items) => (items.some((item) => item.name === course.name) ? items : [...items, course]));
   return (
-    <div class="marketplace neo-marketplace">
+    <div class="marketplace oasis-marketplace">
       <nav class="market-nav">
         <a class="market-brand" href="/">
-          <span>+</span>
+          <img src="/tiwhub-mark.svg" alt="" />
           {t('common.appName')}
         </a>
         <div class="market-nav-links">
@@ -189,7 +189,7 @@ export function PlatformHome() {
               <em>{t('partner.highlight')}</em>
             </h2>
             <p>{t('partner.description')}</p>
-            <a href={`mailto:partners@acadamy.co?subject=${encodeURIComponent(t('platform.navigation.partner') + ' Acadamy')}`}>
+            <a href={`mailto:partners@acadamy.co?subject=${encodeURIComponent(t('platform.navigation.partner') + ' tiwhub')}`}>
               {t('partner.cta')} <span>→</span>
             </a>
           </div>
@@ -214,7 +214,7 @@ export function PlatformHome() {
       </main>
       <footer class="market-footer">
         <b>
-          <span>+</span>{t('common.appName')}
+          <img src="/tiwhub-mark.svg" alt="" />{t('common.appName')}
         </b>
         <span>{t('common.tagline')}</span>
         <span>{t('footer.copyright')}</span>

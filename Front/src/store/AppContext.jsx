@@ -7,7 +7,7 @@ import { setOnUnauthorized } from '../services/api';
 import { getRolePermissions } from '../services/user-service';
 import { setRolePermissions } from '../config/permissions';
 
-const savedTheme = 'neobrutalism';
+const savedTheme = 'oasis';
 
 const initialState = {
   theme: 'dark',

@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "react-datepicker/dist/react-datepicker.css";
 
+/* OASIS BRAND CONTRACT: TiwHub's open-book mark, blue/navy/cyan palette, Thai-first Sarabun, and calm rounded surfaces. Preserve page workflows, tenant marks, and semantic status colors. */
 @theme {
   --color-oasis-primary: #2563eb;
   --color-oasis-primary-light: #60a5fa;
@@ -9,14 +10,15 @@
   --color-oasis-accent: #06b6d4;
   --color-oasis-accent-light: #67e8f9;
   --color-oasis-accent-dark: #0891b2;
-  --color-oasis-bg: #f8fafc;
+  --color-oasis-navy: #17335c;
+  --color-oasis-bg: #f4f8fc;
   --color-oasis-surface: #ffffff;
-  --color-oasis-surface-hover: #f1f5f9;
-  --color-oasis-heading: #0f172a;
-  --color-oasis-body: #475569;
-  --color-oasis-muted: #94a3b8;
-  --color-oasis-border: #e2e8f0;
-  --color-oasis-border-light: #f1f5f9;
+  --color-oasis-surface-hover: #eaf2fb;
+  --color-oasis-heading: #17335c;
+  --color-oasis-body: #52657d;
+  --color-oasis-muted: #71839a;
+  --color-oasis-border: #d8e4f1;
+  --color-oasis-border-light: #eaf2fb;
   --color-oasis-success: #10b981;
   --color-oasis-success-light: #d1fae5;
   --color-oasis-success-dark: #059669;
@@ -96,47 +98,48 @@
 }
 
 .neo-card {
-  border: 3px solid #000;
-  box-shadow: 3px 3px 0px #000;
-  border-radius: 0;
+  border: 1px solid #d8e4f1;
+  box-shadow: 0 3px 14px rgba(23, 53, 92, 0.06);
+  border-radius: 1rem;
 }
 
 .neo-btn {
-  border: 3px solid #000 !important;
-  box-shadow: 3px 3px 0px #000 !important;
-  border-radius: 0 !important;
-  transition: all 0.1s ease !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 2px rgba(23, 53, 92, 0.08) !important;
+  border-radius: 0.75rem !important;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 
 .neo-btn:active {
-  transform: translateX(3px) translateY(3px) !important;
-  box-shadow: 0px 0px 0px #000 !important;
+  transform: translateY(1px) !important;
+  box-shadow: 0 0 0 transparent !important;
 }
 
 .neo-input {
-  border: 2px solid #000 !important;
-  border-radius: 0 !important;
+  border: 1px solid #d8e4f1 !important;
+  border-radius: 0.75rem !important;
 }
 
 .neo-input:focus {
-  outline: none !important;
-  box-shadow: 2px 2px 0px #000 !important;
+  outline: 2px solid rgba(37, 99, 235, 0.22) !important;
+  outline-offset: 1px;
+  border-color: #2563eb !important;
 }
 
-[data-theme="neobrutalism"] .bento-cell-hover {
-  border: 2px solid #000;
-  border-radius: 0;
-  box-shadow: 2px 2px 0px #000;
+[data-theme="oasis"] .bento-cell-hover {
+  border: 1px solid #d8e4f1;
+  border-radius: 1rem;
+  box-shadow: 0 3px 14px rgba(23, 53, 92, 0.06);
 }
 
-[data-theme="neobrutalism"] .bento-cell-hover:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 4px 4px 0px #000;
+[data-theme="oasis"] .bento-cell-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(23, 53, 92, 0.1);
 }
 
 @media (hover: none) {
   .bento-cell-hover:hover,
-  [data-theme="neobrutalism"] .bento-cell-hover:hover {
+  [data-theme="oasis"] .bento-cell-hover:hover {
     transform: none;
   }
 }
@@ -155,41 +158,44 @@
 
 .neo-tab-group {
   display: inline-flex;
-  border: 2px solid #000;
+  border: 1px solid #d8e4f1;
+  border-radius: 0.75rem;
+  overflow: hidden;
 }
 
 .neo-tab-active {
-  background: #000;
+  background: #2563eb;
   color: #fff;
   font-weight: 600;
 }
 
 .neo-tab-inactive {
-  background: transparent;
-  color: #000;
+  background: #fff;
+  color: #52657d;
 }
 
 .neo-tab-inactive:hover {
-  background: rgba(0,0,0,0.05);
+  background: #eaf2fb;
 }
 
 .neo-select {
-  border: 2px solid #000 !important;
-  border-radius: 0 !important;
+  border: 1px solid #d8e4f1 !important;
+  border-radius: 0.75rem !important;
 }
 
 .neo-select:focus {
-  outline: none !important;
-  box-shadow: 2px 2px 0px #000 !important;
+  outline: 2px solid rgba(37, 99, 235, 0.22) !important;
+  outline-offset: 1px;
+  border-color: #2563eb !important;
 }
 
 .neo-label {
-  color: #000 !important;
+  color: #17335c !important;
   font-weight: 500;
 }
 
 .neo-form-divider {
-  border-color: #000 !important;
+  border-color: #d8e4f1 !important;
 }
 
 .neo-accordion-header {
@@ -197,9 +203,9 @@
 }
 
 .neo-accordion-header:hover {
-  background: rgba(0,0,0,0.03);
+  background: #eaf2fb;
 }
 
 .neo-accordion-content {
-  border-color: #000;
+  border-color: #d8e4f1;
 }

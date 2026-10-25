@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub — Parent Rich Menu</title>
+  <desc id="desc">Rich Menu for parents: Home, Attendance, Tuition, Leave and makeup, Homework, and Scores.</desc>
+  <defs>
+    <style>
+      .thai { font-family: Sarabun, "Leelawadee UI", Tahoma, sans-serif; }
+      .icon { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 17; }
+    </style>
+    <symbol id="home" viewBox="0 0 180 180">
+      <path class="icon" d="M28 83 90 32l62 51M43 76v68h94V76M73 144v-43h34v43" />
+      <path class="icon" d="M122 51V35h17v30" />
+    </symbol>
+    <symbol id="attendance" viewBox="0 0 180 180">
+      <path class="icon" d="M52 43h76a12 12 0 0 1 12 12v94H40V55a12 12 0 0 1 12-12Z" />
+      <path class="icon" d="M70 43v-9h40v9M60 82l12 12 23-25M60 120h57" />
+    </symbol>
+    <symbol id="tuition" viewBox="0 0 180 180">
+      <path class="icon" d="M39 38h102v111H39zM57 64h66M57 87h35M57 121h22" />
+      <circle class="icon" cx="116" cy="116" r="24" />
+      <path class="icon" d="M116 102v28m9-21c-2-5-15-7-18 0-4 10 18 6 18 15 0 7-13 10-19 4" />
+    </symbol>
+    <symbol id="leave" viewBox="0 0 180 180">
+      <rect class="icon" x="34" y="47" width="112" height="98" rx="12" />
+      <path class="icon" d="M60 34v27m60-27v27M35 76h110M59 101h26m-26 22h18" />
+      <path class="icon" d="m104 111 12 12 22-26" />
+    </symbol>
+    <symbol id="homework" viewBox="0 0 180 180">
+      <path class="icon" d="M90 53c-17-14-40-16-61-8v91c22-8 45-6 61 8 16-14 39-16 61-8V45c-21-8-44-6-61 8Z" />
+      <path class="icon" d="M90 54v89M48 70c10-2 20 0 28 5m-28 16c10-2 20 0 28 5m49-26c-9-2-18 0-26 5m26 16c-9-2-18 0-26 5" />
+    </symbol>
+    <symbol id="scores" viewBox="0 0 180 180">
+      <path class="icon" d="M38 145V42m0 103h111" />
+      <path class="icon" d="m53 118 25-28 23 15 39-45" />
+      <circle cx="53" cy="118" r="7" fill="currentColor" />
+      <circle cx="78" cy="90" r="7" fill="currentColor" />
+      <circle cx="101" cy="105" r="7" fill="currentColor" />
+      <circle cx="140" cy="60" r="7" fill="currentColor" />
+    </symbol>
+  </defs>
+
+  <rect width="2500" height="1686" fill="#F4F8FC" />
+
+  <!-- Row 1 -->
+  <g>
+    <rect x="28" y="28" width="803" height="806" rx="42" fill="#2563EB" />
+    <circle cx="429" cy="298" r="142" fill="#3B82F6" />
+    <use href="#home" x="339" y="208" width="180" height="180" color="#FFFDF6" stroke="#FFFDF6" />
+    <text class="thai" x="429" y="570" text-anchor="middle" fill="#FFFDF6" font-size="78" font-weight="700">หน้าหลัก</text>
+    <text class="thai" x="429" y="628" text-anchor="middle" fill="#EAF2FB" font-size="34" font-weight="400">ภาพรวมของบุตรหลาน</text>
+    <g transform="translate(690 68)">
+      <rect width="112" height="48" rx="24" fill="#FFFDF6" fill-opacity=".18" />
+      <text class="thai" x="56" y="32" text-anchor="middle" fill="#FFFDF6" font-size="20" font-weight="700" letter-spacing=".2">tiwhub</text>
+    </g>
+    <path d="M376 690h106" stroke="#FFFDF6" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" />
+  </g>
+  <g>
+    <rect x="849" y="28" width="803" height="806" rx="42" fill="#FFFFFF" />
+    <circle cx="1250" cy="298" r="142" fill="#EAF2FB" />
+    <use href="#attendance" x="1160" y="208" width="180" height="180" color="#2563EB" stroke="#2563EB" />
+    <text class="thai" x="1250" y="570" text-anchor="middle" fill="#17335C" font-size="78" font-weight="700">เช็กชื่อ</text>
+    <text class="thai" x="1250" y="628" text-anchor="middle" fill="#52657D" font-size="34" font-weight="400">เวลาเข้าเรียนและสถิติ</text>
+    <path d="M1197 690h106" stroke="#B8CCE3" stroke-width="4" stroke-linecap="round" />
+  </g>
+  <g>
+    <rect x="1670" y="28" width="803" height="806" rx="42" fill="#2563EB" />
+    <circle cx="2071" cy="298" r="142" fill="#3B82F6" />
+    <use href="#tuition" x="1981" y="208" width="180" height="180" color="#FFFDF6" stroke="#FFFDF6" />
+    <text class="thai" x="2071" y="570" text-anchor="middle" fill="#FFFDF6" font-size="78" font-weight="700">ค่าเรียน</text>
+    <text class="thai" x="2071" y="628" text-anchor="middle" fill="#FFFDF6" font-size="38" font-weight="600">ดูยอดค้าง · ส่งสลิป</text>
+    <path d="M2018 690h106" stroke="#FFFDF6" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" />
+  </g>
+
+  <!-- Row 2 -->
+  <g>
+    <rect x="28" y="852" width="803" height="806" rx="42" fill="#FFFFFF" />
+    <circle cx="429" cy="1122" r="142" fill="#EAF2FB" />
+    <use href="#leave" x="339" y="1032" width="180" height="180" color="#2563EB" stroke="#2563EB" />
+    <text class="thai" x="429" y="1394" text-anchor="middle" fill="#17335C" font-size="70" font-weight="700">แจ้งลา / ชดเชย</text>
+    <text class="thai" x="429" y="1452" text-anchor="middle" fill="#52657D" font-size="34" font-weight="400">แจ้งลาและจองเรียนชดเชย</text>
+    <path d="M376 1514h106" stroke="#B8CCE3" stroke-width="4" stroke-linecap="round" />
+  </g>
+  <g>
+    <rect x="849" y="852" width="803" height="806" rx="42" fill="#2563EB" />
+    <circle cx="1250" cy="1122" r="142" fill="#3B82F6" />
+    <use href="#homework" x="1160" y="1032" width="180" height="180" color="#FFFDF6" stroke="#FFFDF6" />
+    <text class="thai" x="1250" y="1394" text-anchor="middle" fill="#FFFDF6" font-size="78" font-weight="700">การบ้าน</text>
+    <text class="thai" x="1250" y="1452" text-anchor="middle" fill="#EAF2FB" font-size="34" font-weight="400">งานที่ได้รับมอบหมาย</text>
+    <path d="M1197 1514h106" stroke="#FFFDF6" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" />
+  </g>
+  <g>
+    <rect x="1670" y="852" width="803" height="806" rx="42" fill="#FFFFFF" />
+    <circle cx="2071" cy="1122" r="142" fill="#EAF2FB" />
+    <use href="#scores" x="1981" y="1032" width="180" height="180" color="#2563EB" stroke="#2563EB" />
+    <text class="thai" x="2071" y="1394" text-anchor="middle" fill="#17335C" font-size="78" font-weight="700">คะแนน</text>
+    <text class="thai" x="2071" y="1452" text-anchor="middle" fill="#52657D" font-size="34" font-weight="400">ผลการเรียนและพัฒนาการ</text>
+    <path d="M2018 1514h106" stroke="#B8CCE3" stroke-width="4" stroke-linecap="round" />
+  </g>
+</svg>

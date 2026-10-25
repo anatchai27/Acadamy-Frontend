@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T00:00:00.000Z",
+  "title": "Design System: tiwhub",
+  "extensions": {
+    "colorMeta": {
+      "oasis-blue": { "role": "primary", "displayName": "Oasis Blue", "canonical": "#2563EB", "tonalRamp": ["#102d68", "#173c84", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#bfdbfe", "#eff6ff"] },
+      "oasis-navy": { "role": "secondary", "displayName": "Learning Navy", "canonical": "#17335C", "tonalRamp": ["#0b192e", "#102440", "#17335c", "#294568", "#52657d", "#71839a", "#b8cce3", "#eaf2fb"] },
+      "oasis-cyan": { "role": "tertiary", "displayName": "Oasis Cyan", "canonical": "#06B6D4", "tonalRamp": ["#083344", "#0e4f65", "#0e7490", "#0891b2", "#06b6d4", "#22d3ee", "#a5f3fc", "#ecfeff"] },
+      "oasis-canvas": { "role": "neutral", "displayName": "Canvas Blue Mist", "canonical": "#F4F8FC", "tonalRamp": ["#52657d", "#71839a", "#94a9c1", "#b8cce3", "#d8e4f1", "#eaf2fb", "#f4f8fc", "#ffffff"] },
+      "oasis-line": { "role": "neutral", "displayName": "Blue Line", "canonical": "#D8E4F1", "tonalRamp": ["#294568", "#526f94", "#718fb3", "#9eb5d0", "#b8cce3", "#d8e4f1", "#eaf2fb", "#f4f8fc"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Sarabun Display", "purpose": "Thai-first page and section headings." },
+      "body": { "displayName": "Sarabun", "purpose": "Thai-first body copy, forms, and operational records." }
+    },
+    "shadows": [
+      { "name": "soft-surface", "value": "0 3px 14px rgba(23, 53, 92, 0.06)", "purpose": "Separate white cards from the cool canvas." },
+      { "name": "floating-surface", "value": "0 8px 24px rgba(23, 53, 92, 0.1)", "purpose": "Menus, popovers, and overlay surfaces." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Short, quiet transitions for interaction states." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action uses confident Oasis Blue with a rounded, accessible touch target.",
+      "html": "<button class=\"ds-btn-primary\">บันทึกข้อมูล</button>",
+      "css": ".ds-btn-primary { background: #2563EB; color: #FFFFFF; border: 1px solid transparent; border-radius: 12px; padding: 12px 20px; font: 600 14px/1.4 Sarabun, sans-serif; cursor: pointer; transition: background-color .18s ease, box-shadow .18s ease; } .ds-btn-primary:hover { background: #1D4ED8; } .ds-btn-primary:focus-visible { outline: 3px solid #06B6D4; outline-offset: 3px; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A quiet bordered action for adjacent choices.",
+      "html": "<button class=\"ds-btn-secondary\">ยกเลิก</button>",
+      "css": ".ds-btn-secondary { background: #FFFFFF; color: #17335C; border: 1px solid #D8E4F1; border-radius: 12px; padding: 12px 20px; font: 600 14px/1.4 Sarabun, sans-serif; cursor: pointer; transition: background-color .18s ease, border-color .18s ease; } .ds-btn-secondary:hover { background: #EAF2FB; border-color: #B8CCE3; } .ds-btn-secondary:focus-visible { outline: 3px solid #06B6D4; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "A clear field with a cool border and a blue focus state.",
+      "html": "<input class=\"ds-input\" aria-label=\"ค้นหา\" placeholder=\"ค้นหาข้อมูล\" />",
+      "css": ".ds-input { width: 100%; background: #FFFFFF; color: #17335C; border: 1px solid #D8E4F1; border-radius: 12px; padding: 12px 16px; font: 400 14px/1.5 Sarabun, sans-serif; transition: border-color .18s ease, box-shadow .18s ease; } .ds-input::placeholder { color: #71839A; } .ds-input:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, .14); }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A white rounded surface separated from the mist canvas by a restrained border and shadow.",
+      "html": "<article class=\"ds-card\"><strong>ภาพรวมการเรียน</strong><p>ข้อมูลของวันนี้</p></article>",
+      "css": ".ds-card { background: #FFFFFF; color: #17335C; border: 1px solid #D8E4F1; border-radius: 16px; padding: 20px; box-shadow: 0 3px 14px rgba(23, 53, 92, .06); font-family: Sarabun, sans-serif; } .ds-card strong { font-size: 18px; line-height: 1.35; } .ds-card p { color: #52657D; margin: 8px 0 0; font-size: 14px; line-height: 1.6; }"
+    },
+    {
+      "name": "Active Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "The selected destination is clearly marked in blue without heavy outlines.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z\"/></svg>หน้าหลัก</a>",
+      "css": ".ds-nav-active { display: inline-flex; align-items: center; gap: 10px; background: #EAF2FB; color: #1D4ED8; border-radius: 12px; padding: 10px 12px; font: 600 14px/1.4 Sarabun, sans-serif; text-decoration: none; } .ds-nav-active svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-nav-active:hover { background: #D8E4F1; } .ds-nav-active:focus-visible { outline: 3px solid #06B6D4; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Oasis of Learning",
+    "overview": "The selected Oasis Pages identity pairs a clear blue open-book mark with deep navy typography and a bright cyan point of connection. It should feel dependable and easy to understand for school teams and families checking real student, class, attendance, and payment information throughout the day. Thai-first copy and Sarabun remain the voice of the product.\n\nThe Front admin and LineLiff family portal share one brand palette and component language while preserving their separate workflows. Existing Bento and Neobrutalism visual modes are unified under Oasis; tenant-uploaded logos, student photographs, receipts, QR codes, and semantic status colors remain intact.",
+    "keyCharacteristics": ["Clear academic blue, open space, and confident navy text.", "Cyan is a small connective accent, not a competing primary.", "Soft, readable surfaces with subtle blue-tinted borders and depth.", "The open-book mark and tiwhub wordmark identify the platform."],
+    "rules": [
+      { "name": "The One Oasis Rule", "body": "Front and LineLiff use the same blue, navy, cyan, and cool-neutral identity; legacy Sage and high-contrast black-outline skins are not alternate brand themes.", "section": "colors" },
+      { "name": "The Status Stays True Rule", "body": "Success, warning, danger, and payment/attendance states keep their distinct semantic hues; brand blue never replaces meaning.", "section": "colors" },
+      { "name": "The Thai First Rule", "body": "Sarabun remains the shared UI face so Thai copy stays readable and consistent in both apps.", "section": "typography" }
+    ],
+    "dos": ["Do use Oasis Blue (#2563EB), Learning Navy (#17335C), and Oasis Cyan (#06B6D4) consistently in both apps.", "Do keep state-specific colors for attendance, payment, success, warning, and error feedback.", "Do retain Thai-first Sarabun typography, existing workflows, and mobile-safe controls.", "Do use the selected open-book mark for platform identity while preserving uploaded tenant logos."],
+    "donts": ["Don't leave Sage as a separate brand palette or restore the black-outline Neobrutalism skin.", "Don't use cyan for large text or primary action surfaces where contrast is weaker than Oasis Blue.", "Don't recolor real institute marks, student photos, QR codes, or payment evidence.", "Don't change API behavior, page permissions, or workflow copy as a side effect of visual rebranding."]
+  }
+}

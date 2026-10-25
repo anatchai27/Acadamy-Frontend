@@ -2,7 +2,6 @@ import { route } from 'preact-router';
 import { useForm, Controller } from 'react-hook-form';
 import { useState, useCallback } from 'preact/hooks';
 import { Button, Input, Checkbox, LogoUpload, showToast } from '../../components/ui';
-import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { authService } from '../../services';
 import { useAppContext } from '../../store/AppContext';
 const PHONE_REGEX = /^\d{9,10}$/;
@@ -23,10 +22,7 @@ export const RegisterPage = () => {
   const {
     dispatch
   } = useAppContext();
-  const {
-    designTheme
-  } = useDesignTheme();
-  const isNeo = designTheme === 'neobrutalism';
+  const isNeo = false;
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [logoBase64, setLogoBase64] = useState(null);
@@ -136,10 +132,8 @@ export const RegisterPage = () => {
   return <div class={'min-h-screen flex flex-col md:flex-row ' + (isNeo ? 'bg-[#FAF3E0]' : '')}>
       {/* LEFT: Branding */}
       <div class={'md:w-[40%] flex flex-col items-center justify-center px-6 md:px-10 py-10 md:py-16 text-center ' + (isNeo ? 'bg-black text-white border-r-3 border-black' : 'bg-oasis-primary text-white')}>
-        <div class={'w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-6 md:mb-8 ' + (isNeo ? 'border-3 border-white' : 'border-4 border-white rounded-2xl')}>
-          <span class="text-3xl md:text-5xl font-bold tracking-tight">TH</span>
-        </div>
-        <h1 class="text-2xl md:text-4xl font-bold mb-4 tracking-tight">TiwHub</h1>
+        <img src="/tiwhub-mark.svg" alt="" class="mb-6 h-20 w-20 rounded-2xl bg-white p-2 shadow-lg md:mb-8 md:h-24 md:w-24 md:p-3" />
+        <h1 class="text-2xl md:text-4xl font-bold mb-4 tracking-tight">tiwhub</h1>
         <p class="text-base md:text-lg text-white/80 leading-relaxed max-w-sm">จัดการสถาบันง่าย จบในที่เดียว</p>
         <div class="mt-8 md:mt-12 flex gap-6 md:gap-8">
           <div class="text-center"><p class="text-2xl md:text-3xl font-bold text-white">500+</p><p class="text-xs md:text-sm text-white/60 mt-1">สถาบันที่เชื่อมั่น</p></div>
@@ -164,7 +158,7 @@ export const RegisterPage = () => {
           </div>
 
           <p class="text-xs uppercase tracking-wide text-zinc-500 mb-1">ขั้นตอนที่ {step}/2</p>
-          <h2 class={'text-2xl font-semibold tracking-tight mb-2 ' + (isNeo ? 'text-black' : 'text-zinc-900')}>{step === 1 ? 'ข้อมูลสถาบัน' : 'เริ่มต้นใช้งาน TiwHub'}</h2>
+          <h2 class={'text-2xl font-semibold tracking-tight mb-2 ' + (isNeo ? 'text-black' : 'text-zinc-900')}>{step === 1 ? 'ข้อมูลสถาบัน' : 'เริ่มต้นใช้งาน tiwhub'}</h2>
           <p class="text-zinc-500 text-sm mb-8">{step === 1 ? 'กรอกข้อมูลสถาบันสอนพิเศษของคุณ' : 'สร้างบัญชีสำหรับสถาบันสอนพิเศษของคุณฟรี'}</p>
 
           <form onSubmit={handleSubmit(onSubmit, onError)} class="flex flex-col gap-5">
@@ -178,7 +172,7 @@ export const RegisterPage = () => {
               }
             }} render={({
               field
-            }) => <Input type="text" label="ชื่อสถาบันสอนพิเศษ" id="reg-institute-name" placeholder="เช่น สถาบันกวดวิชา TiwHub Tutor" error={errors.institute_name?.message} value={field.value} onChange={e => field.onChange(e.target.value)} onBlur={field.onBlur} name={field.name} />} />
+              }) => <Input type="text" label="ชื่อสถาบันสอนพิเศษ" id="reg-institute-name" placeholder="เช่น สถาบันกวดวิชาแสงดาว" error={errors.institute_name?.message} value={field.value} onChange={e => field.onChange(e.target.value)} onBlur={field.onBlur} name={field.name} />} />
                 <Controller name="contact_phone" control={control} rules={{
               required: 'กรุณากรอกเบอร์โทรศัพท์สถาบัน',
               validate: v => PHONE_REGEX.test(v) || 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 9-10 หลัก'

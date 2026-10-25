@@ -35,7 +35,7 @@ describe('Owner dashboard', () => {
   it('only shows shortcuts the current role can access', () => {
     render(<DashboardPage path="/admin/dashboard" />);
     expect(screen.getByRole('button', { name: /ดูแลการเงิน/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /จัดการสินค้า/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /จัดการสินค้า/ })).not.toBeInTheDocument();
     const teacherActions = getAvailableDashboardActions('teacher').map(({ path }) => path);
     expect(teacherActions).toContain('/admin/attendance');
     expect(teacherActions).toContain('/admin/requests');

@@ -322,7 +322,7 @@ export function SessionsPage({ path, courseId }) {
            {recurring ? (
              <div class="grid gap-4">
                <label class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-                 <input type="checkbox" checked={replaceFuture} onChange={event => setReplaceFuture(event.currentTarget.checked)} class="mt-0.5 h-4 w-4 shrink-0 accent-amber-600" />
+                 <input type="checkbox" aria-label="แทนที่ตารางเรียนในอนาคต" checked={replaceFuture} onChange={event => setReplaceFuture(event.currentTarget.checked)} class="mt-0.5 h-4 w-4 shrink-0 accent-amber-600" />
                  <span>
                    <span class="block font-semibold">แทนที่ตารางเรียนในอนาคต</span>
                    <span class="mt-1 block text-xs leading-5 text-amber-800">ยกเลิกเฉพาะคาบที่ยังไม่มีข้อมูลเช็คชื่อ คาบที่ผ่านมาและคาบที่มีเช็คชื่อจะคงไว้ สิทธิ์เรียนและเอกสารคอร์สไม่เปลี่ยน</span>

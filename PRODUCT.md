@@ -45,7 +45,7 @@ TiwHub Academy เป็นระบบจัดการสถาบันก�
 - ระบบผู้ใช้: จัดการบทบาท (admin, teacher, staff)
 - ระบบคำร้องขอ: อนุมัติ/ปฏิเสธ
 - ระบบตั้งค่า: จัดการข้อมูลสถาบัน
-- Dual theme: Bento (modern) และ Neobrutalism (playful)
+- Unified Oasis visual system สำหรับ Front และ LineLiff
 - Achievement badges สำหรับ Admin
 - Mobile responsive (bottom nav, horizontal scroll, dvh units)
 
@@ -60,10 +60,10 @@ TiwHub Academy เป็นระบบจัดการสถาบันก�
 
 - ชื่อ: TiwHub Academy
 - ฟอนต์: Sarabun (Google Fonts, รองรับภาษาไทย)
-- โลโก้: รูปสี่เหลี่ยมที่มีตัวอักษร TH
+- โลโก้: tiwhub Oasis Pages — สัญลักษณ์หนังสือเปิด สีน้ำเงินและ Cyan
 - Design tokens: Oasis palette (primary #2563eb, accent #06b6d4)
 - ภาษา: ไทยทั้งหมด
-- รองรับ 2 design themes: Bento (soft, rounded) และ Neobrutalism (bold, black borders, hard shadows)
+- รูปแบบ UI: พื้นผิวสว่าง มุมโค้ง และเส้นขอบสีน้ำเงินอ่อน โดยคงสถานะ success/warning/error ตามความหมาย
 
 ## Evidence on Hand
 
@@ -76,7 +76,7 @@ TiwHub Academy เป็นระบบจัดการสถาบันก�
 
 1. **ลดความซับซ้อน** — ข้อมูลที่ยุ่งยากถูกทำให้ใช้งานง่าย ไม่ต้องใช้เอกสารกระดาษ
 2. **Mobile-first** — admin ใช้งานบนมือถือได้จริง รองรับทุกฟีเจอร์ผ่าน bottom navigation
-3. **เล่นสนุก** — gamification (badges) และ dual theme สร้างประสบการณ์ที่ไม่น่าเบื่อ
+3. **เป็นมิตรและชัดเจน** — ใช้ระบบภาพ Oasis เดียวทั้ง Front และ LineLiff พร้อม badge ที่ไม่รบกวนงานหลัก
 4. **ประหยัดทรัพยากร** — ทุกการตัดสินใจทางเทคนิคคำนึงถึง VPS 1GB RAM
 5. **พัฒนาต่อยอดได้** — โค้ดแยกส่วน (modular components) พร้อม design system ชัดเจน
 
@@ -84,5 +84,5 @@ TiwHub Academy เป็นระบบจัดการสถาบันก�
 
 - ฟอนต์ Sarabun อ่านง่าย รองรับภาษาไทยครบถ้วน
 - Badge stickers ใช้ `role="status"` + `aria-live="polite"`
-- Theme toggle ใช้ `<button aria-label="เปลี่ยนธีม">`
+- ระบบภาพใช้ Oasis palette เดียวกันทั้ง Front และ LineLiff
 - สีมี contrast ที่เหมาะสม (Oasis palette)

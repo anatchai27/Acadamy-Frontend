@@ -15,7 +15,7 @@ export const App = () => {
   const { state } = useLiffContext();
 
   return state.loading ? <SplashPage /> : (
-    <div class="min-h-screen bg-gray-50 text-gray-900">
+    <div class="min-h-screen bg-oasis-50 text-oasis-navy">
       <Router>
         <LoginPage path="/liff" />
         <LoginPage path="/liff/login" />

@@ -64,19 +64,19 @@ export const ProfilePage = () => {
     <LiffLayout showBack>
       <div class="space-y-6">
         <div class="text-center">
-          <div class="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+          <div class="h-20 w-20 rounded-full bg-oasis-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
             {state.liffProfile?.displayName?.charAt(0) || '?'}
           </div>
           <h1 class="text-xl font-bold">{state.liffProfile?.displayName}</h1>
-          <p class="text-sm text-gray-500">LINE ID: {state.liffProfile?.userId?.slice(0, 8)}...</p>
+          <p class="text-sm text-ink-500">LINE ID: {state.liffProfile?.userId?.slice(0, 8)}...</p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="bg-white rounded-2xl shadow-soft border border-sage-200 p-5">
           <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold">ข้อมูลผู้ปกครอง</h2>
             <button
               onClick={() => setEditMode(!editMode)}
-              class="text-sm text-blue-600 font-medium"
+              class="text-sm text-sage-700 font-medium"
             >
               {editMode ? 'ยกเลิก' : 'แก้ไข'}
             </button>
@@ -90,7 +90,7 @@ export const ProfilePage = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                class="w-full bg-blue-600 text-white rounded-xl py-3 font-semibold disabled:opacity-50"
+                class="w-full bg-sage-600 text-white rounded-xl py-3 font-semibold disabled:opacity-50"
               >
                 {saving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>
@@ -104,20 +104,20 @@ export const ProfilePage = () => {
           )}
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="bg-white rounded-2xl shadow-soft border border-sage-200 p-5">
           <h2 class="font-semibold mb-3">บุตรหลาน</h2>
           {state.children.length === 0 ? (
-            <p class="text-sm text-gray-400">ยังไม่มีข้อมูลบุตรหลาน</p>
+            <p class="text-sm text-ink-500">ยังไม่มีข้อมูลบุตรหลาน</p>
           ) : (
             <div class="space-y-2">
               {state.children.map(c => (
-                <div key={c.id} class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white font-bold">
+                <div key={c.id} class="flex items-center gap-3 p-3 bg-sage-50 rounded-xl">
+                  <div class="h-10 w-10 rounded-full bg-sage-600 flex items-center justify-center text-white font-bold">
                     {(c.fullName || '?').charAt(0)}
                   </div>
                   <div>
                     <p class="font-medium text-sm">{c.fullName}</p>
-                    <p class="text-xs text-gray-400">{c.grade || '-'}</p>
+                    <p class="text-xs text-ink-500">{c.grade || '-'}</p>
                   </div>
                 </div>
               ))}
@@ -132,7 +132,7 @@ export const ProfilePage = () => {
         >
           {loggingOut ? 'กำลังออกจากระบบ LINE...' : 'ออกจากระบบ LINE และเชื่อมใหม่'}
         </button>
-        <p class="text-center text-xs text-gray-400">เวอร์ชัน {APP_VERSION}</p>
+        <p class="text-center text-xs text-ink-500">เวอร์ชัน {APP_VERSION}</p>
       </div>
     </LiffLayout>
   );
@@ -141,7 +141,7 @@ export const ProfilePage = () => {
 const ProfileRow = ({ label, value }) => {
   return (
     <div class="flex justify-between items-center">
-      <span class="text-sm text-gray-500">{label}</span>
+      <span class="text-sm text-ink-500">{label}</span>
       <span class="text-sm font-medium">{value}</span>
     </div>
   );
@@ -150,12 +150,12 @@ const ProfileRow = ({ label, value }) => {
 const InputField = ({ label, value, onChange, type = 'text' }) => {
   return (
     <div>
-      <label class="text-xs text-gray-500 mb-1 block">{label}</label>
+      <label class="text-xs text-ink-500 mb-1 block">{label}</label>
       <input
         type={type}
         value={value}
         onInput={e => onChange(e.target.value)}
-        class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full rounded-xl border border-sage-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
       />
     </div>
   );

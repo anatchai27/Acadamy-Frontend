@@ -23,25 +23,25 @@ export const AttendancePage = ({ childId }) => {
       <div class="space-y-4">
         <div>
           <h1 class="text-xl font-bold">ประวัติการเข้าเรียน</h1>
-          {activeChild && <p class="text-sm text-gray-500">{activeChild.fullName}</p>}
+          {activeChild && <p class="text-sm text-ink-500">{activeChild.fullName}</p>}
         </div>
 
         {loading ? (
           <div class="flex justify-center py-10">
-            <div class="h-8 w-8 rounded-full border-3 border-blue-500/30 border-t-blue-500 animate-spin" />
+            <div class="h-8 w-8 rounded-full border-3 border-sage-200 border-t-sage-600 animate-spin" />
           </div>
         ) : records.length === 0 ? (
-          <div class="text-center py-10 text-gray-400">
+          <div class="text-center py-10 text-ink-500">
             <p class="text-4xl mb-2">📅</p>
             <p>ไม่มีประวัติการเข้าเรียน</p>
           </div>
         ) : (
           <div class="space-y-2">
             {records.map((r, i) => (
-              <div key={i} class="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between shadow-sm">
+              <div key={i} class="bg-white rounded-xl border border-sage-200 p-4 flex items-center justify-between shadow-soft">
                 <div>
                   <p class="font-medium text-sm">{r.courseName || r.course}</p>
-                  <p class="text-xs text-gray-400">{r.date} {r.time}</p>
+                  <p class="text-xs text-ink-500">{r.date} {r.time}</p>
                 </div>
                 <span class={`px-3 py-1 rounded-full text-xs font-semibold ${
                   r.status === 'present' ? 'bg-green-100 text-green-700' :

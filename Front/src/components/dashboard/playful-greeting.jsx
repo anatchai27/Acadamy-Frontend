@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-const greetings = ['ยินดีต้อนรับกลับมา! วันนี้คุณดูเหนื่อยนะ แอบอู้งานไปกินกาแฟหน่อยไหม? ☕', 'อ้าว! กลับมาแล้วเหรอ? Admin คนเก่งของเรา 😎', 'ระบบพร้อมแล้ว! คุณก็คงพร้อมแล้วใช่ไหม?', 'วันนี้อากาศดี เหมาะแก่การจัดการนักเรียนเป็นอย่างยิ่ง 🌤️', 'สวัสดี! TiwHub ดีใจที่ได้เห็นคุณอีกครั้ง 🙌', 'TIP: ถ้าเหนื่อย ให้กด \'สแกน QR\' แล้วยืดเส้นยืดสาย', 'Admin คนนี้ทำอะไรเก่งไปหมดเลย!', 'วันนี้มีอะไรให้ช่วยจัดการบ้าง? บอก TiwHub มาได้เลย!'];
+const greetings = ['ตรวจสอบภาพรวมและรายการที่ต้องดำเนินการได้จากหน้านี้', 'ข้อมูลล่าสุดของสถาบันพร้อมให้คุณตรวจสอบแล้ว', 'เริ่มต้นจัดการการเรียนและข้อมูลนักเรียนได้จากเมนูด้านข้าง', 'ติดตามการเข้าเรียนและคำร้องที่รอพิจารณาได้ในที่เดียว', 'เลือกงานที่ต้องการทำ แล้วระบบจะแสดงข้อมูลที่เกี่ยวข้องให้', 'บันทึกข้อมูลให้เป็นปัจจุบัน เพื่อให้ทีมทำงานต่อได้สะดวก'];
 const getGreetingForToday = () => {
   try {
     const day = new Date().toDateString();
@@ -27,7 +27,7 @@ export const PlayfulGreeting = ({
   const isNeo = designTheme === 'neobrutalism';
   const hour = new Date().getHours();
   const timeGreeting = hour < 12 ? 'สวัสดีตอนเช้า' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
-  return <div id="dashboard-greeting" class={isNeo ? 'neo-card bg-[#FFEAA7] p-5 mb-8' : 'bg-gradient-to-r from-oasis-primary/5 to-oasis-accent/5 border border-oasis-primary/10 rounded-2xl p-5 mb-8'}>
+  return <div id="dashboard-greeting" class={isNeo ? 'neo-card bg-oasis-surface-hover p-5 mb-8' : 'border border-oasis-border rounded-2xl bg-oasis-surface-hover p-5 mb-8'}>
       <h2 class={'text-xl font-bold tracking-tight ' + (isNeo ? 'text-black' : 'text-oasis-heading')}>
         {timeGreeting}{userName ? `, ${userName}` : ''}! 👋
       </h2>

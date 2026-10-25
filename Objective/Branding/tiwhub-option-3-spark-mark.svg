@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub Bright Steps mark</title>
+  <desc id="desc">TH monogram on a plum hexagonal badge with a coral hub and golden connector.</desc>
+  <path d="M128 12 239 76V180L128 244 17 180V76L128 12Z" fill="#55365F" />
+  <path d="M65 83H191M128 83V177" stroke="#FFF8EF" stroke-width="17" stroke-linecap="round" />
+  <path d="M94 177V129C94 119.059 102.059 111 112 111H144C153.941 111 162 119.059 162 129V177" stroke="#FFF8EF" stroke-width="17" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="m177 177 21 21" stroke="#F2C14E" stroke-width="10" stroke-linecap="round" />
+  <circle cx="196" cy="196" r="19" fill="#F07B62" stroke="#55365F" stroke-width="7" />
+</svg>

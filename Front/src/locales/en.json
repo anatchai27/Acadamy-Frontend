@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "acadamy",
+    "appName": "tiwhub",
     "tagline": "Tutoring Center Discovery & Comparison Platform for Kids",
     "search": "Search",
     "cancel": "Cancel",
@@ -119,7 +119,7 @@
     }
   },
   "navigation": {
-    "groups": { "primary": "Core Data", "operations": "Operations", "commerce": "Finance & Products", "system": "System", "master": "Reference Data" },
+    "groups": { "primary": "Core Data", "operations": "Operations", "commerce": "Finance", "system": "System", "master": "Reference Data" },
     "scanQr": "Scan QR",
     "logoutConfirmation": "Are you sure you want to log out?",
     "home": "Home",
@@ -198,7 +198,7 @@
     "eyebrow": "FOR EDUCATION PARTNERS",
     "title": "Have a Course You Want",
     "highlight": "Kids to Discover?",
-    "description": "Join Acadamy to help parents discover your institute more easily, manage courses in one place, and grow with the right families",
+    "description": "Join tiwhub to help parents discover your institute more easily, manage courses in one place, and grow with the right families",
     "cta": "Become a Partner →",
     "benefits": {
       "01": {
@@ -216,7 +216,7 @@
     }
   },
   "footer": {
-    "copyright": "© 2026 Acadamy Platform"
+    "copyright": "© 2026 tiwhub"
   },
   "dashboard": {
     "overview": {

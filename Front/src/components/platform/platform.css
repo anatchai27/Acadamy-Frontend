@@ -577,6 +577,188 @@
 .market-footer b span {
   font-size: 14px;
 }
+
+/* Oasis Pages public surface: the open-book mark and clear blue identity lead. */
+.oasis-marketplace {
+  background: #f4f8fc;
+  color: #17335c;
+}
+.oasis-marketplace .market-nav {
+  max-width: 1180px;
+  border-bottom: 1px solid #d8e4f1;
+}
+.oasis-marketplace .market-brand,
+.oasis-marketplace .market-footer b {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #17335c;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.oasis-marketplace .market-brand img,
+.oasis-marketplace .market-footer b img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+.oasis-marketplace .market-nav-links { color: #52657d; }
+.oasis-marketplace .market-nav-links a:hover,
+.oasis-marketplace .market-heading > a:hover { color: #1d4ed8; }
+.oasis-marketplace .market-partner-link {
+  border-color: #d8e4f1;
+  border-radius: 10px;
+  color: #1d4ed8 !important;
+}
+.oasis-marketplace .market-hero {
+  margin: 0 auto;
+  padding: clamp(52px, 8vw, 92px) 28px 64px;
+  border-radius: 0 0 28px 28px;
+  background: #eaf2fb;
+  text-align: left;
+}
+.oasis-marketplace .market-eyebrow { color: #1d4ed8; }
+.oasis-marketplace .market-hero h1 {
+  max-width: 780px;
+  color: #17335c;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+.oasis-marketplace .market-hero h1 em,
+.oasis-marketplace .market-partner h2 em {
+  color: #2563eb;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 700;
+}
+.oasis-marketplace .market-hero p { margin-left: 0; color: #52657d; }
+.oasis-marketplace .market-search {
+  margin-left: 0;
+  border-color: #d8e4f1;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(23, 53, 92, 0.08);
+}
+.oasis-marketplace .market-search > span,
+.oasis-marketplace .market-suggestions button { color: #2563eb; }
+.oasis-marketplace .market-search button,
+.oasis-marketplace .market-partner > a {
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+}
+.oasis-marketplace .market-suggestions { justify-content: flex-start; color: #52657d; }
+.oasis-marketplace .market-trust,
+.oasis-marketplace .market-institute-card,
+.oasis-marketplace .market-course-card {
+  border-color: #d8e4f1;
+  border-radius: 18px;
+  box-shadow: 0 3px 14px rgba(23, 53, 92, 0.06);
+}
+.oasis-marketplace .market-trust strong,
+.oasis-marketplace .market-heading h2,
+.oasis-marketplace .market-institute-card h3,
+.oasis-marketplace .market-course-card h3 { color: #17335c; }
+.oasis-marketplace .market-heading h2,
+.oasis-marketplace .market-institute-card h3,
+.oasis-marketplace .market-course-card h3,
+.oasis-marketplace .market-compare h2,
+.oasis-marketplace .market-partner h2 {
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+.oasis-marketplace .market-trust p { border-color: #d8e4f1; color: #52657d; }
+.oasis-marketplace .market-heading > a,
+.oasis-marketplace .market-need-card b,
+.oasis-marketplace .market-card-link { color: #2563eb !important; }
+.oasis-marketplace .market-need-card h3 {
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.oasis-marketplace .market-save,
+.oasis-marketplace .market-rating small { color: #52657d; }
+.oasis-marketplace .market-need-card:hover,
+.oasis-marketplace .market-institute-card:hover,
+.oasis-marketplace .market-course-card:hover {
+  box-shadow: 0 12px 30px rgba(23, 53, 92, 0.12);
+}
+.oasis-marketplace .need-mint,
+.oasis-marketplace .need-blue { background: #eaf2fb; }
+.oasis-marketplace .need-peach { background: #e4f7fb; }
+.oasis-marketplace .market-need-card {
+  border: 1px solid #d8e4f1;
+  border-radius: 16px;
+  background-clip: padding-box;
+}
+.oasis-marketplace .market-need-card h3 { color: #17335c; }
+.oasis-marketplace .market-logo,
+.oasis-marketplace .market-provider span { border-radius: 10px; color: #17335c; }
+.oasis-marketplace .market-kicker,
+.oasis-marketplace .market-provider { color: #52657d; }
+.oasis-marketplace .market-tags span {
+  border-radius: 999px;
+  background: #eaf2fb;
+  color: #294568;
+}
+.oasis-marketplace .market-rating { border-color: #d8e4f1; color: #a86b00; }
+.oasis-marketplace .market-rating b { color: #17335c; }
+.oasis-marketplace .market-tabs button {
+  border-color: #d8e4f1;
+  border-radius: 999px;
+  color: #52657d;
+}
+.oasis-marketplace .market-tabs button.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+.oasis-marketplace .market-course-visual { color: #17335c; }
+.oasis-marketplace .market-provider small,
+.oasis-marketplace .market-rating { color: #a86b00; }
+.oasis-marketplace .market-course-card p,
+.oasis-marketplace .market-institute-card p,
+.oasis-marketplace .market-price span { color: #52657d; }
+.oasis-marketplace .market-price strong { color: #17335c; }
+.oasis-marketplace .market-compare-button {
+  border-color: #b8cce3;
+  border-radius: 10px;
+  background: #eaf2fb;
+  color: #1d4ed8;
+}
+.oasis-marketplace .market-compare {
+  border-radius: 22px;
+  background: #17335c;
+  color: #fff;
+}
+.oasis-marketplace .market-compare p { color: #d8e4f1; }
+.oasis-marketplace .market-compare-list { color: #eaf2fb; }
+.oasis-marketplace .market-compare-list span { border-color: #526f94; }
+.oasis-marketplace .market-compare button {
+  border-radius: 10px;
+  background: #06b6d4;
+  color: #17335c;
+}
+.oasis-marketplace .market-partner {
+  border-color: #d8e4f1;
+  border-radius: 22px;
+  background: #eaf2fb;
+}
+.oasis-marketplace .market-partner h2 { color: #17335c; }
+.oasis-marketplace .market-partner p,
+.oasis-marketplace .market-benefits span { color: #52657d; }
+.oasis-marketplace .market-partner > a span { color: #a5f3fc; }
+.oasis-marketplace .market-benefits div,
+.oasis-marketplace .market-footer { border-color: #d8e4f1; }
+.oasis-marketplace .market-benefits b { color: #2563eb; }
+.oasis-marketplace .market-benefits strong { color: #17335c; }
+.oasis-marketplace .market-empty { color: #52657d; }
+.oasis-marketplace :focus-visible {
+  outline: 3px solid rgba(6, 182, 212, 0.75);
+  outline-offset: 3px;
+}
+
 @media (max-width: 760px) {
   .market-nav-links {
     display: none;
@@ -654,260 +836,3 @@
   }
 }
 
-/* Homepage neobrutalism skin. Keep the marketplace layout, replace its visual language. */
-.neo-marketplace {
-  background: #fff8df;
-  color: #111;
-}
-
-.neo-marketplace .market-nav {
-  max-width: none;
-  padding: 18px clamp(18px, 5vw, 72px);
-  border-bottom: 3px solid #000;
-  background: #fff;
-}
-
-.neo-marketplace .market-brand {
-  color: #000;
-  font-size: 24px;
-  letter-spacing: -0.08em;
-}
-
-.neo-marketplace .market-brand span,
-.neo-marketplace .market-footer b span {
-  border: 2px solid #000;
-  border-radius: 0;
-  background: #ffdb3d;
-  color: #000;
-  box-shadow: 2px 2px 0 #000;
-}
-
-.neo-marketplace .market-nav-links {
-  color: #000;
-  font-weight: 700;
-}
-
-.neo-marketplace .market-nav-links a:hover,
-.neo-marketplace .market-heading > a:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-}
-
-.neo-marketplace .market-partner-link,
-.neo-marketplace .market-search,
-.neo-marketplace .market-trust,
-.neo-marketplace .market-institute-card,
-.neo-marketplace .market-course-card,
-.neo-marketplace .market-compare,
-.neo-marketplace .market-partner {
-  border: 3px solid #000;
-  border-radius: 0;
-  box-shadow: 5px 5px 0 #000;
-}
-
-.neo-marketplace .market-partner-link {
-  border-color: #000;
-  background: #ffdb3d;
-  color: #000 !important;
-  box-shadow: 3px 3px 0 #000;
-}
-
-.neo-marketplace .market-partner-link:active,
-.neo-marketplace .market-search button:active,
-.neo-marketplace .market-compare button:active,
-.neo-marketplace .market-partner a:active {
-  transform: translate(3px, 3px);
-  box-shadow: 0 0 0 #000;
-}
-
-.neo-marketplace .market-hero {
-  max-width: none;
-  margin: 0;
-  padding: clamp(64px, 10vw, 128px) 28px 112px;
-  background:
-    radial-gradient(circle at 12% 18%, #ff6b5f 0 7%, transparent 7.2%),
-    radial-gradient(circle at 88% 12%, #54d6e8 0 8%, transparent 8.2%),
-    #fff8df;
-  border-bottom: 3px solid #000;
-}
-
-.neo-marketplace .market-eyebrow {
-  color: #000;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-
-.neo-marketplace .market-hero h1 {
-  color: #000;
-  font-weight: 900;
-  letter-spacing: -0.09em;
-  text-shadow: 4px 4px 0 #ffdb3d;
-}
-
-.neo-marketplace .market-hero h1 em,
-.neo-marketplace .market-partner h2 em {
-  color: #ff5c52;
-  font-weight: 900;
-}
-
-.neo-marketplace .market-hero p,
-.neo-marketplace .market-heading > span,
-.neo-marketplace .market-trust span,
-.neo-marketplace .market-trust p,
-.neo-marketplace .market-institute-card p,
-.neo-marketplace .market-course-card p {
-  color: #343434;
-}
-
-.neo-marketplace .market-search {
-  max-width: 720px;
-  padding: 10px 11px 10px 18px;
-  background: #fff;
-  box-shadow: 6px 6px 0 #000;
-}
-
-.neo-marketplace .market-search > span {
-  color: #000;
-  font-weight: 900;
-}
-
-.neo-marketplace .market-search button,
-.neo-marketplace .market-compare > button,
-.neo-marketplace .market-partner a {
-  border: 3px solid #000;
-  border-radius: 0;
-  background: #000;
-  color: #fff;
-  box-shadow: 3px 3px 0 #ff5c52;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.neo-marketplace .market-suggestions,
-.neo-marketplace .market-suggestions button {
-  color: #000;
-}
-
-.neo-marketplace .market-suggestions button {
-  font-weight: 800;
-}
-
-.neo-marketplace .market-trust {
-  position: relative;
-  margin-top: -38px;
-  background: #fff;
-}
-
-.neo-marketplace .market-trust strong {
-  color: #000;
-  font-weight: 900;
-}
-
-.neo-marketplace .market-trust p {
-  border-color: #000;
-  font-weight: 700;
-}
-
-.neo-marketplace .market-heading h2 {
-  color: #000;
-  font-weight: 900;
-}
-
-.neo-marketplace .market-need-card,
-.neo-marketplace .market-institute-card,
-.neo-marketplace .market-course-card {
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.neo-marketplace .market-need-card:hover,
-.neo-marketplace .market-institute-card:hover,
-.neo-marketplace .market-course-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 7px 7px 0 #000;
-}
-
-.neo-marketplace .market-need-card {
-  border: 3px solid #000;
-  border-radius: 0;
-  box-shadow: 5px 5px 0 #000;
-}
-
-.neo-marketplace .need-mint { background: #63e6be; }
-.neo-marketplace .need-blue { background: #54d6e8; }
-.neo-marketplace .need-peach { background: #ff9f8f; }
-
-.neo-marketplace .market-need-card h3,
-.neo-marketplace .market-need-card b,
-.neo-marketplace .market-need-card > span {
-  color: #000;
-}
-
-.neo-marketplace .market-institute-card,
-.neo-marketplace .market-course-card {
-  background: #fff;
-}
-
-.neo-marketplace .market-logo,
-.neo-marketplace .market-course-visual {
-  border: 2px solid #000;
-  border-radius: 0;
-}
-
-.neo-marketplace .market-kicker,
-.neo-marketplace .market-card-link,
-.neo-marketplace .market-provider small {
-  color: #000;
-  font-weight: 800;
-}
-
-.neo-marketplace .market-institute-card h3,
-.neo-marketplace .market-course-card h3 {
-  color: #000;
-  font-weight: 900;
-}
-
-.neo-marketplace .market-tags span,
-.neo-marketplace .market-tabs button,
-.neo-marketplace .market-compare-list span {
-  border: 2px solid #000;
-  border-radius: 0;
-  background: #fff;
-  color: #000;
-  font-weight: 700;
-}
-
-.neo-marketplace .market-tabs button.active {
-  border-color: #000;
-  background: #000;
-  color: #fff;
-}
-
-.neo-marketplace .market-compare,
-.neo-marketplace .market-partner {
-  background: #ffdb3d;
-}
-
-.neo-marketplace .market-compare h2,
-.neo-marketplace .market-partner h2,
-.neo-marketplace .market-compare p,
-.neo-marketplace .market-partner p,
-.neo-marketplace .market-benefits strong,
-.neo-marketplace .market-benefits span {
-  color: #000;
-}
-
-.neo-marketplace .market-footer {
-  border-top: 3px solid #000;
-  background: #000;
-  color: #fff;
-}
-
-@media (max-width: 760px) {
-  .neo-marketplace .market-hero {
-    padding-top: 72px;
-  }
-
-  .neo-marketplace .market-trust {
-    margin-top: -28px;
-  }
-}

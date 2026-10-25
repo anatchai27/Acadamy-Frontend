@@ -121,8 +121,8 @@ export const LoginPage = () => {
   return (
     <div class="flex min-h-[100dvh] flex-col items-center justify-center bg-sage-50 p-5 text-ink-900 sm:p-6">
       <div class="w-full max-w-sm text-center">
-        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-700 text-2xl text-white shadow-soft" aria-hidden="true">📚</div>
-        <h1 class="text-2xl font-bold tracking-tight text-ink-900">TiwHub</h1>
+        <img src="/tiwhub-mark.svg" alt="" class="mx-auto mb-4 h-14 w-14 rounded-2xl shadow-soft" />
+        <h1 class="text-2xl font-bold tracking-tight text-ink-900">tiwhub</h1>
         <p class="mt-1 text-ink-500">ระบบจัดการเรียนการสอน</p>
         <p class="mb-5 mt-2 text-xs text-ink-500">เวอร์ชัน {APP_VERSION}</p>
         {needsCode ? (

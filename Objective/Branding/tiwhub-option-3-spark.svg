@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub — Bright Steps</title>
+  <desc id="desc">A lively plum and coral identity where learning paths meet at a bright hub.</desc>
+  <path d="M126 18 235 81V179L126 242 17 179V81L126 18Z" fill="#55365F" />
+  <path d="M64 86H180M122 86V171" stroke="#FFF8EF" stroke-width="15" stroke-linecap="round" />
+  <path d="M91 171V128C91 119.163 98.163 112 107 112H137C145.837 112 153 119.163 153 128V171" stroke="#FFF8EF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M177 171 197 191" stroke="#F2C14E" stroke-width="9" stroke-linecap="round" />
+  <circle cx="190" cy="184" r="19" fill="#F07B62" stroke="#55365F" stroke-width="7" />
+  <text x="280" y="179" fill="#38243F" font-family="Arial, 'Segoe UI', sans-serif" font-size="132" font-weight="700" letter-spacing="-7">tiwhub</text>
+  <path d="M283 211H482" stroke="#F07B62" stroke-width="8" stroke-linecap="round" />
+  <circle cx="505" cy="211" r="5" fill="#F2C14E" />
+</svg>

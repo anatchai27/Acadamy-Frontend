@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub — Sage Link</title>
+  <desc id="desc">A calm Sage identity with a connected TH monogram and warm gold hub point.</desc>
+  <rect x="16" y="20" width="220" height="220" rx="54" fill="#718C76" />
+  <path d="M67 82H181M124 82V174" stroke="#FFFDF6" stroke-width="16" stroke-linecap="round" />
+  <path d="M93 174V126C93 117.163 100.163 110 109 110H139C147.837 110 155 117.163 155 126V174" stroke="#FFFDF6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="184" cy="185" r="13" fill="#D5B66B" />
+  <text x="280" y="179" fill="#304535" font-family="Arial, 'Segoe UI', sans-serif" font-size="132" font-weight="700" letter-spacing="-7">tiwhub</text>
+  <path d="M283 211H482" stroke="#D5B66B" stroke-width="8" stroke-linecap="round" />
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub mark test 2 — open book</title>
+  <desc id="desc">An open book and central learning path inside the established Sage brand square.</desc>
+  <rect x="12" y="12" width="232" height="232" rx="58" fill="#718C76" />
+  <path d="M128 78C105 61 73 59 48 69V177C77 168 105 172 128 190C151 172 179 168 208 177V69C183 59 151 61 128 78Z" stroke="#FFFDF6" stroke-width="14" stroke-linejoin="round" />
+  <path d="M128 79V187M68 98C83 94 98 97 109 104M68 126C83 122 98 125 109 132M188 98C173 94 158 97 147 104M188 126C173 122 158 125 147 132" stroke="#FFFDF6" stroke-width="9" stroke-linecap="round" />
+  <circle cx="190" cy="191" r="16" fill="#D5B66B" />
+</svg>

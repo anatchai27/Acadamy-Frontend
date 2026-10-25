@@ -84,7 +84,7 @@ export const LoginPage = () => {
   };
   const onError = () => showToast('กรุณากรอกอีเมลหรือเบอร์โทรศัพท์และรหัสผ่าน', 'error');
   return <AuthPageShell navActionLabel="ลงทะเบียนสถาบันใหม่" navActionHref="/register">
-      <AuthFormLayout title="เข้าสู่ระบบ TiwHub" subtitle="จัดการคลาสเรียนและติดตามการเรียนการสอนของคุณ">
+      <AuthFormLayout title="เข้าสู่ระบบ tiwhub" subtitle="จัดการคลาสเรียนและติดตามการเรียนการสอนของคุณ">
         <form onSubmit={handleSubmit(onSubmit, onError)} class="flex flex-col gap-5">
           <Input type="email" label="อีเมล หรือ เบอร์โทรศัพท์" id="login-email" placeholder="กรอกอีเมลหรือเบอร์โทรศัพท์" error={errors.email?.message} name={emailReg.name} onChange={emailReg.onChange} onBlur={emailReg.onBlur} inputRef={emailReg.ref} />
           <Input type="password" label="รหัสผ่าน" id="login-password" placeholder="กรอกรหัสผ่าน" error={errors.password?.message} name={passwordReg.name} onChange={passwordReg.onChange} onBlur={passwordReg.onBlur} inputRef={passwordReg.ref} />
