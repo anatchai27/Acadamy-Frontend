@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องคิดดี — tiwhub minimal mascot concept 09</title>
+  <desc id="desc">A cheerful blue calculator with a clear screen, friendly face, and cyan operation keys.</desc>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <circle cx="112" cy="135" r="10" fill="#06B6D4"/><circle cx="401" cy="367" r="8" fill="#93B8F2"/>
+  <ellipse cx="256" cy="422" rx="112" ry="16" fill="#17335C" fill-opacity=".08"/>
+  <rect x="150" y="92" width="212" height="322" rx="46" fill="#2563EB" stroke="#17335C" stroke-width="12"/>
+  <rect x="181" y="124" width="150" height="104" rx="24" fill="#FFFFFF"/>
+  <path d="M204 154h104v10H204z" fill="#D8E4F1"/>
+  <ellipse cx="222" cy="190" rx="8" ry="12" fill="#17335C"/><ellipse cx="290" cy="190" rx="8" ry="12" fill="#17335C"/>
+  <circle cx="219" cy="186" r="3" fill="#FFFFFF"/><circle cx="287" cy="186" r="3" fill="#FFFFFF"/>
+  <path d="M240 207c9 8 23 8 32 0" stroke="#17335C" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#EAF2FB" stroke="#17335C" stroke-width="5">
+    <rect x="185" y="252" width="49" height="47" rx="14"/><rect x="251" y="252" width="49" height="47" rx="14"/><rect x="317" y="252" width="28" height="113" rx="14" fill="#06B6D4"/>
+    <rect x="185" y="313" width="49" height="47" rx="14"/><rect x="251" y="313" width="49" height="47" rx="14"/>
+    <rect x="185" y="374" width="49" height="24" rx="12"/><rect x="251" y="374" width="49" height="24" rx="12"/>
+  </g>
+  <path d="M200 275h19m-9-9v18m57 0 16-18m-16 0 16 18m-74 27v20m-10-10h20m48-7v20m-10-10h20m-71 45h20m47-10v20m-10-10h20" stroke="#17335C" stroke-width="5" stroke-linecap="round"/>
+  <path d="M325 289h12m-6 59v-16" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M130 216h-18m288 0h-18" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showToast } from '../../components/ui';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService, studentService, enrollmentService } from '../../services';
 import { getCourseMaterials, uploadCourseMaterial, deleteCourseMaterial, downloadCourseMaterial } from '../../services/course-material-service';
@@ -642,9 +643,7 @@ export function CoursesPage({ path }) {
       {/* Empty State */}
       {!loading && !loadError && courses.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <HiOutlineBookOpen class="h-10 w-10 text-zinc-300" />
-          </div>
+          <FoxSticker action={search ? 'thinking' : 'idea'} className="mb-4" />
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบคอร์สเรียน</h3>
           <p class="text-sm text-zinc-400 mb-6">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}</p>
           {!search && canManageCourses && (

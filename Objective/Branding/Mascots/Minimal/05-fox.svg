@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องจิ้งจอก — tiwhub minimal mascot concept 05</title>
+  <desc id="desc">A clever, friendly fox face in Oasis blue with a cyan learning spark.</desc>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <circle cx="386" cy="126" r="29" fill="#D9F7FC"/><path d="M386 111v30m-15-15h30" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+  <path d="m129 218 8-115 95 65c16-5 32-8 48-8s32 3 48 8l95-65 8 115c21 30 33 66 33 104 0 88-82 146-184 146s-184-58-184-146c0-38 12-74 33-104Z" fill="#2563EB" stroke="#17335C" stroke-width="12" stroke-linejoin="round"/>
+  <path d="m151 164 6 80 57-56-63-24Zm210 0-6 80-57-56 63-24Z" fill="#A5F3FC"/>
+  <path d="M163 302c0-40 31-70 70-70 8 0 16 1 23 4 7-3 15-4 23-4 39 0 70 30 70 70 0 52-40 91-93 91h-1c-53 0-92-39-92-91Z" fill="#FFFFFF"/>
+  <ellipse cx="216" cy="294" rx="10" ry="15" fill="#17335C"/><ellipse cx="296" cy="294" rx="10" ry="15" fill="#17335C"/>
+  <circle cx="212" cy="289" r="4" fill="#FFFFFF"/><circle cx="292" cy="289" r="4" fill="#FFFFFF"/>
+  <path d="m256 323-14 12 14 10 14-10-14-12Z" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M256 345c-8 12-21 18-37 16m37-16c8 12 21 18 37 16" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+  <path d="M195 392c16 20 36 30 61 30s45-10 61-30" stroke="#17335C" stroke-width="10" stroke-linecap="round"/>
+  <path d="M112 310h-26m340 0h-26" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

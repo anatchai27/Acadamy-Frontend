@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องประกาย — tiwhub mascot concept 04</title>
+  <desc id="desc">A bright little learning spark with a soft cyan-and-blue silhouette and a tiny open-book satchel.</desc>
+  <defs>
+    <linearGradient id="spark" x1="147" y1="110" x2="367" y2="369" gradientUnits="userSpaceOnUse"><stop stop-color="#A5F3FC"/><stop offset=".42" stop-color="#06B6D4"/><stop offset="1" stop-color="#2563EB"/></linearGradient>
+    <filter id="shadow" x="93" y="63" width="327" height="394" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feGaussianBlur in="SourceAlpha" stdDeviation="12"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <circle cx="114" cy="160" r="11" fill="#06B6D4"/><circle cx="401" cy="238" r="8" fill="#93B8F2"/><circle cx="369" cy="119" r="13" fill="#D9F7FC"/>
+  <ellipse cx="256" cy="423" rx="106" ry="15" fill="#17335C" fill-opacity=".08"/>
+  <g filter="url(#shadow)">
+    <path d="M256 94c16 32 34 42 67 44-20 26-21 45-8 76 31-7 49-1 72 23-31 13-44 29-49 62 31 10 45 25 50 57-34-7-53 0-76 23-21-23-40-30-72-23-8 32-23 47-55 54 7-34 0-53-23-76-30 14-49 13-77-7 24-21 31-40 23-72-32-8-47-23-54-55 34 7 53 0 76-23-14-30-13-49 7-77 21 24 40 31 72 23 8-32 23-47 55-54Z" fill="url(#spark)" stroke="#17335C" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M184 216c0-42 32-74 72-74s72 32 72 74v61c0 53-32 82-72 82s-72-29-72-82v-61Z" fill="#FFFFFF" fill-opacity=".94" stroke="#17335C" stroke-width="8"/>
+    <ellipse cx="230" cy="240" rx="9" ry="13" fill="#17335C"/><ellipse cx="282" cy="240" rx="9" ry="13" fill="#17335C"/>
+    <circle cx="227" cy="236" r="3.5" fill="#FFFFFF"/><circle cx="279" cy="236" r="3.5" fill="#FFFFFF"/>
+    <path d="M239 266c10 9 23 9 33 0" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="208" cy="265" r="11" fill="#F9A8D4" fill-opacity=".6"/><circle cx="304" cy="265" r="11" fill="#F9A8D4" fill-opacity=".6"/>
+    <path d="M211 317c17-10 32-8 45 5 13-13 28-15 45-5v38c-17-10-32-8-45 5-13-13-28-15-45-5v-38Z" fill="#EAF2FB" stroke="#17335C" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M256 323v33m-32-25c10-3 19-1 27 6m37-6c-10-3-19-1-27 6" stroke="#93B8F2" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M220 358c-7 17-18 27-34 30m108-30c7 17 18 27 34 30" stroke="#17335C" stroke-width="9" stroke-linecap="round"/>
+    <path d="M215 388h-20m122 0h-20" stroke="#06B6D4" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <path d="M127 278c-18 5-28 17-27 30m288-168c12-10 25-12 38-6" stroke="#06B6D4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M420 119v24m-12-12h24" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+</svg>

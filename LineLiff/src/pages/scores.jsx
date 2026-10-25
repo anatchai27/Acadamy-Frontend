@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { getChildProgress, getChildScores } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
+import { FoxSticker } from '../components/fox-sticker';
 
 const unwrap = response => response?.data?.data || response?.data || [];
 export const getScoreValue = score => Math.max(0, Math.min(5, Number(score) || 0));
@@ -84,7 +85,7 @@ export const ScoresPage = ({ childId }) => {
         </header>
         {error && <div role="alert" class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
         {loading && <div class="h-64 animate-pulse rounded-2xl bg-indigo-50" aria-label="กำลังโหลด" />}
-        {!loading && !scores.length && <div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-10 text-center text-sm text-ink-500">ยังไม่มีคะแนนทักษะ</div>}
+        {!loading && !scores.length && <div class="flex justify-center rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-6 text-center"><FoxSticker action="thinking" message="ยังไม่มีคะแนนทักษะ" /></div>}
         {!loading && scores.length > 0 && (
           <>
           <section class="rounded-2xl border border-indigo-100 bg-white p-5 shadow-soft">

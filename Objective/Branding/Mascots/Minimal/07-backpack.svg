@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องเป้ — tiwhub minimal mascot concept 07</title>
+  <desc id="desc">A cheerful little school backpack with a book-shaped front pocket and cyan straps.</desc>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <circle cx="388" cy="126" r="28" fill="#D9F7FC"/><path d="M388 111v30m-15-15h30" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="256" cy="422" rx="131" ry="17" fill="#17335C" fill-opacity=".08"/>
+  <path d="M170 177c0-48 35-83 86-83s86 35 86 83" stroke="#17335C" stroke-width="13" stroke-linecap="round"/>
+  <path d="M152 197c0-19 15-34 34-34h140c19 0 34 15 34 34v180c0 25-20 45-45 45H197c-25 0-45-20-45-45V197Z" fill="#2563EB" stroke="#17335C" stroke-width="12"/>
+  <path d="M181 217c0-13 10-23 23-23h104c13 0 23 10 23 23v104c0 20-16 36-36 36h-78c-20 0-36-16-36-36V217Z" fill="#FFFFFF" stroke="#17335C" stroke-width="8"/>
+  <path d="M256 222c-15-11-33-12-51-6v77c19-7 36-4 51 7 15-11 32-14 51-7v-77c-18-6-36-5-51 6Z" fill="#EAF2FB" stroke="#93B8F2" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M256 225v72m-34-62c8-2 16-1 23 3m45-3c-8-2-16-1-23 3" stroke="#93B8F2" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="228" cy="247" r="6" fill="#17335C"/><circle cx="284" cy="247" r="6" fill="#17335C"/>
+  <path d="M245 265c7 7 15 7 22 0" stroke="#17335C" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M169 223h-28v91h28m174-91h28v91h-28" stroke="#06B6D4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M179 372h154v20c0 10-8 18-18 18h-118c-10 0-18-8-18-18v-20Z" fill="#1D4ED8" stroke="#17335C" stroke-width="7"/>
+  <path d="M247 374v20m18-20v20" stroke="#A5F3FC" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="256" cy="421" r="5" fill="#06B6D4"/>
+</svg>

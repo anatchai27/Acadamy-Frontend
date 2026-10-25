@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Poca-style owl mascot</title>
+  <desc id="desc">A round, huggable Oasis-blue owl with oversized eyes and soft cheeks.</desc>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <ellipse cx="256" cy="424" rx="132" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <g>
+    <path d="M143 204c-28-31-38-63-27-86 29 14 48 36 55 63m198-63c7-27 26-49 55-63 11 23 1 55-27 86" fill="#A5F3FC" stroke="#17335C" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M121 248c0-76 60-137 135-137s135 61 135 137v69c0 83-60 144-135 144s-135-61-135-144v-69Z" fill="#2563EB" stroke="#17335C" stroke-width="11"/>
+    <path d="M150 268c0-51 37-89 83-89 10 0 20 2 29 5 9-3 19-5 29-5 46 0 83 38 83 89 0 55-39 98-92 98h-40c-53 0-92-43-92-98Z" fill="#FFFFFF" stroke="#17335C" stroke-width="8"/>
+    <circle cx="218" cy="265" r="33" fill="#EAF2FB" stroke="#17335C" stroke-width="7"/><circle cx="294" cy="265" r="33" fill="#EAF2FB" stroke="#17335C" stroke-width="7"/>
+    <circle cx="222" cy="267" r="15" fill="#17335C"/><circle cx="290" cy="267" r="15" fill="#17335C"/>
+    <circle cx="217" cy="261" r="6" fill="#FFFFFF"/><circle cx="285" cy="261" r="6" fill="#FFFFFF"/>
+    <path d="m256 287-16 17h32l-16-17Z" fill="#06B6D4" stroke="#17335C" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M234 328c13 13 31 13 44 0" stroke="#17335C" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="168" cy="308" rx="19" ry="13" fill="#F9A8D4" fill-opacity=".62"/><ellipse cx="344" cy="308" rx="19" ry="13" fill="#F9A8D4" fill-opacity=".62"/>
+    <path d="M191 365c-16 18-35 24-53 17m183 0c18 7 37 1 53-17" stroke="#17335C" stroke-width="10" stroke-linecap="round"/>
+    <path d="M213 406v12m86-12v12" stroke="#06B6D4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <path d="M389 126c-16 5-27 16-33 32" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

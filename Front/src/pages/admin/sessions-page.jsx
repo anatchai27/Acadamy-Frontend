@@ -5,6 +5,7 @@ import { SolidInput, Button, showToast } from '../../components/ui';
 import { sessionService, courseService, roomService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlinePlus, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineCalendar, HiOutlineUser, HiOutlineBookOpen, HiOutlineClock, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 
@@ -413,9 +414,7 @@ export function SessionsPage({ path, courseId }) {
 
       {!loading && sessions.length === 0 && (
         <div class="text-center py-16">
-          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
-            <HiOutlineCalendar class="h-10 w-10 text-zinc-300" />
-          </div>
+          <FoxSticker action="idea" className="mb-4" />
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ยังไม่มีคาบเรียน</h3>
           <p class="text-sm text-zinc-400 mb-6">เพิ่มคาบเรียนเพื่อเริ่มจัดการตารางสอน</p>
           <Button variant="primary" size="md" onClick={openCreate}>+ เพิ่มคาบเรียนแรก</Button>

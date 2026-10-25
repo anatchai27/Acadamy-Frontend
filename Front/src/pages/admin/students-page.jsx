@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, showConfirm, showToast } from '../../components/ui';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService } from '../../services';
 import { getStoredUser } from '../../services/auth-service';
@@ -106,9 +107,7 @@ export function StudentsPage({ path }) {
 
   const noDataComponent = (
     <div class="py-10 text-center">
-      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100">
-        <HiOutlineUserGroup class="h-8 w-8 text-zinc-300" />
-      </div>
+      <FoxSticker action={search ? 'thinking' : 'hello'} className="mb-4" />
       <h3 class="mb-1 text-sm font-semibold text-zinc-700">{getStudentEmptyMessage(loadError, search).title}</h3>
       <p class="mb-4 text-xs text-zinc-400">{getStudentEmptyMessage(loadError, search).description}</p>
       {loadError ? (

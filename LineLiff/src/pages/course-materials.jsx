@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
 import { downloadChildCourseMaterial, getChildCourseMaterials } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
+import { FoxSticker } from '../components/fox-sticker';
 
 const unwrap = response => response?.data?.data || [];
 
@@ -52,7 +53,7 @@ export const CourseMaterialsPage = ({ childId }) => {
         </header>
         {error && <div role="alert" class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
         {loading && <div class="space-y-3" aria-label="กำลังโหลด"><div class="h-20 animate-pulse rounded-2xl bg-sage-100" /><div class="h-20 animate-pulse rounded-2xl bg-sage-100" /></div>}
-        {!loading && materials.length === 0 && <div class="rounded-2xl border border-dashed border-sage-200 bg-white px-4 py-10 text-center text-sm text-ink-500">ยังไม่มีเอกสารสำหรับคอร์สที่ลงทะเบียน</div>}
+        {!loading && materials.length === 0 && <div class="flex justify-center rounded-2xl border border-dashed border-sage-200 bg-white px-4 py-6 text-center"><FoxSticker action="reading" message="ยังไม่มีเอกสารสำหรับคอร์สที่ลงทะเบียน" /></div>}
         {!loading && materials.map(material => (
           <article key={material.id} class="flex items-center gap-3 rounded-2xl border border-sage-100 bg-white p-4 shadow-soft">
             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sage-50 text-lg text-sage-700" aria-hidden="true">▤</span>

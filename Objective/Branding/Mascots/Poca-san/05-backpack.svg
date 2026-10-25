@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Poca-style backpack mascot</title>
+  <desc id="desc">A round, huggable school backpack with a big friendly face and cyan straps.</desc>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <ellipse cx="256" cy="426" rx="132" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <g>
+    <path d="M181 164c0-42 30-73 75-73s75 31 75 73" stroke="#17335C" stroke-width="12" stroke-linecap="round"/>
+    <path d="M141 190c0-23 18-41 41-41h148c23 0 41 18 41 41v184c0 30-24 54-54 54H195c-30 0-54-24-54-54V190Z" fill="#2563EB" stroke="#17335C" stroke-width="11"/>
+    <path d="M173 214c0-18 14-32 32-32h102c18 0 32 14 32 32v116c0 24-19 43-43 43h-80c-24 0-43-19-43-43V214Z" fill="#FFFFFF" stroke="#17335C" stroke-width="8"/>
+    <ellipse cx="228" cy="258" rx="10" ry="15" fill="#17335C"/><ellipse cx="284" cy="258" rx="10" ry="15" fill="#17335C"/>
+    <circle cx="224" cy="253" r="4" fill="#FFFFFF"/><circle cx="280" cy="253" r="4" fill="#FFFFFF"/>
+    <path d="M241 287c9 10 21 10 30 0" stroke="#17335C" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="196" cy="287" rx="16" ry="11" fill="#F9A8D4" fill-opacity=".62"/><ellipse cx="316" cy="287" rx="16" ry="11" fill="#F9A8D4" fill-opacity=".62"/>
+    <path d="M162 221h-24v91h24m188-91h24v91h-24" stroke="#06B6D4" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M176 378h160v22c0 11-9 20-20 20h-120c-11 0-20-9-20-20v-22Z" fill="#1D4ED8" stroke="#17335C" stroke-width="7"/>
+    <path d="M246 381v20m20-20v20" stroke="#A5F3FC" stroke-width="6" stroke-linecap="round"/>
+    <path d="M206 412v12m100-12v12" stroke="#06B6D4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <path d="M392 122c-16 4-27 14-33 29" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

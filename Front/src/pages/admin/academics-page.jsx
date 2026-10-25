@@ -4,6 +4,7 @@ import { SolidInput, Button, showToast } from '../../components/ui';
 import { courseService, homeworkService, skillScoreService, studentService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlinePlus, HiOutlineChevronDown, HiOutlinePencil, HiOutlineTrash, HiOutlineXMark } from 'react-icons/hi2';
 
@@ -495,7 +496,10 @@ function HomeworkTab({ courseId, courses, onCourseChange }) {
       )}
 
       {!loading && homeworks.length === 0 && (
-        <p class="text-sm text-slate-400 text-center py-12">ยังไม่มีการบ้านในคอร์สนี้</p>
+        <div class="flex flex-col items-center py-8 text-center">
+          <FoxSticker action="reading" message="ยังไม่มีการบ้านในคอร์สนี้" />
+          <p class="mt-2 text-sm text-slate-500">พร้อมแล้วกด “สั่งการบ้านใหม่” ด้านบนได้เลย</p>
+        </div>
       )}
 
       {homeworks.map((hw) => (

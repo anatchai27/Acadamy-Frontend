@@ -4,6 +4,7 @@ import { SolidInput, Button, showToast, showConfirm, ImageUpload } from '../../c
 import { teacherService, uploadService } from '../../services';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 import {
   HiOutlinePlus,
   HiOutlinePencil,
@@ -497,11 +498,7 @@ export function TeachersPage({ path }) {
       {/* Empty State */}
       {!loading && teachers.length === 0 && (
         <div class="text-center py-20">
-          <div
-            class={`mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full ${isNeo ? 'bg-black/5 border-2 border-black' : 'bg-zinc-100'}`}
-          >
-            <HiOutlineUserGroup class={`h-10 w-10 ${isNeo ? 'text-black/40' : 'text-zinc-300'}`} />
-          </div>
+          <FoxSticker action={search ? 'thinking' : 'hello'} className="mb-5" />
           <h3 class={`text-lg font-semibold mb-1 ${isNeo ? 'text-black' : 'text-zinc-700'}`}>ไม่พบข้อมูลครูผู้สอน</h3>
           <p class="text-sm text-zinc-400 mb-6">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีครูผู้สอนในสถาบัน'}</p>
           {!search && (

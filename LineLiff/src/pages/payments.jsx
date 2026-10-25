@@ -12,6 +12,7 @@ import { LiffLayout } from '../components/liff-layout';
 import { compressImageFile } from '../utils/image-compression';
 import { validatePaymentSlip } from '../utils/validation';
 import { formatPhoneNumber } from '../utils/phone';
+import { FoxSticker } from '../components/fox-sticker';
 
 const formatBaht = amount => `฿${Number(amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const hasPaymentDestination = payment => Boolean(payment.bankAccountNumber || payment.promptPayId || payment.paymentQrImageUrl);
@@ -232,7 +233,7 @@ export const PaymentsPage = ({ childId }) => {
           {activeChild && <p class="mt-1 text-sm text-ink-700">ของ {activeChild.fullName}</p>}
         </header>
 
-        {notice && <p role="status" class="rounded-2xl bg-sage-100 px-4 py-3 text-sm font-semibold text-sage-700">{notice}</p>}
+        {notice && <div role="status" class="rounded-2xl bg-sage-100 px-4 py-3 text-sm font-semibold text-sage-700">{notice === 'ส่งสลิปแล้ว รายการกำลังรอสถาบันตรวจสอบ' ? <FoxSticker action="thumbsUp" message={notice} compact /> : notice}</div>}
         {actionError && <p role="alert" class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{actionError}</p>}
 
         {loading ? (

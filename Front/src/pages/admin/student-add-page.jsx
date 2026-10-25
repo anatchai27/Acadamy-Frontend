@@ -9,6 +9,7 @@ import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { formatPhoneNumber } from '../../utils/phone';
+import { FoxSticker } from '../../components/ui/fox-sticker';
 
 const PARENT_RELATIONS = ['แม่', 'พ่อ', 'ผู้ปกครอง', 'อื่นๆ'];
 const normalizeRelationship = (relationship = '') => {
@@ -534,6 +535,7 @@ export function StudentControll({ path, id }) {
                     </div>
                     {linkCode && linkCode.parentId === parent.id && (
                       <div class="mt-3 border-t border-emerald-200 pt-3" role="status" aria-live="polite">
+                        <FoxSticker action="thumbsUp" message="รหัสพร้อมส่งให้ผู้ปกครองแล้ว" compact className="mb-2" />
                         <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
                           <code class="select-all rounded bg-white px-3 py-2 text-base font-bold tracking-widest text-zinc-900">{linkCode.code}</code>

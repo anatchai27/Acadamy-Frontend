@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องปีกฟ้า — tiwhub mascot concept 03</title>
+  <desc id="desc">A curious blue owl wearing a tiny cyan bookmark, carrying a little open book.</desc>
+  <defs>
+    <linearGradient id="feathers" x1="126" y1="123" x2="395" y2="419" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#2563EB"/></linearGradient>
+    <filter id="shadow" x="81" y="84" width="350" height="371" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feGaussianBlur in="SourceAlpha" stdDeviation="12"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <path d="M109 185c-18-50-9-83 2-105 31 10 52 31 63 62m229 43c18-50 9-83-2-105-31 10-52 31-63 62" fill="#D9F7FC" stroke="#06B6D4" stroke-width="8" stroke-linejoin="round"/>
+  <ellipse cx="256" cy="422" rx="120" ry="16" fill="#17335C" fill-opacity=".08"/>
+  <g filter="url(#shadow)">
+    <path d="M128 201c0-69 57-125 128-125s128 56 128 125v92c0 76-57 128-128 128s-128-52-128-128v-92Z" fill="url(#feathers)" stroke="#17335C" stroke-width="10"/>
+    <path d="M150 256c0-47 37-83 81-83 10 0 20 2 29 6 9-4 19-6 29-6 44 0 81 36 81 83 0 51-38 91-90 91h-40c-52 0-90-40-90-91Z" fill="#FFFFFF"/>
+    <circle cx="216" cy="248" r="35" fill="#EAF2FB"/><circle cx="296" cy="248" r="35" fill="#EAF2FB"/>
+    <circle cx="222" cy="250" r="14" fill="#17335C"/><circle cx="290" cy="250" r="14" fill="#17335C"/>
+    <circle cx="218" cy="245" r="5" fill="#FFFFFF"/><circle cx="286" cy="245" r="5" fill="#FFFFFF"/>
+    <path d="m256 263-18 20h36l-18-20Z" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M231 304c15 13 35 13 50 0" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+    <path d="M168 346c28-20 58-20 88 3 40-23 68-23 88-3v35c-25-16-55-15-88 9-33-24-63-25-88-9v-35Z" fill="#FFFFFF" stroke="#17335C" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M256 352v37m-55-31c17-5 33-1 48 9m62-9c-17-5-33-1-48 9" stroke="#B8CCE3" stroke-width="5" stroke-linecap="round"/>
+    <path d="M196 403c-10 14-24 17-39 12m159 0c15 5 29 2 39-12" stroke="#17335C" stroke-width="9" stroke-linecap="round"/>
+    <path d="M208 413v11m96-11v11" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
+    <path d="M188 174c13-15 28-23 45-25m91 0c17 2 32 10 45 25" stroke="#93B8F2" stroke-width="7" stroke-linecap="round"/>
+    <path d="M311 128v39l14-10 14 10v-37" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <path d="M102 320c-22 12-30 29-23 43 7 13 24 11 42-2m289-41c22 12 30 29 23 43-7 13-24 11-42-2" fill="#60A5FA" stroke="#17335C" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="390" cy="112" r="14" fill="#06B6D4"/><path d="M390 89v-9m23 32h9" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Poca-style fox mascot</title>
+  <desc id="desc">A chubby, huggable fox with a large head, soft cheeks, and a cyan ear accent.</desc>
+  <circle cx="256" cy="256" r="228" fill="#F4F8FC"/>
+  <ellipse cx="256" cy="426" rx="140" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <g>
+    <path d="m126 214 3-92 91 62c11-6 23-9 36-9s25 3 36 9l91-62 3 92" fill="#A5F3FC" stroke="#17335C" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M114 262c0-80 64-145 142-145s142 65 142 145v58c0 86-64 149-142 149s-142-63-142-149v-58Z" fill="#2563EB" stroke="#17335C" stroke-width="11"/>
+    <path d="M167 291c0-45 34-78 77-78 9 0 18 2 26 5 8-3 17-5 26-5 43 0 77 33 77 78 0 49-36 87-85 87h-36c-49 0-85-38-85-87Z" fill="#FFFFFF" stroke="#17335C" stroke-width="8"/>
+    <ellipse cx="223" cy="286" rx="11" ry="16" fill="#17335C"/><ellipse cx="289" cy="286" rx="11" ry="16" fill="#17335C"/>
+    <circle cx="219" cy="280" r="4" fill="#FFFFFF"/><circle cx="285" cy="280" r="4" fill="#FFFFFF"/>
+    <path d="m256 308-13 12 13 9 13-9-13-12Z" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M239 338c10 11 24 11 34 0" stroke="#17335C" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="162" cy="324" rx="20" ry="14" fill="#F9A8D4" fill-opacity=".64"/><ellipse cx="350" cy="324" rx="20" ry="14" fill="#F9A8D4" fill-opacity=".64"/>
+    <path d="M185 386c-17 19-37 25-56 18m198 0c19 7 39 1 56-18" stroke="#17335C" stroke-width="10" stroke-linecap="round"/>
+    <path d="M216 420v13m80-13v13" stroke="#06B6D4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <path d="M390 118c-17 4-29 14-35 30" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

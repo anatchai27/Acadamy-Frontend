@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Poca-style book mascot</title>
+  <desc id="desc">A chubby open-book character with a big face, soft cheeks, and a cyan bookmark.</desc>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <ellipse cx="256" cy="424" rx="148" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <g>
+    <path d="M256 151c-43-29-97-33-151-13v214c56-20 108-14 151 17 43-31 95-37 151-17V138c-54-20-108-16-151 13Z" fill="#2563EB" stroke="#17335C" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M256 164c-35-21-80-24-124-10v176c45-12 87-7 124 16V164Zm0 0c35-21 80-24 124-10v176c-45-12-87-7-124 16V164Z" fill="#FFFFFF" stroke="#D8E4F1" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M256 166v178" stroke="#B8CCE3" stroke-width="8" stroke-linecap="round"/>
+    <path d="M166 196c24-6 48-4 68 5m-68 25c24-6 48-4 68 5m44-30c20-9 44-11 68-5m-68 30c20-9 44-11 68-5" stroke="#93B8F2" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="224" cy="263" rx="10" ry="15" fill="#17335C"/><ellipse cx="288" cy="263" rx="10" ry="15" fill="#17335C"/>
+    <circle cx="220" cy="258" r="4" fill="#FFFFFF"/><circle cx="284" cy="258" r="4" fill="#FFFFFF"/>
+    <path d="M239 292c10 11 24 11 34 0" stroke="#17335C" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="184" cy="293" rx="18" ry="12" fill="#F9A8D4" fill-opacity=".62"/><ellipse cx="328" cy="293" rx="18" ry="12" fill="#F9A8D4" fill-opacity=".62"/>
+    <path d="M322 145v57l18-14 18 14v-61" fill="#06B6D4" stroke="#17335C" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M196 374c-12 17-28 24-46 20m166 0c18 4 34-3 46-20" stroke="#17335C" stroke-width="10" stroke-linecap="round"/>
+    <path d="M226 392v13m60-13v13" stroke="#06B6D4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <circle cx="114" cy="142" r="12" fill="#06B6D4"/>
+</svg>

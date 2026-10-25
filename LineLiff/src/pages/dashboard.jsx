@@ -5,6 +5,7 @@ import { useLiffContext } from '../store/LiffContext';
 import { getChildSessions, getParentDashboard } from '../services/parent-service';
 import { ChildSwitcher } from '../components/child-switcher';
 import { LiffLayout } from '../components/liff-layout';
+import { FoxSticker } from '../components/fox-sticker';
 
 export const getDashboardSchedule = dashboard => (
   Array.isArray(dashboard?.todaySchedule) ? dashboard.todaySchedule : []
@@ -157,6 +158,7 @@ export const DashboardPage = () => {
             <h1 class="mt-1 text-2xl font-bold tracking-tight text-ink-900">
               สวัสดี, {state.liffProfile?.displayName || 'คุณพ่อคุณแม่'}
             </h1>
+            <FoxSticker action="hello" compact className="mt-2" />
           </div>
 
           <button
@@ -234,7 +236,9 @@ export const DashboardPage = () => {
                 ) : schedule.length > 0 ? schedule.map((item, index) => (
                   <TimelineItem key={`${item.title}-${index}`} {...item} />
                 )) : (
-                  <p class="py-6 text-center text-sm text-ink-500">วันนี้ไม่มีคาบเรียนที่กำหนดไว้</p>
+                  <div class="flex justify-center py-3">
+                    <FoxSticker action="sleepy" message="วันนี้ว่าง พักผ่อนได้เลย!" />
+                  </div>
                 )}
               </div>
             </section>

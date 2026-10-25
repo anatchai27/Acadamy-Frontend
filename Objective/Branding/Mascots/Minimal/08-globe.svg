@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องโลกกว้าง — tiwhub minimal mascot concept 08</title>
+  <desc id="desc">A friendly globe character celebrating curiosity and learning about the wider world.</desc>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <path d="M397 112c-21 2-35 13-42 32m-217 35c-17 2-28 10-34 24" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="256" cy="421" rx="131" ry="17" fill="#17335C" fill-opacity=".08"/>
+  <circle cx="256" cy="252" r="151" fill="#2563EB" stroke="#17335C" stroke-width="12"/>
+  <path d="M171 165c14 9 24 22 25 39 2 16-8 28-24 35-10 4-15 14-13 25 2 11 12 18 28 18 20 0 31 11 31 28 0 17 11 30 29 35 19 6 35 22 39 45m49-257c-25 8-40 24-43 46-3 17 7 28 22 33 14 5 21 17 19 31-2 14-15 24-33 23-17-1-31 10-33 27-1 14 6 25 21 33 12 7 19 18 21 34" fill="#A5F3FC" stroke="#D9F7FC" stroke-width="8" stroke-linejoin="round"/>
+  <ellipse cx="221" cy="223" rx="10" ry="15" fill="#17335C"/><ellipse cx="289" cy="223" rx="10" ry="15" fill="#17335C"/>
+  <circle cx="217" cy="218" r="4" fill="#FFFFFF"/><circle cx="285" cy="218" r="4" fill="#FFFFFF"/>
+  <path d="M238 253c10 10 26 10 36 0" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+  <path d="m256 63 8 17 19 2-14 13 4 19-17-10-17 10 4-19-14-13 19-2 8-17Z" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M113 309h-25m336 0h-25" stroke="#06B6D4" stroke-width="7" stroke-linecap="round"/>
+</svg>

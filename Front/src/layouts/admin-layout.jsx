@@ -218,9 +218,9 @@ export const AdminLayout = ({
       {switchingInstituteId === institute.id ? <span class="ml-2 text-xs">กำลังสลับ…</span> : Number(institute.id) === Number(currentInstitute?.id ?? profile?.instituteId) ? <span aria-label="สถาบันปัจจุบัน">✓</span> : null}
     </button>)}
   </div> : null;
-  return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-slate-50 text-slate-700'}`}>
-      <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-white border-r border-slate-200 shadow-sm'}`}>
-        <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-slate-100'}`}>
+      return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-[radial-gradient(ellipse_at_86%_4%,rgba(34,211,238,0.22),transparent_32%),linear-gradient(135deg,#dceeff_0%,#edf8ff_46%,#e2f1ff_100%)] text-[#294563]'}`}>
+        <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-[linear-gradient(180deg,#f5fcff_0%,#e9f5ff_100%)] border-r border-[#c9e1f3] shadow-[4px_0_24px_rgba(38,89,133,0.06)]'}`}>
+        <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-[#d7e9f7] bg-white/45'}`}>
           {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class={`h-9 w-9 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-9 w-9 shrink-0 rounded-xl" />}
           <div class="flex flex-col">
             <span class="text-lg font-bold text-slate-900 leading-tight tracking-tight">
@@ -232,15 +232,15 @@ export const AdminLayout = ({
 
         <nav class="flex-1 space-y-0.5 px-3 py-5 overflow-y-auto">
           {filteredGroups.map(group => <div key={group.key} class="mb-4">
-              <p class={`px-3 mb-2 text-xs font-semibold uppercase tracking-widest ${isNeo ? 'text-black/60' : 'text-slate-400'}`}>
+              <p class={`px-3 mb-2 text-xs font-bold uppercase tracking-wide ${isNeo ? 'text-black/60' : 'text-[#456783]'}`}>
                 {t(`navigation.groups.${group.key}`)}
               </p>
               {group.items.map(item => {
             const isActive = currentPath === item.path;
-            const activeBg = isNeo ? 'bg-black text-white' : 'bg-blue-50 text-blue-700';
-            const inactiveBg = isNeo ? 'text-black hover:bg-black hover:text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800';
-            const activeIconColor = isNeo ? 'text-white' : 'text-blue-600';
-            const inactiveIconColor = isNeo ? 'text-black' : 'text-slate-400';
+            const activeBg = isNeo ? 'bg-black text-white' : 'bg-[#2563eb] text-white shadow-[0_5px_14px_rgba(37,99,235,0.22)]';
+            const inactiveBg = isNeo ? 'text-black hover:bg-black hover:text-white' : 'text-[#405c76] hover:bg-white/80 hover:text-[#174a75]';
+            const activeIconColor = isNeo ? 'text-white' : 'text-white';
+            const inactiveIconColor = isNeo ? 'text-black' : 'text-[#6688a4]';
             return <button key={item.path} onClick={() => route(item.path)} class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? activeBg : inactiveBg}`}>
                     <item.icon class={`h-5 w-5 shrink-0 ${isActive ? activeIconColor : inactiveIconColor}`} />
                     {t(`navigation.${navigationKeyByPath[item.path]}`)}
@@ -250,7 +250,7 @@ export const AdminLayout = ({
             </div>)}
         </nav>
 
-        <div class={`${isNeo ? 'border-t-3 border-black' : 'border-t border-slate-100'} p-4`}>
+        <div class={`${isNeo ? 'border-t-3 border-black' : 'border-t border-[#d2e6f5] bg-white/35'} p-4`}>
           <div class="flex items-center gap-3 mb-3 px-1">
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shrink-0 shadow-sm">
               {avatarChar}
@@ -268,7 +268,7 @@ export const AdminLayout = ({
       </aside>
 
       {/* Mobile Header */}
-      <header class={`lg:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200'}`}>
+      <header class={`lg:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-[linear-gradient(100deg,#f5fcff_0%,#e5f7ff_100%)] border-b border-[#c9e4f5]'}`}>
         <div class="flex items-center gap-2">
           {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class="h-7 w-7 rounded-lg object-cover shrink-0" /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-7 w-7 shrink-0 rounded-lg" />}
           <span class="text-base font-semibold text-slate-900">{currentTitle}</span>
@@ -296,7 +296,7 @@ export const AdminLayout = ({
       </header>
 
       {/* Desktop Top Bar */}
-      <header class={`hidden lg:sticky lg:top-0 lg:z-10 lg:ml-64 lg:flex lg:h-16 lg:items-center lg:justify-between lg:px-8 ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm'}`}>
+      <header class={`hidden lg:sticky lg:top-0 lg:z-10 lg:ml-64 lg:flex lg:h-16 lg:items-center lg:justify-between lg:px-8 ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-[linear-gradient(100deg,#f8fcff_0%,#e9f8ff_100%)] border-b border-[#c9e4f5] shadow-sm'}`}>
         <div class="flex items-center gap-4">
           <div>
             <h1 class="text-lg font-semibold text-slate-900 tracking-tight">{currentTitle}</h1>
@@ -346,18 +346,18 @@ export const AdminLayout = ({
       {/* Main Content — floating card */}
       <main class="lg:ml-64 pt-14 lg:pt-0 pb-20 lg:pb-0">
         <div class="p-4 sm:p-5 lg:p-8 max-w-7xl mx-auto">
-          <div class={`${isNeo ? 'bg-white my-4 neo-card p-4 sm:p-6 lg:p-8' : 'bg-white my-4 rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 shadow-sm'}`}>
+          <div class={`${isNeo ? 'bg-white my-4 neo-card p-4 sm:p-6 lg:p-8' : 'bg-[linear-gradient(145deg,#f1f9ff_0%,#eaf5ff_100%)] my-4 rounded-[1.5rem] border border-[#cfe3f3] p-4 sm:p-6 lg:p-8 shadow-[0_12px_34px_rgba(33,75,116,0.09)]'}`}>
             {children}
           </div>
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class={`lg:hidden fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom shadow-sm ${isNeo ? 'bg-[#FFF] border-t-3 border-black' : 'bg-white/80 backdrop-blur-lg border-t border-slate-200'}`}>
+      <nav class={`lg:hidden fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom shadow-[0_-5px_22px_rgba(38,89,133,0.08)] ${isNeo ? 'bg-[#FFF] border-t-3 border-black' : 'bg-[linear-gradient(100deg,#f5fcff_0%,#e7f7ff_100%)] border-t border-[#c9e4f5]'}`}>
         <div class="flex items-center overflow-x-auto overflow-y-hidden h-full px-2 gap-1 no-scrollbar">
           {filteredMenuItems.map(item => {
           const isActive = currentPath === item.path;
-          const btnClass = isActive ? isNeo ? 'text-black bg-black/5' : 'text-blue-600 bg-blue-50' : 'text-slate-400';
+          const btnClass = isActive ? isNeo ? 'text-black bg-black/5' : 'text-blue-700 bg-white shadow-sm' : 'text-[#587792]';
           return <button key={item.path} onClick={() => route(item.path)} class={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-w-[60px] shrink-0 transition-colors rounded-lg ${btnClass}`}>
                 <item.icon class="h-5 w-5" />
                 <span class="text-[10px] leading-tight whitespace-nowrap">{t(`navigation.${navigationKeyByPath[item.path]}`)}</span>

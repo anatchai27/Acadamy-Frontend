@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub LINE Official profile</title>
+  <desc id="desc">Oasis Pages open-book mark in blue and cyan on a soft blue background.</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="40" x2="580" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#EAF2FB" />
+    </linearGradient>
+    <filter id="shadow" x="102" y="94" width="436" height="452" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dy="12" />
+      <feGaussianBlur stdDeviation="12" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0.09 0 0 0 0 0.21 0 0 0 0 0.36 0 0 0 0.12 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+    </filter>
+  </defs>
+  <rect width="640" height="640" rx="128" fill="url(#background)" />
+  <circle cx="514" cy="140" r="58" fill="#D9F7FC" />
+  <circle cx="514" cy="140" r="9" fill="#06B6D4" />
+  <g filter="url(#shadow)">
+    <rect x="142" y="122" width="356" height="356" rx="88" fill="#2563EB" />
+    <path d="M320 227C284 198 232 195 191 212V388C238 371 286 379 320 407C354 379 402 371 449 388V212C408 195 356 198 320 227Z" stroke="#FFFFFF" stroke-width="20" stroke-linejoin="round" />
+    <path d="M320 228V402M226 260C249 253 275 257 293 269M226 307C249 300 275 304 293 316M414 260C391 253 365 257 347 269M414 307C391 300 365 304 347 316" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round" />
+    <circle cx="437" cy="194" r="27" fill="#06B6D4" stroke="#2563EB" stroke-width="11" />
+  </g>
+</svg>

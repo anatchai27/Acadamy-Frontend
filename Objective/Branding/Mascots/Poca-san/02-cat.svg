@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Poca-style cat mascot</title>
+  <desc id="desc">A round, huggable blue cat with soft cheeks and a tiny cyan collar.</desc>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <ellipse cx="256" cy="426" rx="138" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <g>
+    <path d="m149 190 10-83 72 47c8-4 17-6 25-6s17 2 25 6l72-47 10 83" fill="#A5F3FC" stroke="#17335C" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M118 259c0-78 62-140 138-140s138 62 138 140v61c0 84-62 146-138 146s-138-62-138-146v-61Z" fill="#2563EB" stroke="#17335C" stroke-width="11"/>
+    <ellipse cx="204" cy="274" rx="43" ry="49" fill="#FFFFFF"/><ellipse cx="308" cy="274" rx="43" ry="49" fill="#FFFFFF"/>
+    <ellipse cx="210" cy="278" rx="13" ry="18" fill="#17335C"/><ellipse cx="302" cy="278" rx="13" ry="18" fill="#17335C"/>
+    <circle cx="205" cy="271" r="5" fill="#FFFFFF"/><circle cx="297" cy="271" r="5" fill="#FFFFFF"/>
+    <path d="m256 297-11 10 11 7 11-7-11-10Z" fill="#06B6D4" stroke="#17335C" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M256 318c-8 13-20 19-35 17m35-17c8 13 20 19 35 17" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+    <ellipse cx="164" cy="322" rx="20" ry="14" fill="#F9A8D4" fill-opacity=".64"/><ellipse cx="348" cy="322" rx="20" ry="14" fill="#F9A8D4" fill-opacity=".64"/>
+    <path d="M193 354h126" stroke="#06B6D4" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="256" cy="354" r="8" fill="#FFFFFF" stroke="#17335C" stroke-width="4"/>
+    <path d="M184 386c-18 18-39 24-58 17m202 0c19 7 40 1 58-17" stroke="#17335C" stroke-width="10" stroke-linecap="round"/>
+    <path d="M214 418v13m84-13v13" stroke="#06B6D4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <circle cx="393" cy="121" r="13" fill="#06B6D4"/>
+</svg>

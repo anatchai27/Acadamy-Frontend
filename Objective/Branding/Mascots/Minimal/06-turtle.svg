@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องเต่า — tiwhub minimal mascot concept 06</title>
+  <desc id="desc">A steady, encouraging turtle with a simple Oasis-blue shell and cyan detail.</desc>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <circle cx="115" cy="145" r="11" fill="#06B6D4"/><circle cx="398" cy="368" r="8" fill="#93B8F2"/>
+  <ellipse cx="256" cy="421" rx="143" ry="18" fill="#17335C" fill-opacity=".08"/>
+  <path d="M119 295c0-82 61-145 137-145s137 63 137 145H119Z" fill="#2563EB" stroke="#17335C" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M185 177c11 39 36 61 71 65 35-4 60-26 71-65m-201 78c39 9 62 33 67 72m260-72c-39 9-62 33-67 72m-126-85v126" stroke="#93B8F2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M347 249c22-27 55-37 79-22 18 12 24 37 16 60-8 24-29 39-55 39h-26" fill="#A5F3FC" stroke="#17335C" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="408" cy="254" r="6" fill="#17335C"/><path d="M412 274c-8 7-17 8-26 3" stroke="#17335C" stroke-width="5" stroke-linecap="round"/>
+  <path d="M158 292c-31-13-57-7-67 12-8 17 2 35 21 42 21 8 46 2 65-15m177-39c31-13 57-7 67 12 8 17-2 35-21 42-21 8-46 2-65-15" fill="#60A5FA" stroke="#17335C" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M160 356c-25 18-30 36-17 49 13 12 34 10 55-5m154-44c25 18 30 36 17 49-13 12-34 10-55-5" fill="#60A5FA" stroke="#17335C" stroke-width="9" stroke-linecap="round"/>
+  <path d="M202 300c12-16 31-24 54-24s42 8 54 24" stroke="#D9F7FC" stroke-width="8" stroke-linecap="round"/>
+  <path d="M251 105v25m-12-12h24" stroke="#06B6D4" stroke-width="6" stroke-linecap="round"/>
+</svg>

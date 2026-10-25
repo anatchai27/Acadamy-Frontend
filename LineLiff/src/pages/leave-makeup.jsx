@@ -15,6 +15,7 @@ import {
 } from '../services/parent-service';
 import { LiffLayout } from '../components/liff-layout';
 import { apiErrorMessage, validateLeaveAttachment } from '../utils/validation';
+import { FoxSticker } from '../components/fox-sticker';
 
 const tabs = [
   { id: 'leave', label: 'แจ้งลา', icon: HiOutlineDocumentText },
@@ -141,7 +142,7 @@ const LeavePanel = ({ childId, refreshKey, onRefresh }) => {
           <label class="block"><span class="mb-1.5 block text-sm font-bold text-ink-700">เหตุผล</span><textarea value={reason} onInput={event => setReason(event.currentTarget.value)} rows="3" placeholder="เช่น ป่วย มีธุระครอบครัว" class="w-full resize-none rounded-2xl border border-sage-200 bg-sage-50 px-3 py-3 text-sm text-ink-900 outline-none placeholder:text-ink-500 focus:border-sage-600 focus:ring-2 focus:ring-sage-200" disabled={submitting} /></label>
            <label class="block"><span class="mb-1.5 block text-sm font-bold text-ink-700">หลักฐานการลา <span class="font-normal text-ink-500">(ถ้ามี, PDF/JPG/PNG/WEBP ไม่เกิน 5MB)</span></span><input aria-label="หลักฐานการลา" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={event => { const file = event.currentTarget.files?.[0] || null; setAttachment(file); setError(validateLeaveAttachment(file)); }} disabled={submitting} class="block w-full rounded-2xl border border-dashed border-sage-300 bg-sage-50 px-3 py-3 text-sm text-ink-700 file:mr-3 file:rounded-xl file:border-0 file:bg-sage-600 file:px-3 file:py-2 file:font-bold file:text-white" /></label>
           {error && <Alert tone="error">{error}</Alert>}
-          {success && <Alert tone="success">{success}</Alert>}
+          {success && <div role="status" class="rounded-2xl bg-sage-50 px-4 py-3"><FoxSticker action="love" message={success} compact /></div>}
           <button type="submit" disabled={submitting || loading || !sessions.length} class="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-sage-600 px-4 text-sm font-bold text-white transition hover:bg-sage-700 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? <HiOutlineArrowPath class="h-5 w-5 animate-spin" /> : <HiOutlineDocumentText class="h-5 w-5" />} {submitting ? 'กำลังส่งคำขอ...' : 'ส่งคำขอลา'}</button>
         </form>
       </section>
@@ -200,7 +201,7 @@ const MakeupPanel = ({ childId, refreshKey, onRefresh }) => {
   return (
     <div class="space-y-4">
       <section class="rounded-card bg-sage-700 p-5 text-white shadow-float"><div class="flex items-center gap-3"><HiOutlineTicket class="h-7 w-7 text-gold-100" /><div><p class="text-sm text-white/70">เครดิตที่พร้อมใช้</p><p class="mt-0.5 text-2xl font-bold">{loading ? '...' : availableCredit ? '1 สิทธิ์' : 'ไม่มีสิทธิ์'}</p></div></div>{availableCredit && <p class="mt-3 text-xs text-white/70">ใช้ได้ถึง {formatDate(availableCredit.expiresAt)}</p>}</section>
-      {error && <Alert tone="error">{error}</Alert>}{success && <Alert tone="success">{success}</Alert>}
+      {error && <Alert tone="error">{error}</Alert>}{success && <div role="status" class="rounded-2xl bg-sage-50 px-4 py-3"><FoxSticker action="thumbsUp" message={success} compact /></div>}
       <section><SectionTitle icon={HiOutlineTicket} title="การจองของฉัน" /><div class="mt-3 space-y-2">{loading ? <SkeletonList /> : bookings.length ? bookings.map(booking => <BookingItem key={booking.id} booking={booking} busy={bookingId === booking.id} onCancel={() => cancel(booking)} />) : <EmptyState text="ยังไม่มีการจองเรียนชดเชย" />}</div></section>
        <section><SectionTitle icon={HiOutlineCalendarDays} title="ที่นั่งเรียนชดเชยที่เปิดอยู่" /><div class="mt-3 space-y-3">{loading ? <SkeletonList /> : slots.length ? slots.map(slot => <SlotItem key={slot.id} slot={slot} disabled={!availableCredit || slot.status !== 'open' || slot.bookedCount >= slot.capacity || bookingId === slot.id} busy={bookingId === slot.id} onBook={() => book(slot)} onCancel={() => cancel(slot)} />) : <EmptyState text="ยังไม่มีที่นั่งเรียนชดเชย" />}</div></section>
     </div>
@@ -215,5 +216,5 @@ const SlotItem = ({ slot, disabled, busy, onBook, onCancel }) => <article class=
 
 const SectionTitle = ({ icon: Icon, title }) => <div class="flex items-center gap-2"><Icon class="h-5 w-5 text-sage-600" /><h2 class="text-lg font-bold text-ink-900">{title}</h2></div>;
 const Alert = ({ tone, children }) => <div role="alert" class={`rounded-2xl px-4 py-3 text-sm font-semibold ${tone === 'error' ? 'bg-red-50 text-red-700' : 'bg-sage-50 text-sage-700'}`}>{children}</div>;
-const EmptyState = ({ text }) => <div class="rounded-2xl border border-dashed border-sage-200 bg-white px-4 py-8 text-center text-sm text-ink-500">{text}</div>;
+const EmptyState = ({ text }) => <div class="flex justify-center rounded-2xl border border-dashed border-sage-200 bg-white px-4 py-5 text-center"><FoxSticker action="thinking" message={text} compact /></div>;
 const SkeletonList = () => <div class="space-y-2" aria-label="กำลังโหลด"><div class="h-20 animate-pulse rounded-2xl bg-sage-100" /><div class="h-20 animate-pulse rounded-2xl bg-sage-100" /></div>;

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">น้องฮับบี้ — tiwhub mascot concept 02</title>
+  <desc id="desc">A friendly little learning hub robot with a cyan connection point and book-shaped chest panel.</desc>
+  <defs>
+    <linearGradient id="body" x1="150" y1="141" x2="371" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#17335C"/></linearGradient>
+    <filter id="shadow" x="91" y="87" width="330" height="367" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feGaussianBlur in="SourceAlpha" stdDeviation="12"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope=".15"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="256" cy="256" r="228" fill="#EAF2FB"/>
+  <circle cx="112" cy="147" r="15" fill="#06B6D4"/><circle cx="397" cy="357" r="9" fill="#A5F3FC"/>
+  <ellipse cx="256" cy="422" rx="114" ry="16" fill="#17335C" fill-opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M256 132v-35" stroke="#17335C" stroke-width="12" stroke-linecap="round"/><circle cx="256" cy="82" r="22" fill="#06B6D4" stroke="#17335C" stroke-width="8"/>
+    <rect x="132" y="137" width="248" height="238" rx="76" fill="url(#body)" stroke="#17335C" stroke-width="10"/>
+    <rect x="165" y="169" width="182" height="116" rx="46" fill="#FFFFFF"/>
+    <ellipse cx="218" cy="222" rx="10" ry="15" fill="#17335C"/><ellipse cx="294" cy="222" rx="10" ry="15" fill="#17335C"/>
+    <circle cx="214" cy="217" r="4" fill="#FFFFFF"/><circle cx="290" cy="217" r="4" fill="#FFFFFF"/>
+    <path d="M239 250c10 10 24 10 34 0" stroke="#17335C" stroke-width="6" stroke-linecap="round"/>
+    <path d="M185 316c20-8 42-6 71 12 29-18 51-20 71-12v33c-25-8-48-5-71 13-23-18-46-21-71-13v-33Z" fill="#EAF2FB" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M256 329v34m-47-28c11-2 22 1 32 7m62-7c-11-2-22 1-32 7" stroke="#93B8F2" stroke-width="5" stroke-linecap="round"/>
+    <path d="M132 220h-26c-13 0-24 11-24 24v39m298-63h26c13 0 24 11 24 24v39" stroke="#17335C" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="82" cy="293" r="18" fill="#06B6D4" stroke="#17335C" stroke-width="7"/><circle cx="430" cy="293" r="18" fill="#06B6D4" stroke="#17335C" stroke-width="7"/>
+    <rect x="181" y="373" width="52" height="28" rx="14" fill="#06B6D4" stroke="#17335C" stroke-width="7"/><rect x="279" y="373" width="52" height="28" rx="14" fill="#06B6D4" stroke="#17335C" stroke-width="7"/>
+    <path d="M177 190h-13m184 0h-13" stroke="#A5F3FC" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <path d="M366 123l8-17m12 27 17-8" stroke="#06B6D4" stroke-width="6" stroke-linecap="round"/>
+</svg>
