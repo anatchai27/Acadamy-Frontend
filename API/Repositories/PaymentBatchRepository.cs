@@ -114,6 +114,22 @@ public sealed class PaymentBatchRepository(TutoringDbContext context) : IPayment
             .OrderByDescending(batch => batch.PaidAt)
             .ToListAsync(ct);
 
+    public Task<int> CountPendingSlipBatchesAsync(CancellationToken ct = default) =>
+        _context.PaymentBatches.CountAsync(
+            batch => batch.Status == PaymentStatus.Pending
+                && batch.Method == "transfer"
+                && batch.SlipUrl != null,
+            ct);
+
+    public Task<List<PaymentBatch>> GetPendingSlipBatchesAsync(int limit, CancellationToken ct = default) =>
+        BatchQuery()
+            .Where(batch => batch.Status == PaymentStatus.Pending
+                && batch.Method == "transfer"
+                && batch.SlipUrl != null)
+            .OrderByDescending(batch => batch.CreatedAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
     private IQueryable<PaymentBatch> BatchQuery() => _context.PaymentBatches
         .Include(batch => batch.Allocations)
             .ThenInclude(allocation => allocation.Enrollment)

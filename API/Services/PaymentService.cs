@@ -11,6 +11,7 @@ public class PaymentService(
     IPaymentReceiptService paymentReceiptService,
     IPaymentBatchRepository? batchRepository = null) : IPaymentService
 {
+    private const int PendingSlipPreviewLimit = 50;
     private readonly IPaymentRepository _repository = repository;
     private readonly IPaymentReceiptService _paymentReceiptService = paymentReceiptService;
     private readonly IPaymentBatchRepository? _batchRepository = batchRepository;
@@ -163,6 +164,49 @@ public class PaymentService(
                 new PaymentPagination(page, totalPages)
             )
         );
+    }
+
+    public async Task<PendingSlipReviewResponse> GetPendingSlipReviewsAsync(CancellationToken ct = default)
+    {
+        var paymentCount = await _repository.CountPendingSlipPaymentsAsync(ct);
+        var payments = await _repository.GetPendingSlipPaymentsAsync(PendingSlipPreviewLimit, ct);
+        var batches = _batchRepository is null
+            ? new List<PaymentBatch>()
+            : await _batchRepository.GetPendingSlipBatchesAsync(PendingSlipPreviewLimit, ct);
+        var batchCount = _batchRepository is null
+            ? 0
+            : await _batchRepository.CountPendingSlipBatchesAsync(ct);
+
+        var items = payments.Select(payment => new PaymentHistoryItem(
+            payment.Id,
+            payment.InvoiceNo,
+            payment.Enrollment?.Student?.FullName,
+            payment.Enrollment?.Course?.Name,
+            payment.Amount,
+            payment.Method,
+            payment.Status ?? PaymentStatus.Pending,
+            payment.CreatedAt,
+            payment.SlipUrl,
+            payment.ReceiptPdfUrl))
+            .Concat(batches.Select(batch => new PaymentHistoryItem(
+                -batch.Id,
+                batch.InvoiceNo,
+                string.Join(", ", batch.Allocations.Select(allocation => allocation.Enrollment.Student.FullName).Distinct()),
+                string.Join(", ", batch.Allocations.Select(allocation => allocation.Enrollment.Course.Name).Distinct()),
+                batch.Amount,
+                batch.Method,
+                batch.Status,
+                batch.CreatedAt,
+                batch.SlipUrl,
+                batch.ReceiptPdfUrl,
+                null,
+                true,
+                batch.Id)))
+            .OrderByDescending(item => item.PaidAt)
+            .Take(PendingSlipPreviewLimit)
+            .ToList();
+
+        return new PendingSlipReviewResponse(paymentCount + batchCount, items);
     }
 
     public async Task<byte[]> ExportCsvAsync(

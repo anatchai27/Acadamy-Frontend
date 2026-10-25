@@ -402,4 +402,61 @@ public class PaymentServiceTests
         Assert.Null(item.StudentName);
         Assert.Null(item.CourseName);
     }
+
+    [Fact]
+    public async Task GetPendingSlipReviewsAsync_CombinesSingleAndBatchBillsAndKeepsTotalCount()
+    {
+        var singlePayment = MakePayment(7, "INV-SINGLE", "น้องฟ้า", "คณิตศาสตร์", 1200m, "transfer");
+        singlePayment.Status = PaymentStatus.Pending;
+        singlePayment.CreatedAt = new DateTime(2026, 10, 24, 10, 0, 0, DateTimeKind.Utc);
+
+        var batch = new PaymentBatch
+        {
+            Id = 19,
+            InvoiceNo = "INV-BATCH",
+            Amount = 2400m,
+            Method = "transfer",
+            Status = PaymentStatus.Pending,
+            SlipUrl = "https://storage.test/batch-slip.png",
+            CreatedAt = new DateTime(2026, 10, 24, 11, 0, 0, DateTimeKind.Utc),
+            Allocations =
+            [
+                new PaymentBatchAllocation
+                {
+                    Enrollment = new Enrollment
+                    {
+                        Student = new Student { FullName = "น้องน้ำ" },
+                        Course = new Course { Name = "ภาษาอังกฤษ" }
+                    }
+                }
+            ]
+        };
+
+        var paymentRepository = CreateMockRepo();
+        paymentRepository.Setup(repository => repository.CountPendingSlipPaymentsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        paymentRepository.Setup(repository => repository.GetPendingSlipPaymentsAsync(50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([singlePayment]);
+
+        var batchRepository = new Mock<academy_API.Repositories.Interface.IPaymentBatchRepository>();
+        batchRepository.Setup(repository => repository.CountPendingSlipBatchesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        batchRepository.Setup(repository => repository.GetPendingSlipBatchesAsync(50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([batch]);
+
+        var sut = new PaymentService(
+            paymentRepository.Object,
+            Mock.Of<IPaymentReceiptService>(),
+            batchRepository.Object);
+
+        var result = await sut.GetPendingSlipReviewsAsync();
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal(2, result.Items.Count);
+        Assert.True(result.Items[0].IsBatch);
+        Assert.Equal(19, result.Items[0].BatchId);
+        Assert.Equal("น้องน้ำ", result.Items[0].StudentName);
+        Assert.Equal("https://storage.test/batch-slip.png", result.Items[0].SlipUrl);
+        Assert.Equal("INV-SINGLE", result.Items[1].InvoiceNo);
+    }
 }

@@ -161,6 +161,24 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
                 .ThenInclude(e => e.Course)
             .FirstOrDefaultAsync(p => p.Id == paymentId, ct);
 
+    public Task<int> CountPendingSlipPaymentsAsync(CancellationToken ct = default) =>
+        _context.Payments.CountAsync(
+            payment => payment.Status == PaymentStatus.Pending
+                && payment.Method == "transfer"
+                && payment.SlipUrl != null,
+            ct);
+
+    public Task<List<Payment>> GetPendingSlipPaymentsAsync(int limit, CancellationToken ct = default) =>
+        _context.Payments
+            .Where(payment => payment.Status == PaymentStatus.Pending
+                && payment.Method == "transfer"
+                && payment.SlipUrl != null)
+            .Include(payment => payment.Enrollment).ThenInclude(enrollment => enrollment.Student)
+            .Include(payment => payment.Enrollment).ThenInclude(enrollment => enrollment.Course)
+            .OrderByDescending(payment => payment.CreatedAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
     public async Task<bool> SaveVerifiedSlipAsync(Payment payment, CancellationToken ct = default)
     {
         var strategy = _context.Database.CreateExecutionStrategy();

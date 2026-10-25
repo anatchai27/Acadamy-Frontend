@@ -8,4 +8,5 @@ public interface IPaymentService
     Task<string> IssueReceiptAsync(long paymentId, CancellationToken ct = default);
     Task<PaymentHistoryResponse> GetHistoryAsync(DateTime? startDate, DateTime? endDate, string? method, int page, int limit, CancellationToken ct = default);
     Task<byte[]> ExportCsvAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
+    Task<PendingSlipReviewResponse> GetPendingSlipReviewsAsync(CancellationToken ct = default);
 }

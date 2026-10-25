@@ -10,6 +10,9 @@ export const getPayments = (params = {}, options = {}) => {
   return api.get('/payments', { params, ...options });
 };
 
+export const getPendingSlipReviews = (options = {}) =>
+  api.get('/payments/pending-slips', options);
+
 export const verifyPaymentSlip = (paymentId, options = {}) => {
   return api.post(`/payments/${paymentId}/verify-slip`, {}, options);
 };
@@ -28,6 +31,7 @@ export const financeService = {
   createPayment,
   createPaymentBatch,
   getPayments,
+  getPendingSlipReviews,
   verifyPaymentSlip,
   verifyPaymentBatchSlip,
   issuePaymentReceipt,

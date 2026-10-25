@@ -18,4 +18,6 @@ public interface IPaymentRepository
     Task SaveReceiptPdfUrlAsync(Payment payment, CancellationToken ct = default);
     Task<Payment?> GetPaymentForVerificationAsync(long paymentId, CancellationToken ct = default);
     Task<bool> SaveVerifiedSlipAsync(Payment payment, CancellationToken ct = default);
+    Task<int> CountPendingSlipPaymentsAsync(CancellationToken ct = default);
+    Task<List<Payment>> GetPendingSlipPaymentsAsync(int limit, CancellationToken ct = default);
 }

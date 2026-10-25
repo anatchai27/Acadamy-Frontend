@@ -18,12 +18,17 @@ const paymentStatusLabels = {
 const formatError = (error, fallback) => error?.data?.message || error?.data?.error || error?.data?.detail || error?.data?.title || error?.message || fallback;
 
 export function FinancePage({ path }) {
-  const [mode, setMode] = useState('form');
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get('review') === 'slips' ? 'history' : 'form');
+  const [isSlipReview, setIsSlipReview] = useState(() => new URLSearchParams(window.location.search).get('review') === 'slips');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [payments, setPayments] = useState([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [pendingSlipReviews, setPendingSlipReviews] = useState([]);
+  const [pendingSlipCount, setPendingSlipCount] = useState(0);
+  const [pendingSlipLoading, setPendingSlipLoading] = useState(false);
+  const [pendingSlipError, setPendingSlipError] = useState('');
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [paymentGroups, setPaymentGroups] = useState([{ key: 0, studentId: '', enrollments: [], loading: false }]);
@@ -141,6 +146,21 @@ export function FinancePage({ path }) {
     }
   };
 
+  const fetchPendingSlipReviews = async () => {
+    setPendingSlipLoading(true);
+    setPendingSlipError('');
+    try {
+      const response = await financeService.getPendingSlipReviews();
+      const payload = response.data?.data || response.data || {};
+      setPendingSlipReviews(Array.isArray(payload.items) ? payload.items : []);
+      setPendingSlipCount(Number(payload.count || 0));
+    } catch (error) {
+      setPendingSlipError(formatError(error, 'โหลดคิวตรวจสลิปไม่สำเร็จ'));
+    } finally {
+      setPendingSlipLoading(false);
+    }
+  };
+
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -165,6 +185,20 @@ export function FinancePage({ path }) {
   useEffect(() => {
     if (mode === 'history') fetchPayments();
   }, [mode, historyPage, historyMethod]);
+
+  useEffect(() => {
+    if (mode === 'history' && isSlipReview) fetchPendingSlipReviews();
+  }, [mode, isSlipReview]);
+
+  useEffect(() => {
+    const openReviewQueue = () => {
+      setMode('history');
+      setIsSlipReview(true);
+      window.history.replaceState({}, '', '/admin/finance?review=slips');
+    };
+    window.addEventListener('open-payment-slip-review', openReviewQueue);
+    return () => window.removeEventListener('open-payment-slip-review', openReviewQueue);
+  }, []);
 
   const getAmountDue = (enrollment) => Math.max(
     Number(enrollment.coursePrice || 0) - Number(enrollment.paidAmount || 0) - Number(enrollment.pendingAmount || 0),
@@ -276,9 +310,11 @@ export function FinancePage({ path }) {
         setLatestReceipt({ invoiceNo: payment.invoiceNo, url: result.receiptPdfUrl });
       }
       await fetchPayments(historyPage);
+      if (isSlipReview) await fetchPendingSlipReviews();
     } catch (error) {
       showToast(formatError(error, 'ตรวจสอบสลิปไม่สำเร็จ รายการยังรอตรวจสอบ'), 'error');
       await fetchPayments(historyPage);
+      if (isSlipReview) await fetchPendingSlipReviews();
     } finally {
       setVerifyingPaymentId(null);
     }
@@ -538,7 +574,7 @@ export function FinancePage({ path }) {
       <div class={`${isNeo ? 'neo-tab-group p-0 mb-6' : 'inline-flex rounded-xl bg-zinc-100 p-1 mb-6'}`}>
         <button
           type="button"
-          onClick={() => setMode('form')}
+          onClick={() => { setMode('form'); setIsSlipReview(false); }}
           class={`px-5 py-2 text-sm font-medium transition-all ${
             isNeo
               ? mode === 'form'
@@ -790,6 +826,50 @@ export function FinancePage({ path }) {
       ) : (
         /* Payment History */
         <div>
+          {isSlipReview && (
+            <section class={`${isNeo ? 'neo-card bg-white' : 'rounded-2xl border border-slate-200 bg-white shadow-sm'} mb-6 overflow-hidden`} aria-labelledby="pending-slip-title">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                <div>
+                  <h2 id="pending-slip-title" class="text-lg font-bold text-slate-900">สลิปรอตรวจสอบ</h2>
+                  <p class="mt-1 text-sm text-slate-600">{pendingSlipCount} รายการ · ยืนยันรับเงินหลังตรวจสลิปแล้วเท่านั้น</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onClick={fetchPendingSlipReviews} disabled={pendingSlipLoading} class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                    {pendingSlipLoading ? 'กำลังโหลด…' : 'รีเฟรชคิว'}
+                  </button>
+                  <button type="button" onClick={() => { setIsSlipReview(false); window.history.replaceState({}, '', window.location.pathname); }} class="min-h-10 rounded-lg px-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                    ปิดคิว
+                  </button>
+                </div>
+              </div>
+              {pendingSlipError ? (
+                <p class="px-4 py-5 text-sm font-medium text-red-700" role="alert">{pendingSlipError}</p>
+              ) : pendingSlipLoading && pendingSlipReviews.length === 0 ? (
+                <p class="px-4 py-5 text-sm text-slate-600" role="status">กำลังโหลดสลิปที่รอตรวจ…</p>
+              ) : pendingSlipReviews.length === 0 ? (
+                <p class="px-4 py-5 text-sm text-slate-600">ไม่มีสลิปรอตรวจในตอนนี้</p>
+              ) : (
+                <ul class="divide-y divide-slate-100">
+                  {pendingSlipReviews.map(payment => (
+                    <li key={`${payment.isBatch ? 'batch' : 'payment'}-${payment.id}`} class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                      <div class="min-w-0">
+                        <p class="font-semibold text-slate-900">{payment.studentName || 'ไม่ทราบชื่อนักเรียน'}{payment.isBatch && <span class="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">บิลรวม</span>}</p>
+                        <p class="mt-1 text-sm text-slate-600">{payment.courseName || 'รายการชำระเงิน'} · {payment.invoiceNo}</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">{formatBaht(payment.amount)}</p>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-3">
+                        {payment.slipUrl && <a href={payment.slipUrl} target="_blank" rel="noreferrer" class="min-h-10 content-center rounded-lg border border-slate-300 px-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">เปิดสลิป</a>}
+                        <button type="button" onClick={() => handleVerifyPayment(payment)} disabled={verifyingPaymentId === payment.id} class="min-h-10 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-50">
+                          {verifyingPaymentId === payment.id ? 'กำลังตรวจ…' : 'ตรวจและยืนยัน'}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {pendingSlipCount > pendingSlipReviews.length && <p class="border-t border-slate-100 px-4 py-3 text-xs text-slate-600">แสดง {pendingSlipReviews.length} รายการล่าสุดจากทั้งหมด {pendingSlipCount} รายการ</p>}
+            </section>
+          )}
           <div
             class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} flex flex-wrap items-end gap-3 mb-6`}
           >

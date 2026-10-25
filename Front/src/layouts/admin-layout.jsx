@@ -5,11 +5,12 @@ import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../se
 import { showConfirm, showToast, BadgeSticker } from '../components/ui';
 import { useDesignTheme } from '../hooks/useDesignTheme';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
-import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, BellIcon } from '../components/ui/icons';
+import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, PackageIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
 import { canReadPage } from '../config/permissions';
 import { useTranslation } from '../hooks';
 import { LanguageSwitcher } from '../components/ui/language-switcher';
+import { PaymentSlipNotificationBell } from '../components/ui/payment-slip-notification-bell';
 const menuGroups = [{
   key: 'primary',
   label: 'ข้อมูลหลัก',
@@ -328,10 +329,7 @@ export const AdminLayout = ({
         </div>
         <div class="flex items-center gap-4">
           <LanguageSwitcher />
-          <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
-            <BellIcon class="h-5 w-5" />
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
+          {userRole === 'admin' && <PaymentSlipNotificationBell isNeo={isNeo} />}
           <div class="relative">
             <button onClick={e => {
             e.stopPropagation();

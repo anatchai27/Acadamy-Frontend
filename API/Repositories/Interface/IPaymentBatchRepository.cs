@@ -17,4 +17,6 @@ public interface IPaymentBatchRepository
     Task<decimal> GetTotalAmountAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
     Task<int> GetBatchCountAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
     Task<List<PaymentBatch>> GetBatchesForExportAsync(DateTime? startDate, DateTime? endDate, string? method, CancellationToken ct = default);
+    Task<int> CountPendingSlipBatchesAsync(CancellationToken ct = default);
+    Task<List<PaymentBatch>> GetPendingSlipBatchesAsync(int limit, CancellationToken ct = default);
 }

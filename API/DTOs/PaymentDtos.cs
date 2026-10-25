@@ -62,6 +62,11 @@ public record PaymentHistoryResponse(
     PaymentHistoryData Data
 );
 
+public sealed record PendingSlipReviewResponse(
+    int Count,
+    List<PaymentHistoryItem> Items
+);
+
 public record PaymentHistoryData(
     List<PaymentHistoryItem> Payments,
     PaymentSummary Summary,

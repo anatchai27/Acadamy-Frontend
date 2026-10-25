@@ -53,6 +53,15 @@ public static class PaymentEndpoints
             return Results.Ok(result);
         });
 
+        group.MapGet("/pending-slips", async (
+            IPaymentService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            return Results.Ok(await service.GetPendingSlipReviewsAsync(ct));
+        });
+
         group.MapGet("/export", async (
             IPaymentService service,
             HttpContext httpContext,
