@@ -6,6 +6,8 @@ import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { courseService, teacherService, studentService, enrollmentService } from '../../services';
 import { getCourseMaterials, uploadCourseMaterial, deleteCourseMaterial, downloadCourseMaterial } from '../../services/course-material-service';
 import { useAbortController } from '../../hooks';
+import { useAppContext } from '../../store/AppContext';
+import { getPagePermission } from '../../config/permissions';
 import { formatPhoneNumber } from '../../utils/phone';
 import {
   HiOutlinePlus,
@@ -19,6 +21,7 @@ import {
   HiOutlineMagnifyingGlass,
   HiOutlineCheckCircle,
   HiOutlineXMark,
+  HiOutlineArrowPath,
 } from 'react-icons/hi2';
 
 const courseTypeLabels = {
@@ -71,6 +74,7 @@ export function CoursesPage({ path }) {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -84,6 +88,7 @@ export function CoursesPage({ path }) {
   const [studentEnrollments, setStudentEnrollments] = useState([]);
   const [studentEnrollmentsLoading, setStudentEnrollmentsLoading] = useState(false);
   const [studentEnrollmentsLoaded, setStudentEnrollmentsLoaded] = useState(false);
+  const [studentEnrollmentsError, setStudentEnrollmentsError] = useState(false);
   const [courseSearch, setCourseSearch] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [enrollmentSubmitting, setEnrollmentSubmitting] = useState(false);
@@ -100,22 +105,33 @@ export function CoursesPage({ path }) {
   const enrollmentSearchRef = useRef(null);
   const enrollmentStudentRequestRef = useRef(0);
   const courseRosterRequestRef = useRef(0);
+  const courseRequestRef = useRef(0);
+  const { state } = useAppContext();
+  const role = String(state.userProfile?.role || state.user?.role || '').trim().toLowerCase();
+  const canManageCourses = getPagePermission(role, '/admin/courses').edit;
+  const canManageEnrollments = role === 'admin';
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
 
   const fetchCourses = async (query = '') => {
+    const requestId = ++courseRequestRef.current;
+    const signal = getSignal();
     setLoading(true);
+    setLoadError('');
     try {
       const params = {};
       if (query.trim()) params.search = query.trim();
-      const res = await courseService.getCourses(params, { signal: getSignal() });
+      const res = await courseService.getCourses(params, { signal });
+      if (signal?.aborted || requestId !== courseRequestRef.current) return false;
       const payload = res.data?.data || res.data || {};
       setCourses(payload.courses || (Array.isArray(payload) ? payload : []));
-    } catch {
-      showToast('ไม่สามารถโหลดข้อมูลคอร์สเรียนได้', 'error');
-      setCourses([]);
+      return true;
+    } catch (error) {
+      if (signal?.aborted || requestId !== courseRequestRef.current) return false;
+      setLoadError(error?.data?.message || error?.data?.error || 'ไม่สามารถโหลดข้อมูลคอร์สเรียนได้');
+      return false;
     } finally {
-      setLoading(false);
+      if (!signal?.aborted && requestId === courseRequestRef.current) setLoading(false);
     }
   };
 
@@ -141,12 +157,14 @@ export function CoursesPage({ path }) {
   };
 
   const openCreate = () => {
+    if (!canManageCourses) return;
     setEditingId(null);
     setForm(emptyForm);
     setShowForm(true);
   };
 
   const openEdit = (course) => {
+    if (!canManageCourses) return;
     setEditingId(course.id);
     setForm({
       name: course.name || '',
@@ -175,6 +193,7 @@ export function CoursesPage({ path }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canManageCourses) return;
     if (!form.name.trim() || !form.subject.trim()) {
       showToast('กรุณากรอกชื่อคอร์สและวิชา', 'error');
       return;
@@ -204,7 +223,7 @@ export function CoursesPage({ path }) {
       }
 
       closeForm();
-      fetchCourses(search);
+      await fetchCourses(search);
     } catch (err) {
       const msg = err?.data?.message || err?.data?.error || 'บันทึกไม่สำเร็จ กรุณาลองใหม่';
       showToast(msg, 'error');
@@ -215,6 +234,7 @@ export function CoursesPage({ path }) {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    clearTimeout(debounceRef.current);
     fetchCourses(search);
   };
 
@@ -243,6 +263,7 @@ export function CoursesPage({ path }) {
     setSelectedStudent(null);
     setStudentEnrollments([]);
     setStudentEnrollmentsLoaded(false);
+    setStudentEnrollmentsError(false);
     setSelectedCourseId(course && Number(course.totalSessions) > 0 ? String(course.id) : '');
     setCourseSearch('');
     searchEnrollmentStudents();
@@ -268,6 +289,7 @@ export function CoursesPage({ path }) {
     setSelectedStudent(student);
     setStudentEnrollments([]);
     setStudentEnrollmentsLoaded(false);
+    setStudentEnrollmentsError(false);
     setStudentEnrollmentsLoading(true);
     try {
       const res = await enrollmentService.getEnrollments(student.id);
@@ -276,7 +298,8 @@ export function CoursesPage({ path }) {
       setStudentEnrollmentsLoaded(true);
     } catch {
       setStudentEnrollments([]);
-      setStudentEnrollmentsLoaded(true);
+      setStudentEnrollmentsLoaded(false);
+      setStudentEnrollmentsError(true);
       showToast('โหลดประวัติลงทะเบียนของนักเรียนไม่สำเร็จ', 'error');
     } finally {
       setStudentEnrollmentsLoading(false);
@@ -284,7 +307,7 @@ export function CoursesPage({ path }) {
   };
 
   const handleEnrollmentSubmit = async () => {
-    if (!selectedStudent || !selectedCourseId || !studentEnrollmentsLoaded) return;
+    if (!canManageEnrollments || !selectedStudent || !selectedCourseId || !studentEnrollmentsLoaded) return;
     setEnrollmentSubmitting(true);
     try {
       const res = await enrollmentService.enrollStudent({
@@ -322,6 +345,7 @@ export function CoursesPage({ path }) {
   };
 
   const openCourseRoster = (course) => {
+    if (!canManageEnrollments) return;
     setRosterCourse(course);
     setCourseEnrollments([]);
     loadCourseEnrollments(course);
@@ -336,6 +360,7 @@ export function CoursesPage({ path }) {
   };
 
   const openCourseMaterials = async (course) => {
+    if (!canManageCourses) return;
     setMaterialCourse(course);
     setMaterials([]);
     setMaterialsLoading(true);
@@ -417,18 +442,18 @@ export function CoursesPage({ path }) {
           </p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <Button variant="primary" size="md" onClick={() => openEnrollment()}>
+          {canManageEnrollments && <Button variant="primary" size="md" onClick={() => openEnrollment()}>
             <span class="flex items-center gap-1.5">
               <HiOutlineUserPlus class="h-4 w-4" />
               ลงทะเบียนนักเรียน
             </span>
-          </Button>
-          <Button variant="outline" size="md" onClick={openCreate}>
+          </Button>}
+          {canManageCourses && <Button variant="outline" size="md" onClick={openCreate}>
           <span class="flex items-center gap-1.5">
             <HiOutlinePlus class="h-4 w-4" />
             เพิ่มคอร์สเรียน
           </span>
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -445,6 +470,7 @@ export function CoursesPage({ path }) {
                   รูปแบบคอร์สเรียน *
                 </label>
                 <select
+                  id="course-type"
                   value={form.courseType}
                   onChange={updateField('courseType')}
                   class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
@@ -464,6 +490,7 @@ export function CoursesPage({ path }) {
                 <p class="text-xs leading-relaxed text-zinc-500">{courseTypeDescriptions[form.courseType]}</p>
               </div>
               <SolidInput
+                id="course-name-th"
                 label="ชื่อวิชา / ชื่อคอร์ส (ไทย) *"
                 placeholder="เช่น คณิตศาสตร์ ม.1 เทอม 1"
                 required
@@ -471,16 +498,18 @@ export function CoursesPage({ path }) {
                 onInput={updateField('name')}
               />
               <SolidInput
+                id="course-name-en"
                 label="ชื่อวิชา / ชื่อคอร์ส (English)"
                 placeholder="e.g. Mathematics Grade 7"
                 value={form.nameEn}
                 onInput={updateField('nameEn')}
               />
               <div class="flex flex-col gap-1.5 md:col-span-2">
-                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                <label for="course-subject-th" class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
                   รายละเอียดวิชา (ไทย) *
                 </label>
                 <textarea
+                  id="course-subject-th"
                   placeholder="เช่น เนื้อหาที่เรียน เป้าหมาย ระดับชั้น หรือรายละเอียดเพิ่มเติม"
                   required
                   maxLength="1000"
@@ -492,10 +521,11 @@ export function CoursesPage({ path }) {
                 <span class="text-xs text-zinc-400">ใส่รายละเอียดได้สูงสุด 1,000 ตัวอักษร</span>
               </div>
               <div class="flex flex-col gap-1.5 md:col-span-2">
-                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                <label for="course-subject-en" class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
                   รายละเอียดวิชา (English)
                 </label>
                 <textarea
+                  id="course-subject-en"
                   placeholder="Course content, goals, grade level, or other details"
                   maxLength="1000"
                   rows="4"
@@ -531,6 +561,7 @@ export function CoursesPage({ path }) {
               )}
 
               <SolidInput
+                id="course-price"
                 label="ราคา (บาท)"
                 type="number"
                 placeholder="5000"
@@ -554,8 +585,9 @@ export function CoursesPage({ path }) {
               )}
 
               <div class="flex flex-col gap-1.5">
-                <label class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ครูผู้สอน</label>
+                <label for="course-teacher" class={`text-sm font-medium ${isNeo ? 'text-black' : 'text-zinc-800'}`}>ครูผู้สอน</label>
                 <select
+                  id="course-teacher"
                   value={form.teacherId}
                   onChange={updateField('teacherId')}
                   class={`w-full px-4 py-2.5 bg-white text-sm focus:outline-none text-zinc-800 ${isNeo ? 'neo-select' : 'border border-zinc-200 rounded-xl focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10'}`}
@@ -582,8 +614,8 @@ export function CoursesPage({ path }) {
       )}
 
       {/* Search */}
-      <form class="mb-6">
-        <SolidInput type="text" placeholder="ค้นหาชื่อคอร์สหรือวิชา..." value={search} onInput={handleSearch} />
+      <form class="mb-6" role="search" onSubmit={handleSearchSubmit}>
+        <SolidInput id="course-search" type="search" label="ค้นหาคอร์สเรียน" placeholder="ค้นหาชื่อคอร์สหรือวิชา..." value={search} onInput={handleSearch} />
       </form>
 
       {/* Loading */}
@@ -594,15 +626,28 @@ export function CoursesPage({ path }) {
         </div>
       )}
 
+      {loadError && (
+        <div role="alert" class={`mb-5 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between ${isNeo ? 'border-2 border-black bg-red-100 text-red-950' : 'rounded-xl border border-red-200 bg-red-50 text-red-900'}`}>
+          <div>
+            <p class="text-sm font-semibold">{loadError}</p>
+            {courses.length > 0 && <p class="mt-1 text-sm">ยังแสดงรายการก่อนหน้าอยู่</p>}
+          </div>
+          <button type="button" onClick={() => fetchCourses(search)} disabled={loading} class="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 disabled:opacity-60">
+            <HiOutlineArrowPath class={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+            {loading ? 'กำลังโหลด...' : 'ลองโหลดอีกครั้ง'}
+          </button>
+        </div>
+      )}
+
       {/* Empty State */}
-      {!loading && courses.length === 0 && (
+      {!loading && !loadError && courses.length === 0 && (
         <div class="text-center py-16">
           <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100">
             <HiOutlineBookOpen class="h-10 w-10 text-zinc-300" />
           </div>
           <h3 class="text-lg font-semibold text-zinc-700 mb-1">ไม่พบคอร์สเรียน</h3>
           <p class="text-sm text-zinc-400 mb-6">{search ? 'ลองเปลี่ยนคำค้นหา' : 'ยังไม่มีคอร์สเรียนในสถาบัน'}</p>
-          {!search && (
+          {!search && canManageCourses && (
             <Button variant="primary" size="md" onClick={openCreate}>
               + เพิ่มคอร์สเรียนแรก
             </Button>
@@ -621,20 +666,11 @@ export function CoursesPage({ path }) {
             {courses.map((course) => (
               <article
                 key={course.id}
-                role="link"
-                tabIndex="0"
-                onClick={() => route(`/admin/courses/${course.id}/sessions`)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    route(`/admin/courses/${course.id}/sessions`);
-                  }
-                }}
                 class={`${
                   isNeo
                     ? 'neo-card bg-white'
                     : 'rounded-2xl border border-zinc-200/80 bg-white shadow-sm hover:-translate-y-0.5 hover:border-oasis-primary/30 hover:shadow-lg'
-                } group cursor-pointer overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30`}
+                } group overflow-hidden transition-all duration-200`}
               >
                 <div class="relative aspect-[16/9] overflow-hidden bg-slate-100">
                   <img
@@ -656,7 +692,7 @@ export function CoursesPage({ path }) {
                     <HiOutlineTag class="h-3.5 w-3.5" />
                     {courseTypeLabels[course.courseType] || course.courseType || 'กลุ่ม'}
                   </span>
-                  <button
+                  {canManageCourses && <button
                     type="button"
                     aria-label={`แก้ไข ${course.name || 'คอร์สเรียน'}`}
                     title="แก้ไขคอร์สเรียน"
@@ -667,7 +703,7 @@ export function CoursesPage({ path }) {
                     class="absolute right-3 top-3 rounded-full bg-white/95 p-2 text-zinc-600 shadow-sm transition hover:bg-white hover:text-oasis-primary"
                   >
                     <HiOutlinePencil class="h-4 w-4" />
-                  </button>
+                  </button>}
                 </div>
 
                 <div class="flex min-h-[190px] flex-col p-4">
@@ -714,32 +750,30 @@ export function CoursesPage({ path }) {
                       </div>
                     </div>
                   </div>
-                  <div class="mt-2 flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-1 text-[11px] font-medium text-oasis-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      ดูตารางเรียน <HiOutlineArrowUpRight class="h-3.5 w-3.5" />
-                    </span>
+                  <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <button
                       type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openCourseRoster(course);
-                      }}
-                      class="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-oasis-primary/20 px-2.5 text-xs font-semibold text-oasis-primary transition hover:bg-oasis-primary/5 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30"
+                      onClick={() => route(`/admin/courses/${course.id}/sessions`)}
+                      class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-oasis-primary hover:bg-oasis-primary/5 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30"
+                    >
+                      ดูตารางเรียน <HiOutlineArrowUpRight class="h-3.5 w-3.5" />
+                    </button>
+                    {canManageEnrollments && <button
+                      type="button"
+                      onClick={() => openCourseRoster(course)}
+                      class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-oasis-primary/20 px-2.5 text-xs font-semibold text-oasis-primary transition hover:bg-oasis-primary/5 focus:outline-none focus:ring-2 focus:ring-oasis-primary/30"
                     >
                       <HiOutlineUserGroup class="h-4 w-4" />
                       ดูผู้ลงทะเบียน
-                    </button>
-                    <button
+                    </button>}
+                    {canManageCourses && <button
                       type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openCourseMaterials(course);
-                      }}
-                      class="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-indigo-200 px-2.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      onClick={() => openCourseMaterials(course)}
+                      class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-indigo-200 px-2.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                     >
                       <HiOutlineBookOpen class="h-4 w-4" />
                       เอกสาร
-                    </button>
+                    </button>}
                   </div>
                 </div>
               </article>
@@ -877,7 +911,7 @@ export function CoursesPage({ path }) {
                       class="w-full rounded-xl border border-zinc-200 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-oasis-primary focus:ring-2 focus:ring-oasis-primary/10"
                     />
                   </div>
-                  <div class="mt-2 max-h-52 space-y-2 overflow-y-auto">
+                      <div class="mt-2 max-h-52 space-y-2 overflow-y-auto">
                     {visibleEnrollmentCourses.map((course) => {
                       const isAlreadyEnrolled = activeCourseIds.has(String(course.id));
                       const isSelected = String(course.id) === selectedCourseId;
@@ -905,7 +939,15 @@ export function CoursesPage({ path }) {
                           : 'ไม่พบคอร์สที่ตรงกับคำค้นหา'}
                       </p>
                     )}
-                    {selectedStudent && studentEnrollmentsLoading && <p class="text-xs text-zinc-400">กำลังตรวจสอบคอร์สที่นักเรียนลงทะเบียนไว้...</p>}
+                    {selectedStudent && studentEnrollmentsLoading && <p class="text-xs text-zinc-600" role="status">กำลังตรวจสอบคอร์สที่นักเรียนลงทะเบียนไว้...</p>}
+                    {selectedStudent && studentEnrollmentsError && (
+                      <div role="alert" class="rounded-lg bg-red-50 p-3 text-sm text-red-900">
+                        <p>ตรวจสอบประวัติลงทะเบียนไม่สำเร็จ จึงยังยืนยันรายการนี้ไม่ได้</p>
+                        <button type="button" onClick={() => selectEnrollmentStudent(selectedStudent)} class="mt-2 min-h-11 font-semibold text-red-800 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700">
+                          ลองตรวจสอบอีกครั้ง
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </section>
               </div>
