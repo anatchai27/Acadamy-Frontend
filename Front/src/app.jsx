@@ -30,10 +30,9 @@ const AdminRooms = requireAuth(RoomsPage, ['admin']);
 export function App() {
   return (
     <>
-    {/* todo: add a route for index page */}
-    
       <Router>
-        <IndexPage path="/" />
+        <LoginPage path="/" />
+        <IndexPage path="/explore" />
         <LoginPage path="/login" />
         <RegisterPage path="/register" />
         <ForgotPasswordPage path="/forgot-password" />

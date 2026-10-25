@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Acadamy | ค้นหาและเปรียบเทียบสถาบันเรียนพิเศษสำหรับเด็ก",
-  description: "ศูนย์กลางค้นหาและเปรียบเทียบสถาบันเรียนพิเศษสำหรับเด็ก",
+  title: "Academy CMS",
+  description: "",
 };
 
 export default function RootLayout({

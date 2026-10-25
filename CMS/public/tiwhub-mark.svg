@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">tiwhub Oasis Pages mark</title>
+  <desc id="desc">Open-book symbol with a cyan shared-learning point.</desc>
+  <rect x="12" y="12" width="232" height="232" rx="48" fill="#2563EB" />
+  <path d="M128 78C105 60 72 58 46 69V181C76 170 106 175 128 193C150 175 180 170 210 181V69C184 58 151 60 128 78Z" stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round" />
+  <path d="M128 79V190M68 99C83 95 99 98 110 106M68 128C83 124 99 127 110 135M188 99C173 95 157 98 146 106M188 128C173 124 157 127 146 135" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" />
+  <circle cx="196" cy="56" r="18" fill="#06B6D4" stroke="#2563EB" stroke-width="7" />
+</svg>
