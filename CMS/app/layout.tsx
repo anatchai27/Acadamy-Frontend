@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "tiwhub | ค้นหาที่เรียนที่เหมาะกับลูก",
-  description: "เปรียบเทียบสถาบัน คอร์สเรียน และทำเลในที่เดียว",
+  title: "จัดการสถาบันกวดวิชาในที่เดียว | tiwhub",
+  description: "ดูแลข้อมูลนักเรียน ผู้ปกครอง คอร์สเรียน ครูผู้สอน ตารางเรียน การเช็กชื่อ และการรับชำระในระบบเดียว",
 };
 
 export default function RootLayout({
