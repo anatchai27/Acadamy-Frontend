@@ -19,7 +19,7 @@ export default function HomePage() {
           <a href="#งานที่จัดการได้">งานที่จัดการได้</a>
           <a href="#ภาพระบบ">ลองดูหน้าระบบ</a>
         </nav>
-        <a className="market-partner-link" href="https://acadamy-frontend-3nao-mu.vercel.app/login">เข้าสู่ระบบ <span aria-hidden="true">↗</span></a>
+        <a className="market-partner-link" href="https://tiwhub.vercel.app/">เข้าสู่ระบบ <span aria-hidden="true">↗</span></a>
       </header>
 
       <main id="top">
@@ -29,7 +29,7 @@ export default function HomePage() {
             <h1 id="hero-title">ดูแลนักเรียน<br />จัดการสถาบัน<br /><span>ได้ในที่เดียว</span></h1>
             <p>ข้อมูลนักเรียน ผู้ปกครอง คอร์สเรียน ครูผู้สอน และการรับชำระ—จัดให้อยู่ในระบบเดียว เพื่อให้ทีมสถาบันทำงานประจำวันได้ง่ายขึ้น</p>
             <div className="hero-actions">
-              <a className="button-primary hero-cta" href="https://acadamy-frontend-3nao-mu.vercel.app/login">เข้าสู่ระบบจัดการ <span aria-hidden="true">→</span></a>
+              <a className="button-primary hero-cta" href="https://tiwhub.vercel.app/">เข้าสู่ระบบจัดการ <span aria-hidden="true">→</span></a>
               <a className="hero-secondary-link" href="#ภาพระบบ">ดูตัวอย่างหน้าระบบ <span aria-hidden="true">↓</span></a>
             </div>
             <div className="hero-trust">
@@ -78,14 +78,14 @@ export default function HomePage() {
         <section className="closing-invite">
           <FoxSticker className="closing-mascot" mood="celebrate" alt="สุนัขจิ้งจอกมาสคอตยกมือฉลอง พร้อมเริ่มจัดการงานสถาบัน" />
           <div><p className="section-label">ระบบจัดการสำหรับทีมสถาบัน</p><h2>พร้อมจัดการงานสถาบัน<br />ให้เป็นระบบขึ้นหรือยัง?</h2></div>
-          <a className="button-primary" href="https://acadamy-frontend-3nao-mu.vercel.app/login">เข้าสู่ระบบ <span aria-hidden="true">→</span></a>
+          <a className="button-primary" href="https://tiwhub.vercel.app/">เข้าสู่ระบบ <span aria-hidden="true">→</span></a>
         </section>
       </main>
 
       <footer className="market-footer">
         <a className="footer-brand" href="#top"><img src="/tiwhub-mark.svg" alt="" />tiwhub</a>
         <span>ระบบช่วยจัดการสถาบันกวดวิชา</span>
-        <a href="https://acadamy-frontend-3nao-mu.vercel.app/login">เข้าสู่ระบบ</a>
+        <a href="https://tiwhub.vercel.app/">เข้าสู่ระบบ</a>
       </footer>
     </div>
   );
