@@ -6,8 +6,29 @@ type HomePageProps = { searchParams: Promise<{ lang?: string | string[] }> };
 
 export async function generateMetadata({ searchParams }: HomePageProps) {
   const { lang } = await searchParams;
-  const copy = messages[resolveLocale(lang)];
-  return { title: copy.metadataTitle, description: copy.metadataDescription };
+  const locale = resolveLocale(lang);
+  const copy = messages[locale];
+  const keywords = locale === "th"
+    ? ["ระบบจัดการสถาบันกวดวิชา", "จัดการนักเรียน", "ตารางเรียน", "เช็กชื่อ", "บันทึกค่าเรียน", "tiwhub"]
+    : ["tutoring center management", "student records", "class schedules", "attendance", "payment tracking", "tiwhub"];
+
+  return {
+    title: copy.metadataTitle,
+    description: copy.metadataDescription,
+    keywords,
+    openGraph: {
+      title: copy.metadataTitle,
+      description: copy.metadataDescription,
+      siteName: "tiwhub",
+      type: "website",
+      locale: locale === "th" ? "th_TH" : "en_US",
+    },
+    twitter: {
+      card: "summary",
+      title: copy.metadataTitle,
+      description: copy.metadataDescription,
+    },
+  };
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {

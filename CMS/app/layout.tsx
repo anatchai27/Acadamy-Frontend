@@ -2,8 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "จัดการสถาบันกวดวิชาในที่เดียว | tiwhub",
-  description: "ดูแลข้อมูลนักเรียน ผู้ปกครอง คอร์สเรียน ครูผู้สอน ตารางเรียน การเช็กชื่อ และการรับชำระในระบบเดียว",
+  title: "จัดการสถาบันกวดวิชาให้ง่ายขึ้น | tiwhub",
+  description: "รวมรายชื่อนักเรียน ตารางสอน เช็กชื่อ และยอดชำระไว้ในระบบเดียวสำหรับสถาบันกวดวิชา",
+  applicationName: "tiwhub",
+  icons: {
+    icon: "/mascots/fox-thumbs-up.png",
+    shortcut: "/mascots/fox-thumbs-up.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
