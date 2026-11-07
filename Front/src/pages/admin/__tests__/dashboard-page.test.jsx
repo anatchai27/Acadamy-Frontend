@@ -9,6 +9,12 @@ vi.mock('../../../hooks/useDesignTheme', () => ({ useDesignTheme: () => ({ desig
 vi.mock('../../../layouts/admin-layout', () => ({ AdminLayout: ({ children }) => <div>{children}</div> }));
 vi.mock('../../../components/dashboard/dashboard-overview', () => ({ DashboardOverviewWidget: () => <div>Overview Widget</div> }));
 vi.mock('../../../components/dashboard/playful-greeting', () => ({ PlayfulGreeting: () => <div>สวัสดีตอนเช้า</div> }));
+vi.mock('../../../services', () => ({
+  courseService: { getCourses: vi.fn().mockResolvedValue({ data: { data: { courses: [] } } }) },
+  roomService: { getRooms: vi.fn().mockResolvedValue({ data: { data: [] } }) },
+  sessionService: { getSessions: vi.fn().mockResolvedValue({ data: { data: { sessions: [] } } }) },
+  financeService: { getPendingSlipReviews: vi.fn().mockResolvedValue({ data: { data: { count: 0, items: [], leaveRequestCount: 0, leaveRequests: [] } } }) },
+}));
 vi.mock('../../../components/ui', () => ({
   unlockBadge: vi.fn(),
 }));
@@ -17,7 +23,11 @@ vi.mock('react-icons/hi2', () => ({
   HiOutlineBanknotes: () => <svg />,
   HiOutlineBookOpen: () => <svg />,
   HiOutlineClipboardDocumentCheck: () => <svg />,
+  HiOutlineCalendarDays: () => <svg />,
+  HiOutlineClock: () => <svg />,
+  HiOutlineMapPin: () => <svg />,
   HiOutlineQrCode: () => <svg />,
+  HiOutlineUser: () => <svg />,
   HiOutlineShoppingBag: () => <svg />,
   HiOutlineUserGroup: () => <svg />,
 }));

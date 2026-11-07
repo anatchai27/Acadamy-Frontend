@@ -1,1 +1,51 @@
+.admin-shell{min-height:100dvh;background:#edf2f7;color:#17335c}
+.admin-sidebar{background:#fff;border-right:1px solid #d8e4f1}
+.admin-sidebar-brand{border-bottom:1px solid #e8eef5}
+.admin-sidebar-nav{scrollbar-color:#cbd5e1 transparent;scrollbar-width:thin}
+.admin-sidebar-group{color:#64748b;font-size:11px;letter-spacing:.08em;line-height:1.4}
+.admin-nav-item{color:#52657d}
+.admin-nav-item:hover{background:#f1f5f9;color:#17335c}
+.admin-nav-item:focus-visible,.admin-bottom-nav-item:focus-visible,.admin-logout-button:focus-visible,.admin-qr-action:focus-visible{outline:3px solid rgba(6,182,212,.75);outline-offset:2px}
+.admin-nav-item.is-active{background:#2563eb;color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.2)}
+.admin-nav-icon{color:#8da0b7}
+.admin-nav-item.is-active .admin-nav-icon{color:#fff}
+.admin-sidebar-account{background:#f8fafc}
+.admin-mobile-header{border-bottom:1px solid #d8e4f1;background:#fff}
+.admin-desktop-header{gap:16px;color:#17335c}
+.admin-header-title{flex:1}
+.admin-header-title>div{min-width:0}
+.admin-header-meta{min-width:0}
+.admin-qr-action,.admin-new-student-action{min-width:44px;min-height:44px}
+.admin-qr-action:focus-visible,.admin-new-student-action:focus-visible{outline:3px solid rgba(6,182,212,.75);outline-offset:2px}
+.admin-main{min-width:0}
+.admin-content-container{max-width:none}
+.admin-page-content{width:100%;margin:0 auto}
+.admin-bottom-nav{border-top:1px solid #d8e4f1;background:rgba(255,255,255,.98);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(23,53,92,.07)}
+.admin-bottom-nav-item{min-height:52px;color:#52657d}
+.admin-bottom-nav-item.is-active{background:#eff6ff;color:#1d4ed8;font-weight:700}
+.dashboard-greeting{position:relative;overflow:hidden;border:1px solid #315ce7;background:linear-gradient(112deg,#2563eb 0%,#4f46e5 58%,#315bd8 100%);color:#fff;box-shadow:0 4px 14px rgba(23,53,92,.12)}
+.dashboard-greeting:after{position:absolute;right:5%;top:-54px;width:180px;height:180px;border:22px solid rgba(255,255,255,.07);border-radius:50%;content:"";pointer-events:none}
+.dashboard-greeting-kicker{position:relative;z-index:1;width:max-content;max-width:100%;margin:0;padding:4px 10px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:rgba(255,255,255,.15);color:#eff6ff;font-size:12px;font-weight:600}
+.dashboard-greeting h2,.dashboard-greeting p:not(.dashboard-greeting-kicker){position:relative;z-index:1;color:#fff}
+.dashboard-greeting p:not(.dashboard-greeting-kicker){max-width:68ch;color:#e5edff;line-height:1.55}
+.dashboard-greeting-mascot{position:relative;z-index:1;max-width:90px;max-height:90px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(15,39,74,.15))}
+.dashboard-operations-grid{min-width:0}
+.dashboard-operations-grid>div{min-width:0}
+.dashboard-filter-tabs{scrollbar-width:thin}
+#dashboard-pending-actions li:last-child{border-bottom:0}
+#dashboard-pending-actions{scroll-margin-top:96px}
+#dashboard-overview{min-width:0}
+#dashboard-overview h2{color:#17335c}
+#dashboard-stat-grid{margin-bottom:0}
+#dashboard-stat-grid>div{min-width:0}
+#dashboard-stat-grid>.bento-cell-hover{padding:0;border:0;background:transparent;box-shadow:none}
+#dashboard-stat-grid>.bento-cell-hover:hover{transform:none;box-shadow:none}
+#dashboard-stat-grid .dashboard-stat-card{height:100%;min-height:145px}
+#dashboard-stat-grid .dashboard-stat-card>div:first-child p{line-height:1.35}
+#dashboard-date-filter{align-items:flex-end}
+@media(min-width:1024px){.admin-content-container{padding:24px 28px}.admin-page-content{max-width:1500px}}
+@media(min-width:1024px) and (max-width:1279px){.admin-desktop-header{padding-inline:16px}.admin-header-title,.admin-header-actions{gap:8px}.admin-qr-label,.admin-new-student-action span,.admin-header-time,.admin-header-divider{display:none}.admin-qr-action,.admin-new-student-action{padding-inline:0}.admin-header-actions>div:last-child>button>span{max-width:90px}}
+@media(max-width:1023px){.admin-content-container{padding-bottom:calc(1.25rem + env(safe-area-inset-bottom))}}
+@media(max-width:639px){.admin-content-container{padding:16px 12px calc(1.25rem + env(safe-area-inset-bottom))}.dashboard-greeting{padding:18px}.dashboard-greeting-mascot{max-width:58px;max-height:58px}.dashboard-greeting-action{min-height:40px;padding-inline:11px;font-size:12px}.dashboard-greeting h2{font-size:20px;line-height:1.35}.dashboard-greeting p:not(.dashboard-greeting-kicker){font-size:14px}.dashboard-filter-tabs{width:100%}.dashboard-filter-tabs button{padding-inline:9px}.admin-bottom-nav{height:calc(64px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.admin-nav-item,.admin-bottom-nav-item{transition:none}}
 

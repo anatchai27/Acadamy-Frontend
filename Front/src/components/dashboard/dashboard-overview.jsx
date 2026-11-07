@@ -45,7 +45,7 @@ const defaultData = {
   revenue: {
     value: '฿—',
     trendText: '',
-    trendDirection: 'up',
+    trendDirection: 'neutral',
     isAlertState: false
   }
 };
@@ -121,7 +121,7 @@ export const DashboardOverviewWidget = () => {
     <BentoGrid id="dashboard-stat-grid" class="mb-8">
       <BentoCell id="dashboard-stat-students"><StatCard id="students" title={t('dashboard.overview.stats.students')} value={data.students.value} trendText={data.students.trendText} trendDirection={data.students.trendDirection} isAlertState={data.students.isAlertState} icon={<UsersGroupIcon class="h-5 w-5" />} /></BentoCell>
       <BentoCell id="dashboard-stat-attendance"><StatCard id="attendance" title={t('dashboard.overview.stats.attendance')} value={data.attendance.value} trendText={data.attendance.trendText} trendDirection={data.attendance.trendDirection} isAlertState={data.attendance.isAlertState} icon={<QrCheckIcon class="h-5 w-5" />} /></BentoCell>
-      <BentoCell>
+      <BentoCell id="dashboard-stat-requests-cell">
         <button id="dashboard-stat-requests" type="button" onClick={() => route('/admin/requests')} class="w-full text-left">
           <StatCard id="requests" title={t('dashboard.overview.stats.requests')} value={data.requests.value} trendText={data.requests.trendText} trendDirection={data.requests.trendDirection} isAlertState={data.requests.isAlertState} icon={<ClipboardDocIcon class="h-5 w-5" />} />
         </button>

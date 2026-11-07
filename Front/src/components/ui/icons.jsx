@@ -1,4 +1,4 @@
-import { HiOutlineHome, HiOutlineAcademicCap, HiOutlineClipboardDocumentCheck, HiOutlineUserGroup, HiOutlineBanknotes, HiOutlineQrCode, HiOutlineChevronDown, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineLightBulb, HiOutlineUsers, HiOutlineCube, HiOutlineShieldCheck } from 'react-icons/hi2';
+import { HiOutlineHome, HiOutlineAcademicCap, HiOutlineClipboardDocumentCheck, HiOutlineUserGroup, HiOutlineBanknotes, HiOutlineQrCode, HiOutlineChevronDown, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineLightBulb, HiOutlineUsers, HiOutlineCube, HiOutlineShieldCheck, HiOutlineBuildingOffice2, HiOutlineUserPlus, HiOutlineCalendarDays, HiOutlineClock, HiOutlinePlus } from 'react-icons/hi2';
 export const DashboardIcon = ({
   class: className
 }) => {
@@ -79,3 +79,9 @@ export const PermissionsIcon = ({
 }) => {
   return <HiOutlineShieldCheck className={className} />;
 };
+export const RoomIcon = ({ class: className }) => <HiOutlineBuildingOffice2 className={className} />;
+export const LeadIcon = ({ class: className }) => <HiOutlineUserPlus className={className} />;
+export const MakeupIcon = ({ class: className }) => <HiOutlineCalendarDays className={className} />;
+export const CalendarIcon = ({ class: className }) => <HiOutlineCalendarDays className={className} />;
+export const ClockIcon = ({ class: className }) => <HiOutlineClock className={className} />;
+export const PlusIcon = ({ class: className }) => <HiOutlinePlus className={className} />;

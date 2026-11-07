@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+<html lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tiwhub - แดชบอร์ดระบบบริหารจัดการสถาบันกวดวิชา</title>
+<!-- Google Fonts: Prompt & Sarabun for Thai UI -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&amp;family=Sarabun:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Font Awesome CDN -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+              bg: '#f1f5f9',
+            },
+            appblue: '#1e5df7',
+            appnavy: '#0f274a',
+          },
+          fontFamily: {
+            sans: ['Prompt', 'Sarabun', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Styles for Scrollbar & Micro-interactions -->
+<style data-purpose="custom-scrollbars">
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+<style data-purpose="status-indicators">
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+    .pulse-live {
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#edf2f7] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<!-- BEGIN: MainApplicationContainer -->
+<div class="flex h-screen overflow-hidden">
+<!-- BEGIN: Sidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 select-none" data-purpose="navigation-sidebar">
+<!-- Logo & Academy Brand -->
+<div class="p-5 border-b border-slate-100 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+<i class="fa-solid fa-graduation-cap text-lg"></i>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xl font-bold tracking-tight text-slate-800">tiwhub</span>
+<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">PRO</span>
+</div>
+<p class="text-xs text-slate-400 font-normal">ระบบบริหารสถาบันกวดวิชา</p>
+</div>
+</div>
+</div>
+<!-- Navigation Menus (Scrollable) -->
+<nav class="flex-1 overflow-y-auto px-3.5 py-4 space-y-6 text-sm" data-purpose="sidebar-menu-links">
+<!-- Group: Main Data -->
+<div>
+<span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">ข้อมูลหลัก</span>
+<div class="mt-2 space-y-1">
+<a class="flex items-center justify-between px-3 py-2.5 rounded-xl font-medium bg-blue-600 text-white shadow-sm shadow-blue-600/30 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-house-chimney text-base"></i>
+<span>แดชบอร์ด</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-white"></span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-user-graduate text-base text-slate-400"></i>
+<span>จัดการผู้เรียน</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">128</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-chalkboard-user text-base text-slate-400"></i>
+<span>จัดการผู้สอน</span>
+</div>
+<span class="text-xs text-slate-400">14 คน</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<i class="fa-solid fa-book-open text-base text-slate-400"></i>
+<span>จัดการคอร์สเรียน</span>
+</a>
+</div>
+</div>
+<!-- Group: Daily Operations -->
+<div>
+<span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">การดำเนินงาน</span>
+<div class="mt-2 space-y-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-qrcode text-base text-slate-400"></i>
+<span>เช็คอิน / เช็คเอาท์</span>
+</div>
+<span class="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-live"></span>
+                Live
+              </span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-user-plus text-base text-slate-400"></i>
+<span>ลีดผู้สนใจใหม่</span>
+</div>
+<span class="px-1.5 py-0.2 bg-blue-50 text-blue-600 rounded-md text-xs font-semibold">4</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-calendar-check text-base text-slate-400"></i>
+<span>สล็อตเรียนทดแทน</span>
+</div>
+<span class="px-1.5 py-0.2 bg-amber-50 text-amber-600 rounded-md text-xs font-semibold">2</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-file-signature text-base text-slate-400"></i>
+<span>คำร้องขอ &amp; ใบลา</span>
+</div>
+<span class="px-1.5 py-0.2 bg-rose-50 text-rose-600 rounded-md text-xs font-semibold">3</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<i class="fa-solid fa-brain text-base text-slate-400"></i>
+<span>วิชาการ &amp; คลังข้อสอบ</span>
+</a>
+</div>
+</div>
+<!-- Group: Finance -->
+<div>
+<span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">การเงิน</span>
+<div class="mt-2 space-y-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-receipt text-base text-slate-400"></i>
+<span>สลิปรอตรวจสอบ</span>
+</div>
+<span class="px-2 py-0.5 bg-rose-500 text-white rounded-full text-[11px] font-bold animate-pulse">3 ด่วน!</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<i class="fa-solid fa-wallet text-base text-slate-400"></i>
+<span>บัญชีรายรับ-รายจ่าย</span>
+</a>
+</div>
+</div>
+<!-- Group: System Settings -->
+<div>
+<span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">ระบบ</span>
+<div class="mt-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<i class="fa-solid fa-users-gear text-base text-slate-400"></i>
+<span>จัดการสิทธิ์ผู้ใช้งาน</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" href="#">
+<i class="fa-solid fa-gear text-base text-slate-400"></i>
+<span>ตั้งค่าสถาบัน</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Sidebar Footer (Logged in User) -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/60" data-purpose="current-user-profile">
+<div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs">
+<div class="flex items-center gap-2.5 overflow-hidden">
+<div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              พ
+            </div>
+<div class="truncate leading-tight">
+<div class="text-xs font-semibold text-slate-800 truncate">ครูแพรว มนัสชนก</div>
+<div class="text-[11px] text-slate-400">ผู้ดูแลระบบหลัก</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-rose-600 p-1.5 transition" title="ออกจากระบบ">
+<i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+</button>
+</div>
+</div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- BEGIN: TopBar -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 z-10" data-purpose="header-navigation">
+<!-- Left: Today Info & Quick Search -->
+<div class="flex items-center gap-6">
+<div>
+<h1 class="text-lg font-bold text-slate-800 leading-tight">ภาพรวมประจำวัน (Live Operations)</h1>
+<p class="text-xs text-slate-500 flex items-center gap-1.5">
+<i class="fa-regular fa-calendar-check text-blue-500"></i>
+<span>วันเสาร์ที่ 7 พฤศจิกายน 2569</span>
+<span class="text-slate-300">•</span>
+<span class="font-medium text-slate-700">14:35 น. (ภาคบ่าย)</span>
+</p>
+</div>
+</div>
+<!-- Right: Actions, Language, Alerts, Profile -->
+<div class="flex items-center gap-3">
+<!-- Scan QR Fast Action -->
+<button class="flex items-center gap-2 px-3.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-semibold border border-blue-200/60 transition shadow-2xs">
+<i class="fa-solid fa-qrcode text-sm"></i>
+<span>สแกน QR เช็กชื่อ</span>
+<span class="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] ml-0.5">42/48</span>
+</button>
+<!-- Primary Action: Register / Create Invoice -->
+<button class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-500/30 transition">
+<i class="fa-solid fa-plus"></i>
+<span>รับสมัคร / ออกบิลใหม่</span>
+</button>
+<div class="h-5 w-[1px] bg-slate-200 mx-1"></div>
+<!-- Language Selector -->
+<div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium text-slate-600">
+<button class="px-2 py-1 rounded-md bg-white shadow-2xs font-bold text-slate-900">TH</button>
+<button class="px-2 py-1 rounded-md hover:text-slate-900">EN</button>
+</div>
+<!-- Notification Bell -->
+<button class="relative w-9 h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
+<i class="fa-regular fa-bell text-sm"></i>
+<span class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">5</span>
+</button>
+<!-- Quick Mascot Brand Badge -->
+<div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" title="ผู้ช่วยอัจฉริยะ tiwhub">
+<i class="fa-solid fa-cat text-lg"></i>
+</div>
+</div>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: ScrollablePageContent -->
+<main class="flex-1 overflow-y-auto p-6 space-y-6" data-purpose="dashboard-main-content">
+<!-- Announcement Banner (Inspired by Welcome Card in IMAGE_1) -->
+<div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-2xl p-5 text-white shadow-sm flex items-center justify-between relative overflow-hidden">
+<div class="relative z-10 max-w-2xl">
+<div class="inline-flex items-center gap-2 bg-white/20 px-2.5 py-1 rounded-full text-xs font-medium text-blue-50 mb-2">
+<i class="fa-solid fa-sun text-amber-300"></i> สรุปความพร้อมภาคบ่าย
+            </div>
+<h2 class="text-xl font-bold">สวัสดีตอนบ่าย ครูแพรว! วันนี้มีผู้เรียนทั้งหมด 48 คน</h2>
+<p class="text-xs text-blue-100 mt-1 leading-relaxed">
+              ขณะนี้กำลังมีห้องเรียนสด 2 คอร์ส, มีนักเรียนขาดเช็กชื่อ 2 คน และมีรายการสลิปชำระเงินค้างตรวจสอบ 3 รายการ กรุณาดำเนินการตรวจสอบ
+            </p>
+</div>
+<div class="relative z-10 flex items-center gap-2 shrink-0">
+<a class="px-3.5 py-2 bg-white text-blue-700 rounded-xl text-xs font-bold shadow-md hover:bg-blue-50 transition" href="#pending-actions">
+              เคลียร์งานด่วน (3)
+            </a>
+</div>
+<!-- Background decoration -->
+<div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="absolute right-24 top-2 text-white/10 text-8xl pointer-events-none">
+<i class="fa-solid fa-graduation-cap"></i>
+</div>
+</div>
+<!-- BEGIN: QuickMetricCards -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-purpose="summary-metrics">
+<!-- Metric 1: Check-in Status -->
+<div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-blue-300 transition">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-semibold text-slate-500">นักเรียนเข้าเรียนวันนี้</span>
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-clipboard-user"></i>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-800">42</span>
+<span class="text-xs text-slate-400">/ 48 คน</span>
+<span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-auto">เช็คแล้ว 88%</span>
+</div>
+<div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+<span class="text-rose-600 font-medium"><i class="fa-solid fa-circle-xmark mr-1"></i>ขาด 2 คน</span>
+<span class="text-amber-600 font-medium"><i class="fa-solid fa-clock mr-1"></i>สาย 4 คน</span>
+<button class="text-blue-600 hover:underline font-medium text-[11px]">ดูรายชื่อเด็กขาด</button>
+</div>
+</div>
+<!-- Metric 2: Pending Slips -->
+<div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-2xs">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-semibold text-amber-800">สลิปรอตรวจสอบ</span>
+<div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm font-bold">
+<i class="fa-solid fa-receipt"></i>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-amber-900">3</span>
+<span class="text-xs text-amber-700">รายการด่วน</span>
+<span class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full ml-auto">รวม ฿14,500</span>
+</div>
+<div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-amber-100">
+<span class="text-slate-500">แจ้งเตือนจาก LINE Bot</span>
+<a class="text-amber-700 font-semibold hover:underline flex items-center gap-1" href="#pending-actions">
+                ตรวจทันที <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</div>
+<!-- Metric 3: Active Classes -->
+<div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-blue-300 transition">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-semibold text-slate-500">คลาสเรียนวันนี้</span>
+<div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-school"></i>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-800">8</span>
+<span class="text-xs text-slate-400">คลาสรอบวันเสาร์</span>
+<span class="text-xs font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded ml-auto">ห้องเรียนเต็ม 85%</span>
+</div>
+<div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+<span class="text-emerald-600 font-medium"><i class="fa-solid fa-circle text-[8px] mr-1"></i>สอนสดอยู่ 2 คลาส</span>
+<span class="text-slate-500">รอเริ่ม 3 คลาส</span>
+</div>
+</div>
+<!-- Metric 4: Daily Revenue -->
+<div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-blue-300 transition">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-semibold text-slate-500">ยอดรับชำระวันนี้</span>
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-baht-sign"></i>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-800">฿38,200</span>
+<span class="text-xs text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded ml-auto flex items-center gap-0.5">
+<i class="fa-solid fa-arrow-trend-up"></i> +12%
+              </span>
+</div>
+<div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+<span class="text-slate-500">คอร์สยอดนิยม: ม.ปลาย</span>
+<button class="text-blue-600 hover:underline font-medium text-[11px]">สรุปบัญชี</button>
+</div>
+</div>
+</section>
+<!-- END: QuickMetricCards -->
+<!-- BEGIN: MainOperationsGrid (2 Columns) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Column Left (7 of 12): Live Schedules -->
+<div class="lg:col-span-7 space-y-6">
+<!-- Section: Real-time Schedule -->
+<section class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden" data-purpose="live-class-schedule">
+<!-- Card Header -->
+<div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-2.5">
+<div class="w-3 h-3 rounded-full bg-emerald-500 pulse-live"></div>
+<div>
+<h3 class="text-base font-bold text-slate-800">ตารางเรียนวันนี้แบบ Real-time</h3>
+<p class="text-xs text-slate-500">ติดตามสถานะผู้สอน ห้องเรียน และการเช็กชื่อของแต่ละคอร์ส</p>
+</div>
+</div>
+<!-- Tabs Filter -->
+<div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-medium text-slate-600">
+<button class="px-3 py-1 rounded-lg bg-white shadow-2xs font-semibold text-blue-600">ทั้งหมด (8)</button>
+<button class="px-3 py-1 rounded-lg hover:text-slate-900">กำลังสอน (2)</button>
+<button class="px-3 py-1 rounded-lg hover:text-slate-900">รอบถัดไป (3)</button>
+</div>
+</div>
+<!-- List of Classes -->
+<div class="divide-y divide-slate-100 p-3 sm:p-4 space-y-3">
+<!-- Class 1: LIVE NOW -->
+<div class="p-4 rounded-xl border-l-4 border-l-emerald-500 bg-emerald-50/30 border border-slate-200 hover:shadow-xs transition">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500 text-white flex items-center gap-1">
+<i class="fa-solid fa-circle text-[6px] animate-ping"></i> กำลังสอน (LIVE)
+                        </span>
+<span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ห้อง 201 (ชั้น 2)</span>
+<span class="text-xs text-slate-500"><i class="fa-regular fa-clock mr-1"></i>13:30 - 15:00 น.</span>
+</div>
+<h4 class="text-sm sm:text-base font-bold text-slate-900 mt-2">คณิตศาสตร์เข้มข้น ม.3 (เตรียมสอบเข้า ม.4 โรงเรียนดัง)</h4>
+<p class="text-xs text-slate-600 mt-1 flex items-center gap-3">
+<span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>ผู้สอน: <strong class="text-slate-700">ครูบิ๊ก คณิตวิศวะ</strong></span>
+<span><i class="fa-solid fa-users text-slate-400 mr-1"></i>มาเรียน: <strong class="text-emerald-700">12 / 12 คน (ครบ 100%)</strong></span>
+</p>
+</div>
+<div class="flex items-center gap-2 mt-2 sm:mt-0">
+<button class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition">
+<i class="fa-solid fa-list-check mr-1 text-blue-600"></i> ใบเช็กชื่อ
+                      </button>
+</div>
+</div>
+</div>
+<!-- Class 2: LIVE NOW (With Absent Alert) -->
+<div class="p-4 rounded-xl border-l-4 border-l-amber-500 bg-amber-50/20 border border-slate-200 hover:shadow-xs transition">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500 text-white flex items-center gap-1">
+<i class="fa-solid fa-circle text-[6px] animate-ping"></i> กำลังสอน (LIVE)
+                        </span>
+<span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ห้อง 104 (Lab อังกฤษ)</span>
+<span class="text-xs text-slate-500"><i class="fa-regular fa-clock mr-1"></i>14:00 - 15:30 น.</span>
+</div>
+<h4 class="text-sm sm:text-base font-bold text-slate-900 mt-2">English Grammar &amp; Writing Masterclass (ม.ต้น)</h4>
+<p class="text-xs text-slate-600 mt-1 flex items-center gap-3">
+<span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>ผู้สอน: <strong class="text-slate-700">Teacher Sarah B.</strong></span>
+<span><i class="fa-solid fa-users text-slate-400 mr-1"></i>มาเรียน: <strong class="text-amber-700">9 / 10 คน</strong></span>
+</p>
+<div class="mt-2 text-xs bg-rose-50 text-rose-700 px-2.5 py-1 rounded inline-flex items-center gap-2 border border-rose-200">
+<i class="fa-solid fa-triangle-exclamation"></i>
+<span>ยังไม่เช็กชื่อ 1 คน: <strong>น้องวินนี่ (ด.ช. ธนกร)</strong></span>
+<button class="text-blue-600 font-bold underline ml-1 hover:text-blue-800">กดโทรตามผู้ปกครอง</button>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-2 sm:mt-0">
+<button class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition">
+<i class="fa-solid fa-list-check mr-1 text-blue-600"></i> ใบเช็กชื่อ
+                      </button>
+</div>
+</div>
+</div>
+<!-- Class 3: UPCOMING 15:30 -->
+<div class="p-4 rounded-xl border-l-4 border-l-blue-500 bg-white border border-slate-200 hover:shadow-xs transition">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">
+<i class="fa-regular fa-clock mr-1"></i> คาบถัดไป (15:30 น.)
+                        </span>
+<span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ห้อง 302 (บรรยายใหญ่)</span>
+<span class="text-xs text-slate-500">15:30 - 17:30 น. (2 ชม.)</span>
+</div>
+<h4 class="text-sm sm:text-base font-bold text-slate-900 mt-2">ฟิสิกส์ ม.ปลาย ตะลุยโจทย์ A-Level &amp; TPAT3</h4>
+<p class="text-xs text-slate-600 mt-1 flex items-center gap-3">
+<span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>ผู้สอน: <strong class="text-slate-700">ครูป้อง พิสิษฐ์</strong></span>
+<span><i class="fa-solid fa-users text-slate-400 mr-1"></i>ลงทะเบียนแล้ว: <strong class="text-blue-700">14 / 15 ที่นั่ง</strong></span>
+</p>
+</div>
+<div class="flex items-center gap-2 mt-2 sm:mt-0">
+<span class="text-[11px] text-emerald-600 bg-emerald-50 px-2 py-1 rounded font-medium">เอกสารพร้อมพิมพ์</span>
+<button class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition">
+                        เตรียมเปิดห้อง
+                      </button>
+</div>
+</div>
+</div>
+<!-- Class 4: UPCOMING 16:00 -->
+<div class="p-4 rounded-xl border-l-4 border-l-slate-300 bg-slate-50/40 border border-slate-200">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200 text-slate-700">
+<i class="fa-regular fa-clock mr-1"></i> รอบเย็น (16:00 น.)
+                        </span>
+<span class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ห้องเคมี 2</span>
+<span class="text-xs text-slate-500">16:00 - 18:00 น.</span>
+</div>
+<h4 class="text-sm font-bold text-slate-800 mt-1.5">เคมี ม.4 เทอม 2 ปริมาณสารสัมพันธ์</h4>
+<p class="text-xs text-slate-500 mt-1">ผู้สอน: ครูก้อย ศิริพร • ผู้เรียน: 8 คน (กลุ่มย่อยเน้นแล็บทดลอง)</p>
+</div>
+<button class="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">ดูรายละเอียด</button>
+</div>
+</div>
+</div>
+<!-- Schedule Footer Action -->
+<div class="p-3 bg-slate-50 border-t border-slate-100 text-center">
+<button class="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1.5 transition">
+<i class="fa-regular fa-calendar-days"></i>
+<span>เปิดดูผังตารางเรียนและห้องว่างตลอดทั้งสัปดาห์</span>
+</button>
+</div>
+</section>
+<!-- Quick Action Cards Grid (Inspired by shortcuts in IMAGE_1) -->
+<section class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs" data-purpose="fast-actions-grid">
+<h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+<i class="fa-solid fa-bolt text-amber-500"></i> ทางลัดการทำงานด่วน
+              </h3>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<a class="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition group flex flex-col justify-between" href="#">
+<div class="flex items-center justify-between">
+<span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-id-card"></i>
+</span>
+<i class="fa-solid fa-arrow-right text-xs text-slate-300 group-hover:text-blue-600 transition"></i>
+</div>
+<div class="mt-3">
+<h5 class="text-xs font-bold text-slate-800 group-hover:text-blue-600">ค้นหาบัตรผู้เรียน</h5>
+<p class="text-[11px] text-slate-500 mt-0.5">ค้นประวัติ, ข้อมูลติดต่อผู้ปกครอง</p>
+</div>
+</a>
+<a class="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition group flex flex-col justify-between" href="#">
+<div class="flex items-center justify-between">
+<span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-print"></i>
+</span>
+<i class="fa-solid fa-arrow-right text-xs text-slate-300 group-hover:text-blue-600 transition"></i>
+</div>
+<div class="mt-3">
+<h5 class="text-xs font-bold text-slate-800 group-hover:text-blue-600">พิมพ์ชีทเอกสารติว</h5>
+<p class="text-[11px] text-slate-500 mt-0.5">รวมไฟล์ชีทแยกตามวิชาประจำวัน</p>
+</div>
+</a>
+<a class="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition group flex flex-col justify-between" href="#">
+<div class="flex items-center justify-between">
+<span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">
+<i class="fa-solid fa-comments"></i>
+</span>
+<i class="fa-solid fa-arrow-right text-xs text-slate-300 group-hover:text-blue-600 transition"></i>
+</div>
+<div class="mt-3">
+<h5 class="text-xs font-bold text-slate-800 group-hover:text-blue-600">บรอดแคสต์ LINE แจ้งเตือน</h5>
+<p class="text-[11px] text-slate-500 mt-0.5">ส่งข่าวสารผู้ปกครองทุกระดับชั้น</p>
+</div>
+</a>
+</div>
+</section>
+</div>
+<!-- Column Right (5 of 12): Urgent Action Items & Approval Queue -->
+<div class="lg:col-span-5 space-y-6">
+<!-- Box 1: Urgent Approvals (Slips & Requests) -->
+<section class="bg-white rounded-2xl border border-rose-200 shadow-2xs overflow-hidden" data-purpose="urgent-approval-queue" id="pending-actions">
+<div class="p-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white flex items-center justify-between">
+<div class="flex items-center gap-2">
+<i class="fa-solid fa-bell-concierge"></i>
+<h3 class="text-sm font-bold">งานด่วนรอการอนุมัติ (5 รายการ)</h3>
+</div>
+<span class="px-2 py-0.5 bg-white/20 rounded text-[11px] font-bold uppercase tracking-wider">ต้องจัดการ</span>
+</div>
+<div class="p-4 space-y-3.5 divide-y divide-slate-100">
+<!-- Slip 1 -->
+<div class="pt-3 first:pt-0">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+                        ฿
+                      </div>
+<div>
+<div class="text-xs font-bold text-slate-800">สลิปโอน: น้องกวิน (ม.4)</div>
+<div class="text-[11px] text-slate-500">คอร์สชีววิทยา ตะลุยโจทย์ • ฿4,500 (KBank)</div>
+<div class="text-[10px] text-slate-400 mt-0.5">เมื่อ 12 นาทีที่แล้ว ผ่าน LINE OA</div>
+</div>
+</div>
+<div class="flex flex-col gap-1 items-end">
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded shadow-2xs">
+                          อนุมัติ
+                        </button>
+<button class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded">
+                          ดูสลิป
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Slip 2 -->
+<div class="pt-3">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+                        ฿
+                      </div>
+<div>
+<div class="text-xs font-bold text-slate-800">สลิปโอน: น้องพิม ชนัญญา (ป.6)</div>
+<div class="text-[11px] text-slate-500">คอร์สภาษาจีนพื้นฐาน HSK 1 • ฿3,200 (SCB)</div>
+<div class="text-[10px] text-slate-400 mt-0.5">เมื่อ 28 นาทีที่แล้ว</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded shadow-2xs">
+                        อนุมัติ
+                      </button>
+<button class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded">
+                        ดูสลิป
+                      </button>
+</div>
+</div>
+</div>
+<!-- Make-up class request -->
+<div class="pt-3">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs shrink-0 mt-0.5">
+<i class="fa-solid fa-arrows-rotate"></i>
+</div>
+<div>
+<div class="text-xs font-bold text-slate-800">ขอชดเชยคาบ: น้องภูมินทร์ (ม.2)</div>
+<div class="text-[11px] text-slate-500">ติดสอบโรงเรียน ขอย้ายคาบคณิตไปรอบอาทิตย์ 10:00</div>
+<div class="text-[10px] text-amber-600 font-medium mt-0.5">ห้องว่าง 2 ที่นั่ง (จัดลงได้ทันที)</div>
+</div>
+</div>
+<button class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-semibold rounded shadow-2xs shrink-0">
+                      จัดห้อง
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Box 2: Course Renewal Alerts (Close to finish) -->
+<section class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4" data-purpose="course-renewal-alerts">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide">แจ้งเตือนคอร์สใกล้หมด (เหลือ ≤ 2 ครั้ง)</h4>
+</div>
+<span class="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">3 คน</span>
+</div>
+<div class="space-y-2.5">
+<div class="p-2.5 bg-slate-50 rounded-xl flex items-center justify-between text-xs border border-slate-100">
+<div>
+<span class="font-bold text-slate-800">น้องออโต้ (ม.5)</span>
+<p class="text-[11px] text-slate-500">ฟิสิกส์ ม.ปลาย (เหลือ 1 คาบสุดท้าย)</p>
+</div>
+<button class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[11px] font-semibold flex items-center gap-1 border border-emerald-200">
+<i class="fa-brands fa-line text-emerald-600 text-xs"></i> ทักต่อคอร์ส
+                  </button>
+</div>
+<div class="p-2.5 bg-slate-50 rounded-xl flex items-center justify-between text-xs border border-slate-100">
+<div>
+<span class="font-bold text-slate-800">น้องมินนี่ (ป.5)</span>
+<p class="text-[11px] text-slate-500">คณิตศาสตร์ประถมปลาย (เหลือ 2 คาบ)</p>
+</div>
+<button class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[11px] font-semibold flex items-center gap-1 border border-emerald-200">
+<i class="fa-brands fa-line text-emerald-600 text-xs"></i> ทักต่อคอร์ส
+                  </button>
+</div>
+<div class="p-2.5 bg-slate-50 rounded-xl flex items-center justify-between text-xs border border-slate-100">
+<div>
+<span class="font-bold text-slate-800">น้องเจมส์ (ม.3)</span>
+<p class="text-[11px] text-slate-500">English Grammar (เหลือ 2 คาบ)</p>
+</div>
+<button class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[11px] font-semibold flex items-center gap-1 border border-emerald-200">
+<i class="fa-brands fa-line text-emerald-600 text-xs"></i> ทักต่อคอร์ส
+                  </button>
+</div>
+</div>
+</section>
+<!-- Box 3: Absent Students Follow-up Contact -->
+<section class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4" data-purpose="absenteeism-contact-list">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide">ติดตามเด็กยังไม่มาเรียน (รอบบ่าย)</h4>
+</div>
+<span class="text-[11px] text-rose-600 font-bold">2 รายการ</span>
+</div>
+<div class="space-y-2">
+<div class="p-2.5 bg-rose-50/50 rounded-xl border border-rose-100 flex items-center justify-between text-xs">
+<div>
+<span class="font-bold text-slate-800">น้องวินนี่ (ด.ช. ธนกร)</span>
+<p class="text-[11px] text-slate-500">ห้อง 104 • ขาดติดต่อ 35 นาที</p>
+<p class="text-[10px] text-slate-400 mt-0.5">คุณแม่: 081-987-65xx</p>
+</div>
+<div class="flex items-center gap-1.5">
+<a class="w-7 h-7 bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center justify-center shadow-2xs" href="tel:0819876543" title="โทรหาผู้ปกครอง">
+<i class="fa-solid fa-phone text-xs"></i>
+</a>
+<button class="w-7 h-7 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center shadow-2xs" title="ส่งข้อความ LINE">
+<i class="fa-brands fa-line text-sm"></i>
+</button>
+</div>
+</div>
+<div class="p-2.5 bg-rose-50/50 rounded-xl border border-rose-100 flex items-center justify-between text-xs">
+<div>
+<span class="font-bold text-slate-800">น้องกั้ง (ด.ญ. ชนัญชิดา)</span>
+<p class="text-[11px] text-slate-500">คอร์สวาดภาพศิลปะ • ลาป่วย (แจ้งทางไลน์)</p>
+<p class="text-[10px] text-slate-400 mt-0.5">คุณพ่อ: 089-123-45xx</p>
+</div>
+<span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">บันทึกลาแล้ว</span>
+</div>
+</div>
+</section>
+</div>
+<!-- END: Column Right -->
+</div>
+<!-- END: MainOperationsGrid -->
+</main>
+<!-- END: ScrollablePageContent -->
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainApplicationContainer -->
+</body></html>

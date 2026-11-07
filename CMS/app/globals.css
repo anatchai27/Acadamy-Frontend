@@ -209,3 +209,87 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
 .locale-switch a:focus-visible{outline-offset:1px}
 .partner-page[lang="en"] .partner-hero h1{max-width:620px}
 @media(max-width:700px){.market-nav-actions{gap:7px}.locale-switch{min-height:38px}.locale-switch a{min-height:30px;padding:4px 7px;font-size:12px}.market-partner-link{padding:8px 9px}}
+
+/* Template-inspired mobile dashboard preview */
+.product-demo.template-demo{max-width:565px;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none}
+.template-preview-heading{margin:0 0 11px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.template-preview-heading h2{margin:0;color:var(--navy);font-size:15px;line-height:1.35}
+.template-preview-heading p{margin:2px 0 0;color:var(--body);font-size:11px}
+.template-live-badge{padding:4px 8px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#eaf2fb;color:#174fbd;font-size:10px;font-weight:600;white-space:nowrap}
+.template-live-badge i{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.template-preview-card{overflow:hidden;border:1px solid #d8e4f1;border-radius:17px;background:#fff;box-shadow:0 8px 24px rgba(23,53,92,.08)}
+.template-preview-topbar{min-height:69px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #e8eef5}
+.template-preview-topbar p{margin:0;color:#64748b;font-size:10px}
+.template-preview-topbar h3{margin:2px 0 0;color:#17335c;font-size:15px;line-height:1.35}
+.template-today-label{padding:5px 8px;border-radius:8px;background:#f1f5f9;color:#405772;font-size:10px;font-weight:600;white-space:nowrap}
+.demo-tabs{padding:9px 12px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;background:#fff}
+.demo-tab{min-width:0;min-height:40px;padding:6px 5px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid transparent;border-radius:9px;background:transparent;color:#52657d;font-size:10px;font-weight:600;cursor:pointer}
+.demo-tab:hover{background:#f4f8fc}
+.demo-tab.active{border-color:#dbeafe;background:#eff6ff;color:#1d4ed8}
+.demo-tab .nav-glyph{width:15px;height:15px;flex:0 0 auto;color:currentColor}
+.demo-tab .nav-glyph svg{width:15px;height:15px}
+.template-preview-content{background:#f8fafd}
+.template-demo .product-demo-content{padding:12px 13px 14px}
+.template-demo .template-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 11px}
+.template-demo .demo-stat{min-height:88px;padding:11px;border-color:#dce7f2;border-radius:12px;background:#eff6ff}
+.template-demo .template-payment-stat{border-color:#f3e5c4;background:#fffbf0}
+.template-demo .demo-stat>span{font-size:10px}
+.template-demo .demo-stat>strong{margin:5px 0 3px;color:#1d4ed8;font-size:23px}
+.template-demo .demo-stat>strong i{font-size:10px}
+.template-demo .demo-stat>small{font-size:9px}
+.template-demo .template-payment-stat>strong{color:#a86b00}
+.template-demo .template-schedule{padding:10px 11px;border:1px solid #e0e8f0;border-radius:12px;background:#fff}
+.template-demo .template-schedule .demo-section-heading{margin-bottom:5px}
+.template-demo .template-schedule .demo-section-heading strong{font-size:11px}
+.template-demo .template-schedule .demo-section-heading>span{font-size:10px}
+.template-demo .template-schedule .demo-schedule-row{min-height:43px;grid-template-columns:83px 3px minmax(0,1fr);gap:8px}
+.template-demo .template-schedule .demo-schedule-row time{font-size:9px;white-space:nowrap}
+.template-demo .template-schedule .demo-schedule-row b{font-size:10px}
+.template-demo .template-schedule .demo-schedule-row small{font-size:9px}
+.template-demo .template-schedule .schedule-color{height:25px}
+.template-alert{min-height:39px;margin-top:10px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #f4dce0;border-radius:10px;background:#fff4f5;color:#8f2f3b;font-size:10px}
+.template-alert>span{display:flex;align-items:center;gap:7px}
+.template-alert>span b{width:17px;height:17px;display:grid;place-items:center;border-radius:50%;background:#ffe3e6;color:#c23a48;font-size:11px}
+.template-alert button{padding:3px 4px;border:0;background:transparent;color:#8f2f3b;font-size:10px;font-weight:700;text-decoration:underline;cursor:pointer}
+.template-demo .demo-title-row h3{font-size:16px}
+.template-demo .demo-overline{font-size:10px}
+.template-demo .demo-action-button,.template-demo .demo-date-button{min-height:34px;padding:6px 9px;font-size:10px}
+.template-demo .demo-search{min-height:38px;padding:8px 10px;font-size:11px}
+.template-demo .demo-table-row{min-height:40px;font-size:9px}
+.template-demo .demo-table-head{min-height:30px;font-size:8px}
+.template-demo .demo-person>b:last-child{font-size:9px}
+.template-demo .demo-footnote{font-size:10px;line-height:1.5}
+.template-demo .finance-summary{padding:11px;border-radius:11px}
+.template-demo .finance-summary span{font-size:10px}
+.template-demo .finance-summary strong{font-size:18px}
+.template-demo .payment-row{min-height:49px;grid-template-columns:25px minmax(0,1fr) auto;gap:7px}
+.template-demo .payment-row>div b{font-size:9px}
+.template-demo .payment-row>div small{font-size:8px}
+.template-demo .payment-row>strong{font-size:10px}
+.template-demo .payment-status{font-size:8px}
+.template-demo .demo-course-row{min-height:55px}
+.template-demo .demo-course-row>div b{font-size:10px}
+.template-demo .demo-course-row>div small{font-size:9px}
+.template-demo .course-student-count{font-size:9px}
+@media(max-width:700px){
+	.template-preview-heading h2{font-size:13px}
+	.template-preview-heading p{font-size:9px}
+	.template-live-badge{padding:4px 6px;font-size:9px}
+	.template-preview-topbar{min-height:64px;padding:11px 12px}
+	.template-preview-topbar h3{font-size:13px}
+	.demo-tabs{padding:8px 8px 0;gap:3px}
+	.demo-tab{min-height:42px;padding:5px 2px;gap:3px;font-size:9px}
+	.demo-tab .nav-glyph,.demo-tab .nav-glyph svg{width:13px;height:13px}
+	.template-demo .product-demo-content{padding:10px 9px 12px}
+	.template-demo .template-stat-grid{gap:6px}
+	.template-demo .demo-stat{min-height:78px;padding:8px}
+	.template-demo .demo-stat>span{font-size:9px}
+	.template-demo .demo-stat>strong{font-size:20px}
+	.template-demo .demo-stat>small{font-size:8px}
+	.template-demo .template-schedule{padding:8px}
+	.template-demo .template-schedule .demo-schedule-row{grid-template-columns:76px 3px minmax(0,1fr);gap:6px}
+	.template-demo .template-schedule .demo-schedule-row b{font-size:9px}
+	.template-demo .template-schedule .demo-schedule-row small{font-size:8px}
+	.template-alert{font-size:9px}
+	.template-alert button{font-size:9px}
+}

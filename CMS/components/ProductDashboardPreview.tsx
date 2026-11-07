@@ -14,6 +14,7 @@ const demoMessages = {
     sampleCenter: "สถาบันตัวอย่าง",
     administrator: "ผู้ดูแลระบบ",
     notification: "การแจ้งเตือน",
+    liveToday: "ข้อมูลตัวอย่าง",
     date: "วันจันทร์ · 12 ตุลาคม",
     overviewTitle: "ภาพรวมสถาบัน",
     today: "วันนี้⌄",
@@ -21,6 +22,7 @@ const demoMessages = {
     inSystem: "ข้อมูลในระบบ",
     attendingToday: "มาเรียนวันนี้",
     checkedIn: "เช็กชื่อแล้ว",
+    attendancePercent: "มาเรียน 85%",
     paymentReview: "รอตรวจการชำระ",
     newSlips: "มีสลิปใหม่",
     todaySchedule: "ตารางสอนวันนี้",
@@ -32,6 +34,9 @@ const demoMessages = {
     needsAttention: "เรื่องที่ต้องดู",
     slipsToReview: "สลิปรอการตรวจสอบ",
     requestsToReview: "คำร้องรอพิจารณา",
+    manage: "จัดการ",
+    room201: "ครูมีนา · ห้อง 201",
+    room104: "ครูดิน · ห้อง 104",
     studentFamilyInfo: "ข้อมูลนักเรียนและครอบครัว",
     addStudent: "＋ เพิ่มนักเรียน",
     searchStudents: "ค้นหาชื่อนักเรียนหรือผู้ปกครอง",
@@ -77,6 +82,7 @@ const demoMessages = {
     sampleCenter: "Sample center",
     administrator: "Administrator",
     notification: "Notifications",
+    liveToday: "Sample data",
     date: "Monday · October 12",
     overviewTitle: "Center overview",
     today: "Today⌄",
@@ -84,6 +90,7 @@ const demoMessages = {
     inSystem: "In the system",
     attendingToday: "Attending today",
     checkedIn: "Checked in",
+    attendancePercent: "85% attendance",
     paymentReview: "Payments to review",
     newSlips: "New slips received",
     todaySchedule: "Today’s schedule",
@@ -95,6 +102,9 @@ const demoMessages = {
     needsAttention: "Needs your attention",
     slipsToReview: "Payment slips to review",
     requestsToReview: "Requests awaiting review",
+    manage: "Manage",
+    room201: "Teacher Meena · Room 201",
+    room104: "Teacher Din · Room 104",
     studentFamilyInfo: "Student and family records",
     addStudent: "＋ Add student",
     searchStudents: "Search students or parents",
@@ -151,23 +161,16 @@ function OverviewView({ locale }: { locale: Locale }) {
   const copy = demoMessages[locale];
   return (
     <div className="product-demo-content">
-      <div className="demo-title-row">
-        <div><p className="demo-overline">{copy.date}</p><h3>{copy.overviewTitle}</h3></div>
-        <button className="demo-date-button" type="button">{copy.today}</button>
+      <div className="demo-stat-grid template-stat-grid">
+        <div className="demo-stat template-attendance-stat"><span>{copy.attendingToday}</span><strong>24 <i>/ 28 {locale === "th" ? "คน" : "students"}</i></strong><small><b className="status-dot green-dot" /> {copy.attendancePercent}</small></div>
+        <div className="demo-stat template-payment-stat"><span>{copy.paymentReview}</span><strong>3 <i>{copy.items}</i></strong><small><b className="status-dot amber-dot" /> {copy.newSlips}</small></div>
       </div>
-      <div className="demo-stat-grid">
-        <div className="demo-stat"><span>{copy.studentCount}</span><strong>128</strong><small>{copy.inSystem}</small></div>
-        <div className="demo-stat"><span>{copy.attendingToday}</span><strong>24 <i>/ 28</i></strong><small><b className="status-dot green-dot" /> {copy.checkedIn}</small></div>
-        <div className="demo-stat"><span>{copy.paymentReview}</span><strong>3</strong><small><b className="status-dot amber-dot" /> {copy.newSlips}</small></div>
+      <div className="demo-schedule template-schedule">
+        <div className="demo-section-heading"><strong>{copy.todaySchedule}</strong><span>{copy.seeAll}</span></div>
+        <div className="demo-schedule-row"><time>16:30–18:00</time><span className="schedule-color blue-schedule" /><div><b>{copy.mathCourse}</b><small>{copy.room201}</small></div></div>
+        <div className="demo-schedule-row"><time>17:00–18:30</time><span className="schedule-color cyan-schedule" /><div><b>{copy.englishCourse}</b><small>{copy.room104}</small></div></div>
       </div>
-      <div className="demo-bottom-grid">
-        <div className="demo-schedule">
-          <div className="demo-section-heading"><strong>{copy.todaySchedule}</strong><span>{copy.seeAll}</span></div>
-          <div className="demo-schedule-row"><time>10:00</time><span className="schedule-color blue-schedule" /><div><b>{copy.mathCourse}</b><small>{copy.teacherMeena}</small></div></div>
-          <div className="demo-schedule-row"><time>13:30</time><span className="schedule-color cyan-schedule" /><div><b>{copy.englishCourse}</b><small>{copy.teacherTon}</small></div></div>
-        </div>
-        <div className="demo-todo"><div className="demo-section-heading"><strong>{copy.needsAttention}</strong></div><p><span className="todo-count">3</span> {copy.slipsToReview}</p><p><span className="todo-count muted-count">2</span> {copy.requestsToReview}</p></div>
-      </div>
+      <div className="template-alert"><span><b aria-hidden="true">!</b>{copy.requestsToReview} · 2 {copy.items}</span><button type="button">{copy.manage}</button></div>
     </div>
   );
 }
@@ -227,29 +230,30 @@ export default function ProductDashboardPreview({ locale }: { locale: Locale }) 
   const views: { id: ViewKey; label: string }[] = Object.entries(copy.views).map(([id, label]) => ({ id: id as ViewKey, label }));
 
   return (
-    <div className="product-demo" id="product-preview">
-      <div className="demo-window-bar"><span /><span /><span /><p>{copy.sample}</p></div>
-      <div className="demo-app-shell">
-        <aside className="demo-sidebar" aria-label={copy.centerManagement}>
-          <div className="demo-brand"><span className="demo-brand-mark">t</span><b>tiwhub</b></div>
-          <small className="sidebar-group-label">{copy.centerManagement}</small>
-          <nav className="demo-nav" aria-label={copy.menuLabel}>
-            {views.map((view) => (
-              <button className={activeView === view.id ? "demo-nav-item active" : "demo-nav-item"} key={view.id} type="button" aria-pressed={activeView === view.id} onClick={() => setActiveView(view.id)}>
-                <span className={`nav-glyph glyph-${view.id}`}><DemoNavIcon view={view.id} /></span>{view.label}
-              </button>
-            ))}
-          </nav>
-          <div className="demo-sidebar-bottom"><span className="mini-avatar">{locale === "th" ? "ส" : "C"}</span><span><b>{copy.sampleCenter}</b><small>{copy.administrator}</small></span><span className="sidebar-more">···</span></div>
-        </aside>
-        <div className="demo-main">
-          <div className="demo-topbar"><span className="demo-crumb">{copy.sampleCenter} <b>/</b> {views.find((view) => view.id === activeView)?.label}</span><div className="demo-top-actions"><span className="demo-bell" aria-label={copy.notification}>♧<i /></span><span className="mini-avatar">{locale === "th" ? "ส" : "C"}</span></div></div>
+    <div className="product-demo template-demo" id="product-preview">
+      <div className="template-preview-heading">
+        <div><h2>{copy.overviewTitle}</h2><p>{copy.sample}</p></div>
+        <span className="template-live-badge"><i aria-hidden="true" />{copy.liveToday}</span>
+      </div>
+      <section className="template-preview-card" aria-label={copy.centerManagement}>
+        <div className="template-preview-topbar">
+          <div><p>{copy.date}</p><h3>{copy.sampleCenter}</h3></div>
+          <span className="template-today-label">{copy.today}</span>
+        </div>
+        <nav className="demo-tabs" aria-label={copy.menuLabel}>
+          {views.map((view) => (
+            <button className={activeView === view.id ? "demo-tab active" : "demo-tab"} key={view.id} type="button" aria-pressed={activeView === view.id} onClick={() => setActiveView(view.id)}>
+              <span className={`nav-glyph glyph-${view.id}`}><DemoNavIcon view={view.id} /></span>{view.label}
+            </button>
+          ))}
+        </nav>
+        <div className="template-preview-content">
           {activeView === "overview" && <OverviewView locale={locale} />}
           {activeView === "students" && <StudentsView locale={locale} />}
           {activeView === "finance" && <FinanceView locale={locale} />}
           {activeView === "courses" && <CoursesView locale={locale} />}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -4,9 +4,9 @@ import { useAppContext } from '../store/AppContext';
 import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../services/auth-service';
 import { showConfirm, showToast, BadgeSticker } from '../components/ui';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
-import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon } from '../components/ui/icons';
+import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, LeadIcon, MakeupIcon, RoomIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, CalendarIcon, ClockIcon, PlusIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
-import { canReadPage } from '../config/permissions';
+import { canReadPage, canEditPage } from '../config/permissions';
 import { useTranslation } from '../hooks';
 import { LanguageSwitcher } from '../components/ui/language-switcher';
 import { PaymentSlipNotificationBell } from '../components/ui/payment-slip-notification-bell';
@@ -45,12 +45,12 @@ const menuGroups = [{
   }, {
     path: '/admin/leads',
     label: 'ผู้สนใจทดลองเรียน',
-    icon: RequestIcon,
+    icon: LeadIcon,
      roles: ['admin']
   }, {
     path: '/admin/makeup-slots',
     label: 'เรียนชดเชย',
-    icon: RequestIcon,
+    icon: MakeupIcon,
     roles: ['admin', 'teacher']
   }, {
     path: '/admin/requests',
@@ -97,7 +97,7 @@ const menuGroups = [{
   items: [{
     path: '/admin/rooms',
     label: 'ห้องเรียน',
-    icon: CourseIcon,
+    icon: RoomIcon,
     roles: ['admin']
   }]
 }];
@@ -119,6 +119,7 @@ export const AdminLayout = ({
   const currentPath = path || '/admin/dashboard';
   const { t, currentLanguage } = useTranslation();
   const currentTitle = t(`navigation.${navigationKeyByPath[currentPath] || 'dashboard'}`);
+  const [now, setNow] = useState(() => new Date());
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [switchingInstituteId, setSwitchingInstituteId] = useState(null);
   const isNeo = false;
@@ -135,6 +136,10 @@ export const AdminLayout = ({
   }, [dropdownOpen]);
   useEffect(() => {
     unlockBadge('first_login');
+  }, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -218,57 +223,53 @@ export const AdminLayout = ({
       {switchingInstituteId === institute.id ? <span class="ml-2 text-xs">กำลังสลับ…</span> : Number(institute.id) === Number(currentInstitute?.id ?? profile?.instituteId) ? <span aria-label="สถาบันปัจจุบัน">✓</span> : null}
     </button>)}
   </div> : null;
-      return <div class={`min-h-screen ${isNeo ? 'bg-[#FAF3E0] text-black' : 'bg-[radial-gradient(ellipse_at_86%_4%,rgba(34,211,238,0.22),transparent_32%),linear-gradient(135deg,#dceeff_0%,#edf8ff_46%,#e2f1ff_100%)] text-[#294563]'}`}>
-        <aside class={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:z-20 ${isNeo ? 'bg-[#FFF] border-r-3 border-black' : 'bg-[linear-gradient(180deg,#f5fcff_0%,#e9f5ff_100%)] border-r border-[#c9e1f3] shadow-[4px_0_24px_rgba(38,89,133,0.06)]'}`}>
-        <div class={`flex h-16 items-center gap-3 px-6 ${isNeo ? 'border-b-3 border-black' : 'border-b border-[#d7e9f7] bg-white/45'}`}>
-          {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class={`h-9 w-9 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-9 w-9 shrink-0 rounded-xl" />}
-          <div class="flex flex-col">
-            <span class="text-lg font-bold text-slate-900 leading-tight tracking-tight">
-              {state.instituteName || 'tiwhub'}
-            </span>
-            <span class="text-xs text-slate-400 leading-tight">Admin Panel</span>
+      return <div class="admin-shell min-h-screen bg-[#edf2f7] text-slate-800">
+        <aside class="admin-sidebar hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-64 lg:flex-col">
+        <div class="admin-sidebar-brand flex h-20 items-center gap-3 px-5">
+          {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class={`h-10 w-10 rounded-xl object-cover shrink-0 ${isNeo ? 'ring-3 ring-black' : 'ring-2 ring-blue-100'}`} /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-10 w-10 shrink-0 rounded-xl" />}
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <div class="flex min-w-0 items-center gap-1.5">
+              <span class="truncate text-xl font-bold leading-tight tracking-tight text-slate-900">{t('common.appName')}</span>
+              <span class="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold leading-none tracking-wide text-blue-700">ACADEMY</span>
+            </div>
+            <span class="truncate text-xs leading-tight text-slate-500">{state.instituteName || t('navigation.sidebarSubtitle')}</span>
           </div>
         </div>
 
-        <nav class="flex-1 space-y-0.5 px-3 py-5 overflow-y-auto">
-          {filteredGroups.map(group => <div key={group.key} class="mb-4">
-              <p class={`px-3 mb-2 text-xs font-bold uppercase tracking-wide ${isNeo ? 'text-black/60' : 'text-[#456783]'}`}>
+        <nav class="admin-sidebar-nav flex flex-1 flex-col gap-6 overflow-y-auto px-3.5 py-4" aria-label={t('navigation.mainMenu', { defaultValue: t('navigation.groups.primary') })}>
+          {filteredGroups.map(group => <div key={group.key} class="min-w-0">
+              <p class="admin-sidebar-group mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider">
                 {t(`navigation.groups.${group.key}`)}
               </p>
               {group.items.map(item => {
             const isActive = currentPath === item.path;
-            const activeBg = isNeo ? 'bg-black text-white' : 'bg-[#2563eb] text-white shadow-[0_5px_14px_rgba(37,99,235,0.22)]';
-            const inactiveBg = isNeo ? 'text-black hover:bg-black hover:text-white' : 'text-[#405c76] hover:bg-white/80 hover:text-[#174a75]';
-            const activeIconColor = isNeo ? 'text-white' : 'text-white';
-            const inactiveIconColor = isNeo ? 'text-black' : 'text-[#6688a4]';
-            return <button key={item.path} onClick={() => route(item.path)} class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? activeBg : inactiveBg}`}>
-                    <item.icon class={`h-5 w-5 shrink-0 ${isActive ? activeIconColor : inactiveIconColor}`} />
-                    {t(`navigation.${navigationKeyByPath[item.path]}`)}
-                    {isActive ? <div class={`ml-auto w-1 h-5 rounded-full ${isNeo ? 'bg-white' : 'bg-blue-600'}`} /> : null}
+                return <button key={item.path} type="button" aria-current={isActive ? 'page' : undefined} onClick={() => route(item.path)} class={`admin-nav-item mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition-colors ${isActive ? 'is-active' : ''}`}>
+                  <item.icon class="admin-nav-icon h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span class="min-w-0 flex-1 truncate">{t(`navigation.${navigationKeyByPath[item.path]}`)}</span>
+                  {isActive ? <span class="ml-auto h-2 w-2 rounded-full bg-white" aria-hidden="true" /> : null}
                   </button>;
           })}
             </div>)}
         </nav>
 
-        <div class={`${isNeo ? 'border-t-3 border-black' : 'border-t border-[#d2e6f5] bg-white/35'} p-4`}>
-          <div class="flex items-center gap-3 mb-3 px-1">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold shrink-0 shadow-sm">
+        <div class="admin-sidebar-account border-t border-slate-200 p-3">
+          <div class="mb-2 flex items-center gap-2.5 overflow-hidden rounded-xl border border-slate-200 bg-white p-2">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-oasis-primary text-sm font-bold text-white">
               {avatarChar}
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-slate-900 truncate">{displayName}</p>
-              <p class="text-xs text-slate-400">{displayRole}</p>
+              <p class="truncate text-xs text-slate-500">{displayRole}</p>
             </div>
+            <button type="button" onClick={handleLogout} aria-label={t('common.logout')} title={t('common.logout')} class="admin-logout-button flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-700">
+              <LogoutIcon class="h-4 w-4" />
+            </button>
           </div>
-          <button onClick={handleLogout} class={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isNeo ? 'border-2 border-black text-black hover:bg-red-500 hover:text-white hover:border-red-500' : 'text-zinc-600 hover:text-red-600 hover:bg-red-50'}`}>
-            <LogoutIcon class="h-5 w-5 shrink-0" />
-            {t('common.logout')}
-          </button>
         </div>
       </aside>
 
       {/* Mobile Header */}
-      <header class={`lg:hidden fixed top-0 left-0 right-0 z-20 h-14 flex items-center justify-between px-4 shadow-sm ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-[linear-gradient(100deg,#f5fcff_0%,#e5f7ff_100%)] border-b border-[#c9e4f5]'}`}>
+      <header class="admin-mobile-header fixed left-0 right-0 top-0 z-20 flex h-14 items-center justify-between px-4 lg:hidden">
         <div class="flex items-center gap-2">
           {state.instituteLogo ? <img src={state.instituteLogo} alt="โลโก้สถาบัน" class="h-7 w-7 rounded-lg object-cover shrink-0" /> : <img src="/tiwhub-mark.svg" alt="tiwhub" class="h-7 w-7 shrink-0 rounded-lg" />}
           <span class="text-base font-semibold text-slate-900">{currentTitle}</span>
@@ -296,25 +297,36 @@ export const AdminLayout = ({
       </header>
 
       {/* Desktop Top Bar */}
-      <header class={`hidden lg:sticky lg:top-0 lg:z-10 lg:ml-64 lg:flex lg:h-16 lg:items-center lg:justify-between lg:px-8 ${isNeo ? 'bg-[#FFF] border-b-3 border-black' : 'bg-[linear-gradient(100deg,#f8fcff_0%,#e9f8ff_100%)] border-b border-[#c9e4f5] shadow-sm'}`}>
-        <div class="flex items-center gap-4">
-          <div>
-            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">{currentTitle}</h1>
-            <p class="text-xs text-slate-400">
-              {new Date().toLocaleDateString(currentLanguage === 'th' ? 'th-TH' : 'en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+      <header class="admin-desktop-header sticky top-0 z-10 ml-64 hidden h-20 items-center justify-between border-b border-slate-200 bg-white px-8 lg:flex">
+        <div class="admin-header-title flex min-w-0 items-center">
+          <div class="min-w-0">
+            <h1 class="truncate text-lg font-bold leading-tight tracking-tight text-slate-900">{currentTitle}</h1>
+            <p class="admin-header-meta mt-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-slate-500">
+              <CalendarIcon class="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+              <span>{now.toLocaleDateString(currentLanguage === 'th' ? 'th-TH' : 'en-US', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}</span>
+              <span class="text-slate-300" aria-hidden="true">·</span>
+              <span class="admin-header-time inline-flex items-center gap-1 font-semibold text-slate-700">
+                <ClockIcon class="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+                {now.toLocaleTimeString(currentLanguage === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+              </span>
             </p>
           </div>
-          <button onClick={() => route('/admin/attendance')} class={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${isNeo ? 'border-3 border-black text-black bg-white shadow-[3px_3px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000]' : 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md active:scale-[0.98]'}`}>
-            <QrScanIcon class="h-4 w-4" />
-            {t('navigation.scanQr')}
-          </button>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="admin-header-actions flex shrink-0 items-center gap-3">
+          {canReadPage(userRole, '/admin/attendance') && <button type="button" aria-label={t('navigation.scanQr')} title={t('navigation.scanQr')} onClick={() => route('/admin/attendance')} class="admin-qr-action inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100">
+            <QrScanIcon class="h-4 w-4" />
+            <span class="admin-qr-label">{t('navigation.scanQr')}</span>
+          </button>}
+          {canReadPage(userRole, '/admin/students') && canEditPage(userRole, '/admin/students') && <button type="button" onClick={() => route('/admin/students/add')} class="admin-new-student-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+            <PlusIcon class="h-4 w-4" aria-hidden="true" />
+            <span>{t('navigation.newStudent')}</span>
+          </button>}
+          <span class="admin-header-divider mx-1 h-6 w-px bg-slate-200" aria-hidden="true" />
           <LanguageSwitcher />
           {userRole === 'admin' && <PaymentSlipNotificationBell isNeo={isNeo} />}
           <div class="relative">
@@ -344,23 +356,22 @@ export const AdminLayout = ({
       </header>
 
       {/* Main Content — floating card */}
-      <main class="lg:ml-64 pt-14 lg:pt-0 pb-20 lg:pb-0">
-        <div class="p-4 sm:p-5 lg:p-8 max-w-7xl mx-auto">
-          <div class={`${isNeo ? 'bg-white my-4 neo-card p-4 sm:p-6 lg:p-8' : 'bg-[linear-gradient(145deg,#f1f9ff_0%,#eaf5ff_100%)] my-4 rounded-[1.5rem] border border-[#cfe3f3] p-4 sm:p-6 lg:p-8 shadow-[0_12px_34px_rgba(33,75,116,0.09)]'}`}>
+      <main class="admin-main ml-0 pb-20 pt-14 lg:ml-64 lg:pb-0 lg:pt-0">
+        <div class="admin-content-container mx-auto w-full p-4 sm:p-5 lg:p-7">
+          <div class="admin-page-content min-w-0">
             {children}
           </div>
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav class={`lg:hidden fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom shadow-[0_-5px_22px_rgba(38,89,133,0.08)] ${isNeo ? 'bg-[#FFF] border-t-3 border-black' : 'bg-[linear-gradient(100deg,#f5fcff_0%,#e7f7ff_100%)] border-t border-[#c9e4f5]'}`}>
-        <div class="flex items-center overflow-x-auto overflow-y-hidden h-full px-2 gap-1 no-scrollbar">
+      <nav class="admin-bottom-nav fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-bottom lg:hidden" aria-label={t('navigation.mainMenu', { defaultValue: t('navigation.groups.primary') })}>
+        <div class="flex h-full items-center gap-1 overflow-x-auto overflow-y-hidden px-2 no-scrollbar">
           {filteredMenuItems.map(item => {
           const isActive = currentPath === item.path;
-          const btnClass = isActive ? isNeo ? 'text-black bg-black/5' : 'text-blue-700 bg-white shadow-sm' : 'text-[#587792]';
-          return <button key={item.path} onClick={() => route(item.path)} class={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-w-[60px] shrink-0 transition-colors rounded-lg ${btnClass}`}>
+          return <button key={item.path} type="button" aria-current={isActive ? 'page' : undefined} onClick={() => route(item.path)} class={`admin-bottom-nav-item flex min-w-[60px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 transition-colors ${isActive ? 'is-active' : ''}`}>
                 <item.icon class="h-5 w-5" />
-                <span class="text-[10px] leading-tight whitespace-nowrap">{t(`navigation.${navigationKeyByPath[item.path]}`)}</span>
+                <span class="whitespace-nowrap text-[10px] leading-tight">{t(`navigation.${navigationKeyByPath[item.path]}`)}</span>
               </button>;
         })}
         </div>
