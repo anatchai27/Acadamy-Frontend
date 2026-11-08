@@ -16,3 +16,4 @@ export { MakeupSlotsPage } from './makeup-slots-page';
 export { LeadsPage } from './leads-page';
 export { RoomsPage } from './rooms-page';
 export { PermissionsPage } from './permissions-page';
+export { HelpPage } from './help-page';

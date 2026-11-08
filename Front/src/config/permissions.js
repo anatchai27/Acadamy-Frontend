@@ -5,6 +5,12 @@ export const PAGE_PERMISSIONS = {
     teacher: { read: true, edit: false, delete: false },
     staff: { read: true, edit: false, delete: false },
   },
+  '/admin/help': {
+    label: 'คู่มือการใช้งาน',
+    admin: { read: true, edit: false, delete: false },
+    teacher: { read: true, edit: false, delete: false },
+    staff: { read: true, edit: false, delete: false },
+  },
   '/admin/students': {
     label: 'นักเรียน',
     admin: { read: true, edit: true, delete: true },

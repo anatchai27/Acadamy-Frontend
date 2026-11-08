@@ -20,6 +20,12 @@ export const verifyPaymentSlip = (paymentId, options = {}) => {
 export const verifyPaymentBatchSlip = (batchId, options = {}) =>
   api.post(`/payment-batches/${batchId}/verify-slip`, {}, options);
 
+export const confirmPaymentManually = (paymentId, options = {}) =>
+  api.post(`/payments/${paymentId}/confirm-manual`, {}, options);
+
+export const confirmPaymentBatchManually = (batchId, options = {}) =>
+  api.post(`/payment-batches/${batchId}/confirm-manual`, {}, options);
+
 export const issuePaymentReceipt = (paymentId, options = {}) => {
   return api.post(`/payments/${paymentId}/issue-receipt`, {}, options);
 };
@@ -34,6 +40,8 @@ export const financeService = {
   getPendingSlipReviews,
   verifyPaymentSlip,
   verifyPaymentBatchSlip,
+  confirmPaymentManually,
+  confirmPaymentBatchManually,
   issuePaymentReceipt,
   issuePaymentBatchReceipt,
 };

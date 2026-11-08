@@ -42,6 +42,7 @@ public sealed class PaymentSlipVerificationService(
 
         payment.Status = PaymentStatus.Succeeded;
         payment.VerifiedAt = DateTime.UtcNow;
+        payment.PaidAt = payment.VerifiedAt.Value;
         payment.VerifiedBy = actorId;
         payment.VerificationProvider = result.Provider;
         payment.VerificationPayload = JsonSerializer.Serialize(new
@@ -60,5 +61,54 @@ public sealed class PaymentSlipVerificationService(
         var receiptPdfUrl = await paymentReceiptService.IssueAndNotifyAsync(payment, ct);
 
         return new PaymentSlipVerificationResponse(payment.Id, true, result.Amount, result.Reference, null, result.Provider, payment.VerifiedAt, receiptPdfUrl);
+    }
+
+    public async Task<PaymentSlipVerificationResponse> ConfirmManuallyAsync(long paymentId, int? actorId, CancellationToken ct = default)
+    {
+        var payment = await repository.GetPaymentForVerificationAsync(paymentId, ct)
+            ?? throw new PaymentValidationException("PAYMENT_NOT_FOUND", "ไม่พบรายการชำระเงิน");
+        if (payment.Status is not null && payment.Status != PaymentStatus.Pending)
+            throw new PaymentValidationException("ALREADY_VERIFIED", "รายการชำระเงินนี้ไม่ได้อยู่ในสถานะรอตรวจสอบแล้ว");
+        if (payment.Method != "transfer")
+            throw new PaymentValidationException("INVALID_METHOD", "ยืนยันด้วยตนเองได้เฉพาะรายการโอนเงิน");
+        if (string.IsNullOrWhiteSpace(payment.SlipUrl))
+            throw new PaymentValidationException("SLIP_NOT_FOUND", "รายการชำระเงินยังไม่มีสลิป");
+
+        var verifiedAt = DateTime.UtcNow;
+        payment.Status = PaymentStatus.Succeeded;
+        payment.PaidAt = verifiedAt;
+        payment.VerifiedAt = verifiedAt;
+        payment.VerifiedBy = actorId;
+        payment.VerificationProvider = "manual";
+        payment.VerificationPayload = JsonSerializer.Serialize(new
+        {
+            provider = "manual",
+            method = "bank_statement",
+            confirmedAmount = payment.Amount,
+            verifiedBy = actorId,
+            verifiedAt
+        });
+        payment.SlipAmount = null;
+        payment.SlipTransRef = null;
+        payment.SlipVerifiedAt = verifiedAt;
+
+        if (!await repository.SaveVerifiedSlipAsync(payment, ct))
+            throw new PaymentValidationException("ALREADY_VERIFIED", "รายการชำระเงินนี้ถูกตรวจสอบแล้ว");
+
+        string? receiptPdfUrl = null;
+        try
+        {
+            receiptPdfUrl = await paymentReceiptService.IssueAndNotifyAsync(payment, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // Settlement is final even if receipt storage or notification needs a retry.
+        }
+
+        return new PaymentSlipVerificationResponse(payment.Id, true, null, null, null, "manual", verifiedAt, receiptPdfUrl);
     }
 }

@@ -15,7 +15,7 @@ export const Button = ({
     designTheme
   } = useDesignTheme();
   const isNeo = neo !== undefined ? neo : designTheme === 'neobrutalism';
-  const baseClasses = isNeo ? 'neo-btn font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed' : 'font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl';
+  const baseClasses = isNeo ? 'neo-btn font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oasis-accent disabled:opacity-50 disabled:cursor-not-allowed' : 'font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oasis-accent disabled:opacity-50 disabled:cursor-not-allowed rounded-xl';
   const variants = {
     primary: isNeo ? 'bg-oasis-primary hover:bg-oasis-primary-dark text-white' : 'bg-oasis-primary hover:bg-oasis-primary-dark text-white shadow-sm',
     secondary: isNeo ? 'bg-slate-100 hover:bg-slate-200 text-slate-800' : 'bg-slate-100 hover:bg-slate-200 text-slate-800',

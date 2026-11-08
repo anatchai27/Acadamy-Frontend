@@ -1,7 +1,7 @@
 .marketplace {
   min-height: 100vh;
-  background: #f9f9f6;
-  color: #1d2b2b;
+  background: #f4f8fc;
+  color: #17335c;
   font-family: 'Sarabun', sans-serif;
 }
 .marketplace a {
@@ -30,8 +30,8 @@
   height: 25px;
   margin-right: 5px;
   border-radius: 8px 8px 8px 2px;
-  background: #0b4a3a;
-  color: #d7f1df;
+  background: #2563eb;
+  color: #fff;
 }
 .market-nav-links {
   display: flex;
@@ -40,10 +40,10 @@
   font-size: 12px;
 }
 .market-partner-link {
-  border: 1px solid #b8d6c2;
+  border: 1px solid #d8e4f1;
   border-radius: 8px;
   padding: 9px 13px;
-  color: #39775a !important;
+  color: #1d4ed8 !important;
   font-size: 11px;
   font-weight: 700;
 }
@@ -55,10 +55,10 @@
   margin: 34px auto 0;
   padding: 76px 28px 85px;
   text-align: center;
-  background: radial-gradient(circle at 50% 10%, #e1f2e6 0, #f9f9f6 42%);
+  background: #eaf2fb;
 }
 .market-eyebrow {
-  color: #5d8c78;
+  color: #1d4ed8;
   font:
     500 10px 'DM Mono',
     monospace;
@@ -66,7 +66,7 @@
   text-transform: uppercase;
 }
 .market-hero h1 {
-  color: #063327;
+  color: #17335c;
   font-size: clamp(44px, 6vw, 76px);
   line-height: 1.02;
   letter-spacing: -0.08em;
@@ -74,9 +74,10 @@
 }
 .market-hero h1 em,
 .market-partner h2 em {
-  color: #4e9a73;
+  color: #2563eb;
   font-family: Georgia, serif;
-  font-weight: 400;
+  font-weight: 700;
+  font-style: normal;
 }
 .market-hero p {
   max-width: 590px;

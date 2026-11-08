@@ -3,6 +3,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { DataTable, SolidInput, Button, showToast, DatePickerInput, ImageUpload } from '../../components/ui';
 import { financeService, studentService, enrollmentService, uploadService, reportService } from '../../services';
 import { instituteService } from '../../services/institute-service';
+import { getStoredUser } from '../../services/auth-service';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 
@@ -15,6 +16,7 @@ const paymentStatusLabels = {
   partially_refunded: 'คืนเงินบางส่วน',
 };
 
+const formatBaht = (amount) => `฿${Number(amount || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 })}`;
 const formatError = (error, fallback) => error?.data?.message || error?.data?.error || error?.data?.detail || error?.data?.title || error?.message || fallback;
 
 export function FinancePage({ path }) {
@@ -49,12 +51,14 @@ export function FinancePage({ path }) {
   const [reportLoading, setReportLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [paymentSetupComplete, setPaymentSetupComplete] = useState(null);
+  const [viewingSlip, setViewingSlip] = useState(null);
 
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState(null);
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+  const canVerifySlips = String(getStoredUser()?.role || '').trim().toLowerCase() === 'admin';
 
   const enrollmentRequestIds = useRef(new Map());
   const paymentGroupKey = useRef(1);
@@ -187,8 +191,8 @@ export function FinancePage({ path }) {
   }, [mode, historyPage, historyMethod]);
 
   useEffect(() => {
-    if (mode === 'history' && isSlipReview) fetchPendingSlipReviews();
-  }, [mode, isSlipReview]);
+    if (mode === 'history' && isSlipReview && canVerifySlips) fetchPendingSlipReviews();
+  }, [mode, isSlipReview, canVerifySlips]);
 
   useEffect(() => {
     const openReviewQueue = () => {
@@ -297,6 +301,10 @@ export function FinancePage({ path }) {
   };
 
   const handleVerifyPayment = async (payment) => {
+    if (!canVerifySlips) {
+      showToast('การตรวจสอบสลิปทำได้โดยผู้ดูแลระบบเท่านั้น', 'error');
+      return false;
+    }
     setVerifyingPaymentId(payment.id);
     try {
       const res = payment.isBatch
@@ -311,13 +319,57 @@ export function FinancePage({ path }) {
       }
       await fetchPayments(historyPage);
       if (isSlipReview) await fetchPendingSlipReviews();
+      return true;
     } catch (error) {
       showToast(formatError(error, 'ตรวจสอบสลิปไม่สำเร็จ รายการยังรอตรวจสอบ'), 'error');
       await fetchPayments(historyPage);
       if (isSlipReview) await fetchPendingSlipReviews();
+      return false;
     } finally {
       setVerifyingPaymentId(null);
     }
+  };
+
+  const handleVerifyViewedSlip = async () => {
+    if (!viewingSlip) return;
+    const verified = await handleVerifyPayment(viewingSlip);
+    if (verified) setViewingSlip(null);
+  };
+
+  const handleManualConfirmPayment = async (payment) => {
+    if (!canVerifySlips) {
+      showToast('การยืนยันรับเงินทำได้โดยผู้ดูแลระบบเท่านั้น', 'error');
+      return false;
+    }
+    setVerifyingPaymentId(payment.id);
+    try {
+      const response = payment.isBatch
+        ? await financeService.confirmPaymentBatchManually(payment.batchId)
+        : await financeService.confirmPaymentManually(payment.id);
+      const result = response.data?.data || response.data || {};
+      if (!result.verified) throw new Error(result.reason || 'ยืนยันรับเงินไม่สำเร็จ');
+      showToast(`ยืนยันรับเงินจากบัญชีแล้ว: ${payment.invoiceNo}`, 'success');
+      if (payment.isBatch && pendingBatchId === payment.batchId) {
+        resetPaymentForm();
+        setLatestReceipt({ invoiceNo: payment.invoiceNo, url: result.receiptPdfUrl });
+      }
+      await fetchPayments(historyPage);
+      if (isSlipReview) await fetchPendingSlipReviews();
+      return true;
+    } catch (error) {
+      showToast(formatError(error, 'ยืนยันรับเงินไม่สำเร็จ รายการยังรอตรวจสอบ'), 'error');
+      await fetchPayments(historyPage);
+      if (isSlipReview) await fetchPendingSlipReviews();
+      return false;
+    } finally {
+      setVerifyingPaymentId(null);
+    }
+  };
+
+  const handleManualConfirmViewedSlip = async () => {
+    if (!viewingSlip) return;
+    const confirmed = await handleManualConfirmPayment(viewingSlip);
+    if (confirmed) setViewingSlip(null);
   };
 
   const handleIssueReceipt = async (payment) => {
@@ -382,12 +434,17 @@ export function FinancePage({ path }) {
     {
       key: 'status',
       label: 'สถานะ',
-      render: (value) => (
-        <span
-          class={`rounded-full px-2 py-1 text-xs font-medium ${value === 'succeeded' ? 'bg-emerald-50 text-emerald-700' : value === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-zinc-100 text-zinc-600'}`}
-        >
-          {paymentStatusLabels[value] || value || '-'}
-        </span>
+      render: (value, payment) => (
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span
+            class={`rounded-full px-2 py-1 text-xs font-medium ${value === 'succeeded' ? 'bg-emerald-50 text-emerald-700' : value === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-zinc-100 text-zinc-600'}`}
+          >
+            {paymentStatusLabels[value] || value || '-'}
+          </span>
+          {payment.verificationProvider === 'manual' && (
+            <span title="ยืนยันจากรายการเดินบัญชีโดยผู้ดูแลระบบ" class="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800">เช็คเอง</span>
+          )}
+        </div>
       ),
     },
     { key: 'method', label: 'ช่องทาง', align: 'center' },
@@ -398,9 +455,9 @@ export function FinancePage({ path }) {
       render: (value, payment) => (
         <div class="flex items-center justify-center gap-2">
           {value && (
-            <a href={value} target="_blank" rel="noreferrer" class="text-oasis-primary hover:underline">
-              ดู
-            </a>
+            <button type="button" onClick={() => setViewingSlip(payment)} class="text-oasis-primary hover:underline">
+              ดูสลิป
+            </button>
           )}
           {payment.status === 'pending' && payment.method === 'transfer' && (
             <label class="cursor-pointer text-xs font-medium text-oasis-primary hover:underline">
@@ -425,7 +482,7 @@ export function FinancePage({ path }) {
       label: 'ตรวจสลิป',
       align: 'center',
       render: (_, payment) => {
-        if (payment.status === 'pending' && payment.method === 'transfer' && payment.slipUrl) {
+        if (canVerifySlips && payment.status === 'pending' && payment.method === 'transfer' && payment.slipUrl) {
           return (
             <button
               type="button"
@@ -842,7 +899,9 @@ export function FinancePage({ path }) {
                   </button>
                 </div>
               </div>
-              {pendingSlipError ? (
+              {!canVerifySlips ? (
+                <p class="px-4 py-5 text-sm text-slate-600" role="status">การตรวจสอบสลิปทำได้โดยผู้ดูแลระบบเท่านั้น</p>
+              ) : pendingSlipError ? (
                 <p class="px-4 py-5 text-sm font-medium text-red-700" role="alert">{pendingSlipError}</p>
               ) : pendingSlipLoading && pendingSlipReviews.length === 0 ? (
                 <p class="px-4 py-5 text-sm text-slate-600" role="status">กำลังโหลดสลิปที่รอตรวจ…</p>
@@ -858,10 +917,13 @@ export function FinancePage({ path }) {
                         <p class="mt-1 text-sm font-bold text-slate-900">{formatBaht(payment.amount)}</p>
                       </div>
                       <div class="flex shrink-0 items-center gap-3">
-                        {payment.slipUrl && <a href={payment.slipUrl} target="_blank" rel="noreferrer" class="min-h-10 content-center rounded-lg border border-slate-300 px-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">เปิดสลิป</a>}
-                        <button type="button" onClick={() => handleVerifyPayment(payment)} disabled={verifyingPaymentId === payment.id} class="min-h-10 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-50">
-                          {verifyingPaymentId === payment.id ? 'กำลังตรวจ…' : 'ตรวจและยืนยัน'}
-                        </button>
+                        {payment.slipUrl ? (
+                          <button type="button" onClick={() => setViewingSlip(payment)} class="min-h-10 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+                            ดูสลิปและตรวจ
+                          </button>
+                        ) : (
+                          <span class="text-xs font-medium text-amber-800">ไม่มีไฟล์สลิป</span>
+                        )}
                       </div>
                     </li>
                   ))}
@@ -871,7 +933,7 @@ export function FinancePage({ path }) {
             </section>
           )}
           <div
-            class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} flex flex-wrap items-end gap-3 mb-6`}
+            class={`${isNeo ? 'neo-card bg-white p-4' : 'bg-zinc-50 rounded-2xl border border-zinc-100 p-4'} mb-6 grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(11rem,1.1fr)_auto_auto]`}
           >
             <DatePickerInput
               label="ตั้งแต่วันที่"
@@ -885,7 +947,7 @@ export function FinancePage({ path }) {
               onChange={(date) => setEndDate(date ? date.toISOString().split('T')[0] : '')}
               placeholder="เลือกวันที่สิ้นสุด"
             />
-            <div class="flex min-w-44 flex-col gap-1.5">
+            <div class="flex min-w-0 flex-col gap-1.5 sm:col-span-2 lg:col-span-1">
               <label class="text-sm font-medium text-zinc-800">ช่องทางชำระเงิน</label>
               <select
                 value={historyMethod}
@@ -901,10 +963,10 @@ export function FinancePage({ path }) {
                 <option value="credit_card">บัตรเครดิต</option>
               </select>
             </div>
-            <Button variant="primary" size="md" onClick={handleDateFilter}>
+            <Button variant="primary" size="md" onClick={handleDateFilter} class="w-full justify-center lg:w-auto">
               กรองข้อมูล
             </Button>
-            <Button variant="outline" size="md" onClick={handleExport} loading={exporting} disabled={exporting}>
+            <Button variant="outline" size="md" onClick={handleExport} loading={exporting} disabled={exporting} class="w-full justify-center lg:w-auto">
               ส่งออก CSV
             </Button>
           </div>
@@ -976,6 +1038,114 @@ export function FinancePage({ path }) {
           )}
         </div>
       )}
+      {viewingSlip && (
+        <SlipPreviewDialog
+          key={`${viewingSlip.id}-${viewingSlip.slipUrl}`}
+          payment={viewingSlip}
+          canVerify={canVerifySlips}
+          verifying={verifyingPaymentId === viewingSlip.id}
+          onClose={() => setViewingSlip(null)}
+          onVerify={handleVerifyViewedSlip}
+          onManualConfirm={handleManualConfirmViewedSlip}
+        />
+      )}
     </AdminLayout>
+  );
+}
+
+function SlipPreviewDialog({ payment, canVerify, verifying, onClose, onVerify, onManualConfirm }) {
+  const [imageError, setImageError] = useState(false);
+  const [confirmingManual, setConfirmingManual] = useState(false);
+  const closeButtonRef = useRef(null);
+  const closeHandlerRef = useRef(onClose);
+  closeHandlerRef.current = onClose;
+  const isPendingTransfer = payment.method === 'transfer' && (!payment.status || payment.status === 'pending');
+
+  useEffect(() => {
+    const previousFocus = document.activeElement;
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closeHandlerRef.current();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, []);
+
+  return (
+    <div
+      class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-3 sm:p-6"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <section role="dialog" aria-modal="true" aria-labelledby="slip-preview-title" aria-describedby="slip-preview-description" class="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <header class="flex items-start justify-between gap-4 border-b border-oasis-border px-4 py-3 sm:px-6 sm:py-4">
+          <div class="min-w-0">
+            <h2 id="slip-preview-title" class="truncate text-base font-bold text-oasis-navy sm:text-lg">ตรวจสอบสลิปการชำระเงิน</h2>
+            <p id="slip-preview-description" class="mt-0.5 truncate text-sm text-oasis-body">
+              {payment.studentName || 'ไม่ทราบชื่อนักเรียน'} · {payment.invoiceNo || 'ไม่มีเลข Invoice'} · {formatBaht(payment.amount)}
+            </p>
+          </div>
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="ปิดหน้าต่างสลิป" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary">
+            <span aria-hidden="true" class="text-2xl leading-none">×</span>
+          </button>
+        </header>
+
+        <div class="min-h-0 flex-1 overflow-auto bg-slate-100 p-3 sm:p-5">
+          {!imageError ? (
+            <img
+              src={payment.slipUrl}
+              alt={`สลิปการชำระเงิน ${payment.invoiceNo || ''}`.trim()}
+              onError={() => setImageError(true)}
+              class="mx-auto max-h-[65dvh] max-w-full rounded-lg object-contain"
+            />
+          ) : (
+            <div class="mx-auto flex min-h-56 max-w-xl flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-6 text-center">
+              <p class="text-sm font-semibold text-slate-800">แสดงภาพสลิปในหน้านี้ไม่ได้</p>
+              <p class="text-sm text-slate-600">ลองเปิดไฟล์ในแท็บใหม่ แล้วกลับมาตรวจยอดในหน้าต่างนี้</p>
+              <a href={payment.slipUrl} target="_blank" rel="noreferrer" class="inline-flex min-h-10 items-center rounded-lg border border-oasis-border px-4 text-sm font-semibold text-oasis-primary hover:bg-blue-50">
+                เปิดไฟล์สลิปในแท็บใหม่
+              </a>
+            </div>
+          )}
+        </div>
+
+        <footer class="flex flex-col gap-3 border-t border-oasis-border px-4 py-3 sm:px-6 sm:py-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs leading-relaxed text-oasis-body">
+              {canVerify
+                ? 'เลือกตรวจด้วย EasySlip หรือเช็คยอดเงินเข้าบัญชีสถาบันด้วยตนเอง'
+                : 'การตรวจสอบยอดและยืนยันรับชำระทำได้โดยผู้ดูแลระบบเท่านั้น'}
+            </p>
+            <div class="flex shrink-0 flex-wrap justify-end gap-2">
+              <button type="button" onClick={onClose} disabled={verifying} class="min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary disabled:opacity-50">ปิด</button>
+              {canVerify && isPendingTransfer && !confirmingManual && (
+                <>
+                  <button type="button" onClick={onVerify} disabled={verifying} class="min-h-11 rounded-lg bg-oasis-primary px-4 text-sm font-bold text-white hover:bg-oasis-primary-dark disabled:cursor-wait disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary focus-visible:ring-offset-2">
+                    {verifying ? 'กำลังตรวจสอบ…' : 'ตรวจด้วย EasySlip'}
+                  </button>
+                  <button type="button" onClick={() => setConfirmingManual(true)} disabled={verifying} class="min-h-11 rounded-lg border border-oasis-border bg-white px-4 text-sm font-bold text-oasis-navy hover:bg-oasis-surface-soft disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary">
+                    เช็คเงินเข้าเอง
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          {canVerify && isPendingTransfer && confirmingManual && (
+            <div class="w-full rounded-xl border border-amber-300 bg-amber-50 p-3" role="alert">
+              <p class="text-sm font-bold text-amber-950">ยืนยันเฉพาะเมื่อเห็นรายการเงินเข้าบัญชีสถาบันแล้ว</p>
+              <p class="mt-1 text-xs leading-relaxed text-amber-900">ตรวจยอดในแอปธนาคารหรือรายการเดินบัญชีให้ตรงกับบิลก่อน การยืนยันนี้จะไม่ตรวจยอดหรือสลิปซ้ำอัตโนมัติ และระบบจะบันทึกผู้ยืนยันกับเวลา</p>
+              <div class="mt-3 flex flex-wrap justify-end gap-2">
+                <button type="button" onClick={() => setConfirmingManual(false)} disabled={verifying} class="min-h-10 rounded-lg border border-amber-400 bg-white px-3 text-sm font-semibold text-amber-950 disabled:opacity-50">กลับ</button>
+                <button type="button" onClick={onManualConfirm} disabled={verifying} class="min-h-10 rounded-lg bg-amber-800 px-3 text-sm font-bold text-white hover:bg-amber-900 disabled:cursor-wait disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2">
+                  {verifying ? 'กำลังบันทึก…' : 'ยืนยันว่าเงินเข้าแล้ว'}
+                </button>
+              </div>
+            </div>
+          )}
+        </footer>
+      </section>
+    </div>
   );
 }

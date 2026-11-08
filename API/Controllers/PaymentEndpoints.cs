@@ -104,6 +104,21 @@ public static class PaymentEndpoints
             { return Results.Json(new { error = ex.Message, code = ex.ErrorCode }, statusCode: StatusCodes.Status503ServiceUnavailable); }
         });
 
+        group.MapPost("/{paymentId:long}/confirm-manual", async (
+            long paymentId,
+            IPaymentSlipVerificationService service,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            var actorId = int.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) ? id : (int?)null;
+            try { return Results.Ok(await service.ConfirmManuallyAsync(paymentId, actorId, ct)); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode is "PAYMENT_NOT_FOUND" or "SLIP_NOT_FOUND")
+            { return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex)
+            { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
+        });
+
         group.MapPost("/{paymentId:long}/issue-receipt", async (
             long paymentId,
             IPaymentService service,

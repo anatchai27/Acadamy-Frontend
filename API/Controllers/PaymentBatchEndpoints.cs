@@ -42,6 +42,17 @@ public static class PaymentBatchEndpoints
             { return Results.BadRequest(new { error = ex.Message, code = ex.ErrorCode }); }
         });
 
+        group.MapPost("/{batchId:long}/confirm-manual", async (long batchId, IPaymentBatchService service, HttpContext context, CancellationToken ct) =>
+        {
+            if (!context.User.IsInRole("admin")) return Results.Forbid();
+            var actorId = int.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) ? id : (int?)null;
+            try { return Results.Ok(await service.ConfirmManuallyAsync(batchId, actorId, ct)); }
+            catch (PaymentValidationException ex) when (ex.ErrorCode is "PAYMENT_BATCH_NOT_FOUND" or "SLIP_NOT_FOUND")
+            { return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode }); }
+            catch (PaymentValidationException ex)
+            { return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode }); }
+        });
+
         group.MapPost("/{batchId:long}/issue-receipt", async (long batchId, IPaymentBatchService service, HttpContext context, CancellationToken ct) =>
         {
             if (!context.User.IsInRole("admin")) return Results.Forbid();

@@ -171,6 +171,54 @@ public sealed class PaymentBatchService(
         return new PaymentBatchSlipVerificationResponse(batch.Id, true, result.Amount, result.Reference, receiptPdfUrl);
     }
 
+    public async Task<PaymentBatchSlipVerificationResponse> ConfirmManuallyAsync(long batchId, int? actorId, CancellationToken ct = default)
+    {
+        var batch = await repository.GetForVerificationAsync(batchId, ct)
+            ?? throw new PaymentValidationException("PAYMENT_BATCH_NOT_FOUND", "ไม่พบบิลรวม");
+        if (batch.Status != PaymentStatus.Pending)
+            throw new PaymentValidationException("ALREADY_VERIFIED", "บิลรวมนี้ไม่ได้อยู่ในสถานะรอตรวจสอบแล้ว");
+        if (batch.Method != "transfer")
+            throw new PaymentValidationException("INVALID_METHOD", "ยืนยันด้วยตนเองได้เฉพาะรายการโอนเงิน");
+        if (string.IsNullOrWhiteSpace(batch.SlipUrl))
+            throw new PaymentValidationException("SLIP_NOT_FOUND", "บิลรวมนี้ยังไม่มีสลิป");
+
+        var verifiedAt = DateTime.UtcNow;
+        batch.Status = PaymentStatus.Succeeded;
+        batch.PaidAt = verifiedAt;
+        batch.VerifiedAt = verifiedAt;
+        batch.VerifiedBy = actorId;
+        batch.VerificationProvider = "manual";
+        batch.VerificationPayload = JsonSerializer.Serialize(new
+        {
+            provider = "manual",
+            method = "bank_statement",
+            confirmedAmount = batch.Amount,
+            verifiedBy = actorId,
+            verifiedAt
+        });
+        batch.SlipAmount = null;
+        batch.SlipTransRef = null;
+
+        if (!await repository.SaveVerifiedSlipAsync(batch, ct))
+            throw new PaymentValidationException("ALREADY_VERIFIED", "บิลรวมนี้ถูกตรวจสอบแล้ว");
+
+        string? receiptPdfUrl = null;
+        try
+        {
+            receiptPdfUrl = await receiptService.IssueAndNotifyAsync(batch, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // Settlement is final even if receipt storage or notification needs a retry.
+        }
+
+        return new PaymentBatchSlipVerificationResponse(batch.Id, true, null, null, receiptPdfUrl);
+    }
+
     public async Task<string> IssueReceiptAsync(long batchId, CancellationToken ct = default)
     {
         var batch = await repository.GetForVerificationAsync(batchId, ct)

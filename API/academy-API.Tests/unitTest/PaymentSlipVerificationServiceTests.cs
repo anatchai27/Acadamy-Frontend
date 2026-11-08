@@ -126,4 +126,60 @@ public class PaymentSlipVerificationServiceTests
         provider.Verify(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Never);
         receipts.Verify(x => x.IssueAndNotifyAsync(payment, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ConfirmManuallyAsync_PendingTransfer_RecordsManualAuditAndSettlesWithoutProvider()
+    {
+        var repository = new Mock<IPaymentRepository>();
+        var provider = new Mock<ISlipVerificationProvider>();
+        var receipts = new Mock<IPaymentReceiptService>();
+        var payment = new Payment
+        {
+            Id = 5,
+            Amount = 1200m,
+            Method = "transfer",
+            SlipUrl = "https://slip.test/5.png",
+            Status = PaymentStatus.Pending
+        };
+        repository.Setup(x => x.GetPaymentForVerificationAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        repository.Setup(x => x.SaveVerifiedSlipAsync(payment, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        receipts.Setup(x => x.IssueAndNotifyAsync(payment, It.IsAny<CancellationToken>())).ReturnsAsync("https://storage/receipt.pdf");
+        var sut = new PaymentSlipVerificationService(repository.Object, provider.Object, receipts.Object);
+
+        var result = await sut.ConfirmManuallyAsync(5, 99);
+
+        Assert.True(result.Verified);
+        Assert.Equal("manual", result.Provider);
+        Assert.Null(result.Amount);
+        Assert.Null(result.Reference);
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
+        Assert.Equal(99, payment.VerifiedBy);
+        Assert.Equal("manual", payment.VerificationProvider);
+        Assert.Contains("bank_statement", payment.VerificationPayload);
+        Assert.Equal(payment.VerifiedAt, payment.PaidAt);
+        Assert.Equal(payment.VerifiedAt, payment.SlipVerifiedAt);
+        Assert.Null(payment.SlipAmount);
+        Assert.Null(payment.SlipTransRef);
+        Assert.Equal("https://storage/receipt.pdf", result.ReceiptPdfUrl);
+        provider.Verify(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.SaveVerifiedSlipAsync(payment, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ConfirmManuallyAsync_WithoutSlip_RejectsWithoutSettling()
+    {
+        var repository = new Mock<IPaymentRepository>();
+        var provider = new Mock<ISlipVerificationProvider>();
+        var receipts = new Mock<IPaymentReceiptService>();
+        var payment = new Payment { Id = 5, Amount = 1200m, Method = "transfer", Status = PaymentStatus.Pending };
+        repository.Setup(x => x.GetPaymentForVerificationAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        var sut = new PaymentSlipVerificationService(repository.Object, provider.Object, receipts.Object);
+
+        var exception = await Assert.ThrowsAsync<PaymentValidationException>(() => sut.ConfirmManuallyAsync(5, 99));
+
+        Assert.Equal("SLIP_NOT_FOUND", exception.ErrorCode);
+        Assert.Equal(PaymentStatus.Pending, payment.Status);
+        repository.Verify(x => x.SaveVerifiedSlipAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never);
+        provider.Verify(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

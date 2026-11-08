@@ -7,5 +7,6 @@ public interface IPaymentBatchService
     Task<PaymentBatchResponse> CreateAsync(CreatePaymentBatchRequest request, CancellationToken ct = default);
     Task<PaymentBatchResponse> CreateParentTransferAsync(int parentUserId, int studentId, int enrollmentId, CancellationToken ct = default, decimal? amount = null);
     Task<PaymentBatchSlipVerificationResponse> VerifySlipAsync(long batchId, int? actorId, CancellationToken ct = default);
+    Task<PaymentBatchSlipVerificationResponse> ConfirmManuallyAsync(long batchId, int? actorId, CancellationToken ct = default);
     Task<string> IssueReceiptAsync(long batchId, CancellationToken ct = default);
 }

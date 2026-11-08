@@ -32,4 +32,11 @@ describe('admin role guard', () => {
     expect(canEditPage('staff', '/admin/students/add')).toBe(true);
     expect(canEditPage('staff', '/admin/students/64002/edit')).toBe(true);
   });
+
+  it('allows every Front role to read the usage guide without edit access', () => {
+    for (const role of ['admin', 'teacher', 'staff']) {
+      expect(canReadPage(role, '/admin/help')).toBe(true);
+      expect(canEditPage(role, '/admin/help')).toBe(false);
+    }
+  });
 });

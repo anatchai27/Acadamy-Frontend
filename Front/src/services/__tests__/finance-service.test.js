@@ -7,6 +7,8 @@ import {
   financeService,
   verifyPaymentSlip,
   verifyPaymentBatchSlip,
+  confirmPaymentManually,
+  confirmPaymentBatchManually,
   issuePaymentReceipt,
   issuePaymentBatchReceipt,
 } from '../finance-service';
@@ -55,6 +57,16 @@ describe('Finance Service', () => {
     expect(api.post).toHaveBeenCalledWith('/payment-batches/42/verify-slip', {}, {});
   });
 
+  it('confirms a payment manually through its separate endpoint', async () => {
+    await confirmPaymentManually(42);
+    expect(api.post).toHaveBeenCalledWith('/payments/42/confirm-manual', {}, {});
+  });
+
+  it('confirms a consolidated batch manually through its separate endpoint', async () => {
+    await confirmPaymentBatchManually(42);
+    expect(api.post).toHaveBeenCalledWith('/payment-batches/42/confirm-manual', {}, {});
+  });
+
   it('retries receipt generation for an already settled payment', async () => {
     await issuePaymentReceipt(42);
     expect(api.post).toHaveBeenCalledWith('/payments/42/issue-receipt', {}, {});
@@ -67,9 +79,11 @@ describe('Finance Service', () => {
 
   it('exposes verification through the service object', () => {
     expect(financeService.verifyPaymentSlip).toBe(verifyPaymentSlip);
+    expect(financeService.confirmPaymentManually).toBe(confirmPaymentManually);
     expect(financeService.issuePaymentReceipt).toBe(issuePaymentReceipt);
     expect(financeService.createPaymentBatch).toBe(createPaymentBatch);
     expect(financeService.verifyPaymentBatchSlip).toBe(verifyPaymentBatchSlip);
+    expect(financeService.confirmPaymentBatchManually).toBe(confirmPaymentBatchManually);
     expect(financeService.issuePaymentBatchReceipt).toBe(issuePaymentBatchReceipt);
   });
 });

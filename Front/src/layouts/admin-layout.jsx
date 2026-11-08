@@ -4,7 +4,7 @@ import { useAppContext } from '../store/AppContext';
 import { logout, clearAuthStorage, setAuthStorage, switchInstitute } from '../services/auth-service';
 import { showConfirm, showToast, BadgeSticker } from '../components/ui';
 import { unlockBadge, useBadges } from '../components/ui/badge-sticker';
-import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, LeadIcon, MakeupIcon, RoomIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, CalendarIcon, ClockIcon, PlusIcon } from '../components/ui/icons';
+import { DashboardIcon, StudentIcon, TeacherIcon, CourseIcon, AttendanceIcon, RequestIcon, LeadIcon, MakeupIcon, RoomIcon, AcademicsIcon, FinanceIcon, UsersMenuIcon, PermissionsIcon, SettingsIcon, HelpIcon, QrScanIcon, ChevronDownIcon, LogoutIcon, CalendarIcon, ClockIcon, PlusIcon } from '../components/ui/icons';
 import { startAdminInactivityTimer } from '../services/admin-session-timeout';
 import { canReadPage, canEditPage } from '../config/permissions';
 import { useTranslation } from '../hooks';
@@ -100,6 +100,15 @@ const menuGroups = [{
     icon: RoomIcon,
     roles: ['admin']
   }]
+}, {
+  key: 'help',
+  label: 'ช่วยเหลือ',
+  items: [{
+    path: '/admin/help',
+    label: 'คู่มือการใช้งาน',
+    icon: HelpIcon,
+    roles: ['admin', 'teacher', 'staff']
+  }]
 }];
 const navigationKeyByPath = {
   '/admin/dashboard': 'dashboard', '/admin/students': 'students', '/admin/teachers': 'teachers',
@@ -107,6 +116,7 @@ const navigationKeyByPath = {
   '/admin/makeup-slots': 'makeupSlots', '/admin/requests': 'requests', '/admin/academics': 'academics',
   '/admin/finance': 'finance', '/admin/users': 'users',
   '/admin/permissions': 'permissions', '/admin/settings': 'settings', '/admin/rooms': 'rooms',
+  '/admin/help': 'help',
 };
 export const AdminLayout = ({
   children,

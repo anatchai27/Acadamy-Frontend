@@ -197,6 +197,7 @@ public class PaymentRepository(TutoringDbContext context) : IPaymentRepository
                 .Where(p => p.Id == payment.Id && p.Status == PaymentStatus.Pending)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(p => p.Status, PaymentStatus.Succeeded)
+                    .SetProperty(p => p.PaidAt, payment.PaidAt)
                     .SetProperty(p => p.VerifiedAt, payment.VerifiedAt)
                     .SetProperty(p => p.VerifiedBy, payment.VerifiedBy)
                     .SetProperty(p => p.VerificationProvider, payment.VerificationProvider)

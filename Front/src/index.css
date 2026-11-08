@@ -1,8 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
-@import "tailwindcss";
 @import "react-datepicker/dist/react-datepicker.css";
+@import "tailwindcss";
 
-/* OASIS BRAND CONTRACT: TiwHub's open-book mark, blue/navy/cyan palette, Thai-first Sarabun, airy sky-tinted work surfaces, and readable type. Preserve page workflows, tenant marks, and semantic status colors. */
+/* OASIS / TEMPLATE CONTRACT: use the supplied admin template's clear sidebar, compact task header, and calm white work surfaces across Front. Keep one blue/navy/cyan theme, Sarabun-first Thai typography, tenant identity, existing workflows, and true semantic status colors. */
+:root {
+  color-scheme: light;
+  --oasis-radius-control: 0.75rem;
+  --oasis-radius-card: 1rem;
+  --oasis-radius-panel: 1.5rem;
+  --oasis-shadow-surface: 0 3px 14px rgba(23, 53, 92, 0.06);
+  --oasis-shadow-floating: 0 8px 24px rgba(23, 53, 92, 0.1);
+  --oasis-sidebar-width: 16rem;
+  --oasis-header-height: 5rem;
+}
+
 @theme {
   --color-oasis-primary: #2563eb;
   --color-oasis-primary-light: #60a5fa;
@@ -11,7 +21,7 @@
   --color-oasis-accent-light: #67e8f9;
   --color-oasis-accent-dark: #0891b2;
   --color-oasis-navy: #17335c;
-  --color-oasis-bg: #edf2f7;
+  --color-oasis-bg: #f4f8fc;
   --color-oasis-surface: #ffffff;
   --color-oasis-surface-hover: #eaf2fb;
   --color-oasis-heading: #17335c;
@@ -19,15 +29,15 @@
   --color-oasis-muted: #71839a;
   --color-oasis-border: #d8e4f1;
   --color-oasis-border-light: #eaf2fb;
-  --color-oasis-success: #10b981;
-  --color-oasis-success-light: #d1fae5;
-  --color-oasis-success-dark: #059669;
-  --color-oasis-warning: #f59e0b;
-  --color-oasis-warning-light: #fef3c7;
-  --color-oasis-warning-dark: #d97706;
-  --color-oasis-danger: #ef4444;
-  --color-oasis-danger-light: #fee2e2;
-  --color-oasis-danger-dark: #dc2626;
+  --color-oasis-success: #16815d;
+  --color-oasis-success-light: #e6f5ee;
+  --color-oasis-success-dark: #116747;
+  --color-oasis-warning: #a86b00;
+  --color-oasis-warning-light: #fff4d6;
+  --color-oasis-warning-dark: #855500;
+  --color-oasis-danger: #c23a48;
+  --color-oasis-danger-light: #fcebed;
+  --color-oasis-danger-dark: #a52d3c;
   --color-slate-50: #f8fafc;
   --color-slate-100: #f1f5f9;
   --color-slate-200: #d8e4f1;
@@ -50,6 +60,17 @@
   --color-zinc-800: #243f60;
   --color-zinc-900: #17335c;
   --color-zinc-950: #10284a;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #d8e4f1;
+  --color-gray-300: #c4d2e2;
+  --color-gray-400: #61768d;
+  --color-gray-500: #52657d;
+  --color-gray-600: #405772;
+  --color-gray-700: #334e6b;
+  --color-gray-800: #243f60;
+  --color-gray-900: #17335c;
+  --color-gray-950: #10284a;
   --text-xs: 0.875rem;
   --text-xs--line-height: 1.35rem;
   --text-sm: 1rem;
@@ -104,7 +125,7 @@
     font-family: var(--font-family-sans);
     font-weight: 400;
     background-color: var(--color-oasis-bg);
-    color: #304a66;
+    color: var(--color-oasis-body);
     font-size: 16px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
@@ -156,8 +177,8 @@
 
 .neo-card {
   border: 1px solid #d8e4f1;
-  box-shadow: 0 3px 14px rgba(23, 53, 92, 0.06);
-  border-radius: 1rem;
+  box-shadow: var(--oasis-shadow-surface);
+  border-radius: var(--oasis-radius-card);
 }
 
 .neo-btn {
@@ -173,8 +194,8 @@
 }
 
 .neo-input {
-  border: 1px solid #d8e4f1 !important;
-  border-radius: 0.75rem !important;
+  border: 1px solid var(--color-oasis-border) !important;
+  border-radius: var(--oasis-radius-control) !important;
 }
 
 .neo-input:focus {
@@ -249,8 +270,8 @@
 }
 
 .neo-select {
-  border: 1px solid #d8e4f1 !important;
-  border-radius: 0.75rem !important;
+  border: 1px solid var(--color-oasis-border) !important;
+  border-radius: var(--oasis-radius-control) !important;
 }
 
 .neo-select:focus {

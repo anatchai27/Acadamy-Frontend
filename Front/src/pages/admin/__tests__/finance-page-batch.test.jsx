@@ -35,7 +35,11 @@ vi.mock('../../../services', () => ({
   financeService: {
     createPaymentBatch: vi.fn(),
     getPayments: vi.fn(),
+    getPendingSlipReviews: vi.fn(),
+    verifyPaymentSlip: vi.fn(),
     verifyPaymentBatchSlip: vi.fn(),
+    confirmPaymentManually: vi.fn(),
+    confirmPaymentBatchManually: vi.fn(),
   },
   studentService: { getStudents: vi.fn() },
   enrollmentService: { getEnrollments: vi.fn() },
@@ -49,6 +53,9 @@ vi.mock('../../../hooks/useDesignTheme', () => ({ useDesignTheme: () => ({ desig
 describe('finance batch payment form', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/admin/finance');
+    localStorage.setItem('auth_user', JSON.stringify({ role: 'admin' }));
+    financeService.getPayments.mockResolvedValue({ data: { data: { payments: [], pagination: { totalPages: 1 } } } });
     studentService.getStudents.mockResolvedValue({
       data: {
         data: {
@@ -196,5 +203,100 @@ describe('finance batch payment form', () => {
     expect(uploadService.uploadPaymentBatchSlip).toHaveBeenCalledWith(slip, 51);
     expect(financeService.verifyPaymentBatchSlip).toHaveBeenCalledWith(51);
     expect(await screen.findByText(/INV-BATCH-51/)).toBeInTheDocument();
+  });
+
+  it('opens a queued slip in a modal and verifies it from the preview', async () => {
+    window.history.replaceState({}, '', '/admin/finance?review=slips');
+    financeService.getPendingSlipReviews.mockResolvedValue({
+      data: {
+        data: {
+          count: 1,
+          items: [{
+            id: 77,
+            invoiceNo: 'INV-77',
+            studentName: 'น้องต้น',
+            courseName: 'คณิตศาสตร์',
+            amount: 1200,
+            method: 'transfer',
+            status: 'pending',
+            slipUrl: 'https://files.test/slip-77.jpg',
+          }],
+        },
+      },
+    });
+    financeService.verifyPaymentSlip.mockResolvedValue({
+      data: { data: { verified: true, receiptPdfUrl: 'https://receipt.test/77.pdf' } },
+    });
+
+    render(<FinancePage path="/admin/finance" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'ดูสลิปและตรวจ' }));
+    const dialog = screen.getByRole('dialog', { name: 'ตรวจสอบสลิปการชำระเงิน' });
+    expect(dialog.querySelector('img')).toHaveAttribute('src', 'https://files.test/slip-77.jpg');
+    expect(screen.getByRole('button', { name: 'ตรวจด้วย EasySlip' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'ตรวจด้วย EasySlip' }));
+
+    await waitFor(() => expect(financeService.verifyPaymentSlip).toHaveBeenCalledWith(77));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('manually confirms a single payment only after the admin confirms bank receipt', async () => {
+    window.history.replaceState({}, '', '/admin/finance?review=slips');
+    financeService.getPendingSlipReviews.mockResolvedValue({
+      data: { data: { count: 1, items: [{
+        id: 77,
+        invoiceNo: 'INV-77',
+        studentName: 'น้องต้น',
+        amount: 1200,
+        method: 'transfer',
+        status: 'pending',
+        slipUrl: 'https://files.test/slip-77.jpg',
+      }] } },
+    });
+    financeService.confirmPaymentManually.mockResolvedValue({
+      data: { data: { verified: true, provider: 'manual', receiptPdfUrl: 'https://receipt.test/77.pdf' } },
+    });
+
+    render(<FinancePage path="/admin/finance" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'ดูสลิปและตรวจ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'เช็คเงินเข้าเอง' }));
+    expect(screen.getByText('ยืนยันเฉพาะเมื่อเห็นรายการเงินเข้าบัญชีสถาบันแล้ว')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'ยืนยันว่าเงินเข้าแล้ว' }));
+
+    await waitFor(() => expect(financeService.confirmPaymentManually).toHaveBeenCalledWith(77));
+    expect(financeService.verifyPaymentSlip).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('routes manual confirmation for a combined batch to its batch endpoint', async () => {
+    window.history.replaceState({}, '', '/admin/finance?review=slips');
+    financeService.getPendingSlipReviews.mockResolvedValue({
+      data: { data: { count: 1, items: [{
+        id: -88,
+        batchId: 88,
+        isBatch: true,
+        invoiceNo: 'INV-BATCH-88',
+        studentName: 'น้องต้น, น้องใบเตย',
+        amount: 2300,
+        method: 'transfer',
+        status: 'pending',
+        slipUrl: 'https://files.test/slip-88.jpg',
+      }] } },
+    });
+    financeService.confirmPaymentBatchManually.mockResolvedValue({
+      data: { data: { verified: true, provider: 'manual' } },
+    });
+
+    render(<FinancePage path="/admin/finance" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'ดูสลิปและตรวจ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'เช็คเงินเข้าเอง' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ยืนยันว่าเงินเข้าแล้ว' }));
+
+    await waitFor(() => expect(financeService.confirmPaymentBatchManually).toHaveBeenCalledWith(88));
+    expect(financeService.verifyPaymentBatchSlip).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

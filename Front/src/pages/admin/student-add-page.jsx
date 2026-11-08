@@ -5,6 +5,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { SolidInput, Button, Checkbox, Textarea, showToast, ImageUpload } from '../../components/ui';
 import { studentService, uploadService } from '../../services';
 import { issueParentLineLinkCode } from '../../services/parent-service';
+import { getStoredUser } from '../../services/auth-service';
 import { useAbortController } from '../../hooks';
 import { BentoGrid } from '../../components/ui/bento-grid';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
@@ -32,6 +33,8 @@ export function StudentControll({ path, id }) {
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+  const currentRole = String(getStoredUser()?.role || '').trim().toLowerCase();
+  const canManageParentLine = currentRole === 'admin' || currentRole === 'staff';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const parentIdCounter = useRef(0);
@@ -506,7 +509,7 @@ export function StudentControll({ path, id }) {
                       ))}
                     </select>
                   </div>
-                  <div class="md:col-span-3 rounded-xl bg-emerald-50/70 p-3">
+                  <div class="md:col-span-3 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p class="text-sm font-medium text-zinc-800">เชื่อมบัญชีผู้ปกครองกับ LINE</p>
@@ -514,13 +517,15 @@ export function StudentControll({ path, id }) {
                           {parent.isLineLinked
                             ? 'ผู้ปกครองเชื่อม LINE แล้ว'
                             : parent.id
-                              ? 'สร้างรหัสแล้วส่งให้ผู้ปกครองกรอกในหน้า LINE LIFF'
+                              ? canManageParentLine
+                                ? 'สร้างรหัสแล้วส่งให้ผู้ปกครองเป็นการส่วนตัว เพื่อนำไปกรอกใน LINE LIFF'
+                                : 'แจ้งผู้ดูแลระบบหรือเจ้าหน้าที่ให้ออกรหัส แล้วส่งให้ผู้ปกครองเป็นการส่วนตัว'
                               : 'บันทึกข้อมูลผู้ปกครองก่อน แล้วจึงสร้างรหัสได้'}
                         </p>
                       </div>
                       {parent.isLineLinked ? (
                         <span class="text-xs font-semibold text-emerald-800">เชื่อมแล้ว</span>
-                      ) : (
+                      ) : canManageParentLine ? (
                         <Button
                           type="button"
                           variant="outline"
@@ -531,12 +536,14 @@ export function StudentControll({ path, id }) {
                         >
                           สร้างรหัสเชื่อม LINE
                         </Button>
+                      ) : (
+                        <span class="text-xs font-medium text-zinc-600">เฉพาะผู้ดูแลระบบหรือเจ้าหน้าที่</span>
                       )}
                     </div>
                     {linkCode && linkCode.parentId === parent.id && (
                       <div class="mt-3 border-t border-emerald-200 pt-3" role="status" aria-live="polite">
                         <FoxSticker action="thumbsUp" message="รหัสพร้อมส่งให้ผู้ปกครองแล้ว" compact className="mb-2" />
-                        <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
+                        <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองเป็นการส่วนตัวภายใน 5 วัน ห้ามส่งลงกลุ่มหรือโพสต์สาธารณะ</p>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
                           <code class="select-all rounded bg-white px-3 py-2 text-base font-bold tracking-widest text-zinc-900">{linkCode.code}</code>
                           <Button type="button" variant="outline" size="sm" onClick={handleCopyParentLineCode}>คัดลอกรหัส</Button>

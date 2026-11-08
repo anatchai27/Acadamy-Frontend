@@ -7,7 +7,7 @@ import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { studentService } from '../../services';
 import { getStoredUser } from '../../services/auth-service';
 import { useAbortController } from '../../hooks';
-import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineTrash, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineEye, HiOutlinePencil, HiOutlineTrash, HiOutlineUserGroup, HiOutlineTag, HiOutlinePhone, HiOutlineUser, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineChatBubbleLeftRight } from 'react-icons/hi2';
 import { formatPhoneNumber } from '../../utils/phone';
 
 export const getStudentEmptyMessage = (loadError, search) => loadError
@@ -27,7 +27,9 @@ export function StudentsPage({ path }) {
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
-  const isAdmin = String(getStoredUser()?.role || '').trim().toLowerCase() === 'admin';
+  const currentRole = String(getStoredUser()?.role || '').trim().toLowerCase();
+  const isAdmin = currentRole === 'admin';
+  const canManageParentLine = currentRole === 'admin' || currentRole === 'staff';
 
   const fetchStudents = async (page = 1, query = '') => {
     setLoading(true);
@@ -160,6 +162,26 @@ export function StudentsPage({ path }) {
         </div>
       </div>
 
+      <section class="mb-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-4 sm:p-5" aria-labelledby="student-line-guide-title">
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-oasis-primary" aria-hidden="true">
+            <HiOutlineChatBubbleLeftRight class="h-5 w-5" />
+          </span>
+          <div class="min-w-0">
+            <h3 id="student-line-guide-title" class="text-sm font-bold text-oasis-navy">เริ่มต้นใช้งานและเชื่อม LINE ผู้ปกครอง</h3>
+            <ol class="mt-2 grid gap-2 text-sm leading-relaxed text-oasis-body md:grid-cols-3">
+              <li><span class="font-semibold text-oasis-navy">1.</span> เพิ่มนักเรียน พร้อมชื่อและเบอร์โทรผู้ปกครอง</li>
+              <li><span class="font-semibold text-oasis-navy">2.</span> เปิดโปรไฟล์ แล้วสร้างรหัสให้ผู้ปกครองที่ต้องการเชื่อม</li>
+              <li><span class="font-semibold text-oasis-navy">3.</span> ส่งรหัสแบบส่วนตัว ให้ผู้ปกครองนำไปกรอกใน LINE LIFF ภายใน 5 วัน</li>
+            </ol>
+            <p class="mt-2 text-xs leading-relaxed text-oasis-body">
+              รหัสใช้ได้ครั้งเดียวและการออกรหัสใหม่จะยกเลิกรหัสเดิมที่ยังไม่ใช้ · อย่าส่งรหัสลงกลุ่มหรือโพสต์สาธารณะ
+              {!canManageParentLine && ' · ครูผู้สอนโปรดแจ้งผู้ดูแลระบบหรือเจ้าหน้าที่ให้ออกรหัส'}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Search */}
       <div class="mb-6">
         <SolidInput
@@ -266,13 +288,25 @@ export function StudentsPage({ path }) {
                 </div>
 
                 <div class="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => route(`/admin/students/${student.id}`)}
-                    class="inline-flex items-center gap-1 text-sm font-semibold text-oasis-primary hover:underline"
-                  >
-                    <HiOutlineEye class="h-4 w-4" />ดูโปรไฟล์
-                  </button>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <button
+                      type="button"
+                      onClick={() => route(`/admin/students/${student.id}`)}
+                      class="inline-flex items-center gap-1 text-sm font-semibold text-oasis-primary hover:underline"
+                    >
+                      <HiOutlineEye class="h-4 w-4" />ดูโปรไฟล์
+                    </button>
+                    {canManageParentLine && (
+                      <button
+                        type="button"
+                        onClick={() => route(`/admin/students/${student.id}`)}
+                        aria-label={`จัดการ LINE ผู้ปกครองของ ${student.fullName || 'นักเรียน'}`}
+                        class="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-oasis-primary hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oasis-primary"
+                      >
+                        <HiOutlineChatBubbleLeftRight class="h-4 w-4" />จัดการ LINE
+                      </button>
+                    )}
+                  </div>
                   <button
                     type="button"
                     aria-label={`แก้ไขข้อมูล ${student.fullName || 'นักเรียน'}`}

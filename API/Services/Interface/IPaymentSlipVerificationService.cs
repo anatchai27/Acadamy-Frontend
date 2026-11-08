@@ -5,4 +5,5 @@ namespace academy_API.Services.Interface;
 public interface IPaymentSlipVerificationService
 {
     Task<PaymentSlipVerificationResponse> VerifyAsync(long paymentId, int? actorId, CancellationToken ct = default);
+    Task<PaymentSlipVerificationResponse> ConfirmManuallyAsync(long paymentId, int? actorId, CancellationToken ct = default);
 }

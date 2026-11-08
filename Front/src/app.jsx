@@ -3,13 +3,14 @@ import { IndexPage } from './pages/index';
 import { NotFoundPage } from './pages/not-found-page';
 import { TrialClassPage } from './pages/trial-class-page';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
-import { DashboardPage, UsersPage, PermissionsPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, MakeupSlotsPage, LeadsPage } from './pages/admin';
+import { DashboardPage, UsersPage, PermissionsPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, MakeupSlotsPage, LeadsPage, HelpPage } from './pages/admin';
 import { RoomsPage } from './pages/admin/rooms-page';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
 import { requireAuth, RoleForbidden } from './components/require-auth';
 import './app.css';
 
 const AdminDashboard = requireAuth(DashboardPage, ['admin', 'teacher', 'staff']);
+const AdminHelp = requireAuth(HelpPage, ['admin', 'teacher', 'staff']);
 const AdminStudents = requireAuth(StudentsPage, ['admin', 'teacher', 'staff']);
 const AdminStudentControll = requireAuth(StudentControll, ['admin', 'teacher', 'staff']);
 const AdminStudentProfile = requireAuth(StudentProfilePage, ['admin', 'teacher', 'staff']);
@@ -40,6 +41,7 @@ export function App() {
         <TrialClassPage path="/trial-class" />
         <RoleForbidden path="/forbidden" />
         <AdminDashboard path="/admin/dashboard" />
+        <AdminHelp path="/admin/help" />
         <AdminStudents path="/admin/students" />
         <AdminStudentControll path="/admin/students/add" />
         <AdminStudentControll path="/admin/students/:id/edit" />

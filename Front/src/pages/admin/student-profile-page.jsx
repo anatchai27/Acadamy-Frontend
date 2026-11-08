@@ -5,6 +5,7 @@ import { AdminLayout } from '../../layouts/admin-layout';
 import { Button, showToast } from '../../components/ui';
 import { studentService } from '../../services';
 import { issueParentLineLinkCode } from '../../services/parent-service';
+import { getStoredUser } from '../../services/auth-service';
 import { useAbortController } from '../../hooks';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
 import { HiOutlineChevronLeft, HiOutlinePencil, HiOutlineTag, HiOutlinePhone, HiOutlineQrCode, HiOutlineUserMinus } from 'react-icons/hi2';
@@ -42,6 +43,8 @@ export const StudentProfilePage = ({ path, id }) => {
   const getSignal = useAbortController();
   const { designTheme } = useDesignTheme();
   const isNeo = designTheme === 'neobrutalism';
+  const currentRole = String(getStoredUser()?.role || '').trim().toLowerCase();
+  const canManageParentLine = currentRole === 'admin' || currentRole === 'staff';
 
   const loadStudent = () => {
     if (!id) return;
@@ -277,8 +280,8 @@ export const StudentProfilePage = ({ path, id }) => {
                         </div>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
                           {p.isLineLinked ? (
-                            <span class="text-xs font-medium text-emerald-700">เชื่อม LINE แล้ว</span>
-                          ) : (
+                            <span class="text-xs font-semibold text-emerald-700" role="status">เชื่อม LINE แล้ว</span>
+                          ) : canManageParentLine ? (
                             <Button
                               variant="outline"
                               size="sm"
@@ -288,16 +291,20 @@ export const StudentProfilePage = ({ path, id }) => {
                             >
                               สร้างรหัสเชื่อม LINE
                             </Button>
+                          ) : (
+                            <span class="text-xs font-medium text-zinc-600">ให้ผู้ดูแลระบบหรือเจ้าหน้าที่สร้างรหัสเชื่อม</span>
                           )}
                         </div>
                         {!p.isLineLinked && (
-                          <p class="mt-2 text-xs text-zinc-500">
-                            สร้างรหัสแล้วส่งให้ผู้ปกครอง เพื่อให้เชื่อมบัญชีจากหน้า LINE LIFF
+                          <p class="mt-2 text-xs leading-relaxed text-zinc-500">
+                            {canManageParentLine
+                              ? 'รหัสใช้ได้ครั้งเดียว หมดอายุใน 5 วัน และการออกรหัสใหม่จะยกเลิกรหัสเดิม ส่งให้ผู้ปกครองเป็นการส่วนตัวเพื่อกรอกใน LINE LIFF'
+                              : 'เมื่อผู้ปกครองต้องการเชื่อมบัญชี โปรดแจ้งผู้ดูแลระบบหรือเจ้าหน้าที่'}
                           </p>
                         )}
                         {linkCode?.parentId === p.id && (
                           <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3" role="status" aria-live="polite">
-                            <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองภายใน 5 วัน</p>
+                            <p class="text-xs font-medium text-emerald-900">ส่งรหัสนี้ให้ผู้ปกครองเป็นการส่วนตัวภายใน 5 วัน ห้ามส่งลงกลุ่มหรือโพสต์สาธารณะ</p>
                             <div class="mt-2 flex flex-wrap items-center gap-2">
                               <code class="select-all rounded bg-white px-3 py-2 text-base font-bold tracking-widest text-zinc-900">{linkCode.code}</code>
                               <Button variant="outline" size="sm" onClick={handleCopyParentLineCode}>คัดลอกรหัส</Button>

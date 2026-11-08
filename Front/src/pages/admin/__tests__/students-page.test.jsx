@@ -38,6 +38,7 @@ vi.mock('react-icons/hi2', () => ({
   HiOutlineUser: () => <span aria-hidden="true" />,
   HiOutlineChevronLeft: () => <span aria-hidden="true" />,
   HiOutlineChevronRight: () => <span aria-hidden="true" />,
+  HiOutlineChatBubbleLeftRight: () => <span aria-hidden="true" />,
 }));
 
 describe('student list states', () => {
@@ -97,6 +98,26 @@ describe('student list states', () => {
     expect(screen.getByRole('link', { name: '081-234-5678' })).toHaveAttribute('href', 'tel:0812345678');
 
     fireEvent.click(screen.getByRole('button', { name: 'ดูโปรไฟล์' }));
+    const { route } = await import('preact-router');
+    expect(route).toHaveBeenCalledWith('/admin/students/42');
+  });
+
+  it('shows LINE setup guidance and tells teachers to ask an authorized staff member', async () => {
+    render(<StudentsPage path="/admin/students" />);
+
+    expect(await screen.findByRole('region', { name: 'เริ่มต้นใช้งานและเชื่อม LINE ผู้ปกครอง' })).toBeInTheDocument();
+    expect(screen.getByText(/รหัสใช้ได้ครั้งเดียวและการออกรหัสใหม่จะยกเลิกรหัสเดิม/)).toBeInTheDocument();
+    expect(screen.getByText(/ครูผู้สอนโปรดแจ้งผู้ดูแลระบบหรือเจ้าหน้าที่ให้ออกรหัส/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'จัดการ LINE ผู้ปกครองของ มะลิ ใจดี' })).not.toBeInTheDocument();
+  });
+
+  it('lets admins open a student profile to manage parent LINE links', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ role: 'admin' }));
+    render(<StudentsPage path="/admin/students" />);
+
+    await screen.findByRole('heading', { name: 'มะลิ ใจดี' });
+    fireEvent.click(screen.getByRole('button', { name: 'จัดการ LINE ผู้ปกครองของ มะลิ ใจดี' }));
+
     const { route } = await import('preact-router');
     expect(route).toHaveBeenCalledWith('/admin/students/42');
   });

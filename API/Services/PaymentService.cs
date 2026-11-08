@@ -135,7 +135,8 @@ public class PaymentService(
             p.PaidAt,
             p.SlipUrl,
             p.ReceiptPdfUrl,
-            p.Enrollment?.Course?.NameEn
+            p.Enrollment?.Course?.NameEn,
+            VerificationProvider: p.VerificationProvider
         )).Concat(batches.Select(batch => new PaymentHistoryItem(
             -batch.Id,
             batch.InvoiceNo,
@@ -149,7 +150,8 @@ public class PaymentService(
             batch.ReceiptPdfUrl,
             null,
             true,
-            batch.Id
+            batch.Id,
+            batch.VerificationProvider
         )))
             .OrderByDescending(item => item.PaidAt)
             .Skip((page - 1) * limit)
@@ -187,7 +189,8 @@ public class PaymentService(
             payment.Status ?? PaymentStatus.Pending,
             payment.CreatedAt,
             payment.SlipUrl,
-            payment.ReceiptPdfUrl))
+            payment.ReceiptPdfUrl,
+            VerificationProvider: payment.VerificationProvider))
             .Concat(batches.Select(batch => new PaymentHistoryItem(
                 -batch.Id,
                 batch.InvoiceNo,
@@ -201,7 +204,8 @@ public class PaymentService(
                 batch.ReceiptPdfUrl,
                 null,
                 true,
-                batch.Id)))
+                batch.Id,
+                batch.VerificationProvider)))
             .OrderByDescending(item => item.PaidAt)
             .Take(PendingSlipPreviewLimit)
             .ToList();

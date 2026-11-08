@@ -173,4 +173,40 @@ public class PaymentBatchServiceTests
         Assert.Equal(PaymentStatus.Succeeded, batch.Status);
         provider.Verify(service => service.VerifyAsync(batch.SlipUrl, 2300m, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ConfirmManuallyAsync_PendingTransferBatch_RecordsManualAuditAndSettlesWithoutProvider()
+    {
+        var batch = new PaymentBatch
+        {
+            Id = 20,
+            Amount = 2300m,
+            Method = "transfer",
+            Status = PaymentStatus.Pending,
+            SlipUrl = "https://slips.test/batch.png",
+            Allocations = [new PaymentBatchAllocation { Enrollment = Enrollment(10, 1, 3000m), Amount = 2300m }]
+        };
+        var batches = new Mock<IPaymentBatchRepository>();
+        var provider = new Mock<ISlipVerificationProvider>();
+        var receipts = new Mock<IPaymentBatchReceiptService>();
+        batches.Setup(repository => repository.GetForVerificationAsync(20, It.IsAny<CancellationToken>())).ReturnsAsync(batch);
+        batches.Setup(repository => repository.SaveVerifiedSlipAsync(batch, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        receipts.Setup(service => service.IssueAndNotifyAsync(batch, It.IsAny<CancellationToken>())).ReturnsAsync("https://receipts.test/batch.pdf");
+
+        var result = await CreateSut(batches, receiptService: receipts, verificationProvider: provider)
+            .ConfirmManuallyAsync(20, 42);
+
+        Assert.True(result.Verified);
+        Assert.Null(result.VerifiedAmount);
+        Assert.Null(result.TransactionReference);
+        Assert.Equal("https://receipts.test/batch.pdf", result.ReceiptPdfUrl);
+        Assert.Equal(PaymentStatus.Succeeded, batch.Status);
+        Assert.Equal(42, batch.VerifiedBy);
+        Assert.Equal("manual", batch.VerificationProvider);
+        Assert.Contains("bank_statement", batch.VerificationPayload);
+        Assert.Null(batch.SlipAmount);
+        Assert.Null(batch.SlipTransRef);
+        provider.Verify(service => service.VerifyAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Never);
+        batches.Verify(repository => repository.SaveVerifiedSlipAsync(batch, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

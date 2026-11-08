@@ -88,7 +88,8 @@ public record PaymentHistoryItem(
     string? ReceiptPdfUrl,
     string? CourseNameEn = null,
     bool IsBatch = false,
-    long? BatchId = null
+    long? BatchId = null,
+    string? VerificationProvider = null
 );
 
 public record PaymentSummary(

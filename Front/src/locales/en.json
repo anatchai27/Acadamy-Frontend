@@ -138,7 +138,7 @@
   },
   "navigation": {
     "sidebarSubtitle": "Tutoring center management",
-    "groups": { "primary": "Core Data", "operations": "Operations", "commerce": "Finance", "system": "System", "master": "Reference Data" },
+    "groups": { "primary": "Core Data", "operations": "Operations", "commerce": "Finance", "system": "System", "master": "Reference Data", "help": "Help" },
     "scanQr": "Scan QR attendance",
     "newStudent": "Add student",
     "logoutConfirmation": "Are you sure you want to log out?",
@@ -158,7 +158,51 @@
     "products": "Products",
     "makeupSlots": "Makeup Slots",
     "leads": "Leads",
-    "rooms": "Rooms"
+    "rooms": "Rooms",
+    "help": "User guide"
+  },
+  "helpGuide": {
+    "title": "User guide",
+    "description": "Short, practical steps for common tasks. Open this guide whenever you need it.",
+    "contentsTitle": "In this guide",
+    "readTime": "Jump to the topic you need",
+    "sections": {
+      "start": {
+        "title": "Getting started",
+        "intro": "Visible menus depend on your role and permissions. If a menu you need is missing, contact your institute administrator.",
+        "steps": ["Start at the dashboard for an overview and items that need attention.", "Use the sidebar on desktop or the bottom navigation on mobile to move between pages.", "Review your changes and save before leaving a page."]
+      },
+      "students": {
+        "title": "Students and parents",
+        "intro": "Keep contact details accurate so the institute team can find and reach the right person.",
+        "steps": ["Open Students and search for an existing record before adding a new one.", "Enter the student's name, grade, and parent details; check the phone number before saving.", "Open the student profile to review parent information and LINE connection status."],
+        "lineTitle": "Connect a parent's LINE account",
+        "lineSteps": ["An administrator or staff member opens the student profile and issues a code for the parent.", "Send the code privately so the parent can enter it in LINE LIFF.", "The parent must use their own LINE account. The code is single-use and expires after five days."],
+        "lineNote": "Issuing a new code invalidates any unused code. Do not post codes in groups or public spaces. Teachers should ask an administrator or staff member to issue one."
+      },
+      "teaching": {
+        "title": "Courses, teaching, and attendance",
+        "intro": "Set up courses and sessions before teaching so the team can use a consistent schedule and attendance record.",
+        "steps": ["Create or find a course and verify its teacher and details.", "Manage sessions from the course page and set the date, time, and room.", "Use Attendance to record attendance by QR or select a status manually.", "Use Academics and Requests for assigned work. For a make-up class, check the slot and time before confirming."]
+      },
+      "finance": {
+        "title": "Finance",
+        "intro": "Check each record and its status before confirming, so payment information matches the evidence.",
+        "steps": ["Open Finance and select a payment in the pending-slip queue.", "Choose EasySlip verification, or open the slip and confirm the actual deposit in the institute's bank app or statement before marking it received.", "Use manual confirmation only when the deposit matches the bill. It does not check the amount or detect reused slips automatically; leave the payment pending and follow up if details differ."]
+      },
+      "system": {
+        "title": "Users and institute settings",
+        "intro": "System menus are for authorized administrators to manage shared information and team access.",
+        "steps": ["Check the role and permissions before adding or editing a user account.", "Change institute settings only when the information is confirmed, then verify after saving.", "Manage rooms and trial-class leads from their respective menus."]
+      },
+      "troubleshooting": {
+        "title": "Troubleshooting",
+        "intro": "Try these basic checks first to avoid re-entering information.",
+        "steps": ["Can't find a record: search by part of a name or phone number and confirm you are on the right page.", "Can't save: read the message, check required fields, and check your internet connection.", "Missing a menu or permission: ask your institute administrator to review your account role and access.", "LINE connection failed: check that the code has not expired or been used; ask an administrator or staff member for a new one."]
+      }
+    },
+    "linkLabel": "Open this page",
+    "privateDataNote": "Student records, phone numbers, and account-link codes are personal information. Use only what you need and share directly with the intended person."
   },
   "hero": {
     "eyebrow": "THE SMART WAY TO CHOOSE TUTORING",
