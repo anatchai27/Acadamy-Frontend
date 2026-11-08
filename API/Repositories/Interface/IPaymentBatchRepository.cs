@@ -11,6 +11,8 @@ public interface IPaymentBatchRepository
     Task<PaymentBatch> CreateAsync(PaymentBatch batch, CancellationToken ct = default);
     Task<PaymentBatch?> GetForSlipUploadAsync(long batchId, CancellationToken ct = default);
     Task<PaymentBatch?> GetForVerificationAsync(long batchId, CancellationToken ct = default);
+    Task<bool> SaveGatewayDetailsAsync(long batchId, string gatewayRefId, string? qrUrl, string? checkoutUrl, DateTime? expiresAt, CancellationToken ct = default);
+    Task<bool> UpdateGatewayStatusAsync(long batchId, string status, DateTime paidAt, CancellationToken ct = default);
     Task<bool> SaveVerifiedSlipAsync(PaymentBatch batch, CancellationToken ct = default);
     Task SaveReceiptPdfUrlAsync(PaymentBatch batch, CancellationToken ct = default);
     Task<List<PaymentBatch>> GetHistoryAsync(DateTime? startDate, DateTime? endDate, string? method, int limit, CancellationToken ct = default);

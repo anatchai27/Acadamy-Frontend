@@ -16,8 +16,15 @@ CREATE TABLE IF NOT EXISTS payment_batches (
     slip_amount DECIMAL(10,2) NULL,
     slip_trans_ref VARCHAR(255) NULL,
     receipt_pdf_url VARCHAR(1000) NULL,
+    gateway_ref_id VARCHAR(255) NULL,
+    gateway_qr_url VARCHAR(1000) NULL,
+    checkout_url VARCHAR(1000) NULL,
+    gateway_expires_at DATETIME NULL,
+    installment_bank VARCHAR(50) NULL,
+    installment_term INT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_payment_batches_invoice_no (invoice_no),
+    UNIQUE KEY uq_payment_batches_gateway_ref (gateway_ref_id),
     KEY idx_payment_batches_institute_created (institute_id, created_at),
     CONSTRAINT fk_payment_batches_institute FOREIGN KEY (institute_id) REFERENCES institutes(id) ON DELETE RESTRICT
 );

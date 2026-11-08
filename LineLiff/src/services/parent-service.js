@@ -22,6 +22,18 @@ export const getChildPayableBalances = childId =>
 export const createChildPaymentBatch = (childId, enrollmentId, amount) =>
   api.post(`/parents/children/${childId}/payment-batches`, { enrollmentId, amount });
 
+export const createChildOnlinePaymentBatch = (childId, enrollmentId, amount, method, installmentBank = null, installmentTerm = null) =>
+  api.post(`/parents/children/${childId}/payment-batches/online`, {
+    enrollmentId,
+    amount,
+    method,
+    installmentBank,
+    installmentTerm,
+  });
+
+export const refreshChildOnlinePaymentStatus = (childId, batchId) =>
+  api.get(`/parents/children/${childId}/payment-batches/${batchId}/status`);
+
 export const uploadPaymentBatchSlip = (batchId, file) => {
   const formData = new FormData();
   formData.append('file', file);

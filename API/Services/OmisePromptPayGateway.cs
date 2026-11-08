@@ -16,6 +16,8 @@ public sealed class OmiseOptions
     public string WebhookSecret { get; set; } = string.Empty;
     public string PreviousWebhookSecret { get; set; } = string.Empty;
     public string ApiBaseUrl { get; set; } = "https://api.omise.co/";
+    public string LiffId { get; set; } = string.Empty;
+    public bool EnableInstallments { get; set; }
 }
 
 public sealed class OmisePromptPayGateway(
@@ -27,6 +29,17 @@ public sealed class OmisePromptPayGateway(
     private const int MaximumSignatureAgeSeconds = 300;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly OmiseOptions _options = options.Value;
+
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(_options.SecretKey);
+    public bool InstallmentsEnabled => IsConfigured && _options.EnableInstallments && !string.IsNullOrWhiteSpace(_options.LiffId);
+    public bool IsInstallmentPlanAvailable(decimal amount, string bankType, int installmentTerm) =>
+        InstallmentsEnabled
+        && amount >= MinimumAmount
+        && amount <= MaximumAmount
+        && amount * 100m == decimal.Truncate(amount * 100m)
+        && InstallmentPlans.TryGetValue(bankType, out var plan)
+        && amount >= plan.MinimumAmount
+        && plan.Terms.Contains(installmentTerm);
 
     public async Task<OmiseCharge> CreateChargeAsync(
         decimal amount,
@@ -49,6 +62,51 @@ public sealed class OmisePromptPayGateway(
         });
 
         return await SendAsync(request, ct);
+    }
+
+    public async Task<OmiseCharge> CreateInstallmentChargeAsync(
+        decimal amount,
+        string referenceId,
+        string description,
+        string bankType,
+        int installmentTerm,
+        int childId,
+        long batchId,
+        CancellationToken ct = default)
+    {
+        if (!InstallmentsEnabled)
+            throw new InvalidOperationException("Omise installments are not enabled for this application.");
+        if (!IsInstallmentPlanAvailable(amount, bankType, installmentTerm))
+            throw new ArgumentOutOfRangeException(nameof(installmentTerm), "The selected installment plan is not available for this amount.");
+        if (string.IsNullOrWhiteSpace(referenceId))
+            throw new ArgumentException("A unique reference ID is required.", nameof(referenceId));
+        if (childId <= 0 || batchId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(batchId), "A valid child and payment batch are required.");
+        var returnUri = $"https://liff.line.me/{Uri.EscapeDataString(_options.LiffId)}/liff/payments/{childId}?paymentBatchId={batchId}";
+
+        var amountInMinorUnits = ToMinorUnits(amount);
+        using var sourceRequest = CreateAuthorizedRequest(HttpMethod.Post, "sources");
+        sourceRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["amount"] = amountInMinorUnits.ToString(CultureInfo.InvariantCulture),
+            ["currency"] = "THB",
+            ["type"] = bankType,
+            ["installment_term"] = installmentTerm.ToString(CultureInfo.InvariantCulture)
+        });
+        var source = await SendAsync<OmiseSource>(sourceRequest, ct);
+
+        using var chargeRequest = CreateAuthorizedRequest(HttpMethod.Post, "charges");
+        chargeRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["amount"] = amountInMinorUnits.ToString(CultureInfo.InvariantCulture),
+            ["currency"] = "THB",
+            ["source"] = source.Id,
+            ["ref_id"] = referenceId,
+            ["description"] = description ?? string.Empty,
+            ["return_uri"] = returnUri
+        });
+
+        return await SendAsync(chargeRequest, ct);
     }
 
     public async Task<OmiseCharge> GetChargeAsync(string chargeId, CancellationToken ct = default)
@@ -128,6 +186,9 @@ public sealed class OmisePromptPayGateway(
     }
 
     private async Task<OmiseCharge> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        => await SendAsync<OmiseCharge>(request, ct);
+
+    private async Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken ct)
     {
         using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         var responseBody = await response.Content.ReadAsStringAsync(ct);
@@ -137,8 +198,8 @@ public sealed class OmisePromptPayGateway(
                 null,
                 response.StatusCode);
 
-        return JsonSerializer.Deserialize<OmiseCharge>(responseBody, JsonOptions)
-            ?? throw new InvalidOperationException("Omise returned an empty or invalid charge response.");
+        return JsonSerializer.Deserialize<T>(responseBody, JsonOptions)
+            ?? throw new InvalidOperationException("Omise returned an empty or invalid response.");
     }
 
     private static long ToMinorUnits(decimal amount)
@@ -152,7 +213,22 @@ public sealed class OmisePromptPayGateway(
 
         return decimal.ToInt64(minorUnits);
     }
+
+    private static readonly IReadOnlyDictionary<string, (int MinimumAmount, int[] Terms)> InstallmentPlans =
+        new Dictionary<string, (int, int[])>(StringComparer.Ordinal)
+        {
+            ["installment_bay"] = (500, [3, 4, 6, 9, 10]),
+            ["installment_bbl"] = (500, [3, 4, 5, 6, 7, 8, 9, 10]),
+            ["installment_first_choice"] = (300, [3, 4, 6, 9, 10, 12, 18, 24, 36]),
+            ["installment_kbank"] = (0, [3, 4, 6, 10]),
+            ["installment_ktc"] = (0, [3, 4, 5, 6, 7, 8, 9, 10]),
+            ["installment_scb"] = (500, [3, 4, 6, 9, 10]),
+            ["installment_uob"] = (500, [3, 4, 6, 10]),
+            ["installment_ttb"] = (500, [3, 4, 6, 10])
+        };
 }
+
+public sealed record OmiseSource([property: JsonPropertyName("id")] string Id);
 
 public sealed record OmiseCharge(
     [property: JsonPropertyName("id")] string Id,
@@ -161,7 +237,9 @@ public sealed record OmiseCharge(
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("ref_id")] string? ReferenceId,
     [property: JsonPropertyName("expires_at")] DateTimeOffset? ExpiresAt,
-    [property: JsonPropertyName("source")] OmiseChargeSource? Source);
+    [property: JsonPropertyName("source")] OmiseChargeSource? Source,
+    [property: JsonPropertyName("paid")] bool Paid = false,
+    [property: JsonPropertyName("authorize_uri")] string? AuthorizeUri = null);
 
 public sealed record OmiseChargeSource(
     [property: JsonPropertyName("type")] string? Type,

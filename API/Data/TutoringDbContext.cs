@@ -517,6 +517,12 @@ public class TutoringDbContext(
             entity.Property(e => e.SlipAmount).HasColumnName("slip_amount").HasColumnType("decimal(10,2)");
             entity.Property(e => e.SlipTransRef).HasMaxLength(255).HasColumnName("slip_trans_ref");
             entity.Property(e => e.ReceiptPdfUrl).HasMaxLength(1000).HasColumnName("receipt_pdf_url");
+            entity.Property(e => e.GatewayRefId).HasMaxLength(255).HasColumnName("gateway_ref_id");
+            entity.Property(e => e.GatewayQrUrl).HasMaxLength(1000).HasColumnName("gateway_qr_url");
+            entity.Property(e => e.CheckoutUrl).HasMaxLength(1000).HasColumnName("checkout_url");
+            entity.Property(e => e.GatewayExpiresAt).HasColumnName("gateway_expires_at");
+            entity.Property(e => e.InstallmentBank).HasMaxLength(50).HasColumnName("installment_bank");
+            entity.Property(e => e.InstallmentTerm).HasColumnName("installment_term");
             entity.HasOne(e => e.Institute).WithMany().HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(e => e.Allocations).WithOne(e => e.PaymentBatch).HasForeignKey(e => e.PaymentBatchId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => e.InvoiceNo).IsUnique();

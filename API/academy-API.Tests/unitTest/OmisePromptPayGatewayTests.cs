@@ -34,6 +34,40 @@ public class OmisePromptPayGatewayTests
         Assert.Contains("ref_id=INV-1", handler.RequestBody);
     }
 
+    [Fact]
+    public async Task CreateInstallmentChargeAsync_CreatesSourceThenHostedChargeWithoutCardData()
+    {
+        var responses = new Queue<string>([
+            "{\"id\":\"src_test_installment\"}",
+            "{\"id\":\"chrg_test_installment\",\"amount\":125000,\"currency\":\"THB\",\"status\":\"pending\",\"ref_id\":\"INV-1\",\"authorize_uri\":\"https://pay.omise.co/authorize/123\"}"
+        ]);
+        var requests = new List<(string Path, string Body)>();
+        StubHttpMessageHandler? handler = null;
+        handler = new StubHttpMessageHandler((request, _) =>
+        {
+            requests.Add((request.RequestUri!.AbsolutePath, handler!.RequestBody));
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(responses.Dequeue(), Encoding.UTF8, "application/json")
+            });
+        });
+        var gateway = CreateGateway(handler, liffId: "2010927966-test", enableInstallments: true);
+
+        var charge = await gateway.CreateInstallmentChargeAsync(1250m, "INV-1", "Tuition fee", "installment_kbank", 3, 20, 91);
+
+        Assert.Equal("chrg_test_installment", charge.Id);
+        Assert.Equal("https://pay.omise.co/authorize/123", charge.AuthorizeUri);
+        Assert.Equal(2, requests.Count);
+        Assert.Equal("/sources", requests[0].Path);
+        Assert.Contains("type=installment_kbank", requests[0].Body);
+        Assert.Contains("installment_term=3", requests[0].Body);
+        Assert.Equal("/charges", requests[1].Path);
+        Assert.Contains("source=src_test_installment", requests[1].Body);
+        Assert.Contains("return_uri=https%3A%2F%2Fliff.line.me%2F2010927966-test%2Fliff%2Fpayments%2F20%3FpaymentBatchId%3D91", requests[1].Body);
+        Assert.DoesNotContain("card_number", requests[1].Body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cvv", requests[1].Body, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData(19.99)]
     [InlineData(150000.01)]
@@ -58,6 +92,17 @@ public class OmisePromptPayGatewayTests
     }
 
     [Fact]
+    public void IsInstallmentPlanAvailable_RequiresEnabledFeatureAndSupportedBankTerms()
+    {
+        var gateway = CreateGateway(new StubHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK))), liffId: "2010927966-test", enableInstallments: true);
+
+        Assert.True(gateway.IsInstallmentPlanAvailable(1200m, "installment_kbank", 3));
+        Assert.False(gateway.IsInstallmentPlanAvailable(499m, "installment_bay", 3));
+        Assert.False(gateway.IsInstallmentPlanAvailable(1200m, "installment_bay", 5));
+    }
+
+    [Fact]
     public void VerifyWebhookSignature_AcceptsValidSignatureAndRejectsStaleTimestamp()
     {
         var key = RandomNumberGenerator.GetBytes(32);
@@ -77,11 +122,15 @@ public class OmisePromptPayGatewayTests
     private static OmisePromptPayGateway CreateGateway(
         HttpMessageHandler handler,
         string secretKey = "skey_test_value",
-        string webhookSecret = "") =>
+        string webhookSecret = "",
+        string liffId = "",
+        bool enableInstallments = false) =>
         new(new HttpClient(handler), Options.Create(new OmiseOptions
         {
             SecretKey = secretKey,
-            WebhookSecret = webhookSecret
+            WebhookSecret = webhookSecret,
+            LiffId = liffId,
+            EnableInstallments = enableInstallments
         }));
 
     private sealed class StubHttpMessageHandler(

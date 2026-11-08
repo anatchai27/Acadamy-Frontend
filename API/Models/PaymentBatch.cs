@@ -18,6 +18,12 @@ public class PaymentBatch : IMultiTenantEntity
     public decimal? SlipAmount { get; set; }
     public string? SlipTransRef { get; set; }
     public string? ReceiptPdfUrl { get; set; }
+    public string? GatewayRefId { get; set; }
+    public string? GatewayQrUrl { get; set; }
+    public string? CheckoutUrl { get; set; }
+    public DateTime? GatewayExpiresAt { get; set; }
+    public string? InstallmentBank { get; set; }
+    public int? InstallmentTerm { get; set; }
 
     public Institute Institute { get; set; } = null!;
     public ICollection<PaymentBatchAllocation> Allocations { get; set; } = new List<PaymentBatchAllocation>();

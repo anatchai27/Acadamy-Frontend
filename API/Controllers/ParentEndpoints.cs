@@ -25,6 +25,8 @@ public static class ParentEndpoints
         group.MapGet("/children/{childId:int}/payments", GetChildPayments).RequireAuthorization();
         group.MapGet("/children/{childId:int}/payable-balances", GetChildPayableBalances).RequireAuthorization();
         group.MapPost("/children/{childId:int}/payment-batches", CreateChildPaymentBatch).RequireAuthorization();
+        group.MapPost("/children/{childId:int}/payment-batches/online", CreateChildOnlinePaymentBatch).RequireAuthorization();
+        group.MapGet("/children/{childId:int}/payment-batches/{batchId:long}/status", RefreshChildOnlinePaymentStatus).RequireAuthorization();
         group.MapGet("/children/{childId:int}/scores", GetChildScores).RequireAuthorization();
         group.MapGet("/children/{childId:int}/homework", GetChildHomework).RequireAuthorization();
         group.MapGet("/children/{childId:int}/progress", GetChildProgress).RequireAuthorization();
@@ -210,10 +212,15 @@ public static class ParentEndpoints
                 descriptionEn = p.CourseNameEn,
                 date = p.PaidAt.ToString("yyyy-MM-dd"),
                 amount = p.Amount,
-                method = "",
                 status = p.Status == PaymentStatus.Succeeded ? "paid" : p.Status,
+                method = p.Method,
                 slipUrl = p.SlipUrl,
                 receiptPdfUrl = p.ReceiptPdfUrl,
+                gatewayQrUrl = p.GatewayQrUrl,
+                checkoutUrl = p.CheckoutUrl,
+                gatewayExpiresAt = p.GatewayExpiresAt,
+                installmentBank = p.InstallmentBank,
+                installmentTerm = p.InstallmentTerm,
                 p.InstituteName,
                 p.InstituteContactPhone,
                 p.BankName,
@@ -230,6 +237,7 @@ public static class ParentEndpoints
         int childId,
         HttpContext httpContext,
         IParentService service,
+        IOmisePromptPayGateway omiseGateway,
         CancellationToken ct)
     {
         if (!await OwnsChild(httpContext, childId, service, ct)) return ParentForbidden(httpContext);
@@ -237,6 +245,11 @@ public static class ParentEndpoints
         return Results.Ok(new
         {
             status = "success",
+            paymentOptions = new
+            {
+                promptPayEnabled = omiseGateway.IsConfigured,
+                installmentsEnabled = omiseGateway.InstallmentsEnabled
+            },
             data = balances.Select(balance => new
             {
                 balance.EnrollmentId,
@@ -254,6 +267,79 @@ public static class ParentEndpoints
                 balance.PaymentQrImageUrl
             })
         });
+    }
+
+    private static async Task<IResult> CreateChildOnlinePaymentBatch(
+        int childId,
+        CreateParentOnlinePaymentRequest request,
+        HttpContext httpContext,
+        IPaymentBatchService paymentBatchService,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(httpContext);
+        if (!userId.HasValue) return Results.Unauthorized();
+        if (request.EnrollmentId <= 0)
+            return Results.BadRequest(new { error = "เลือกคอร์สที่ต้องการชำระ", code = "INVALID_ENROLLMENT" });
+
+        try
+        {
+            return Results.Ok(await paymentBatchService.CreateParentOnlinePaymentAsync(
+                userId.Value,
+                childId,
+                request.EnrollmentId,
+                request.Amount,
+                request.Method,
+                request.InstallmentBank,
+                request.InstallmentTerm,
+                ct));
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode == "ENROLLMENT_NOT_FOUND")
+        {
+            return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode });
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode == "BALANCE_ALREADY_RESERVED")
+        {
+            return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode });
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode is "PAYMENT_PROVIDER_UNAVAILABLE" or "INSTALLMENTS_UNAVAILABLE" or "PAYMENT_GATEWAY_ERROR")
+        {
+            return Results.Json(new { error = ex.Message, code = ex.ErrorCode }, statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (PaymentValidationException ex)
+        {
+            return Results.BadRequest(new { error = ex.Message, code = ex.ErrorCode });
+        }
+    }
+
+    private static async Task<IResult> RefreshChildOnlinePaymentStatus(
+        int childId,
+        long batchId,
+        HttpContext httpContext,
+        IPaymentBatchService paymentBatchService,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(httpContext);
+        if (!userId.HasValue) return Results.Unauthorized();
+        try
+        {
+            return Results.Ok(await paymentBatchService.RefreshParentOnlinePaymentAsync(userId.Value, childId, batchId, ct));
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode == "PAYMENT_BATCH_NOT_FOUND")
+        {
+            return Results.NotFound(new { error = ex.Message, code = ex.ErrorCode });
+        }
+        catch (PaymentValidationException ex) when (ex.ErrorCode is "PAYMENT_PROVIDER_UNAVAILABLE" or "PAYMENT_GATEWAY_ERROR")
+        {
+            return Results.Json(new { error = ex.Message, code = ex.ErrorCode }, statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (HttpRequestException)
+        {
+            return Results.Json(new { error = "ตรวจสอบสถานะจากผู้ให้บริการไม่ได้ กรุณาลองอีกครั้งภายหลัง", code = "PAYMENT_GATEWAY_UNAVAILABLE" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (PaymentValidationException ex)
+        {
+            return Results.Conflict(new { error = ex.Message, code = ex.ErrorCode });
+        }
     }
 
     private static async Task<IResult> CreateChildPaymentBatch(

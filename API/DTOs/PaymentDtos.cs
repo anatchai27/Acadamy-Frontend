@@ -26,6 +26,14 @@ public sealed record CreatePaymentBatchRequest(
     string Method
 );
 
+public sealed record CreateParentOnlinePaymentRequest(
+    int EnrollmentId,
+    decimal Amount,
+    string Method,
+    string? InstallmentBank = null,
+    int? InstallmentTerm = null
+);
+
 public sealed record PaymentBatchAllocationResponse(
     int EnrollmentId,
     int StudentId,
@@ -40,7 +48,13 @@ public sealed record PaymentBatchData(
     decimal Amount,
     string Status,
     string? ReceiptPdfUrl,
-    List<PaymentBatchAllocationResponse> Allocations
+    List<PaymentBatchAllocationResponse> Allocations,
+    string? Method = null,
+    string? GatewayQrUrl = null,
+    string? CheckoutUrl = null,
+    DateTime? GatewayExpiresAt = null,
+    string? InstallmentBank = null,
+    int? InstallmentTerm = null
 );
 
 public sealed record PaymentBatchResponse(

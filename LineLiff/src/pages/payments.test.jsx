@@ -4,10 +4,12 @@ import { normalizePayment, PaymentsPage } from './payments';
 
 const services = vi.hoisted(() => ({
   createChildPaymentBatch: vi.fn(),
+  createChildOnlinePaymentBatch: vi.fn(),
   getChildPayableBalances: vi.fn(),
   getChildPayments: vi.fn(),
   uploadPaymentBatchSlip: vi.fn(),
   uploadPaymentSlip: vi.fn(),
+  refreshChildOnlinePaymentStatus: vi.fn(),
 }));
 
 vi.mock('../services/parent-service', () => services);
@@ -35,6 +37,12 @@ beforeEach(() => {
   services.createChildPaymentBatch.mockResolvedValue({
     data: { data: { batchId: 81, invoiceNo: 'INV-81', amount: 1250 } },
   });
+  services.createChildOnlinePaymentBatch.mockResolvedValue({
+    data: { status: 'success', message: 'รายการพร้อมชำระ', data: { batchId: 91, invoiceNo: 'INV-91', amount: 1250, status: 'pending' } },
+  });
+  services.refreshChildOnlinePaymentStatus.mockResolvedValue({
+    data: { status: 'success', message: 'ชำระสำเร็จแล้ว', data: { batchId: 91, status: 'succeeded' } },
+  });
   services.uploadPaymentBatchSlip.mockResolvedValue({ data: { status: 'success' } });
   services.uploadPaymentSlip.mockResolvedValue({ data: { status: 'success' } });
   Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:slip-preview') });
@@ -53,6 +61,7 @@ describe('LIFF payment payload', () => {
       date: '-',
       amount: 1200.5,
       status: 'unknown',
+      method: 'transfer',
       slipUrl: '',
       receiptPdfUrl: 'https://storage.test/receipt.pdf',
       instituteName: '',
@@ -63,6 +72,11 @@ describe('LIFF payment payload', () => {
       promptPayId: '',
       paymentInstructions: '',
       paymentQrImageUrl: '',
+      gatewayQrUrl: '',
+      checkoutUrl: '',
+      gatewayExpiresAt: '',
+      installmentBank: '',
+      installmentTerm: null,
     });
   });
 
@@ -106,7 +120,7 @@ describe('LIFF payment payload', () => {
 
     await screen.findByText('INV-81');
     expect(services.createChildPaymentBatch).toHaveBeenCalledWith(20, 45, 1250);
-    expect(screen.getByText('ยอดโอน ฿1,250.00')).toBeInTheDocument();
+    expect(screen.getByText('ยอดชำระ ฿1,250.00')).toBeInTheDocument();
     expect(screen.getByText('ธนาคารตัวอย่าง')).toBeInTheDocument();
     expect(screen.getByText('1234567890')).toBeInTheDocument();
 
@@ -145,7 +159,7 @@ describe('LIFF payment payload', () => {
     fireEvent.input(amountInput, { target: { value: '400' } });
     fireEvent.click(screen.getByRole('button', { name: 'ชำระเงิน' }));
 
-    await screen.findByText('ยอดโอน ฿400.00');
+    await screen.findByText('ยอดชำระ ฿400.00');
     expect(services.createChildPaymentBatch).toHaveBeenCalledWith(20, 45, 400);
   });
 
@@ -213,5 +227,67 @@ describe('LIFF payment payload', () => {
 
     await screen.findByText('ส่งสลิปแล้ว รายการกำลังรอสถาบันตรวจสอบ');
     expect(services.uploadPaymentSlip).toHaveBeenCalledWith(44, expect.any(File));
+  });
+
+  it('creates a dynamic PromptPay QR and lets the parent refresh its payment status', async () => {
+    services.getChildPayableBalances.mockResolvedValue({
+      data: {
+        paymentOptions: { promptPayEnabled: true, installmentsEnabled: true },
+        data: [{ enrollmentId: 45, studentId: 20, courseName: 'คณิตศาสตร์ ป.4', amountDue: 1250 }],
+      },
+    });
+    services.createChildOnlinePaymentBatch.mockResolvedValue({
+      data: { status: 'success', message: 'สร้าง QR แล้ว', data: {
+        batchId: 91,
+        invoiceNo: 'INV-91',
+        amount: 1250,
+        method: 'promptpay',
+        status: 'pending',
+        gatewayQrUrl: 'https://api.omise.co/qr.svg',
+        gatewayExpiresAt: '2026-11-08T10:00:00Z',
+      } },
+    });
+    render(<PaymentsPage childId="20" />);
+
+    await screen.findByText('คณิตศาสตร์ ป.4');
+    fireEvent.click(screen.getByRole('radio', { name: 'PromptPay QR ระบุยอดอัตโนมัติ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'สร้าง QR พร้อมเพย์' }));
+
+    expect(await screen.findByRole('img', { name: 'QR พร้อมเพย์สำหรับยอด ฿1,250.00' })).toHaveAttribute('src', 'https://api.omise.co/qr.svg');
+    fireEvent.click(screen.getByRole('button', { name: 'ชำระแล้ว · ตรวจสอบสถานะ' }));
+    await screen.findByText('ชำระสำเร็จแล้ว');
+    expect(services.createChildOnlinePaymentBatch).toHaveBeenCalledWith(20, 45, 1250, 'promptpay', null, null);
+    expect(services.refreshChildOnlinePaymentStatus).toHaveBeenCalledWith(20, 91);
+  });
+
+  it('starts card installments through the hosted Omise checkout without collecting card data in LIFF', async () => {
+    services.getChildPayableBalances.mockResolvedValue({
+      data: {
+        paymentOptions: { promptPayEnabled: true, installmentsEnabled: true },
+        data: [{ enrollmentId: 45, studentId: 20, courseName: 'คณิตศาสตร์ ป.4', amountDue: 1250 }],
+      },
+    });
+    services.createChildOnlinePaymentBatch.mockResolvedValue({
+      data: { status: 'success', data: {
+        batchId: 92,
+        invoiceNo: 'INV-92',
+        amount: 1250,
+        method: 'credit_card_installment',
+        status: 'pending',
+        checkoutUrl: 'https://pay.omise.co/authorize/92',
+        installmentBank: 'installment_kbank',
+        installmentTerm: 3,
+      } },
+    });
+    render(<PaymentsPage childId="20" />);
+
+    await screen.findByText('คณิตศาสตร์ ป.4');
+    fireEvent.click(screen.getByRole('radio', { name: 'ผ่อนชำระด้วยบัตรเครดิต' }));
+    fireEvent.click(screen.getByRole('button', { name: 'เริ่มรายการผ่อน' }));
+
+    const checkoutLink = await screen.findByRole('link', { name: 'ไปหน้าชำระเงินปลอดภัยของ Omise' });
+    expect(checkoutLink).toHaveAttribute('href', 'https://pay.omise.co/authorize/92');
+    expect(screen.getByText('ข้อมูลบัตรจะกรอกบนหน้าชำระที่ปลอดภัยของ Omise เท่านั้น ตรวจยอดต่องวดและดอกเบี้ยก่อนยืนยัน')).toBeInTheDocument();
+    expect(services.createChildOnlinePaymentBatch).toHaveBeenCalledWith(20, 45, 1250, 'credit_card_installment', 'installment_kbank', 3);
   });
 });

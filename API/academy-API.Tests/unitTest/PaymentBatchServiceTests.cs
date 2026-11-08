@@ -3,6 +3,7 @@ using academy_API.Models;
 using academy_API.Repositories;
 using academy_API.Repositories.Interface;
 using academy_API.Services;
+using academy_API.Services.Interface;
 using Moq;
 
 namespace academy_API.Tests.unitTest;
@@ -22,11 +23,13 @@ public class PaymentBatchServiceTests
         Mock<IPaymentBatchRepository> batchRepository,
         Mock<IPaymentRepository>? paymentRepository = null,
         Mock<IPaymentBatchReceiptService>? receiptService = null,
-        Mock<ISlipVerificationProvider>? verificationProvider = null) => new(
+        Mock<ISlipVerificationProvider>? verificationProvider = null,
+        Mock<IOmisePromptPayGateway>? omiseGateway = null) => new(
             batchRepository.Object,
             paymentRepository?.Object ?? Mock.Of<IPaymentRepository>(),
             receiptService?.Object ?? Mock.Of<IPaymentBatchReceiptService>(),
-            verificationProvider?.Object ?? Mock.Of<ISlipVerificationProvider>());
+            verificationProvider?.Object ?? Mock.Of<ISlipVerificationProvider>(),
+            omiseGateway?.Object);
 
     private static void SetupBalances(Mock<IPaymentRepository> payments, Mock<IPaymentBatchRepository> batches)
     {
@@ -138,6 +141,44 @@ public class PaymentBatchServiceTests
 
         Assert.Equal("AMOUNT_EXCEEDS_BALANCE", exception.ErrorCode);
         batches.Verify(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateParentOnlinePaymentAsync_CreatesPendingDynamicPromptPayBatch()
+    {
+        var enrollment = Enrollment(45, 20, 2000m);
+        enrollment.Student.Parents.Add(new Parent { UserId = 10, StudentId = 20 });
+        var batches = new Mock<IPaymentBatchRepository>();
+        var gateway = new Mock<IOmisePromptPayGateway>();
+        gateway.SetupGet(provider => provider.IsConfigured).Returns(true);
+        batches.Setup(repository => repository.GetEnrollmentAsync(45, It.IsAny<CancellationToken>())).ReturnsAsync(enrollment);
+        batches.Setup(repository => repository.GenerateInvoiceNoAsync(It.IsAny<CancellationToken>())).ReturnsAsync("INV-202611-B123456789");
+        batches.Setup(repository => repository.CreateAsync(It.IsAny<PaymentBatch>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PaymentBatch batch, CancellationToken _) =>
+            {
+                batch.Id = 91;
+                return batch;
+            });
+        gateway.Setup(provider => provider.CreateChargeAsync(1250m, "INV-202611-B123456789", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OmiseCharge(
+                "chrg_test_91",
+                125000,
+                "THB",
+                "pending",
+                "INV-202611-B123456789",
+                DateTimeOffset.UtcNow.AddMinutes(15),
+                new OmiseChargeSource("promptpay", new OmiseScannableCode("qr", new OmiseQrImage("https://api.omise.co/qr.svg")))));
+        batches.Setup(repository => repository.SaveGatewayDetailsAsync(91, "chrg_test_91", "https://api.omise.co/qr.svg", null, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await CreateSut(batches, omiseGateway: gateway).CreateParentOnlinePaymentAsync(
+            10, 20, 45, 1250m, "promptpay");
+
+        Assert.Equal(PaymentStatus.Pending, result.Data.Status);
+        Assert.Equal("promptpay", result.Data.Method);
+        Assert.Equal("https://api.omise.co/qr.svg", result.Data.GatewayQrUrl);
+        batches.Verify(repository => repository.CreateAsync(It.Is<PaymentBatch>(batch =>
+            batch.Method == "promptpay" && batch.Status == PaymentStatus.Pending && batch.Amount == 1250m), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -70,6 +70,26 @@ public class PaymentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_CreditCardWithoutGateway_IsRejected()
+    {
+        var repoMock = CreateMockRepo();
+        repoMock.Setup(repository => repository.GetEnrollmentWithStudentAsync(7, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Enrollment
+            {
+                Id = 7,
+                InstituteId = 4,
+                Student = new Student { Id = 9, FullName = "สมชาย" },
+                Course = new Course { Name = "คณิตศาสตร์", Price = 5000m }
+            });
+
+        var exception = await Assert.ThrowsAsync<PaymentValidationException>(() =>
+            CreateSut(repoMock).CreateAsync(new CreatePaymentRequest(7, 1200m, "credit_card", null)));
+
+        Assert.Equal("INVALID_METHOD", exception.ErrorCode);
+        repoMock.Verify(repository => repository.CreatePaymentWithTransactionAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateAsync_PaidCashPayment_NotifiesThroughReceiptIssuer()
     {
         var repoMock = CreateMockRepo();

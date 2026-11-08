@@ -62,6 +62,59 @@ public sealed class PaymentBatchRepository(TutoringDbContext context) : IPayment
     public Task<PaymentBatch?> GetForVerificationAsync(long batchId, CancellationToken ct = default) =>
         BatchQuery().FirstOrDefaultAsync(batch => batch.Id == batchId, ct);
 
+    public async Task<bool> SaveGatewayDetailsAsync(
+        long batchId,
+        string gatewayRefId,
+        string? qrUrl,
+        string? checkoutUrl,
+        DateTime? expiresAt,
+        CancellationToken ct = default) =>
+        await _context.PaymentBatches
+            .Where(batch => batch.Id == batchId && batch.Status == PaymentStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(batch => batch.GatewayRefId, gatewayRefId)
+                .SetProperty(batch => batch.GatewayQrUrl, qrUrl)
+                .SetProperty(batch => batch.CheckoutUrl, checkoutUrl)
+                .SetProperty(batch => batch.GatewayExpiresAt, expiresAt), ct) > 0;
+
+    public async Task<bool> UpdateGatewayStatusAsync(
+        long batchId,
+        string status,
+        DateTime paidAt,
+        CancellationToken ct = default)
+    {
+        if (status is not (PaymentStatus.Succeeded or PaymentStatus.Failed or PaymentStatus.Cancelled))
+            throw new ArgumentOutOfRangeException(nameof(status), "Only terminal gateway statuses can be persisted.");
+
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+            var updated = status == PaymentStatus.Succeeded
+                ? await _context.PaymentBatches
+                    .Where(batch => batch.Id == batchId && batch.Status == PaymentStatus.Pending)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(batch => batch.Status, status)
+                        .SetProperty(batch => batch.PaidAt, paidAt), ct)
+                : await _context.PaymentBatches
+                    .Where(batch => batch.Id == batchId && batch.Status == PaymentStatus.Pending)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(batch => batch.Status, status), ct);
+
+            if (updated == 0) return false;
+            if (status == PaymentStatus.Succeeded)
+            {
+                var enrollmentIds = await _context.PaymentBatchAllocations
+                    .Where(allocation => allocation.PaymentBatchId == batchId)
+                    .Select(allocation => allocation.EnrollmentId)
+                    .ToListAsync(ct);
+                await RefreshEnrollmentPaidAmountsAsync(enrollmentIds, ct);
+            }
+
+            await transaction.CommitAsync(ct);
+            return true;
+        });
+    }
+
     public async Task<bool> SaveVerifiedSlipAsync(PaymentBatch batch, CancellationToken ct = default)
     {
         var strategy = _context.Database.CreateExecutionStrategy();

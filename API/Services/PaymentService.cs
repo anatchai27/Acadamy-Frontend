@@ -21,9 +21,9 @@ public class PaymentService(
         var enrollment = await _repository.GetEnrollmentWithStudentAsync(request.EnrollmentId, ct)
             ?? throw new PaymentValidationException("ENROLLMENT_NOT_FOUND", "ไม่พบข้อมูลการลงทะเบียน");
 
-        var validMethods = new HashSet<string> { "transfer", "credit_card", "cash" };
+        var validMethods = new HashSet<string> { "transfer", "cash" };
         if (!validMethods.Contains(request.Method))
-            throw new PaymentValidationException("INVALID_METHOD", "รูปแบบการชำระเงินไม่ถูกต้อง (transfer, credit_card, cash)");
+            throw new PaymentValidationException("INVALID_METHOD", "รูปแบบการชำระเงินไม่ถูกต้อง (transfer, cash)");
 
         if (request.Amount <= 0)
             throw new PaymentValidationException("INVALID_AMOUNT", "จำนวนเงินต้องมากกว่า 0");
