@@ -59,6 +59,16 @@ export const LoginPage = () => {
       const termsStatus = await getTermsStatus();
       const hasAcceptedTerms = !!termsStatus.data?.accepted;
       dispatch({ type: 'SET_TERMS_ACCEPTED', payload: hasAcceptedTerms });
+      dispatch({ type: 'SET_USER', payload: profile });
+      dispatch({ type: 'SET_PROFILE', payload: profile });
+      const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
+      dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
+      dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
+      if (!hasAcceptedTerms) {
+        route('/terms/accept');
+        return;
+      }
+
       const permissionResponse = await getRolePermissions(profile?.role);
       const rolePermissions = permissionResponse.data?.data?.permissions
         || permissionResponse.data?.permissions;
@@ -72,13 +82,6 @@ export const LoginPage = () => {
         type: 'SET_PROFILE',
         payload: profile
       });
-      const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
-      dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
-      dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
-      if (!hasAcceptedTerms) {
-        route('/terms/accept');
-        return;
-      }
       showToast('เข้าสู่ระบบสำเร็จ', 'success');
       route('/admin/dashboard');
     } catch (error) {

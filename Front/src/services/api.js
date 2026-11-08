@@ -2,10 +2,15 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'auth_token';
 
 let onUnauthorized = null;
+let onTermsRequired = null;
 let refreshPromise = null;
 
 export const setOnUnauthorized = handler => {
   onUnauthorized = handler;
+};
+
+export const setOnTermsRequired = handler => {
+  onTermsRequired = handler;
 };
 
 const buildQuery = params => {
@@ -91,6 +96,10 @@ const fetcher = async (endpoint, options = {}) => {
   const data = response.headers.get('content-type')?.includes('application/json')
     ? await response.json().catch(() => null)
     : null;
+
+  if (response.status === 428 && data?.code === 'TERMS_ACCEPTANCE_REQUIRED') {
+    onTermsRequired?.(data);
+  }
 
   return response.ok ? { data, status: response.status } : (() => {
     const validationMessage = data?.errors && typeof data.errors === 'object'

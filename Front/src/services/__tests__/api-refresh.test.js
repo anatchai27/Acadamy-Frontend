@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api, setOnUnauthorized } from '../api';
+import { api, setOnTermsRequired, setOnUnauthorized } from '../api';
 
 const jsonResponse = (status, data) => ({
   ok: status >= 200 && status < 300,
@@ -12,6 +12,7 @@ describe('API access-token refresh', () => {
   beforeEach(() => {
     localStorage.clear();
     setOnUnauthorized(vi.fn());
+    setOnTermsRequired(vi.fn());
   });
 
   afterEach(() => {
@@ -52,5 +53,24 @@ describe('API access-token refresh', () => {
     await expect(api.get('/students')).rejects.toMatchObject({ status: 401 });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(unauthorizedHandler).toHaveBeenCalledOnce();
+  });
+
+  it('notifies the app when the API requires acceptance of current terms', async () => {
+    localStorage.setItem('auth_token', 'valid-access-token');
+    const termsRequiredHandler = vi.fn();
+    setOnTermsRequired(termsRequiredHandler);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse(428, { code: 'TERMS_ACCEPTANCE_REQUIRED', currentVersion: '1.0' }),
+    ));
+
+    await expect(api.get('/users/permissions/admin')).rejects.toMatchObject({
+      status: 428,
+      data: { code: 'TERMS_ACCEPTANCE_REQUIRED' },
+    });
+
+    expect(termsRequiredHandler).toHaveBeenCalledWith({
+      code: 'TERMS_ACCEPTANCE_REQUIRED',
+      currentVersion: '1.0',
+    });
   });
 });

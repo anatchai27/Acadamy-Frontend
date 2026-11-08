@@ -3,6 +3,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { acceptTerms, getCurrentTerms } from '../../services';
 import { useAppContext } from '../../store/AppContext';
 import { clearAuthStorage } from '../../services/auth-service';
+import { getRolePermissions } from '../../services/user-service';
+import { setRolePermissions } from '../../config/permissions';
 
 export const TermsAcceptPage = () => {
   const { state, dispatch } = useAppContext();
@@ -30,6 +32,16 @@ export const TermsAcceptPage = () => {
     try {
       await acceptTerms({ accepted: true, version: document.version, language });
       dispatch({ type: 'SET_TERMS_ACCEPTED', payload: true });
+      try {
+        const role = state.userProfile?.role || state.user?.role;
+        if (role) {
+          const permissionResponse = await getRolePermissions(role);
+          const permissions = permissionResponse.data?.data?.permissions || permissionResponse.data?.permissions;
+          if (permissions) setRolePermissions(role, permissions);
+        }
+      } catch {
+        // Continue with the app's default permission policy if role permissions are unavailable.
+      }
       route('/admin/dashboard', true);
     } catch (requestError) {
       if (requestError.status === 409) {
