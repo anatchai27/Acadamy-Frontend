@@ -1,7 +1,7 @@
 import { route } from 'preact-router';
 import { useEffect, useState } from 'preact/hooks';
 import { useLiffContext } from '../store/LiffContext';
-import { bindLineUserId } from '../services/parent-service';
+import { bindLineUserId, getCurrentTerms } from '../services/parent-service';
 import { normalizeParentLinkCode, validateParentLinkCode } from '../utils/parent-link-code';
 import { APP_VERSION } from '../utils/app-version';
 
@@ -14,8 +14,12 @@ export const LoginPage = () => {
   const [needsCode, setNeedsCode] = useState(false);
   const [linkCode, setLinkCode] = useState('');
   const [lineAuthFailed, setLineAuthFailed] = useState(false);
+  const [needsTerms, setNeedsTerms] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [terms, setTerms] = useState(null);
+  const [termsLanguage, setTermsLanguage] = useState('th');
 
-  const bindParent = async (code = '') => {
+  const bindParent = async (code = '', acceptTerms = false) => {
     setBinding(true);
     setError(null);
     setLineAuthFailed(false);
@@ -24,7 +28,11 @@ export const LoginPage = () => {
       const { getLiffIdToken } = await import('../services/liff');
       const idToken = await getLiffIdToken();
       if (!idToken) throw new Error('ไม่พบ LINE ID token กรุณาปิดแล้วเปิด LIFF ใหม่');
-      const res = await bindLineUserId(idToken, code);
+      const res = await bindLineUserId(idToken, code, {
+        acceptTerms,
+        termsVersion: acceptTerms ? terms?.version : undefined,
+        termsLanguage,
+      });
       const token = res.data?.token || res.data?.accessToken;
       token ? ((() => {
         try {
@@ -38,7 +46,19 @@ export const LoginPage = () => {
       children.length > 0 ? dispatch({ type: 'SET_ACTIVE_CHILD', payload: children[0].id }) : null;
       route('/liff/dashboard', true);
     } catch (err) {
+      if (err.status === 428 && err.data?.code === 'TERMS_ACCEPTANCE_REQUIRED') {
+        setNeedsTerms(true);
+        setTermsAccepted(false);
+        try {
+          const response = await getCurrentTerms(termsLanguage);
+          setTerms(response.data?.document || null);
+        } catch {
+          setError('ไม่สามารถโหลดข้อกำหนดได้ กรุณาลองใหม่ / Unable to load the terms. Please retry.');
+        }
+        return;
+      }
       if (err.status === 404 && err.data?.code === 'LINK_CODE_REQUIRED' && !code) {
+        setNeedsTerms(false);
         setNeedsCode(true);
         return;
       }
@@ -90,7 +110,7 @@ export const LoginPage = () => {
         }
       })() :
       state.parentUser ? route('/liff/dashboard', true) :
-      needsCode || binding ? null : bindParent()
+      needsCode || needsTerms || binding ? null : bindParent()
     );
   }, [state.liffInitialized, state.liffProfile, state.parentUser, needsCode]);
 
@@ -102,7 +122,13 @@ export const LoginPage = () => {
       setError(validationError);
       return;
     }
-    bindParent(normalizedCode);
+    bindParent(normalizedCode, termsAccepted);
+  };
+
+  const handleTermsSubmit = event => {
+    event.preventDefault();
+    if (!termsAccepted || !terms?.version) return;
+    bindParent(needsCode ? normalizeParentLinkCode(linkCode) : '', true);
   };
 
   const handleLeaveLogin = async () => {
@@ -125,7 +151,20 @@ export const LoginPage = () => {
         <h1 class="text-2xl font-bold tracking-tight text-ink-900">tiwhub</h1>
         <p class="mt-1 text-ink-500">ระบบจัดการเรียนการสอน</p>
         <p class="mb-5 mt-2 text-xs text-ink-500">เวอร์ชัน {APP_VERSION}</p>
-        {needsCode ? (
+        {needsTerms ? (
+          <form onSubmit={handleTermsSubmit} class="text-left">
+            <section class="mb-4 rounded-2xl border border-sage-200 bg-white p-5 shadow-soft">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div><h2 class="text-lg font-bold text-ink-900">ข้อกำหนดการใช้บริการ / Terms of Service</h2><p class="mt-1 text-xs text-ink-500">Version {terms?.version || '—'} · Effective {terms?.effectiveAt || '—'}</p></div>
+                <div class="flex gap-2 text-xs"><button type="button" class="underline" aria-pressed={termsLanguage === 'th'} onClick={async () => { setTermsLanguage('th'); try { const response = await getCurrentTerms('th'); setTerms(response.data?.document || null); } catch { setError('โหลดข้อกำหนดไม่สำเร็จ'); } }}>ไทย</button><button type="button" class="underline" aria-pressed={termsLanguage === 'en'} onClick={async () => { setTermsLanguage('en'); try { const response = await getCurrentTerms('en'); setTerms(response.data?.document || null); } catch { setError('Unable to load terms.'); } }}>English</button></div>
+              </div>
+              {terms ? <article class="mt-4 max-h-[45vh] overflow-y-auto border-y border-sage-100 py-3 text-sm leading-6 text-ink-700" lang={termsLanguage}><h3 class="font-semibold">{terms.title?.[termsLanguage]}</h3><p class="mt-2">{terms.intro?.[termsLanguage]}</p>{terms.sections?.map(section => <section class="mt-3" key={section.heading?.[termsLanguage]}><h4 class="font-semibold">{section.heading?.[termsLanguage]}</h4>{section.paragraphs?.[termsLanguage]?.map(paragraph => <p class="mt-1" key={paragraph}>{paragraph}</p>)}</section>)}</article> : <p class="mt-3 text-sm text-ink-500">กำลังโหลดข้อกำหนด / Loading terms…</p>}
+              <label class="mt-4 flex cursor-pointer items-start gap-3 text-sm leading-6"><input type="checkbox" class="mt-1 h-4 w-4" checked={termsAccepted} onChange={event => setTermsAccepted(event.currentTarget.checked)} /><span>ฉันได้อ่านและยอมรับข้อกำหนดฉบับนี้ / I have read and expressly accept these Terms of Service.</span></label>
+              {error && <p role="alert" class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+              <button type="submit" disabled={binding || !termsAccepted || !terms} class="mt-4 min-h-11 w-full rounded-xl bg-sage-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{binding ? 'กำลังบันทึก...' : 'ยอมรับและดำเนินการต่อ / Accept and continue'}</button>
+            </section>
+          </form>
+        ) : needsCode ? (
           <form onSubmit={handleCodeSubmit} class="text-left">
             <div class="mb-4 rounded-2xl border border-sage-200 bg-white p-5 shadow-soft">
               <h2 class="text-lg font-bold text-ink-900">เชื่อมบัญชีผู้ปกครอง</h2>

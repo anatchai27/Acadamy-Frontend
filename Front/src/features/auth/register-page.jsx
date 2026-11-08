@@ -1,8 +1,8 @@
 import { route } from 'preact-router';
 import { useForm, Controller } from 'react-hook-form';
-import { useState, useCallback } from 'preact/hooks';
+import { useState, useCallback, useEffect } from 'preact/hooks';
 import { Button, Input, Checkbox, LogoUpload, showToast } from '../../components/ui';
-import { authService } from '../../services';
+import { authService, getCurrentTerms } from '../../services';
 import { useAppContext } from '../../store/AppContext';
 const PHONE_REGEX = /^\d{9,10}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,7 +16,8 @@ const formDefaults = {
   admin_email: '',
   admin_phone: '',
   admin_password: '',
-  consent_version: ''
+  accept_terms: false,
+  accept_pdpa: false
 };
 export const RegisterPage = () => {
   const {
@@ -49,9 +50,18 @@ export const RegisterPage = () => {
   const adminEmail = watch('admin_email');
   const adminPhone = watch('admin_phone');
   const adminPassword = watch('admin_password');
-  const consentVersion = watch('consent_version');
+  const acceptTermsChecked = watch('accept_terms');
+  const acceptPdpaChecked = watch('accept_pdpa');
+  const [terms, setTerms] = useState(null);
+  const [termsLanguage, setTermsLanguage] = useState('th');
+  const [termsLoadError, setTermsLoadError] = useState('');
+  useEffect(() => {
+    getCurrentTerms(termsLanguage)
+      .then(response => { setTerms(response.data?.document); setTermsLoadError(''); })
+      .catch(() => setTermsLoadError('ไม่สามารถโหลดข้อกำหนดได้ กรุณาลองใหม่ / Unable to load the terms. Please retry.'));
+  }, [termsLanguage]);
   const canGoToStep2 = !!instituteName?.trim() && instituteName.trim().length <= INSTITUTE_NAME_MAX && PHONE_REGEX.test(contactPhone || '') && !logoError;
-  const canSubmit = !!adminFullName?.trim() && !!lineId?.trim() && EMAIL_REGEX.test(adminEmail || '') && !!adminPhone?.trim() && PASSWORD_REGEX.test(adminPassword || '') && !!consentVersion && !submitting;
+  const canSubmit = !!adminFullName?.trim() && !!lineId?.trim() && EMAIL_REGEX.test(adminEmail || '') && !!adminPhone?.trim() && PASSWORD_REGEX.test(adminPassword || '') && !!terms?.version && acceptTermsChecked && acceptPdpaChecked && !submitting;
   const handleLogoChange = useCallback((base64, validationError) => {
     return validationError ? (() => {
       setLogoError(validationError);
@@ -101,8 +111,11 @@ export const RegisterPage = () => {
           password: data.admin_password,
           phone: data.admin_phone,
           lineUserId: data.line_id,
-          acceptPdpa: true,
-          pdpaConsentVersion: data.consent_version || '1.0'
+          acceptPdpa: data.accept_pdpa,
+          pdpaConsentVersion: '1.0',
+          acceptTerms: data.accept_terms,
+          termsVersion: terms.version,
+          termsLanguage
         };
         const response = await authService.registerInstitute(payload);
         return response.status === 201 || response.data?.token || response.data?.user ? (() => {
@@ -111,6 +124,7 @@ export const RegisterPage = () => {
             type: 'SET_USER',
             payload: user
           });
+          dispatch({ type: 'SET_TERMS_ACCEPTED', payload: true });
           showToast('ลงทะเบียนสถาบันสำเร็จ! กำลังพาท่านเข้าสู่ระบบ...', 'success', 3000);
           setTimeout(() => route('/admin/dashboard'), 1200);
         })() : undefined;
@@ -221,12 +235,18 @@ export const RegisterPage = () => {
             }} render={({
               field
             }) => <Input type="password" label="รหัสผ่าน" id="reg-password" placeholder="ตั้งรหัสผ่าน" error={errors.admin_password?.message} value={field.value} onChange={e => field.onChange(e.target.value)} onBlur={field.onBlur} name={field.name} />} />
-                <Controller name="consent_version" control={control} rules={{
-              required: 'กรุณายอมรับข้อตกลงและเงื่อนไขการใช้งาน',
-              validate: v => v.trim().length > 0 || 'กรุณายอมรับข้อตกลงและเงื่อนไขการใช้งาน'
-            }} render={({
-              field
-            }) => <div class="flex flex-col gap-1"><Checkbox id="consent" checked={!!field.value} onChange={e => field.onChange(e.target.checked ? 'v1.0' : '')} onBlur={field.onBlur} label="ฉันยอมรับข้อตกลงและเงื่อนไขการใช้งาน (PDPA)" error={errors.consent_version?.message} required name={field.name} /><a href="/privacy" target="_blank" rel="noopener noreferrer" class="text-xs text-oasis-primary underline hover:no-underline ml-6">อ่านนโยบายความเป็นส่วนตัว</a></div>} />
+                <section class="rounded-xl border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="register-terms-title">
+                  <div class="mb-3 flex items-center justify-between gap-3">
+                    <h3 id="register-terms-title" class="font-semibold text-zinc-900">ข้อกำหนด / Terms of Service {terms?.version ? `· v${terms.version}` : ''}</h3>
+                    <div class="flex gap-2 text-sm"><button type="button" class="underline" onClick={() => setTermsLanguage('th')} aria-pressed={termsLanguage === 'th'}>ไทย</button><button type="button" class="underline" onClick={() => setTermsLanguage('en')} aria-pressed={termsLanguage === 'en'}>English</button></div>
+                  </div>
+                  {termsLoadError ? <p role="alert" class="text-sm text-red-700">{termsLoadError}</p> : terms ? <div class="max-h-48 overflow-y-auto pr-2 text-sm leading-6 text-zinc-700" lang={termsLanguage}>
+                    <p class="font-medium">{terms.title?.[termsLanguage]}</p><p class="mt-2">{terms.intro?.[termsLanguage]}</p>
+                    {terms.sections?.map(section => <article key={section.heading?.[termsLanguage]} class="mt-3"><h4 class="font-semibold">{section.heading?.[termsLanguage]}</h4>{section.paragraphs?.[termsLanguage]?.map(paragraph => <p class="mt-1" key={paragraph}>{paragraph}</p>)}</article>)}
+                  </div> : <p class="text-sm text-zinc-500">กำลังโหลดข้อกำหนด / Loading terms…</p>}
+                </section>
+                <Controller name="accept_terms" control={control} rules={{ required: 'กรุณายอมรับข้อกำหนด / Please accept the Terms of Service' }} render={({ field }) => <Checkbox id="accept-terms" checked={!!field.value} onChange={e => field.onChange(e.target.checked)} onBlur={field.onBlur} label="ฉันได้อ่านและยอมรับข้อกำหนดฉบับข้างต้น / I have read and accept the Terms of Service above" error={errors.accept_terms?.message} required name={field.name} />} />
+                <Controller name="accept_pdpa" control={control} rules={{ required: 'กรุณายืนยันความยินยอมด้านข้อมูลส่วนบุคคล / Please confirm personal-data consent' }} render={({ field }) => <div><Checkbox id="accept-pdpa" checked={!!field.value} onChange={e => field.onChange(e.target.checked)} onBlur={field.onBlur} label="ฉันยินยอมให้ประมวลผลข้อมูลส่วนบุคคลตามประกาศความเป็นส่วนตัว / I consent to personal-data processing as described in the Privacy Notice" error={errors.accept_pdpa?.message} required name={field.name} /><a href="/privacy" target="_blank" rel="noopener noreferrer" class="ml-6 text-xs text-oasis-primary underline hover:no-underline">อ่านประกาศความเป็นส่วนตัว / Read privacy notice</a></div>} />
                 <div class="flex gap-3 mt-4">
                   <Button variant="secondary" size="lg" type="button" onClick={handleBack} disabled={submitting}>กลับ</Button>
                   <Button variant="primary" size="lg" type="submit" loading={submitting} disabled={!canSubmit}>{submitting ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชีผู้ใช้งาน'}</Button>

@@ -22,6 +22,7 @@ public class TutoringDbContext(
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<PdpaConsent> PdpaConsents => Set<PdpaConsent>();
+      public DbSet<TermsAcceptance> TermsAcceptances => Set<TermsAcceptance>();
     public DbSet<Parent> Parents => Set<Parent>();
       public DbSet<ParentLineLinkCode> ParentLineLinkCodes => Set<ParentLineLinkCode>();
     public DbSet<Session> Sessions => Set<Session>();
@@ -210,6 +211,28 @@ public class TutoringDbContext(
             entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
             entity.Property(e => e.ConsentDocumentVersion).HasMaxLength(50).HasColumnName("consent_document_version");
         });
+
+            modelBuilder.Entity<TermsAcceptance>(entity =>
+            {
+                  entity.ToTable("terms_acceptances");
+                  entity.HasKey(e => e.Id);
+                  entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                  entity.Property(e => e.UserId).HasColumnName("user_id");
+                  entity.Property(e => e.ParentId).HasColumnName("parent_id");
+                  entity.Property(e => e.DocumentType).HasMaxLength(40).HasColumnName("document_type").IsRequired();
+                  entity.Property(e => e.DocumentVersion).HasMaxLength(50).HasColumnName("document_version").IsRequired();
+                  entity.Property(e => e.Language).HasMaxLength(5).HasColumnName("language").IsRequired();
+                  entity.Property(e => e.ContentSha256).HasMaxLength(64).HasColumnName("content_sha256").IsRequired();
+                  entity.Property(e => e.AcceptedAt).HasColumnName("accepted_at");
+                  entity.Property(e => e.IpAddress).HasMaxLength(45).HasColumnName("ip_address");
+                  entity.Property(e => e.UserAgent).HasMaxLength(500).HasColumnName("user_agent");
+                  entity.Property(e => e.Source).HasMaxLength(50).HasColumnName("source").IsRequired();
+                  entity.Property(e => e.ActorType).HasMaxLength(50).HasColumnName("actor_type").IsRequired();
+                  entity.Property(e => e.ActorId).HasColumnName("actor_id");
+                  entity.HasIndex(e => new { e.UserId, e.DocumentType, e.DocumentVersion }).IsUnique();
+                  entity.HasIndex(e => e.AcceptedAt);
+                  entity.HasIndex(e => e.ParentId);
+            });
 
         modelBuilder.Entity<Parent>(entity =>
         {

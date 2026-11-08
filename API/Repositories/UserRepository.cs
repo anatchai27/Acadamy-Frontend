@@ -140,6 +140,55 @@ public class UserRepository(TutoringDbContext context) : IUserRepository
         });
     }
 
+    public async Task<(Institute? Institute, User User)> RegisterAsync(
+        Institute? institute,
+        User user,
+        PdpaConsent consent,
+        Teacher? teacher,
+        TermsAcceptance termsAcceptance,
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                if (institute is not null)
+                {
+                    _context.Institutes.Add(institute);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    user.InstituteId = institute.Id;
+                    if (teacher is not null) teacher.InstituteId = institute.Id;
+                }
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(cancellationToken);
+                consent.UserId = user.Id;
+                consent.ReferenceId = user.Id;
+                termsAcceptance.UserId = user.Id;
+                termsAcceptance.ActorId = user.Id;
+                termsAcceptance.AcceptedAt = DateTime.UtcNow;
+                _context.PdpaConsents.Add(consent);
+                _context.TermsAcceptances.Add(termsAcceptance);
+                if (teacher is not null)
+                {
+                    teacher.UserId = user.Id;
+                    _context.Teachers.Add(teacher);
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return (institute, user);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
+    }
+
     public async Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken cancellationToken = default)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);

@@ -4,6 +4,7 @@ using academy_API.Models;
 using academy_API.DTOs;
 using academy_API.Repositories;
 using academy_API.Services.Contracts;
+using academy_API.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace academy_API.Services;
@@ -12,12 +13,14 @@ public class UserService(
     IUserRepository repository,
     IPdpaConsentRepository pdpaRepository,
     ITokenService tokenService,
-    TutoringDbContext context) : IUserService
+    TutoringDbContext context,
+    ITermsService? termsService = null) : IUserService
 {
     private readonly IUserRepository _repository = repository;
     private readonly IPdpaConsentRepository _pdpaRepository = pdpaRepository;
     private readonly ITokenService _tokenService = tokenService;
     private readonly TutoringDbContext _context = context;
+    private readonly ITermsService? _termsService = termsService;
 
     public async Task<IEnumerable<User>> GetAllAsync(CancellationToken ct = default)
         => await _repository.GetAllAsync(ct);
@@ -114,6 +117,13 @@ public class UserService(
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             throw new UserValidationException("CREDENTIALS_REQUIRED", "Email and password are required.");
         if (!request.AcceptPdpa) throw new UserValidationException("PDPA_REQUIRED", "PDPA consent must be accepted to create an account.");
+        if (_termsService is not null && !request.AcceptTerms)
+            throw new UserValidationException("TERMS_REQUIRED", "Terms of Service must be accepted to create an account.");
+        if (_termsService is not null && !string.Equals(
+            request.TermsVersion,
+            _termsService.GetCurrentDocument(request.TermsLanguage).Version,
+            StringComparison.Ordinal))
+            throw new UserValidationException("TERMS_VERSION_CHANGED", "The current Terms of Service version must be accepted.");
         var email = request.Email.Trim();
         if (await _repository.GetByEmailOrPhoneAsync(email, request.Phone, ct) is not null)
             throw new UserValidationException("DUPLICATE_USER", "Email or phone number is already registered.");
@@ -150,7 +160,22 @@ public class UserService(
         var teacher = request.Role is UserRole.admin or UserRole.teacher
             ? new Teacher { FullName = request.Admin?.FullName ?? "Admin" }
             : null;
-        var result = await _repository.RegisterAsync(institute, user, consent, teacher, ct);
+        var termsVersion = _termsService?.GetCurrentDocument(request.TermsLanguage).Version;
+        if (_termsService is not null && !string.Equals(request.TermsVersion, termsVersion, StringComparison.Ordinal))
+            throw new UserValidationException("TERMS_VERSION_CHANGED", $"Terms version changed. Current version: {termsVersion}.");
+        var registrationTerms = _termsService is null ? null : new TermsAcceptance
+        {
+            DocumentVersion = termsVersion!,
+            Language = request.TermsLanguage is "en" ? "en" : "th",
+            ContentSha256 = _termsService.GetCurrentContentSha256(),
+            AcceptedAt = DateTime.UtcNow,
+            IpAddress = ipAddress,
+            Source = "registration",
+            ActorType = "user"
+        };
+        var result = registrationTerms is null
+            ? await _repository.RegisterAsync(institute, user, consent, teacher, ct)
+            : await _repository.RegisterAsync(institute, user, consent, teacher, registrationTerms, ct);
         return (result.User, result.Institute);
     }
 

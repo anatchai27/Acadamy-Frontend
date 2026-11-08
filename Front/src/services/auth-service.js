@@ -11,6 +11,10 @@ export const getMe = async () => {
   return api.get('/auth/me');
 };
 
+export const getTermsStatus = async () => api.get('/legal/terms/status');
+export const getCurrentTerms = async language => api.get('/legal/terms/current', { params: { language } });
+export const acceptTerms = async payload => api.post('/legal/terms/accept', payload);
+
 export const switchInstitute = async (instituteId) => {
   return api.post('/auth/switch-institute', { instituteId });
 };
@@ -39,6 +43,9 @@ export const authService = {
   login,
   logout,
   getMe,
+  getTermsStatus,
+  getCurrentTerms,
+  acceptTerms,
   switchInstitute,
   registerInstitute,
   refreshToken,

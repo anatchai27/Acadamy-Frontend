@@ -50,8 +50,11 @@ export const requireAuth = (Component, allowedRoles = []) => {
         ? (() => route('/forbidden', true))()
         : undefined;
     }, [state.isAuthenticated, state.isAuthLoading, role, hasPageAccess]);
+    useEffect(() => {
+      if (state.isAuthenticated && !state.isAuthLoading && state.termsAccepted === false) route('/terms/accept', true);
+    }, [state.isAuthenticated, state.isAuthLoading, state.termsAccepted]);
     return state.isAuthLoading ? <div class="flex items-center justify-center min-h-screen bg-oasis-bg">
         <div class="h-10 w-10 rounded-full border-2 border-oasis-primary border-t-transparent animate-spin" />
-      </div> : !state.isAuthenticated || !hasAllowedRole(role, allowedRoles) || !hasPageAccess ? null : <Component {...props} />;
+      </div> : !state.isAuthenticated || state.termsAccepted === false || !hasAllowedRole(role, allowedRoles) || !hasPageAccess ? null : <Component {...props} />;
   };
 };

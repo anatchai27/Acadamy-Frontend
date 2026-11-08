@@ -124,6 +124,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <footer className="market-footer">
         <a className="footer-brand" href={`/?lang=${locale}#top`}><img src="/tiwhub-mark.svg" alt="" />tiwhub</a>
         <span>{copy.footerDescription}</span>
+        <a href={`/terms?lang=${locale}`}>{locale === "th" ? "ข้อกำหนดการใช้บริการ" : "Terms of Service"}</a>
         <a href="https://tiwhub.vercel.app/">{copy.login}</a>
       </footer>
     </div>

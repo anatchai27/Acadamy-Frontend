@@ -2,7 +2,7 @@ import { Router } from 'preact-router';
 import { IndexPage } from './pages/index';
 import { NotFoundPage } from './pages/not-found-page';
 import { TrialClassPage } from './pages/trial-class-page';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage } from './features/auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ContactPage, TermsAcceptPage } from './features/auth';
 import { DashboardPage, UsersPage, PermissionsPage, CoursesPage, SessionsPage, RequestsPage, AcademicsPage, SettingsPage, StudentsPage, StudentControll, StudentProfilePage, AttendancePage, FinancePage, TeachersPage, MakeupSlotsPage, LeadsPage, HelpPage } from './pages/admin';
 import { RoomsPage } from './pages/admin/rooms-page';
 import { ToastContainer, ConfirmDialogContainer } from './components/ui';
@@ -38,6 +38,7 @@ export function App() {
         <RegisterPage path="/register" />
         <ForgotPasswordPage path="/forgot-password" />
         <ContactPage path="/contact" />
+        <TermsAcceptPage path="/terms/accept" />
         <TrialClassPage path="/trial-class" />
         <RoleForbidden path="/forbidden" />
         <AdminDashboard path="/admin/dashboard" />

@@ -11,7 +11,10 @@ namespace academy_API.Tests.unitTest;
 
 public class UserManagementServiceTests
 {
-    private static UserService CreateSut(Mock<IUserRepository> repository, Mock<ITokenService>? token = null)
+    private static UserService CreateSut(
+        Mock<IUserRepository> repository,
+        Mock<ITokenService>? token = null,
+        academy_API.Services.Interface.ITermsService? terms = null)
     {
         var options = new DbContextOptionsBuilder<TutoringDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -19,7 +22,7 @@ public class UserManagementServiceTests
         var context = new TutoringDbContext(options, new academy_API.Tests.MockTenantProvider());
         token ??= new Mock<ITokenService>();
         token.Setup(t => t.HashPassword(It.IsAny<string>())).Returns("hashed-password");
-        return new UserService(repository.Object, Mock.Of<IPdpaConsentRepository>(), token.Object, context);
+        return new UserService(repository.Object, Mock.Of<IPdpaConsentRepository>(), token.Object, context, terms);
     }
 
     [Fact]
@@ -101,6 +104,74 @@ public class UserManagementServiceTests
 
         Assert.Equal("PDPA_REQUIRED", exception.Code);
         repository.Verify(r => r.RegisterAsync(It.IsAny<Institute?>(), It.IsAny<User>(), It.IsAny<PdpaConsent>(), It.IsAny<Teacher?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WithoutTerms_RejectsBeforePersistence()
+    {
+        var repository = new Mock<IUserRepository>();
+        var terms = new Mock<academy_API.Services.Interface.ITermsService>();
+        terms.Setup(service => service.GetCurrentDocument("th"))
+            .Returns(new academy_API.Services.Interface.TermsDocument("terms", "1.0", new DateOnly(2026, 11, 8), true,
+                new("Thai", "English"), new("Intro TH", "Intro EN"), []));
+        var sut = CreateSut(repository, terms: terms.Object);
+
+        var exception = await Assert.ThrowsAsync<UserValidationException>(() => sut.RegisterAsync(new RegisterUserRequest
+        {
+            Email = "admin@example.com",
+            Password = "secret",
+            Role = UserRole.admin,
+            AcceptPdpa = true,
+            AcceptTerms = false
+        }, null));
+
+        Assert.Equal("TERMS_REQUIRED", exception.Code);
+        repository.Verify(r => r.RegisterAsync(It.IsAny<Institute?>(), It.IsAny<User>(), It.IsAny<PdpaConsent>(), It.IsAny<Teacher?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WithTerms_StoresAcceptanceInRegistrationTransaction()
+    {
+        var repository = new Mock<IUserRepository>();
+        repository.Setup(r => r.GetByEmailOrPhoneAsync("admin@example.com", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        repository.Setup(r => r.RegisterAsync(
+                It.IsAny<Institute?>(), It.IsAny<User>(), It.IsAny<PdpaConsent>(), It.IsAny<Teacher?>(),
+                It.IsAny<TermsAcceptance>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Institute? institute, User user, PdpaConsent _, Teacher? _, TermsAcceptance _, CancellationToken _) =>
+            {
+                user.Id = 21;
+                return (institute, user);
+            });
+        var terms = new Mock<academy_API.Services.Interface.ITermsService>();
+        terms.Setup(service => service.GetCurrentDocument("en"))
+            .Returns(new academy_API.Services.Interface.TermsDocument("terms", "1.0", new DateOnly(2026, 11, 8), true,
+                new("Thai", "English"), new("Intro TH", "Intro EN"), []));
+        terms.Setup(service => service.GetCurrentContentSha256()).Returns(new string('a', 64));
+        var sut = CreateSut(repository, terms: terms.Object);
+
+        await sut.RegisterAsync(new RegisterUserRequest
+        {
+            Email = "admin@example.com",
+            Password = "secret",
+            Role = UserRole.admin,
+            AcceptPdpa = true,
+            AcceptTerms = true,
+            TermsVersion = "1.0",
+            TermsLanguage = "en"
+        }, "127.0.0.1");
+
+        repository.Verify(r => r.RegisterAsync(
+            It.IsAny<Institute?>(),
+            It.IsAny<User>(),
+            It.Is<PdpaConsent>(consent => consent.IsAccepted == true),
+            It.IsAny<Teacher?>(),
+            It.Is<TermsAcceptance>(acceptance => acceptance.DocumentVersion == "1.0"
+                && acceptance.ContentSha256 == new string('a', 64)
+                && acceptance.Language == "en"
+                && acceptance.Source == "registration"
+                && acceptance.IpAddress == "127.0.0.1"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

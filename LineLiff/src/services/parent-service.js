@@ -1,8 +1,10 @@
 import { api } from './api';
 
-export const bindLineUserId = (idToken, code = '') => {
-  return api.post('/parents/bind-line', { idToken, code });
+export const bindLineUserId = (idToken, code = '', terms = {}) => {
+  return api.post('/parents/bind-line', { idToken, code, ...terms });
 }
+
+export const getCurrentTerms = language => api.get('/legal/terms/current', { params: { language } });
 
 export const getParentDashboard = () => {
   return api.get('/parents/me/dashboard');

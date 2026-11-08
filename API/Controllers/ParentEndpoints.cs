@@ -44,6 +44,8 @@ public static class ParentEndpoints
         ITokenService tokenService,
         IConfiguration configuration,
         ILoggerFactory loggerFactory,
+        ITermsService termsService,
+        HttpContext httpContext,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.IdToken))
@@ -60,6 +62,13 @@ public static class ParentEndpoints
                 code = "LINE_ID_TOKEN_REJECTED",
                 error = "LINE ยืนยันตัวตนไม่ผ่าน กรุณาลองใหม่หรือเริ่มยืนยัน LINE อีกครั้ง หากยังไม่สำเร็จให้ตรวจสอบ LINE Login channel ID"
             }, statusCode: StatusCodes.Status401Unauthorized);
+
+        var currentTerms = termsService.GetCurrentDocument(request.TermsLanguage ?? "th");
+        var alreadyAccepted = await termsService.HasParentAcceptedAsync(verifiedUserId, currentTerms.Version, ct);
+        if (!alreadyAccepted && !request.AcceptTerms)
+            return Results.Json(new { code = "TERMS_ACCEPTANCE_REQUIRED", currentVersion = currentTerms.Version }, statusCode: StatusCodes.Status428PreconditionRequired);
+        if (request.AcceptTerms && !string.Equals(request.TermsVersion, currentTerms.Version, StringComparison.Ordinal))
+            return Results.Conflict(new { code = "TERMS_VERSION_CHANGED", currentVersion = currentTerms.Version });
 
         var existingBinding = await service.BindLineAsync(verifiedUserId, ct);
         if (existingBinding.Status == ParentBindingStatus.Conflict)
@@ -83,6 +92,28 @@ public static class ParentEndpoints
 
             var binding = redeemed.Binding!;
             result = new ParentBindingResult(binding.User, binding.Parent, binding.Children);
+        }
+
+        if (request.AcceptTerms && !alreadyAccepted)
+        {
+            try
+            {
+                await termsService.AcceptAsync(
+                    result.User.Id,
+                    request.TermsVersion!,
+                    request.TermsLanguage ?? "th",
+                    "line-liff-bind",
+                    "parent",
+                    result.Parent.Id,
+                    result.Parent.Id,
+                    httpContext.Connection.RemoteIpAddress?.ToString(),
+                    httpContext.Request.Headers.UserAgent.ToString(),
+                    ct);
+            }
+            catch (TermsVersionConflictException ex)
+            {
+                return Results.Conflict(new { code = "TERMS_VERSION_CHANGED", currentVersion = ex.CurrentVersion });
+            }
         }
 
         return Results.Ok(new
@@ -527,5 +558,5 @@ public static class ParentEndpoints
     }
 }
 
-public record BindLineRequest(string? IdToken, string? Code);
+public record BindLineRequest(string? IdToken, string? Code, bool AcceptTerms = false, string? TermsVersion = null, string? TermsLanguage = null);
 public record CreateParentPaymentBatchRequest(int EnrollmentId, decimal? Amount = null);

@@ -28,6 +28,9 @@ public class UserCreateRequest
     public string Password { get; set; } = null!;
     public bool AcceptPdpa { get; set; }
     public string PdpaConsentVersion { get; set; } = "1.0";
+    public bool AcceptTerms { get; set; }
+    public string TermsVersion { get; set; } = string.Empty;
+    public string TermsLanguage { get; set; } = "th";
 }
 
 public class RegisterUserRequest
@@ -41,6 +44,9 @@ public class RegisterUserRequest
     public string? LineUserId { get; set; }
     public bool AcceptPdpa { get; set; }
     public string PdpaConsentVersion { get; set; } = "1.0";
+    public bool AcceptTerms { get; set; }
+    public string TermsVersion { get; set; } = string.Empty;
+    public string TermsLanguage { get; set; } = "th";
 }
 
 public class InstituteInfo

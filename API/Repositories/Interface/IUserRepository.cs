@@ -13,6 +13,13 @@ public interface IUserRepository
     Task<User> CreateAsync(User user, CancellationToken cancellationToken = default);
     Task<User> CreateStaffAsync(User user, Teacher? teacher, CancellationToken cancellationToken = default);
     Task<(Institute? Institute, User User)> RegisterAsync(Institute? institute, User user, PdpaConsent consent, Teacher? teacher, CancellationToken cancellationToken = default);
+    Task<(Institute? Institute, User User)> RegisterAsync(
+        Institute? institute,
+        User user,
+        PdpaConsent consent,
+        Teacher? teacher,
+        TermsAcceptance termsAcceptance,
+        CancellationToken cancellationToken = default);
     Task<bool> UpdateRoleAsync(int id, UserRole role, CancellationToken cancellationToken = default);
     Task<bool> UpdatePasswordAsync(int id, string passwordHash, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);

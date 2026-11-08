@@ -1,0 +1,101 @@
+{
+  "documentType": "terms",
+  "version": "1.0",
+  "effectiveAt": "2026-11-08",
+  "reviewRequired": true,
+  "title": {
+    "th": "ข้อกำหนดและเงื่อนไขการใช้บริการ tiwhub",
+    "en": "tiwhub Terms of Service"
+  },
+  "intro": {
+    "th": "ข้อกำหนดฉบับนี้ใช้กับผู้ใช้งานแพลตฟอร์ม tiwhub และบริการที่สถาบันการศึกษาที่เข้าร่วมให้บริการ โปรดอ่านก่อนสมัครหรือใช้งาน การสมัคร การกดปุ่มยอมรับ หรือการใช้งานต่อเพียงอย่างเดียวไม่ถือเป็นการยอมรับข้อกำหนดฉบับใหม่ ผู้ใช้ต้องยืนยันการยอมรับฉบับที่มีผลใช้อย่างชัดแจ้ง",
+    "en": "These terms apply to users of the tiwhub platform and services provided by participating educational institutions. Please read them before registering or using the service. Registration, clicking an acceptance button, or continued use alone does not accept a new version; users must expressly accept the version in force."
+  },
+  "sections": [
+    {
+      "heading": { "th": "1. บัญชีและข้อมูลผู้ใช้", "en": "1. Accounts and user information" },
+      "paragraphs": {
+        "th": [
+          "ผู้ใช้ต้องให้ข้อมูลที่ถูกต้อง เป็นปัจจุบัน และแก้ไขเมื่อมีการเปลี่ยนแปลง ผู้ใช้มีหน้าที่ดูแลข้อมูลเข้าสู่ระบบและแจ้งผู้ดูแลเมื่อสงสัยว่าบัญชีถูกใช้โดยไม่ได้รับอนุญาต",
+          "ผู้ปกครองหรือผู้แทนโดยชอบธรรมต้องดำเนินการแทนผู้เยาว์ และรับรองว่ามีอำนาจให้ความยินยอมหรืออนุญาตตามที่กฎหมายกำหนด การยอมรับข้อกำหนดนี้ไม่ทดแทนความยินยอมด้านข้อมูลส่วนบุคคลที่กฎหมายกำหนด"
+        ],
+        "en": [
+          "Users must provide accurate, current information and update it when it changes. Users are responsible for safeguarding their sign-in credentials and notifying the relevant administrator if they suspect unauthorized account use.",
+          "A parent or legal representative must act for a minor and confirm that they have authority to provide any consent or permission required by law. Acceptance of these terms does not replace any legally required personal-data consent."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "2. การใช้บริการและการชำระเงิน", "en": "2. Use of services and payments" },
+      "paragraphs": {
+        "th": [
+          "ผู้ใช้ต้องใช้บัญชีตามสิทธิ์ที่ได้รับ ไม่แบ่งปันบัญชีหรือสิทธิ์เข้าถึงโดยไม่ได้รับอนุญาต และไม่ใช้บริการเพื่อกระทำการที่ผิดกฎหมาย รบกวนระบบ หรือกระทบสิทธิของผู้อื่น",
+          "รายละเอียดคอร์ส ราคา วิธีชำระเงิน การยกเลิก และการคืนเงินให้เป็นไปตามข้อมูลที่สถาบันผู้ให้บริการแจ้งก่อนทำรายการและกฎหมายที่ใช้บังคับ สถาบันเป็นผู้รับผิดชอบการให้บริการด้านการเรียนและการแจ้งเงื่อนไขดังกล่าว"
+        ],
+        "en": [
+          "Users may use accounts only within their assigned permissions. Users must not share accounts or access rights without authorization, use the service unlawfully, disrupt its operation, or infringe another person's rights.",
+          "Course details, prices, payment methods, cancellations, and refunds are governed by the information disclosed by the providing institution before a transaction and by applicable law. The institution is responsible for delivering educational services and communicating those terms."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "3. ทรัพย์สินทางปัญญา", "en": "3. Intellectual property" },
+      "paragraphs": {
+        "th": [
+          "สิทธิในซอฟต์แวร์ เครื่องหมายการค้า และองค์ประกอบของแพลตฟอร์มเป็นของเจ้าของสิทธิที่เกี่ยวข้อง ส่วนสื่อการเรียน โลโก้ และเนื้อหาที่สถาบันหรือผู้สอนนำเข้าระบบเป็นของเจ้าของสิทธิในเนื้อหานั้น",
+          "ห้ามคัดลอก บันทึก ทำซ้ำ ดัดแปลง เผยแพร่ หรือใช้เนื้อหาเพื่อการค้า เว้นแต่ได้รับอนุญาตจากเจ้าของสิทธิหรือกฎหมายอนุญาต"
+        ],
+        "en": [
+          "Rights in the software, trademarks, and platform components belong to their respective rights holders. Learning materials, logos, and content uploaded by an institution or instructor belong to the rights holders of that content.",
+          "You must not copy, record, reproduce, modify, distribute, or commercially use content unless the rights holder permits it or applicable law allows it."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "4. ความพร้อมใช้งานและผลการเรียน", "en": "4. Availability and learning outcomes" },
+      "paragraphs": {
+        "th": [
+          "อาจมีการหยุดให้บริการชั่วคราวเพื่อบำรุงรักษา แก้ไขปัญหา หรือด้วยเหตุที่อยู่นอกเหนือการควบคุม เราจะดำเนินการตามสมควรเพื่อให้บริการกลับมาใช้งานได้",
+          "ผลการเรียนและคะแนนขึ้นอยู่กับหลายปัจจัย รวมถึงการมีส่วนร่วมและการฝึกฝนของผู้เรียน แพลตฟอร์มและสถาบันไม่รับประกันผลลัพธ์เฉพาะ เว้นแต่มีการตกลงเป็นลายลักษณ์อักษร"
+        ],
+        "en": [
+          "The service may be temporarily unavailable for maintenance, troubleshooting, or reasons beyond our control. Reasonable efforts will be made to restore it.",
+          "Learning progress and scores depend on many factors, including a learner's participation and practice. The platform and institution do not guarantee a particular outcome unless agreed in writing."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "5. ข้อมูลส่วนบุคคล", "en": "5. Personal data" },
+      "paragraphs": {
+        "th": [
+          "การเก็บ ใช้ และเปิดเผยข้อมูลส่วนบุคคลเป็นไปตามประกาศความเป็นส่วนตัวที่เกี่ยวข้องและกฎหมายคุ้มครองข้อมูลส่วนบุคคล ข้อกำหนดนี้ไม่ใช่ประกาศความเป็นส่วนตัวหรือความยินยอมสำหรับวัตถุประสงค์อื่น"
+        ],
+        "en": [
+          "Personal data is collected, used, and disclosed in accordance with the applicable privacy notice and personal-data protection laws. These terms are not a privacy notice or consent for other purposes."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "6. การระงับหรือยุติการใช้งาน", "en": "6. Suspension or termination" },
+      "paragraphs": {
+        "th": [
+          "เราอาจจำกัด ระงับ หรือยุติการเข้าถึงเมื่อจำเป็นเพื่อความปลอดภัย การปฏิบัติตามกฎหมาย หรือเมื่อมีการละเมิดข้อกำหนด โดยจะดำเนินการตามกฎหมายและแจ้งเหตุผลเมื่อสามารถทำได้"
+        ],
+        "en": [
+          "Access may be restricted, suspended, or terminated when necessary for security, legal compliance, or a breach of these terms. Actions will comply with applicable law, and reasons will be provided where practicable."
+        ]
+      }
+    },
+    {
+      "heading": { "th": "7. การปรับปรุงข้อกำหนด", "en": "7. Changes to these terms" },
+      "paragraphs": {
+        "th": [
+          "เมื่อมีการเปลี่ยนแปลงสาระสำคัญ เราจะแสดงฉบับและวันที่มีผลใหม่ในแพลตฟอร์ม และขอให้ผู้ใช้ยอมรับอย่างชัดแจ้งก่อนใช้งานต่อ การไม่ยอมรับอาจทำให้ไม่สามารถใช้บริการที่เกี่ยวข้องได้ ทั้งนี้ไม่กระทบสิทธิที่กฎหมายกำหนด"
+        ],
+        "en": [
+          "When material changes are made, the new version and effective date will be shown in the platform, and users will be asked to expressly accept it before continuing to use the service. Declining may prevent use of the affected service, subject to statutory rights."
+        ]
+      }
+    }
+  ]
+}

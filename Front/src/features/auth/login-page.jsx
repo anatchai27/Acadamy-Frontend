@@ -5,7 +5,7 @@ import { Button, Input, Checkbox, AuthFormLayout, AuthPageShell } from '../../co
 import { showToast } from '../../components/ui';
 import { useAppContext } from '../../store/AppContext';
 import { useDesignTheme } from '../../hooks/useDesignTheme';
-import { authService } from '../../services';
+import { authService, getTermsStatus } from '../../services';
 import { clearAuthStorage, getMe, setAuthStorage } from '../../services/auth-service';
 import { getRolePermissions } from '../../services/user-service';
 import { setRolePermissions } from '../../config/permissions';
@@ -56,6 +56,9 @@ export const LoginPage = () => {
       // Resolve the canonical profile and role policy before entering the app.
       const meResponse = await getMe();
       const profile = meResponse.data?.data || meResponse.data || user;
+      const termsStatus = await getTermsStatus();
+      const hasAcceptedTerms = !!termsStatus.data?.accepted;
+      dispatch({ type: 'SET_TERMS_ACCEPTED', payload: hasAcceptedTerms });
       const permissionResponse = await getRolePermissions(profile?.role);
       const rolePermissions = permissionResponse.data?.data?.permissions
         || permissionResponse.data?.permissions;
@@ -72,6 +75,10 @@ export const LoginPage = () => {
       const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
       dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
       dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
+      if (!hasAcceptedTerms) {
+        route('/terms/accept');
+        return;
+      }
       showToast('เข้าสู่ระบบสำเร็จ', 'success');
       route('/admin/dashboard');
     } catch (error) {

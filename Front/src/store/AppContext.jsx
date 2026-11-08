@@ -2,7 +2,7 @@ import { createContext } from 'preact';
 import { useContext, useReducer, useEffect, useCallback } from 'preact/hooks';
 import { route } from 'preact-router';
 import { AppReducer } from './AppReducer';
-import { clearAuthStorage, getMe } from '../services/auth-service';
+import { clearAuthStorage, getMe, getTermsStatus } from '../services/auth-service';
 import { setOnUnauthorized } from '../services/api';
 import { getRolePermissions } from '../services/user-service';
 import { setRolePermissions } from '../config/permissions';
@@ -53,12 +53,19 @@ export function AppProvider({ children }) {
         }
         dispatch({ type: 'SET_PROFILE', payload: profile });
         dispatch({ type: 'SET_USER', payload: profile });
+        try {
+          const termsStatus = await getTermsStatus();
+          dispatch({ type: 'SET_TERMS_ACCEPTED', payload: termsStatus.data?.accepted });
+        } catch {
+          dispatch({ type: 'SET_TERMS_ACCEPTED', payload: false });
+        }
         const currentInstitute = profile?.data?.currentInstitute || profile?.currentInstitute;
         dispatch({ type: 'SET_INSTITUTE_NAME', payload: currentInstitute?.name || '' });
         dispatch({ type: 'SET_INSTITUTE_LOGO', payload: currentInstitute?.logoUrl || '' });
       })
       .catch(() => {
         dispatch({ type: 'CLEAR_USER' });
+        dispatch({ type: 'SET_TERMS_ACCEPTED', payload: false });
       })
       .finally(() => {
         dispatch({ type: 'SET_AUTH_LOADING', payload: false });

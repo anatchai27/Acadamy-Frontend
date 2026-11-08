@@ -113,6 +113,7 @@ builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPdpaConsentRepository, PdpaConsentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITermsService, TermsService>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IStudentExportService, StudentExportService>();
@@ -251,6 +252,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantMiddleware>();
+app.UseMiddleware<TermsAcceptanceMiddleware>();
 
 // Map endpoint groups
 app.MapProductEndpoints();
@@ -258,6 +260,7 @@ app.MapRoomEndpoints();
 app.MapStudentEndpoints();
 app.MapTeacherEndpoints();
 app.MapAuthEndpoints();
+app.MapLegalEndpoints();
 app.MapUserEndpoints();
 app.MapAttendanceEndpoints();
 app.MapMakeupEndpoints();
